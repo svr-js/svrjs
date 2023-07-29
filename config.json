@@ -1,0 +1,86 @@
+{
+  "users": [],
+  "port": 80,
+  "pubport": 80,
+  "page404": "404.html",
+  "timestamp": 1680954429282,
+  "blacklist": [],
+  "nonStandardCodes": [],
+  "enableCompression": true,
+  "customHeaders": {},
+  "enableHTTP2": false,
+  "enableLogging": true,
+  "enableDirectoryListing": true,
+  "enableDirectoryListingWithDefaultHead": false,
+  "serverAdministratorEmail": "[no contact information]",
+  "stackHidden": false,
+  "enableRemoteLogBrowsing": true,
+  "exposeServerVersion": true,
+  "disableServerSideScriptExpose": false,
+  "rewriteMap": [
+    {
+      "definingRegex": "/\\/invoke500\\/\\?/",
+      "replacements": [
+        {
+          "regex": "/\\/invoke500\\/\\?/",
+          "replacement": "/invoke500.svr?"
+        }
+      ]
+    },
+    {
+      "definingRegex": "/\\/invoke500\\/.+\\//",
+      "replacements": [
+        {
+          "regex": "/\\/\\?/",
+          "replacement": "&"
+        },
+        {
+          "regex": "/invoke500\\//",
+          "replacement": "invoke500.svr?"
+        },
+        {
+          "regex": "/\\/(?!invoke500.svr?)/",
+          "replacement": ""
+        }
+      ]
+    },
+    {
+      "definingRegex": "/\\/invoke500\\/.+/",
+      "replacements": [
+        {
+          "regex": "/\\?/",
+          "replacement": "&"
+        },
+        {
+          "regex": "/invoke500\\//",
+          "replacement": "invoke500.svr?"
+        }
+      ]
+    },
+    {
+      "definingRegex": "/\\/invoke500\\//",
+      "replacements": [
+        {
+          "regex": "/\\/invoke500\\//",
+          "replacement": "/invoke500.svr"
+        }
+      ]
+    },
+    {
+      "definingRegex": "/\\/invoke500$/",
+      "replacements": [
+        {
+          "regex": "/\\/invoke500/",
+          "replacement": "/invoke500.svr"
+        }
+      ]
+    }
+  ],
+  "allowStatus": true,
+  "dontCompress": ["/.*\\.ipxe$/","/.*\\.img$/","/.*\\.iso$/"],
+  "enableIPSpoofing": false,
+  "secure": false,
+  "sni": {},
+  "disableNonEncryptedServer": false,
+  "disableToHTTPSRedirect": false
+}

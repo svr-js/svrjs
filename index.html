@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SVR.JS 3.4.17</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: FreeSans, Helvetica, Tahoma, Arial, sans-serif;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to SVR.JS 3.4.17</h1>
+    <br/>
+    <img src="/logo.png" style="width: 256px;" />
+    <br/>
+    <p>If you see this page, that means, that the server is properly working. You can further configure the server and replace <i>index.html</i> and <i>tests.html</i> pages with custom ones.</p>
+    <p>Default <i>config.json</i> looks like this:</p>
+    <div style="background-color: #e0e0e0; padding: 5px; text-align: left; display: inline-block;">
+      <code>
+        {<br/>
+        &nbsp;&nbsp;"users": [],<br/>
+        &nbsp;&nbsp;"port": 80,<br/>
+        &nbsp;&nbsp;"pubport": 80,<br/>
+        &nbsp;&nbsp;"page404": "404.html",<br/>
+        &nbsp;&nbsp;"timestamp": 1680954429282,<br/>
+        &nbsp;&nbsp;"blacklist": [],<br/>
+        &nbsp;&nbsp;"nonStandardCodes": [],<br/>
+        &nbsp;&nbsp;"enableCompression": true,<br/>
+        &nbsp;&nbsp;"customHeaders": {},<br/>
+        &nbsp;&nbsp;"enableHTTP2": false,<br/>
+        &nbsp;&nbsp;"enableLogging": true,<br/>
+        &nbsp;&nbsp;"enableDirectoryListing": true,<br/>
+        &nbsp;&nbsp;"enableDirectoryListingWithDefaultHead": false,<br/>
+        &nbsp;&nbsp;"serverAdministratorEmail": "[no contact information]",<br/>
+        &nbsp;&nbsp;"stackHidden": false,<br/>
+        &nbsp;&nbsp;"enableRemoteLogBrowsing": true,<br/>
+        &nbsp;&nbsp;"exposeServerVersion": true,<br/>
+        &nbsp;&nbsp;"disableServerSideScriptExpose": false,<br/>
+        &nbsp;&nbsp;"rewriteMap": [<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\/\\?/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": dorians[<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\/\\?/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr?"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\/.+\\//",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/\\?/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/(?!invoke500.svr?)/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": ""<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\/.+/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\?/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\//",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\//",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500$/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;],<br/>
+        &nbsp;&nbsp;"allowStatus": true,<br/>
+        &nbsp;&nbsp;"dontCompress": ["/.*\\.ipxe$/","/.*\\.img$/","/.*\\.iso$/"],<br/>
+        &nbsp;&nbsp;"enableIPSpoofing": false,<br/>
+        &nbsp;&nbsp;"secure": false,<br/>
+        &nbsp;&nbsp;"sni": {},<br/>
+        &nbsp;&nbsp;"disableNonEncryptedServer": false,<br/>
+        &nbsp;&nbsp;"disableToHTTPSRedirect": false<br/>
+        }
+      </code>
+    </div>
+    <p>Changes:</p>
+    <ul>
+      <li>Improved URL sanitizer.</li>
+      <li>Fixed bug with formidable wrapper.</li>
+    </ul>
+    <p>Bugs:</p>
+    <ul>
+      <li>Some very old mods requiring hexstrbase64 will fail to load.</li>
+      <li>On first load server-side JavaScript will fail to load when SVR.JS is running on Bun.</li>
+    </ul>
+    <br/>
+    <a href="/tests.html">Tests</a><br/>
+    <a href="/licenses">Licenses</a><br/>
+    <a href="/svrjsstatus.svr">SVR.JS status page</a><br/>
+    <a href="https://svrjs.org/docs">More Information</a>
+    <br/>
+    <br/>
+    <img src="/powered.png" />
+  </body>
+</html>
