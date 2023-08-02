@@ -77,7 +77,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.6.1";
+var version = "3.6.2";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -137,7 +137,7 @@ if (!singlethreaded) {
   try {
     // Import cluster module
     var cluster = require("cluster");
-  } catch (ex) {
+  } catch (err) {
     // Clustering is not supported!
   }
 
@@ -217,8 +217,8 @@ if (!singlethreaded) {
 
         try {
           eval("'use strict';(" + String(worker.send).replace(/console\.log *\( *(["'])ChildProcess\.prototype\.send\(\) - Sorry! Not implemented yet\1 *\) *;?/, "throw new Error(\"NOT IMPLEMENTED\"); //") + ")(undefined)");
-        } catch (ex) {
-          if (ex.message === "NOT IMPLEMENTED") {
+        } catch (err) {
+          if (err.message === "NOT IMPLEMENTED") {
             sendImplemented = false;
           }
         }
@@ -254,8 +254,8 @@ if (!singlethreaded) {
             var fakeWorkerIPCConnection = net.createConnection(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.W" + newWorker.process.pid + ".ipc") : (__dirname + "/temp/.W" + newWorker.process.pid + ".ipc"), function () {
               fakeWorkerIPCConnection.end(message);
             });
-          } catch (ex) {
-            if (tries > 25) throw ex;
+          } catch (err) {
+            if (tries > 25) throw err;
 
             setTimeout(function () {
               newWorker.send(message, undefined, undefined, tries + 1);
@@ -311,39 +311,39 @@ var url = require("url");
 try {
   var gracefulFs = require("graceful-fs");
   if (!process.isBun) gracefulFs.gracefulify(fs); //Bun + graceful-fs + SVR.JS + requests about static content = 500 Internal Server Error!
-} catch (ex) {
+} catch (err) {
   //Don't use graceful-fs
 }
 var path = require("path");
 var hexstrbase64 = undefined;
 try {
   hexstrbase64 = require("./hexstrbase64/index.js");
-} catch (ex) {
+} catch (err) {
   //Don't use hexstrbase64
 }
 var svrmodpack = undefined;
 try {
   svrmodpack = require("svrmodpack");
-} catch (ex) {
+} catch (err) {
   svrmodpack = {
-    _errored: ex
+    _errored: err
   };
 }
 var zlib = require("zlib");
 var tar = undefined;
 try {
   tar = require("tar");
-} catch (ex) {
+} catch (err) {
   tar = {
-    _errored: ex
+    _errored: err
   };
 }
 var formidable = undefined;
 try {
   formidable = require("formidable");
-} catch (ex) {
+} catch (err) {
   formidable = {
-    _errored: ex
+    _errored: err
   };
 }
 var ocsp = undefined;
@@ -351,17 +351,17 @@ var ocspCache = undefined;
 try {
   ocsp = require("ocsp");
   ocspCache = new ocsp.Cache();
-} catch (ex) {
+} catch (err) {
   ocsp = {
-    _errored: ex
+    _errored: err
   };
 }
 var prettyBytes = undefined;
 try {
   prettyBytes = require("pretty-bytes");
-} catch (ex) {
+} catch (err) {
   prettyBytes = {
-    _errored: ex
+    _errored: err
   };
 }
 var http2 = {};
@@ -370,11 +370,11 @@ try {
   if (process.isBun) {
     try {
       http2.Http2ServerRequest();
-    } catch (ex) {
-      if (ex.name == "NotImplementedError" || ex.code == "ERR_NOT_IMPLEMENTED") throw ex;
+    } catch (err) {
+      if (err.name == "NotImplementedError" || err.code == "ERR_NOT_IMPLEMENTED") throw err;
     }
   }
-} catch (ex) {
+} catch (err) {
   http2.__disabled__ = null;
   http2.createServer = function () {
     throw new Error("HTTP/2 support is not present");
@@ -394,7 +394,7 @@ var https = {};
 try {
   crypto = require("crypto");
   https = require("https");
-} catch (ex) {
+} catch (err) {
   crypto = {};
   https = {};
   crypto.__disabled__ = null;
@@ -434,7 +434,7 @@ function sizify(x) {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
     }).replace(/ /g, "").replace(/B/ig, "").replace(/k/g, "K");
-  } catch (ex) {
+  } catch (err) {
     if (x < 1000) return x.toString();
     if (x < 10000) return (Math.round(x / 10) / 100).toString() + "K";
     if (x < 100000) return (Math.round(x / 100) / 10).toString() + "K";
@@ -483,12 +483,12 @@ function getOS() {
   }
 }
 
-function createRegex(regex) {
-  var regexObj = regex.split("/");
-  if (regexObj.length == 0) throw new Error("Invalid regex!");
-  var modifiers = regexObj.pop();
-  regexObj.shift();
-  var searchString = regexObj.join("/");
+function createRegex(regex, isPath) {
+  var regexStrMatch = regex.match(/^\/((?:\\.|[^\/\\])*)\/([a-zA-Z0-9]*)$/);
+  if (!regexStrMatch) throw new Error("Invalid regex!");
+  var searchString = regexStrMatch[1];
+  var modifiers = regexStrMatch[2];
+  if (isPath && !modifiers.match(/i/i) && os.platform() == "win32") modifiers += "i";
   return new RegExp(searchString, modifiers);
 }
 
@@ -752,8 +752,8 @@ var ifaces = {};
 var ifaceEx = null;
 try {
   ifaces = os.networkInterfaces();
-} catch (ex) {
-  ifaceEx = ex;
+} catch (err) {
+  ifaceEx = err;
 }
 var ips = [];
 var attmts = 5;
@@ -918,12 +918,12 @@ if (fs.existsSync(__dirname + "/config.json")) {
   var configJSONf = "";
   try {
     configJSONf = fs.readFileSync(__dirname + "/config.json"); //Read JSON File
-  } catch (ex) {
+  } catch (err) {
     throw new Error("Cannot read JSON file.");
   }
   try {
     configJSON = JSON.parse(configJSONf); //Parse JSON
-  } catch (ex) {
+  } catch (err) {
     throw new Error("JSON Parse error.");
   }
 }
@@ -1008,7 +1008,7 @@ function getCustomHeaders() {
 var vnum = 0;
 try {
   vnum = process.config.variables.node_module_version;
-} catch (ex) {
+} catch (err) {
   //Version number not retrieved
 }
 
@@ -1098,8 +1098,8 @@ function LOG(s) {
         }
       }
     }
-  } catch (ex) {
-    if (!s.match(/^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /) && !reallyExiting) serverconsole.locwarnmessage("There was a problem while saving logs! Logs will not be kept in log file. Reason: " + ex.message);
+  } catch (err) {
+    if (!s.match(/^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /) && !reallyExiting) serverconsole.locwarnmessage("There was a problem while saving logs! Logs will not be kept in log file. Reason: " + err.message);
   }
 }
 
@@ -1214,7 +1214,7 @@ process.exit = function (code) {
         logSync = true;
         process.unsafeExit(code);
       }, 10000); //timeout
-    } catch (ex) {
+    } catch (err) {
       logFile = undefined;
       logSync = true;
       process.unsafeExit(code);
@@ -1243,25 +1243,25 @@ if (!disableMods) {
       // Try creating the modloader folder (if not already exists)
       try {
         fs.mkdirSync(__dirname + "/temp/" + modloaderFolderName);
-      } catch (ex) {
+      } catch (err) {
         // If the folder already exists, continue to the next step
-        if (ex.code != "EEXIST") {
+        if (err.code != "EEXIST") {
           // If there was another error, try creating the temp folder and then the modloader folder again
           fs.mkdirSync(__dirname + "/temp");
           try {
             fs.mkdirSync(__dirname + "/temp/" + modloaderFolderName);
-          } catch (ex) {
+          } catch (err) {
             // If there was another error, throw it
-            if (ex.code != "EEXIST") throw ex;
+            if (err.code != "EEXIST") throw err;
           }
         }
       }
 
       // Create a subfolder for the current mod within the modloader folder
       fs.mkdirSync(__dirname + "/temp/" + modloaderFolderName + "/" + modFiles[i]);
-    } catch (ex) {
+    } catch (err) {
       // If there was an error creating the folder, ignore it if it's a known error
-      if (ex.code != "EEXIST" && ex.code != "ENOENT") throw ex;
+      if (err.code != "EEXIST" && err.code != "ENOENT") throw err;
       // Some other SVR.JS process may have created the files.
     }
 
@@ -1293,8 +1293,8 @@ if (!disableMods) {
             Mod = require("./temp/" + modloaderFolderName + "/" + modFiles[i] + "/index.js");
             mod = new Mod();
             break;
-          } catch (ex) {
-            if (j >= 2 || ex.name == "SyntaxError") throw ex;
+          } catch (err) {
+            if (j >= 2 || err.name == "SyntaxError") throw err;
             // Wait for a short time before retrying
             var now = Date.now();
             while (Date.now() - now < 2);
@@ -1310,11 +1310,11 @@ if (!disableMods) {
           try {
             modInfos.push(JSON.parse(fs.readFileSync(__dirname + "/temp/" + modloaderFolderName + "/" + modFiles[i] + "/mod.info")));
             break;
-          } catch (ex) {
+          } catch (err) {
             if (j >= 2) {
               // If failed to read info file, add a placeholder entry to modInfos with an error message
               modInfos.push({
-                name: "Unknown mod (" + modFiles[i] + ";" + ex.message + ")",
+                name: "Unknown mod (" + modFiles[i] + ";" + err.message + ")",
                 version: "ERROR"
               });
             }
@@ -1324,12 +1324,12 @@ if (!disableMods) {
             // Try reloading mod info
           }
         }
-      } catch (ex) {
+      } catch (err) {
         // If there was an error during mod loading, log it to the console
         if (cluster.isMaster || cluster.isMaster === undefined) {
           serverconsole.locwarnmessage("There was a problem while loading a \"" + modFiles[i] + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
-          serverconsole.locwarnmessage(generateErrorStack(ex));
+          serverconsole.locwarnmessage(generateErrorStack(err));
         }
       }
     }
@@ -1340,7 +1340,7 @@ if (!disableMods) {
     try {
       // Prepend necessary modules and variables to the custom server side script
       var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(headers){for(var jsn=JSON.stringify(headers,null,2).split('\\n'),njsn=[\"{\"],i=1;i<jsn.length-1;i++)0!==jsn[i].replace(/ /g,\"\").indexOf('\":')&&(eval(\"var value = \"+(\",\"==jsn[i][jsn[i].length-1]?jsn[i].substring(0,jsn[i].length-1):jsn[i]).split('\": ')[1]),\",\"==jsn[i][jsn[i].length-1]&&i==jsn.length-2?njsn.push(jsn[i].substring(0,jsn[i].length-1)):null!=value&&njsn.push(jsn[i]));return njsn.push(\"}\"),JSON.parse(njsn.join(os.EOL))}\r\n";
-      var modfoot = "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(ex) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
+      var modfoot = "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
       fs.writeFileSync(__dirname + "/temp/serverSideScript.js", modhead + fs.readFileSync("./serverSideScript.js") + modfoot);
 
@@ -1354,8 +1354,8 @@ if (!disableMods) {
           aMod = require("./temp/serverSideScript.js");
           amod = new aMod();
           break;
-        } catch (ex) {
-          if (i >= 7 || ex.name == "SyntaxError") throw ex;
+        } catch (err) {
+          if (i >= 7 || err.name == "SyntaxError") throw err;
           // Wait for a short time before retrying
           var now = Date.now();
           while (Date.now() - now < 2);
@@ -1365,12 +1365,12 @@ if (!disableMods) {
 
       // Add the loaded server side script to the mods list
       mods.push(amod);
-    } catch (ex) {
+    } catch (err) {
       // If there was an error during server side script loading, log it to the console
       if (cluster.isMaster || cluster.isMaster === undefined) {
         serverconsole.locwarnmessage("There was a problem while loading server side JavaScript.");
         serverconsole.locwarnmessage("Stack:");
-        serverconsole.locwarnmessage(generateErrorStack(ex));
+        serverconsole.locwarnmessage(generateErrorStack(err));
       }
     }
   }
@@ -1558,11 +1558,11 @@ function isIndexOfForbiddenPath(decodedHref, match) {
   var forbiddenPath = forbiddenPaths[match];
   if (!forbiddenPath) return false;
   if (typeof forbiddenPath === "string") {
-    return decodedHref === forbiddenPath || decodedHref.indexOf(forbiddenPath + "/") === 0 || (os.platform() === "win32" && (decodedHref.toLowerCase() === forbiddenPath.toLowerCase() || decodedHref.toLowerCase().indexOf(forbiddenPath.toLowerCase()) === 0));
+    return decodedHref === forbiddenPath || decodedHref.indexOf(forbiddenPath + "/") === 0 || (os.platform() === "win32" && (decodedHref.toLowerCase() === forbiddenPath.toLowerCase() || decodedHref.toLowerCase().indexOf(forbiddenPath.toLowerCase() + "/") === 0));
   }
   if (typeof forbiddenPath === "object") {
     for (var i = 0; i < forbiddenPath.length; i++) {
-      if (decodedHref === forbiddenPath || decodedHref.indexOf(forbiddenPath[i] + "/") === 0 || (os.platform() === "win32" && (decodedHref.toLowerCase() === forbiddenPath[i].toLowerCase() || decodedHref.toLowerCase().indexOf(forbiddenPath[i].toLowerCase()) === 0))) {
+      if (decodedHref === forbiddenPath[i] || decodedHref.indexOf(forbiddenPath[i] + "/") === 0 || (os.platform() === "win32" && (decodedHref.toLowerCase() === forbiddenPath[i].toLowerCase() || decodedHref.toLowerCase().indexOf(forbiddenPath[i].toLowerCase() + "/") === 0))) {
         return true;
       }
     }
@@ -1602,7 +1602,7 @@ if (!cluster.isMaster) {
     server2 = http.createServer({
       requireHostHeader: false
     });
-  } catch (ex) {
+  } catch (err) {
     server2 = http.createServer();
   }
   if (!disableToHTTPSRedirect) {
@@ -1813,7 +1813,7 @@ if (!cluster.isMaster) {
         server = http.createServer({
           requireHostHeader: false
         });
-      } catch (ex) {
+      } catch (err) {
         server = http.createServer();
       }
     }
@@ -1863,7 +1863,7 @@ if (!cluster.isMaster) {
           try {
             sock._parent.destroy(a, b, c);
             sock.destroyed = sock._parent.destroyed;
-          } catch (ex) {
+          } catch (err) {
             //Socket is probably already destroyed.
           }
         };
@@ -1871,7 +1871,7 @@ if (!cluster.isMaster) {
         sock._parent.destroy = sock._parent.reallyDestroy;
         try {
           if (sock._parent.toDestroy) sock._parent.destroy();
-        } catch (ex) {
+        } catch (err) {
           //Socket is probably already destroyed.
         }
       }
@@ -2011,7 +2011,7 @@ if (!cluster.isMaster) {
       }
       try {
         req.url = encodeURI(Buffer.from(req.url, "latin1").toString("utf8")).replace(/%25/gi, "%");
-      } catch (ex) {
+      } catch (err) {
         //URL not converted...
       }
       res.writeHeadNative = res.writeHead;
@@ -2105,15 +2105,17 @@ if (!cluster.isMaster) {
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
               fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
               responseEnd();
-            } catch (ex) {
+            } catch (err) {
               var additionalError = 500;
-              if (ex.code == "ENOENT") {
+              if (err.code == "ENOENT") {
                 additionalError = 404;
-              } else if (ex.code == "EACCES") {
+              } else if (err.code == "ENOTDIR") {
+                additionalError = 404; // Assume that file doesn't exist
+              } else if (err.code == "EACCES") {
                 additionalError = 403;
-              } else if (ex.code == "EMFILE") {
+              } else if (err.code == "EMFILE") {
                 additionalError = 429;
-              } else if (ex.code == "ELOOP") {
+              } else if (err.code == "ELOOP") {
                 additionalError = 508;
               }
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
@@ -2144,7 +2146,7 @@ if (!cluster.isMaster) {
           res.socket.realRemoteAddress = reqip;
           res.socket.originalRemotePort = oldport;
           res.socket.originalRemoteAddress = oldip;
-        } catch (ex) {
+        } catch (err) {
           //Nevermind...
         }
       } else if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
@@ -2162,7 +2164,7 @@ if (!cluster.isMaster) {
           res.socket.realRemoteAddress = reqip;
           res.socket.originalRemotePort = oldport;
           res.socket.originalRemoteAddress = oldip;
-        } catch (ex) {
+        } catch (err) {
           //Nevermind...
         }
       } else {
@@ -2229,7 +2231,7 @@ if (!cluster.isMaster) {
                 nuobject.query[key] = value;
               });
               return nuobject;
-            } catch (ex) {
+            } catch (err) {
               return url.parse(uri, true);
             }
           } else {
@@ -2241,7 +2243,7 @@ if (!cluster.isMaster) {
           if (urlp.path.indexOf("//") == 0) {
             urlp = parseURL("http:" + url.path);
           }
-        } catch (ex) {
+        } catch (err) {
           //URL parse error...
         }
         if (urlp.host == "localhost" || urlp.host == "localhost:" + port.toString() || urlp.host == "127.0.0.1" || urlp.host == "127.0.0.1:" + port.toString() || urlp.host == "::1" || urlp.host == "::1:" + port.toString()) {
@@ -2291,18 +2293,18 @@ if (!cluster.isMaster) {
             requestURL.unshift("");
             requestURL = requestURL.join("/");
           }
-        } catch (ex) {
+        } catch (err) {
           //Leave URL as it is...
         }
         var rheaders = getCustomHeaders();
         rheaders["Location"] = lloc + requestURL;
         res.writeHead(301, "Redirect to HTTPS", rheaders);
         res.end();
-      } catch (ex) {
+      } catch (err) {
         serverconsole.errmessage("There was an error while processing the request!");
         serverconsole.errmessage("Stack:");
-        serverconsole.errmessage(generateErrorStack(ex));
-        callServerError(500, undefined, generateErrorStack(ex));
+        serverconsole.errmessage(generateErrorStack(err));
+        callServerError(500, undefined, generateErrorStack(err));
       }
 
     }
@@ -2326,7 +2328,7 @@ if (!cluster.isMaster) {
       socket.end(x, function () {
         try {
           socket.destroy();
-        } catch (ex) {
+        } catch (err) {
           //Socket is probably already destroyed
         }
       });
@@ -2508,15 +2510,17 @@ if (!cluster.isMaster) {
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
             fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
             responseEnd();
-          } catch (ex) {
+          } catch (err) {
             var additionalError = 500;
-            if (ex.code == "ENOENT") {
+            if (err.code == "ENOENT") {
               additionalError = 404;
-            } else if (ex.code == "EACCES") {
+            } else if (err.code == "ENOTDIR") {
+              additionalError = 404; // Assume that file doesn't exist
+            } else if (err.code == "EACCES") {
               additionalError = 403;
-            } else if (ex.code == "EMFILE") {
+            } else if (err.code == "EMFILE") {
               additionalError = 429;
-            } else if (ex.code == "ELOOP") {
+            } else if (err.code == "ELOOP") {
               additionalError = 508;
             }
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
@@ -2616,7 +2620,7 @@ if (!cluster.isMaster) {
           callServerError(400); //Also malformed Packet
         }
       }
-    } catch (ex) {
+    } catch (err) {
       serverconsole.errmessage("There was an error while determining type of malformed request.");
       callServerError(400);
     }
@@ -2886,12 +2890,12 @@ if (!cluster.isMaster) {
             return;
           }
         }
-      } catch (ex) {
+      } catch (err) {
         var cheaders = getCustomHeaders();
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         cheaders[":status"] = "500";
         response.stream.respond(cheaders);
-        response.stream.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(ex)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (request.headers[":authority"] == undefined ? "" : " on " + request.headers[":authority"]) + "</i></p></body></html>");
+        response.stream.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (request.headers[":authority"] == undefined ? "" : " on " + request.headers[":authority"]) + "</i></p></body></html>");
         response.stream.end();
         return;
       }
@@ -2905,7 +2909,7 @@ if (!cluster.isMaster) {
 
     try {
       request.url = encodeURI(Buffer.from(request.url, "latin1").toString("utf8")).replace(/%25/gi, "%");
-    } catch (ex) {
+    } catch (err) {
       //Request URL not modified...
     }
 
@@ -2948,11 +2952,11 @@ if (!cluster.isMaster) {
         rheaders["Location"] = lloc + (request.url.replace(/\/+/g, "/"));
         response.writeHead(301, "Redirect to WWW", rheaders);
         response.end();
-      } catch (ex) {
+      } catch (err) {
         var cheaders = getCustomHeaders();
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         res.writeHead(500, "Internal Server Error", cheaders);
-        res.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(ex)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p></body></html>");
+        res.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p></body></html>");
         response.end();
       }
     } else {
@@ -2997,7 +3001,7 @@ if (!cluster.isMaster) {
           response.socket.realRemoteAddress = reqip;
           response.socket.originalRemotePort = oldport;
           response.socket.originalRemoteAddress = oldip;
-        } catch (ex) {
+        } catch (err) {
           //Address setting failed
         }
       } else if (request.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
@@ -3015,7 +3019,7 @@ if (!cluster.isMaster) {
           response.socket.realRemoteAddress = reqip;
           response.socket.originalRemotePort = oldport;
           response.socket.originalRemoteAddress = oldip;
-        } catch (ex) {
+        } catch (err) {
           //Address setting failed
         }
       } else {
@@ -3193,16 +3197,18 @@ if (!cluster.isMaster) {
               response.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
               fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, request.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")); // Replace placeholders in error response
               responseEnd();
-            } catch (ex) {
+            } catch (err) {
               var additionalError = 500;
               // Handle additional error cases
-              if (ex.code == "ENOENT") {
+              if (err.code == "ENOENT") {
                 additionalError = 404;
-              } else if (ex.code == "EACCES") {
+              } else if (err.code == "ENOTDIR") {
+                additionalError = 404; // Assume that file doesn't exist
+              } else if (err.code == "EACCES") {
                 additionalError = 403;
-              } else if (ex.code == "EMFILE") {
+              } else if (err.code == "EMFILE") {
                 additionalError = 429;
-              } else if (ex.code == "ELOOP") {
+              } else if (err.code == "ELOOP") {
                 additionalError = 508;
               }
 
@@ -3325,7 +3331,7 @@ if (!cluster.isMaster) {
 
             // Return the created URL object
             return nuobject;
-          } catch (ex) {
+          } catch (err) {
             // If there was an error using the URL API, fall back to deprecated url.parse
             return url.parse(uri, true);
           }
@@ -3344,7 +3350,7 @@ if (!cluster.isMaster) {
       var decodedHref = "";
       try {
         decodedHref = decodeURIComponent(href);
-      } catch (ex) {
+      } catch (err) {
         //Return 400 error
         callServerError(400);
         serverconsole.errmessage("Bad request!");
@@ -3431,7 +3437,7 @@ if (!cluster.isMaster) {
               res.socket.realRemoteAddress = reqip;
               res.socket.originalRemotePort = oldport;
               res.socket.originalRemoteAddress = oldip;
-            } catch (ex) {
+            } catch (err) {
               //Nevermind...
             }
           } else if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
@@ -3449,7 +3455,7 @@ if (!cluster.isMaster) {
               res.socket.realRemoteAddress = reqip;
               res.socket.originalRemotePort = oldport;
               res.socket.originalRemoteAddress = oldip;
-            } catch (ex) {
+            } catch (err) {
               //Nevermind...
             }
           } else {
@@ -3523,8 +3529,8 @@ if (!cluster.isMaster) {
                 res.end("<style>body{background-color: black; color: white}</style><!DOCTYPE html>\n<!-- DON'T DELETE THE PAGE! THIS PAGE IS MEANT TO ACTIVATE SVR.JS!!! -->\n<html>\n<head>\n<title>SVR.JS Genuine Advantage</title>\n</head>\n<body>\n<h1>Activate SVR.JS</h1>\n<i>You will then be able to use all of SVR.JS features through SVR.JS Genuine Advantage!</i>\n<noscript>You need to enable JavaScript in order to activate SVR.JS.</noscript>\n<big><p id=\"activate\">Wait...</p></big>\n<script>\n  setTimeout(function () {\n    document.getElementById(\"activate\").innerHTML = \"Can't connect to DorianTech Activation Service! Check your internet connection.\";\n    'use doriantech activation technologies';\n    //#$DAT%SURL http://cscsmaterials.ddns.net/dat/doriantech.dad\n    //#$DAT%CONN __DORIANTECH__.__SVRJS__.__APRILFOOLS__.__ACTIVATE__(this,\"SVRJSSECRET32942832432\")\n    //#$DAT%ATOV __DORIANTECH__.__SVRJS__.__APRILFOOLS__.__USECOPY__(this)\n    //#$DAT%USEC this\n    //#$DAT%IFOK __JSEXECUTE__(\"document.getElementById('activate').innerHTML = __dat__.exec('HTML');\")\n  }, 2000);\n</script>\n</body>\n</html>\n<small>This copy of SVR.JS is not genuine.</small>");
               }
               return;
-            } catch (ex) {
-              callServerError(500, undefined, generateErrorStack(ex));
+            } catch (err) {
+              callServerError(500, undefined, generateErrorStack(err));
               return;
             }
           } else if (allowStatus && (href == "/svrjsstatus.svr" || (os.platform() == "win32" && href.toLowerCase() == "/svrjsstatus.svr"))) {
@@ -3587,6 +3593,10 @@ if (!cluster.isMaster) {
                   serverconsole.errmessage("Resource not found.");
                   return;
                 }
+              } else if (err.code == "ENOTDIR") {
+                callServerError(404); // Assume that file doesn't exist.
+                serverconsole.errmessage("Resource not found.");
+                return;
               } else if (err.code == "EACCES") {
                 callServerError(403);
                 serverconsole.errmessage("Access denied.");
@@ -3851,20 +3861,23 @@ if (!cluster.isMaster) {
                         serverconsole.resmessage("Client successfully received content.");
                       });
 
-                    } catch (ex) {
-                      if (ex.code == "ENOENT") {
+                    } catch (err) {
+                      if (err.code == "ENOENT") {
                         callServerError(404);
                         serverconsole.errmessage("Resource not found.");
-                      } else if (ex.code == "EACCES") {
+                      } else if (err.code == "ENOTDIR") {
+                        callServerError(404); // Assume that file doesn't exist.
+                        serverconsole.errmessage("Resource not found.");
+                      } else if (err.code == "EACCES") {
                         callServerError(403);
                         serverconsole.errmessage("Access denied.");
-                      } else if (ex.code == "EMFILE") {
-                        callServerError(500, undefined, generateErrorStack(ex)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
-                      } else if (ex.code == "ELOOP") {
+                      } else if (err.code == "EMFILE") {
+                        callServerError(500, undefined, generateErrorStack(err)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
+                      } else if (err.code == "ELOOP") {
                         callServerError(508); // The symbolic link loop is detected during file system operations.
                         serverconsole.errmessage("Symbolic link loop detected.");
                       } else {
-                        callServerError(500, undefined, generateErrorStack(ex));
+                        callServerError(500, undefined, generateErrorStack(err));
                       }
                     }
                   });
@@ -3884,6 +3897,9 @@ if (!cluster.isMaster) {
                   if (err) {
                     if (err.code == "ENOENT") {
                       callServerError(404);
+                      serverconsole.errmessage("Resource not found.");
+                    } else if (err.code == "ENOTDIR") {
+                      callServerError(404); // Assume that file doesn't exist.
                       serverconsole.errmessage("Resource not found.");
                     } else if (err.code == "EACCES") {
                       callServerError(403);
@@ -4003,6 +4019,9 @@ if (!cluster.isMaster) {
                             if (err.code == "ENOENT") {
                               callServerError(404);
                               serverconsole.errmessage("Resource not found.");
+                            } else if (err.code == "ENOTDIR") {
+                              callServerError(404); // Assume that file doesn't exist.
+                              serverconsole.errmessage("Resource not found.");
                             } else if (err.code == "EACCES") {
                               callServerError(403);
                               serverconsole.errmessage("Access denied.");
@@ -4019,8 +4038,8 @@ if (!cluster.isMaster) {
                               res.writeHead(206, http.STATUS_CODES[206], rhd);
                               readStream.pipe(res);
                               serverconsole.resmessage("Client successfully received content.");
-                            } catch (ex) {
-                              callServerError(500, undefined, generateErrorStack(ex));
+                            } catch (err) {
+                              callServerError(500, undefined, generateErrorStack(err));
                             }
                           });
                         } else {
@@ -4028,8 +4047,8 @@ if (!cluster.isMaster) {
                           res.end();
                         }
                       }
-                    } catch (ex) {
-                      callServerError(500, undefined, generateErrorStack(ex));
+                    } catch (err) {
+                      callServerError(500, undefined, generateErrorStack(err));
                     }
                   } else {
                     try {
@@ -4055,20 +4074,23 @@ if (!cluster.isMaster) {
 
                       if (req.method != "HEAD") {
                         var readStream = fs.createReadStream(readFrom);
-                        readStream.on("error", function (ex) {
-                          if (ex.code == "ENOENT") {
+                        readStream.on("error", function (err) {
+                          if (err.code == "ENOENT") {
                             callServerError(404);
                             serverconsole.errmessage("Resource not found.");
-                          } else if (ex.code == "EACCES") {
+                          } else if (err.code == "ENOTDIR") {
+                            callServerError(404); // Assume that file doesn't exist.
+                            serverconsole.errmessage("Resource not found.");
+                          } else if (err.code == "EACCES") {
                             callServerError(403);
                             serverconsole.errmessage("Access denied.");
-                          } else if (ex.code == "EMFILE") {
-                            callServerError(500, undefined, generateErrorStack(ex)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
-                          } else if (ex.code == "ELOOP") {
+                          } else if (err.code == "EMFILE") {
+                            callServerError(500, undefined, generateErrorStack(err)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
+                          } else if (err.code == "ELOOP") {
                             callServerError(508); // The symbolic link loop is detected during file system operations.
                             serverconsole.errmessage("Symbolic link loop detected.");
                           } else {
-                            callServerError(500, undefined, generateErrorStack(ex));
+                            callServerError(500, undefined, generateErrorStack(err));
                           }
                         }).on("open", function () {
                           try {
@@ -4104,8 +4126,8 @@ if (!cluster.isMaster) {
                               readStream.pipe(resStream);
                             }
                             serverconsole.resmessage("Client successfully received content.");
-                          } catch (ex) {
-                            callServerError(500, undefined, generateErrorStack(ex));
+                          } catch (err) {
+                            callServerError(500, undefined, generateErrorStack(err));
                           }
                         });
                       } else {
@@ -4113,8 +4135,8 @@ if (!cluster.isMaster) {
                         res.end();
                         serverconsole.resmessage("Client successfully received content.");
                       }
-                    } catch (ex) {
-                      callServerError(500, undefined, generateErrorStack(ex));
+                    } catch (err) {
+                      callServerError(500, undefined, generateErrorStack(err));
                     }
                   }
                 });
@@ -4202,7 +4224,7 @@ if (!cluster.isMaster) {
 
             try {
               decodedHref = decodeURIComponent(href);
-            } catch (ex) {
+            } catch (err) {
               //Return 400 error
               callServerError(400);
               serverconsole.errmessage("Bad request!");
@@ -4229,7 +4251,7 @@ if (!cluster.isMaster) {
               ext = ext.substr(1, ext.length);
               try {
                 decodedHref = decodeURIComponent(href);
-              } catch (ex) {
+              } catch (err) {
                 //Return 400 error
                 callServerError(400);
                 serverconsole.errmessage("Bad request!");
@@ -4247,7 +4269,7 @@ if (!cluster.isMaster) {
           for (var i = 0; i < hk.length; i++) {
             try {
               response.setHeader(hk[i], hkh[hk[i]]);
-            } catch (ex) {
+            } catch (err) {
               //Headers will not be set.
             }
           }
@@ -4276,21 +4298,15 @@ if (!cluster.isMaster) {
           var regexI = [];
           if (!isProxy && nonStandardCodes != undefined) {
             for (var i = 0; i < nonStandardCodes.length; i++) {
-              var mth = false;
+              var isMatch = false;
               if (nonStandardCodes[i].regex) {
-                var regexObj = nonStandardCodes[i].regex.split("/");
-                if (regexObj.length == 0) throw new Error("Invalid regex!");
-                var modifiers = regexObj.pop();
-                if (!modifiers.match(/i/i) && os.platform() == "win32") modifiers += "i";
-                regexObj.shift();
-                var searchString = regexObj.join("/");
-                var rx = RegExp(searchString, modifiers);
-                mth = req.url.match(rx) || href.match(rx);
-                regexI.push(rx);
+                var createdRegex = createRegex(nonStandardCodes[i].regex, true)
+                isMatch = req.url.match(createdRegex) || href.match(createdRegex);
+                regexI.push(createdRegex);
               } else {
-                mth = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
+                isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
               }
-              if (mth) {
+              if (isMatch) {
                 if (nonStandardCodes[i].scode == 401) {
                   if (authIndex == -1) {
                     authIndex = i;
@@ -4298,12 +4314,12 @@ if (!cluster.isMaster) {
                 } else {
                   if (nonscodeIndex == -1) {
                     if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
-                      var lpk = false;
+                      var toBreakLoop = false;
                       if (nonStandardCodes[i].users.check(reqip)) {
                         nonscodeIndex = i;
-                        lpk = true;
+                        toBreakLoop = true;
                       }
-                      if (lpk) break;
+                      if (toBreakLoop) break;
                     } else {
                       nonscodeIndex = i;
                     }
@@ -4359,21 +4375,21 @@ if (!cluster.isMaster) {
                 serverconsole.errmessage("Content needs authorization.");
                 return;
               }
-              var cmatch = credentials.match(/^Basic (.+)$/);
-              if (!cmatch) {
+              var credentialsMatch = credentials.match(/^Basic (.+)$/);
+              if (!credentialsMatch) {
                 callServerError(401, undefined, undefined, ha);
                 serverconsole.errmessage("Malformed credentials.");
                 return;
               }
-              var c2 = Buffer.from(cmatch[1], "base64").toString("utf8");
-              var c2match = c2.match(/^([^:]*):(.*)$/);
-              if (!c2match) {
+              var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
+              var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
+              if (!decodedCredentialsMatch) {
                 callServerError(401, undefined, undefined, ha);
                 serverconsole.errmessage("Malformed credentials.");
                 return;
               }
-              var username = c2match[1];
-              var password = c2match[2];
+              var username = decodedCredentialsMatch[1];
+              var password = decodedCredentialsMatch[2];
               var authorized = false;
               for (var i = 0; i < users.length; i++) {
                 var hash = sha256(password + users[i].salt);
@@ -4446,10 +4462,10 @@ if (!cluster.isMaster) {
             modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
           }
         }
-      } catch (ex) {
+      } catch (err) {
         //CRASH HANDLER
-        if (ex.message == "Intentionally crashed") throw ex; //If intentionally crashed, then crash SVR.JS
-        callServerError(500, undefined, generateErrorStack(ex)); //Else just return 500 error
+        if (err.message == "Intentionally crashed") throw err; //If intentionally crashed, then crash SVR.JS
+        callServerError(500, undefined, generateErrorStack(err)); //Else just return 500 error
       }
     }
 
@@ -4734,9 +4750,9 @@ function start(init) {
           process.send("Server closed.");
           process.send("\x12CLOSE");
         }
-      } catch (ex) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot close server! Reason: " + ex.message);
-        else process.send("Cannot close server! Reason: " + ex.message);
+      } catch (err) {
+        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot close server! Reason: " + err.message);
+        else process.send("Cannot close server! Reason: " + err.message);
       }
     },
     open: function () {
@@ -4752,9 +4768,9 @@ function start(init) {
           process.send("Server opened.");
           process.send("\x12OPEN");
         }
-      } catch (ex) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot open server! Reason: " + ex.message);
-        else process.send("Cannot open server! Reason: " + ex.message);
+      } catch (err) {
+        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot open server! Reason: " + err.message);
+        else process.send("Cannot open server! Reason: " + err.message);
       }
     },
     help: function () {
@@ -4829,8 +4845,8 @@ function start(init) {
         try {
           saveConfig();
           serverconsole.locmessage("Configuration saved.");
-        } catch (ex) {
-          throw new Error(ex);
+        } catch (err) {
+          throw new Error(err);
         }
       }, 300000);
     } else if (cluster.isMaster) {
@@ -4842,13 +4858,13 @@ function start(init) {
               cluster.workers[allClusters[i]].on("message", msgListener);
               cluster.workers[allClusters[i]].send("\x14SAVECONF");
             }
-          } catch (ex) {
+          } catch (err) {
             if (cluster.workers[allClusters[i]]) {
               cluster.workers[allClusters[i]].removeAllListeners("message");
               cluster.workers[allClusters[i]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[i]]));
               cluster.workers[allClusters[i]].on("message", listenConnListener);
             }
-            serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + ex.message);
+            serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
           }
         }
       }, 300000);
@@ -4864,8 +4880,8 @@ function start(init) {
             try {
               saveConfig();
               process.send("\x12SAVEGOOD");
-            } catch (ex) {
-              process.send("\x12SAVEERR" + ex.message);
+            } catch (err) {
+              process.send("\x12SAVEERR" + err.message);
             }
             process.send("\x12END");
           } else if (commands[line.split(" ")[0]] !== undefined && commands[line.split(" ")[0]] !== null) {
@@ -4877,7 +4893,7 @@ function start(init) {
             process.send("Unrecognized command \"" + line.split(" ")[0] + "\".");
             process.send("\x12END");
           }
-        } catch (ex) {
+        } catch (err) {
           if (line != "") {
             process.send("Can't execute command \"" + line.split(" ")[0] + "\".");
             process.send("\x12END");
@@ -4908,7 +4924,7 @@ function start(init) {
                   if (cluster.workers[allClusters[i]]) {
                     cluster.workers[allClusters[i]].kill();
                   }
-                } catch (ex) {
+                } catch (err) {
                   stopError = true;
                 }
               }
@@ -4919,7 +4935,7 @@ function start(init) {
               try {
                 var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; //1 core deleted for safety...
                 if (cpus > useAvailableCores) cpus = useAvailableCores;
-              } catch (ex) {
+              } catch (err) {
                 //Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
               }
               if (cpus < 1) cpus = 1; //If SVR.JS is run on Haiku or if useAvailableCores = 0
@@ -4951,7 +4967,7 @@ function start(init) {
                   cluster.workers[allClusters[i]].on("message", msgListener);
                   cluster.workers[allClusters[i]].send(line);
                 }
-              } catch (ex) {
+              } catch (err) {
                 if (cluster.workers[allClusters[i]]) {
                   cluster.workers[allClusters[i]].removeAllListeners("message");
                   cluster.workers[allClusters[i]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[i]]));
@@ -4973,7 +4989,7 @@ function start(init) {
             }
             try {
               commands[command](argss);
-            } catch (ex) {
+            } catch (err) {
               serverconsole.climessage("Unrecognized command \"" + command + "\".");
             }
           }
@@ -4990,7 +5006,7 @@ function start(init) {
         try {
           var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; //1 core deleted for safety...
           if (cpus > useAvailableCores) cpus = useAvailableCores;
-        } catch (ex) {
+        } catch (err) {
           //Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
         }
         if (cpus < 1) cpus = 1; //If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
@@ -5185,8 +5201,8 @@ function saveConfig() {
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
-    } catch (ex) {
-      if (i >= 2) throw ex;
+    } catch (err) {
+      if (i >= 2) throw err;
       var now = Date.now();
       while (Date.now() - now < 2);
     }
@@ -5195,40 +5211,40 @@ function saveConfig() {
 
 //Process event listeners
 if (cluster.isMaster || cluster.isMaster === undefined) {
-  process.on("uncaughtException", function (ex) {
+  process.on("uncaughtException", function (err) {
     //CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(generateErrorStack(ex));
-    process.exit(ex.errno);
+    serverconsole.locerrmessage(generateErrorStack(err));
+    process.exit(err.errno);
   });
-  process.on("unhandledRejection", function (ex) {
+  process.on("unhandledRejection", function (err) {
     //CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(ex.stack ? generateErrorStack(ex) : String(ex));
-    process.exit(ex.errno);
+    serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
+    process.exit(err.errno);
   });
   process.on("exit", function (code) {
     try {
       saveConfig();
-    } catch (ex) {
-      serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + ex.message);
+    } catch (err) {
+      serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
     }
     try {
       deleteFolderRecursive(__dirname + "/temp");
-    } catch (ex) {
+    } catch (err) {
       //Error!
     }
     try {
       fs.mkdirSync(__dirname + "/temp");
-    } catch (ex) {
+    } catch (err) {
       //Error!
     }
     if (process.isBun) {
       try {
         fs.writeFileSync(__dirname + "/temp/serverSideScript.js", "//Placeholder server-side JavaScript to workaround Bun bug.\r\n");
-      } catch (ex) {
+      } catch (err) {
         //Error!
       }
     }
@@ -5251,7 +5267,7 @@ if (cluster.isMaster || cluster.isMaster === undefined) {
           if (cluster.workers[allClusters[i]]) {
             cluster.workers[allClusters[i]].send("stop");
           }
-        } catch (ex) {
+        } catch (err) {
           //Worker will crash with EPIPE anyway.
         }
       }
@@ -5260,19 +5276,19 @@ if (cluster.isMaster || cluster.isMaster === undefined) {
     process.exit();
   });
 } else {
-  process.on("uncaughtException", function (ex) {
+  process.on("uncaughtException", function (err) {
     //CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(generateErrorStack(ex));
-    process.exit(ex.errno);
+    serverconsole.locerrmessage(generateErrorStack(err));
+    process.exit(err.errno);
   });
-  process.on("unhandledRejection", function (ex) {
+  process.on("unhandledRejection", function (err) {
     //CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(ex.stack ? generateErrorStack(ex) : String(ex));
-    process.exit(ex.errno);
+    serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
+    process.exit(err.errno);
   });
   process.on("warning", function (warning) {
     serverconsole.locwarnmessage(warning.message);
@@ -5285,11 +5301,11 @@ if (cluster.isMaster || cluster.isMaster === undefined) {
 //Call start
 try {
   start(true);
-} catch (ex) {
+} catch (err) {
   serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
   serverconsole.locerrmessage("Stack:");
-  serverconsole.locerrmessage(generateErrorStack(ex));
-  process.exit(ex.errno);
+  serverconsole.locerrmessage(generateErrorStack(err));
+  process.exit(err.errno);
 }
 
 //////////////////////////////////

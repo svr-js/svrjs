@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.6.1</title>
+    <title>SVR.JS 3.6.2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.6.1</h1>
+    <h1>Welcome to SVR.JS 3.6.2</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -110,10 +110,9 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added support for ETags.</li>
-      <li>Added new config.json property: enableETag.</li>
-      <li>Improved URL sanitizer.</li>
-      <li>Fixed bug with formidable wrapper.</li>
+      <li>Fixed bug with ENOTDIR error (was 500, now it's 404).</li>
+      <li>Fixed bug with forbidden path checker.</li>
+      <li>Optimized regular expression creating function.</li>
     </ul>
     <p>Bugs:</p>
     <ul>
