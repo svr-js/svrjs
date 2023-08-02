@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.17";
+var version = "3.4.18";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -1444,10 +1444,10 @@ function checkIfForbiddenPath(decodedHref, match) {
 function checkIfIndexOfForbiddenPath(decodedHref, match) {
   var mo = forbiddenPaths[match];
   if (!mo) return false;
-  if (typeof mo == "string") return decodedHref == mo || decodedHref.indexOf(mo + "/") == 0 || (os.platform() == "win32" && (decodedHref.toLowerCase() == mo.toLowerCase() || decodedHref.toLowerCase().indexOf(mo.toLowerCase()) == 0));
+  if (typeof mo == "string") return decodedHref == mo || decodedHref.indexOf(mo + "/") == 0 || (os.platform() == "win32" && (decodedHref.toLowerCase() == mo.toLowerCase() || decodedHref.toLowerCase().indexOf(mo.toLowerCase() + "/") == 0));
   if (typeof mo == "object") {
     for (var i = 0; i < mo.length; i++) {
-      if (decodedHref == mo || decodedHref.indexOf(mo[i] + "/") == 0 || (os.platform() == "win32" && (decodedHref.toLowerCase() == mo[i].toLowerCase() || decodedHref.toLowerCase().indexOf(mo[i].toLowerCase()) == 0))) return true;
+      if (decodedHref == mo[i] || decodedHref.indexOf(mo[i] + "/") == 0 || (os.platform() == "win32" && (decodedHref.toLowerCase() == mo[i].toLowerCase() || decodedHref.toLowerCase().indexOf(mo[i].toLowerCase() + "/") == 0))) return true;
     }
   }
   return false;
@@ -1963,6 +1963,8 @@ if (!cluster.isMaster) {
               var additionalError = 500;
               if (ex.code == "ENOENT") {
                 additionalError = 404;
+              } else if (ex.code == "ENOTDIR") {
+                additionalError = 404;
               } else if (ex.code == "EACCES") {
                 additionalError = 403;
               } else if (ex.code == "EMFILE") {
@@ -2365,6 +2367,8 @@ if (!cluster.isMaster) {
           } catch (ex) {
             var additionalError = 500;
             if (ex.code == "ENOENT") {
+              additionalError = 404;
+            } else if (ex.code == "ENOTDIR") {
               additionalError = 404;
             } else if (ex.code == "EACCES") {
               additionalError = 403;
@@ -3042,6 +3046,8 @@ if (!cluster.isMaster) {
               // Handle additional error cases
               if (ex.code == "ENOENT") {
                 additionalError = 404;
+              } else if (ex.code == "ENOTDIR") {
+                additionalError = 404;
               } else if (ex.code == "EACCES") {
                 additionalError = 403;
               } else if (ex.code == "EMFILE") {
@@ -3343,6 +3349,9 @@ if (!cluster.isMaster) {
               if (err.code == "ENOENT") {
                 callServerError(404);
                 serverconsole.errmessage("Resource not found.");
+              } else if (err.code == "ENOTDIR") {
+                callServerError(404);
+                serverconsole.errmessage("Resource not found.");
               } else if (err.code == "EACCES") {
                 callServerError(403);
                 serverconsole.errmessage("Access denied.");
@@ -3538,6 +3547,9 @@ if (!cluster.isMaster) {
                       if (ex.code == "ENOENT") {
                         callServerError(404);
                         serverconsole.errmessage("Resource not found.");
+                      } else if (ex.code == "ENOTDIR") {
+                        callServerError(404);
+                        serverconsole.errmessage("Resource not found.");
                       } else if (ex.code == "EACCES") {
                         callServerError(403);
                         serverconsole.errmessage("Access denied.");
@@ -3563,6 +3575,9 @@ if (!cluster.isMaster) {
                 fs.stat("./" + pth, function (err, stats) {
                   if (err) {
                     if (err.code == "ENOENT") {
+                      callServerError(404);
+                      serverconsole.errmessage("Resource not found.");
+                    } else if (err.code == "ENOTDIR") {
                       callServerError(404);
                       serverconsole.errmessage("Resource not found.");
                     } else if (err.code == "EACCES") {
@@ -3657,6 +3672,9 @@ if (!cluster.isMaster) {
                             if (err.code == "ENOENT") {
                               callServerError(404);
                               serverconsole.errmessage("Resource not found.");
+                            } else if (err.code == "ENOTDIR") {
+                              callServerError(404);
+                              serverconsole.errmessage("Resource not found.");
                             } else if (err.code == "EACCES") {
                               callServerError(403);
                               serverconsole.errmessage("Access denied.");
@@ -3709,6 +3727,9 @@ if (!cluster.isMaster) {
                         var readStream = fs.createReadStream("./" + pth);
                         readStream.on("error", function (ex) {
                           if (ex.code == "ENOENT") {
+                            callServerError(404);
+                            serverconsole.errmessage("Resource not found.");
+                          } else if (ex.code == "ENOTDIR") {
                             callServerError(404);
                             serverconsole.errmessage("Resource not found.");
                           } else if (ex.code == "EACCES") {
