@@ -77,7 +77,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.6.2";
+var version = "3.6.3";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -3664,27 +3664,30 @@ if (!cluster.isMaster) {
                   res.writeHead(200, http.STATUS_CODES[200], customHeaders);
 
                   // Read custom header and footer content (if available)
-                  var heada = fs.existsSync("." + decodeURIComponent(href) + "/.dirhead".replace(/\/+/g, "/"))
+                  var customDirListingHeader = fs.existsSync("." + decodeURIComponent(href) + "/.dirhead".replace(/\/+/g, "/"))
                     ? fs.readFileSync("." + decodeURIComponent(href) + "/.dirhead".replace(/\/+/g, "/")).toString()
                     : (fs.existsSync("." + decodeURIComponent(href) + "/HEAD.html".replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
                       ? fs.readFileSync("." + decodeURIComponent(href) + "/HEAD.html".replace(/\/+/g, "/")).toString()
                       : "";
-                  var foota = fs.existsSync("." + decodeURIComponent(href) + "/.dirfoot".replace(/\/+/g, "/"))
+                  var customDirListingFooter = fs.existsSync("." + decodeURIComponent(href) + "/.dirfoot".replace(/\/+/g, "/"))
                     ? fs.readFileSync("." + decodeURIComponent(href) + "/.dirfoot".replace(/\/+/g, "/")).toString()
                     : (fs.existsSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
                       ? fs.readFileSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")).toString()
                       : "";
-
+                      
+                  // Check if custom header has HTML tag
+                  var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>).)*|)(?:-->|$)/gs, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:.|$)|[^\\"])*(?:"|$)|'(?:\\(?:.|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/si);
+                  
                   // Generate HTML head and footer based on configuration and custom content
                   var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == ""
-                    ? (heada.indexOf("<html>") == -1
-                      ? "<!doctype html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>"
-                      : heada.replace("<head>", "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>"))
-                    : head.replace("<head>", "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
-      (heada.indexOf("<html>") == -1 ? heada : "") +
+                    ? (!headerHasHTMLTag
+                      ? "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>"
+                      : customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>"))
+                    : head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+      (!headerHasHTMLTag ? customDirListingHeader : "") +
       "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
 
-                  var htmlFoot = "</table><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p>" + foota + (!configJSON.enableDirectoryListingWithDefaultHead || foot == "" ? "</body></html>" : foot);
+                  var htmlFoot = "</table><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p>" + customDirListingFooter + (!configJSON.enableDirectoryListingWithDefaultHead || foot == "" ? "</body></html>" : foot);
 
                   if (fs.existsSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/"))) {
                     htmlFoot = "</table><hr/>" + fs.readFileSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/")) + htmlFoot;
