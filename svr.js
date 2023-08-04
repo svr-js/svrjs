@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.19";
+var version = "3.4.20";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -1163,6 +1163,10 @@ if (!disableMods) {
   if (cluster.isMaster === false) {
     modloaderFolderName = ".modloader_w" + Math.floor(Math.random() * 65536);
   }
+  var tempServerSideScriptName = "serverSideScript.js";
+  if (!process.isBun && cluster.isMaster === false) {
+    tempServerSideScriptName = ".serverSideScript_w" + Math.floor(Math.random() * 65536) + ".js";
+  }
   for (var i = 0; i < modFiles.length; i++) {
     var modFile = __dirname + "/mods/" + modFiles[i];
     try {
@@ -1242,16 +1246,16 @@ if (!disableMods) {
     try {
       var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(headers){for(var jsn=JSON.stringify(headers,null,2).split('\\n'),njsn=[\"{\"],i=1;i<jsn.length-1;i++)0!==jsn[i].replace(/ /g,\"\").indexOf('\":')&&(eval(\"var value = \"+(\",\"==jsn[i][jsn[i].length-1]?jsn[i].substring(0,jsn[i].length-1):jsn[i]).split('\": ')[1]),\",\"==jsn[i][jsn[i].length-1]&&i==jsn.length-2?njsn.push(jsn[i].substring(0,jsn[i].length-1)):null!=value&&njsn.push(jsn[i]));return njsn.push(\"}\"),JSON.parse(njsn.join(os.EOL))}\r\n";
       var modfoot = "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(ex) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
-      fs.writeFileSync(__dirname + "/temp/serverSideScript.js", modhead + fs.readFileSync("./serverSideScript.js") + modfoot);
+      fs.writeFileSync(__dirname + "/temp/" + tempServerSideScriptName, modhead + fs.readFileSync("./serverSideScript.js") + modfoot);
       var aMod = undefined;
       var amod = undefined;
-      for (var i = 0; i < 8; i++) {
+      for (var i = 0; i < 5; i++) {
         try {
-          aMod = require("./temp/serverSideScript.js");
+          aMod = require("./temp/" + tempServerSideScriptName);
           amod = new aMod();
           break;
         } catch (ex) {
-          if (i >= 7 || ex.name == "SyntaxError") throw ex;
+          if (i >= 4 || ex.name == "SyntaxError") throw ex;
           var now = Date.now();
           while (Date.now() - now < 2);
           //Try reloading mod
