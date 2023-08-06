@@ -77,7 +77,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.6.4";
+var version = "Nightly-GitMaster";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
