@@ -2022,7 +2022,7 @@ if (!cluster.isPrimary) {
         }
         return ph;
       }
-      if (req.headers["x-svr-js-from-main-thread"] == "true") {
+      if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost")) {
         var headers = getCustomHeaders();
         res.writeHead(204, "No Content", headers);
         res.end();
@@ -2922,7 +2922,7 @@ if (!cluster.isPrimary) {
       }
     }
 
-    if (request.headers["x-svr-js-from-main-thread"] == "true") {
+    if (request.headers["x-svr-js-from-main-thread"] == "true" && (!request.socket.remoteAddress || request.socket.remoteAddress == "::1" || request.socket.remoteAddress == "::ffff:127.0.0.1" || request.socket.remoteAddress == "127.0.0.1" || request.socket.remoteAddress == "localhost")) {
       var headers = getCustomHeaders();
       response.writeHead(204, "No Content", headers);
       response.end();
@@ -5120,7 +5120,7 @@ function start(init) {
                   "X-SVR-JS-From-Main-Thread": "true",
                   "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
                 },
-                timeout: 1625,
+                timeout: 1620,
                 rejectUnauthorized: false
               }, function (res) {
                 chksocket.removeAllListeners("timeout");
@@ -5146,7 +5146,7 @@ function start(init) {
                   else crashed = false;
                 }
               });
-              connection.setTimeout(1625, function () {
+              connection.setTimeout(1620, function () {
                 if (!exiting) SVRJSFork();
                 crashed = true;
               });
@@ -5173,7 +5173,7 @@ function start(init) {
                   "X-SVR-JS-From-Main-Thread": "true",
                   "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
                 },
-                timeout: 1625
+                timeout: 1620
               }, function (res) {
                 chksocket.removeAllListeners("timeout");
                 res.destroy();
@@ -5191,7 +5191,7 @@ function start(init) {
               });
             }
           }
-        }, 4500);
+        }, 4550);
         
         // Termination of unused good workers
         if(cluster.isPrimary !== undefined) {
@@ -5200,11 +5200,7 @@ function start(init) {
               if (!closedMaster && !exiting) {
                 var allClusters = Object.keys(cluster.workers);
                 var minClusters = 0;
-                if(cpus < 8) {
-                  minClusters = Math.ceil(cpus * 0.65);
-                } else {
-                  minClusters = Math.ceil(cpus * 0.55);
-                }
+                minClusters = Math.ceil(cpus * 0.625);
                 if(minClusters < 2) minClusters = 2;
                 var goodWorkers = [];
                 function checkWorker(callback, _id) {
