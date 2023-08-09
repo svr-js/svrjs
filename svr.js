@@ -4772,9 +4772,13 @@ function start(init) {
   var commands = {
     close: function () {
       try {
-        server.close();
-        if (secure && !disableNonEncryptedServer) {
-          server2.close();
+        if(server.listening || server2.listening) {
+          server.close();
+          if (secure && !disableNonEncryptedServer) {
+            server2.close();
+          }
+        } else {
+          throw new Error("Server is already closed.");
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("Server closed.");
         else {
@@ -4788,11 +4792,15 @@ function start(init) {
     },
     open: function () {
       try {
-        if (secure) {
-          server.listen(sport);
-          if (!disableNonEncryptedServer) server2.listen(port);
+        if(!server.listening) {
+          if (secure) {
+            server.listen(sport);
+            if (!disableNonEncryptedServer) server2.listen(port);
+          } else {
+            server.listen(port); // Reopen Server
+          }
         } else {
-          server.listen(port); // Reopen Server
+          throw new Error("Server is already opened.");
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
         else {
@@ -4821,10 +4829,46 @@ function start(init) {
     },
     stop: function (retcode) {
       reallyExiting = true;
-      if (typeof retcode == "number") {
-        process.exit(retcode);
+      if((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
+        try {
+          server.close(function() {
+            if(server2.listening) {
+              try {
+                server2.close(function() {
+                  if (typeof retcode == "number") {
+                    process.exit(retcode);
+                  } else {
+                    process.exit(0);
+                  }
+                });
+              } catch(err) {
+                if (typeof retcode == "number") {
+                  process.exit(retcode);
+                } else {
+                  process.exit(0);
+                }
+              }
+            } else {
+              if (typeof retcode == "number") {
+                process.exit(retcode);
+              } else {
+                process.exit(0);
+              }
+            }
+          });
+        } catch(err) {
+          if (typeof retcode == "number") {
+            process.exit(retcode);
+          } else {
+            process.exit(0);
+          }
+        }
       } else {
-        process.exit(0);
+        if (typeof retcode == "number") {
+          process.exit(retcode);
+        } else {
+          process.exit(0);
+        }
       }
     },
     clear: function () {
@@ -4915,8 +4959,11 @@ function start(init) {
             }
             process.send("\x12END");
           } else if (line == "\x14KILLPING") {
-            process.send("\x12KILLOK");
-            process.send("\x12END");
+            if(!reallyExiting) {
+              process.send("\x12KILLOK");
+              process.send("\x12END");
+            }
+            // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
           } else if (line == "\x14KILLREQ") {
             if(reqcounter - reqcounterKillReq < 2) {
               process.send("\x12KILLTERMMSG");
