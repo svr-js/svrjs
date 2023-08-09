@@ -77,7 +77,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "Nightly-GitMaster";
+var version = "Nightly-GitMain";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -269,6 +269,9 @@ if (!singlethreaded) {
       return newWorker;
     };
   }
+
+  // Shim cluster.isPrimary field
+  if (cluster.isPrimary === undefined && cluster.isMaster !== undefined) cluster.isPrimary = cluster.isMaster;
 }
 
 var bruteForceDb = {};
@@ -969,9 +972,9 @@ if (configJSON.disableNonEncryptedServer != undefined) disableNonEncryptedServer
 if (configJSON.disableToHTTPSRedirect != undefined) disableToHTTPSRedirect = configJSON.disableToHTTPSRedirect;
 if (configJSON.wwwroot != undefined) {
   var wwwroot = configJSON.wwwroot;
-  if (cluster.isMaster || cluster.isMaster === undefined) process.chdir(wwwroot);
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
 } else {
-  if (cluster.isMaster || cluster.isMaster === undefined) process.chdir(__dirname);
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(__dirname);
 }
 
 //Compability for older mods
@@ -1083,10 +1086,10 @@ function LOG(s) {
   try {
     if (configJSON.enableLogging || configJSON.enableLogging == undefined) {
       if (logSync) {
-        fs.appendFileSync(__dirname + "/log/" + (cluster.isMaster ? "master" : (cluster.isMaster === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", "[" + new Date().toISOString() + "] " + s + "\r\n");
+        fs.appendFileSync(__dirname + "/log/" + (cluster.isPrimary ? "master" : (cluster.isPrimary === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", "[" + new Date().toISOString() + "] " + s + "\r\n");
       } else {
         if (!logFile) {
-          logFile = fs.createWriteStream(__dirname + "/log/" + (cluster.isMaster ? "master" : (cluster.isMaster === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", {
+          logFile = fs.createWriteStream(__dirname + "/log/" + (cluster.isPrimary ? "master" : (cluster.isPrimary === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", {
             flags: "a",
             autoClose: false
           });
@@ -1229,14 +1232,14 @@ process.exit = function (code) {
 if (!disableMods) {
   // Define the modloader folder name
   var modloaderFolderName = "modloader";
-  if (cluster.isMaster === false) {
+  if (cluster.isPrimary === false) {
     // If not the master process, create a unique modloader folder name for each worker
     modloaderFolderName = ".modloader_w" + Math.floor(Math.random() * 65536);
   }
   
   // Define the temporary server-side JavaScript file name
   var tempServerSideScriptName = "serverSideScript.js";
-  if (!process.isBun && cluster.isMaster === false) {
+  if (!process.isBun && cluster.isPrimary === false) {
     // If not the master process and it's not Bun, create a unique temporary server-side JavaScript file name for each worker
     tempServerSideScriptName = ".serverSideScript_w" + Math.floor(Math.random() * 65536) + ".js";
   }
@@ -1333,7 +1336,7 @@ if (!disableMods) {
         }
       } catch (err) {
         // If there was an error during mod loading, log it to the console
-        if (cluster.isMaster || cluster.isMaster === undefined) {
+        if (cluster.isPrimary || cluster.isPrimary === undefined) {
           serverconsole.locwarnmessage("There was a problem while loading a \"" + modFiles[i] + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(err));
@@ -1374,7 +1377,7 @@ if (!disableMods) {
       mods.push(amod);
     } catch (err) {
       // If there was an error during server side script loading, log it to the console
-      if (cluster.isMaster || cluster.isMaster === undefined) {
+      if (cluster.isPrimary || cluster.isPrimary === undefined) {
         serverconsole.locwarnmessage("There was a problem while loading server side JavaScript.");
         serverconsole.locwarnmessage("Stack:");
         serverconsole.locwarnmessage(generateErrorStack(err));
@@ -1601,7 +1604,7 @@ forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.log = getInitializePath("./log");
 
 //Create server
-if (!cluster.isMaster) {
+if (!cluster.isPrimary) {
   var reqcounter = 0;
   var server = {};
   var server2 = {};
@@ -1734,7 +1737,7 @@ if (!cluster.isMaster) {
   server2.on("error", function (err) {
     if (err.code == "EADDRINUSE" || err.code == "EADDRNOTAVAIL" || err.code == "EACCES") {
       attmtsRedir--;
-      if (cluster.isMaster === undefined) {
+      if (cluster.isPrimary === undefined) {
         if (err.code == "EADDRINUSE") {
           serverconsole.locerrmessage("Address is already in use by another process.");
         } else if (err.code == "EADDRNOTAVAIL") {
@@ -1778,14 +1781,14 @@ if (!cluster.isMaster) {
         server2.close();
         setTimeout(start, 900);
       } else {
-        if (cluster.isMaster !== undefined) process.send("\x12" + err.code);
+        if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
         process.exit(errors[err.code]);
       }
     } else {
       serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
       serverconsole.locerrmessage("Stack:");
       serverconsole.locerrmessage(generateErrorStack(err));
-      if (cluster.isMaster !== undefined) process.send("\x12CRASH");
+      if (cluster.isPrimary !== undefined) process.send("\x12CRASH");
       process.exit(err.code ? errors[err.code] : 1);
     }
   });
@@ -4484,7 +4487,7 @@ if (!cluster.isMaster) {
   server.on("error", function (err) {
     if (err.code == "EADDRINUSE" || err.code == "EADDRNOTAVAIL" || err.code == "EACCES") {
       attmts--;
-      if (cluster.isMaster === undefined) {
+      if (cluster.isPrimary === undefined) {
         if (err.code == "EADDRINUSE") {
           serverconsole.locerrmessage("Address is already in use by another process.");
         } else if (err.code == "EADDRNOTAVAIL") {
@@ -4528,14 +4531,14 @@ if (!cluster.isMaster) {
         server2.close();
         setTimeout(start, 900);
       } else {
-        if (cluster.isMaster !== undefined) process.send("\x12" + err.code);
+        if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
         process.exit(errors[err.code]);
       }
     } else {
       serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
       serverconsole.locerrmessage("Stack:");
       serverconsole.locerrmessage(generateErrorStack(err));
-      if (cluster.isMaster !== undefined) process.send("\x12CRASH");
+      if (cluster.isPrimary !== undefined) process.send("\x12CRASH");
       process.exit(err.code ? errors[err.code] : 1);
     }
   });
@@ -4655,7 +4658,7 @@ var messageTransmitted = false;
 function listeningMessage() {
   if (messageTransmitted) return;
   messageTransmitted = true;
-  if (!cluster.isMaster && cluster.isMaster !== undefined) {
+  if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
     process.send("\x12LISTEN");
     return;
   }
@@ -4695,7 +4698,7 @@ var closedMaster = false;
 
 function start(init) {
   init = Boolean(init);
-  if (cluster.isMaster || cluster.isMaster === undefined) {
+  if (cluster.isPrimary || cluster.isPrimary === undefined) {
     if (init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); //Print logo
       console.log();
@@ -4705,7 +4708,7 @@ function start(init) {
       if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
-      if (cluster.isMaster === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
+      if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.js. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
       if (secure && process.versions && process.versions.openssl && process.versions.openssl.substr(0, 2) == "1.") {
@@ -4738,7 +4741,7 @@ function start(init) {
   }
 
 
-  if (!cluster.isMaster) {
+  if (!cluster.isPrimary) {
     if (secure) {
       server.listen(sport);
       if (!disableNonEncryptedServer) server2.listen(port);
@@ -4755,13 +4758,13 @@ function start(init) {
         if (secure && !disableNonEncryptedServer) {
           server2.close();
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("Server closed.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Server closed.");
         else {
           process.send("Server closed.");
           process.send("\x12CLOSE");
         }
       } catch (err) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot close server! Reason: " + err.message);
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot close server! Reason: " + err.message);
         else process.send("Cannot close server! Reason: " + err.message);
       }
     },
@@ -4773,29 +4776,29 @@ function start(init) {
         } else {
           server.listen(port); // Reopen Server
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("Server opened.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
         else {
           process.send("Server opened.");
           process.send("\x12OPEN");
         }
       } catch (err) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot open server! Reason: " + err.message);
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot open server! Reason: " + err.message);
         else process.send("Cannot open server! Reason: " + err.message);
       }
     },
     help: function () {
-      if (cluster.isMaster === undefined) serverconsole.climessage("Server commands:\n" + Object.keys(commands).join(" "));
+      if (cluster.isPrimary === undefined) serverconsole.climessage("Server commands:\n" + Object.keys(commands).join(" "));
       else process.send("Server commands:\n" + Object.keys(commands).join(" "));
     },
     mods: function () {
-      if (cluster.isMaster === undefined) serverconsole.climessage("Mods:");
+      if (cluster.isPrimary === undefined) serverconsole.climessage("Mods:");
       else process.send("Mods:");
       for (var i = 0; i < modInfos.length; i++) {
-        if (cluster.isMaster === undefined) serverconsole.climessage((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
+        if (cluster.isPrimary === undefined) serverconsole.climessage((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
         else process.send((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
       }
       if (modInfos.length == 0) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("No mods installed.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("No mods installed.");
         else process.send("No mods installed.");
       }
     },
@@ -4812,8 +4815,8 @@ function start(init) {
     },
     block: function (ip) {
       if (ip == undefined || JSON.stringify(ip) == "[]") {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot block non-existent IP.");
-        else if (!cluster.isMaster) process.send("Cannot block non-existent IP.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot block non-existent IP.");
+        else if (!cluster.isPrimary) process.send("Cannot block non-existent IP.");
       } else {
         for (var i = 0; i < ip.length; i++) {
           if (ip[i].indexOf(":") == -1) {
@@ -4823,14 +4826,14 @@ function start(init) {
             blacklist.add(ip[i]);
           }
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("IPs successfully blocked.");
-        else if (!cluster.isMaster) process.send("IPs successfully blocked.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully blocked.");
+        else if (!cluster.isPrimary) process.send("IPs successfully blocked.");
       }
     },
     unblock: function (ip) {
       if (ip == undefined || JSON.stringify(ip) == "[]") {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot unblock non-existent IP.");
-        else if (!cluster.isMaster) process.send("Cannot unblock non-existent IP.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot unblock non-existent IP.");
+        else if (!cluster.isPrimary) process.send("Cannot unblock non-existent IP.");
       } else {
         for (var i = 0; i < ip.length; i++) {
           if (ip[i].indexOf(":") == -1) {
@@ -4838,19 +4841,19 @@ function start(init) {
           }
           blacklist.remove(ip[i]);
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("IPs successfully unblocked.");
-        else if (!cluster.isMaster) process.send("IPs successfully unblocked.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully unblocked.");
+        else if (!cluster.isPrimary) process.send("IPs successfully unblocked.");
       }
     },
     restart: function () {
-      if (cluster.isMaster === undefined) serverconsole.climessage("This command is not supported on single-threaded SVR.JS.");
+      if (cluster.isPrimary === undefined) serverconsole.climessage("This command is not supported on single-threaded SVR.JS.");
       else process.send("This command need to be run in SVR.JS master.");
     }
   };
 
 
   if (init) {
-    if (cluster.isMaster === undefined) {
+    if (cluster.isPrimary === undefined) {
       setInterval(function () {
         try {
           saveConfig();
@@ -4859,7 +4862,7 @@ function start(init) {
           throw new Error(err);
         }
       }, 300000);
-    } else if (cluster.isMaster) {
+    } else if (cluster.isPrimary) {
       setInterval(function () {
         var allClusters = Object.keys(cluster.workers);
         for (var i = 0; i < allClusters.length; i++) {
@@ -4879,7 +4882,7 @@ function start(init) {
         }
       }, 300000);
     }
-    if (!cluster.isMaster && cluster.isMaster !== undefined) {
+    if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
         try {
           if (line == "") {
@@ -4922,7 +4925,7 @@ function start(init) {
         var argss = line.split(" ");
         var command = argss.shift();
         if (line != "") {
-          if (cluster.isMaster !== undefined) {
+          if (cluster.isPrimary !== undefined) {
             var allClusters = Object.keys(cluster.workers);
             if (command == "block") commands.block(argss);
             if (command == "unblock") commands.unblock(argss);
@@ -5008,9 +5011,9 @@ function start(init) {
       });
     }
 
-    if (cluster.isMaster || cluster.isMaster === undefined) {
+    if (cluster.isPrimary || cluster.isPrimary === undefined) {
       //Cluster forking code
-      if (cluster.isMaster !== undefined && init) {
+      if (cluster.isPrimary !== undefined && init) {
         var cpus = os.cpus().length;
         if (cpus > 16) cpus = 16;
         try {
@@ -5220,7 +5223,7 @@ function saveConfig() {
 }
 
 //Process event listeners
-if (cluster.isMaster || cluster.isMaster === undefined) {
+if (cluster.isPrimary || cluster.isPrimary === undefined) {
   process.on("uncaughtException", function (err) {
     //CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
@@ -5269,7 +5272,7 @@ if (cluster.isMaster || cluster.isMaster === undefined) {
   });
   process.on("SIGINT", function () {
     reallyExiting = true;
-    if (cluster.isMaster !== undefined) {
+    if (cluster.isPrimary !== undefined) {
       exiting = true;
       var allClusters = Object.keys(cluster.workers);
       for (var i = 0; i < allClusters.length; i++) {
