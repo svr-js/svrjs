@@ -4922,7 +4922,7 @@ function start(init) {
           } else if (line == "\x14KILLREQ") {
             if(reqcounter - reqcounterKillReq < 2) {
               process.send("\x12KILLTERMMSG");
-              process.nextTick(commands.stop());
+              process.nextTick(commands.stop);
             } else {
               reqcounterKillReq = reqcounter;
             }
