@@ -27,13 +27,16 @@
 //Check if SVR.JS is running on Node.JS-compatible runtime. If not, just error it out.
 if (typeof require === "undefined") {
   if (typeof ActiveXObject !== "undefined" && typeof WScript !== "undefined") {
+    // If it runs on Windows Script Host, display an error message.
     var shell = new ActiveXObject("WScript.Shell");
     shell.Popup("SVR.JS doesn't work on Windows Script Host. SVR.JS requires use of Node.JS (or compatible JS runtime).", undefined, "Can't start SVR.JS", 16);
     WScript.quit();
   } else {
     if (typeof alert !== "undefined" && typeof document !== "undefined") {
+      // If it runs on web browser, display an alert.
       alert("SVR.JS doesn't work on web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     }
+    // If it's not, throw an error.
     if (typeof document !== "undefined") {
       throw new Error("SVR.JS doesn't work on web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     } else {
@@ -41,6 +44,7 @@ if (typeof require === "undefined") {
     }
   }
 }
+
 var secure = false;
 var disableMods = false;
 
@@ -274,15 +278,17 @@ if (!singlethreaded) {
   if (cluster.isPrimary === undefined && cluster.isMaster !== undefined) cluster.isPrimary = cluster.isMaster;
 }
 
-var bruteForceDb = {};
-
+// ETag-related
 var ETagDB = {};
-
 function generateETag(filePath, stat) {
   if(!ETagDB[filePath + "-" + stat.size + "-" + stat.mtime]) ETagDB[filePath + "-" + stat.size + "-" + stat.mtime] = sha256(filePath + "-" + stat.size + "-" + stat.mtime);
   return ETagDB[filePath + "-" + stat.size + "-" + stat.mtime];
 }
 
+// Brute force-related
+var bruteForceDb = {};
+
+// SVR.JS worker spawn-related
 var SVRJSInitialized = false;
 var exiting = false;
 var reallyExiting = false;
@@ -1606,6 +1612,7 @@ forbiddenPaths.log = getInitializePath("./log");
 //Create server
 if (!cluster.isPrimary) {
   var reqcounter = 0;
+  var reqcounterKillReq = 0;
   var server = {};
   var server2 = {};
   try {
@@ -1714,6 +1721,7 @@ if (!cluster.isPrimary) {
       var reqip = socket.remoteAddress;
       var reqport = socket.remotePort;
       serverconsole.locmessage("Somebody connected to " + (typeof port == "number" ? "port " : "socket ") + port + "...");
+      reqcounter++;
       serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants to proxy " + request.url + " through this server");
       if (request.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + request.headers["user-agent"]);
       serverconsole.errmessage("This server will never be a proxy.");
@@ -2015,7 +2023,8 @@ if (!cluster.isPrimary) {
         return ph;
       }
       if (req.headers["x-svr-js-from-main-thread"] == "true") {
-        res.writeHead(204, "No Content", getCustomHeaders());
+        var headers = getCustomHeaders();
+        res.writeHead(204, "No Content", headers);
         res.end();
         return;
       }
@@ -2181,7 +2190,7 @@ if (!cluster.isPrimary) {
         reqip = req.socket.remoteAddress;
         reqport = req.socket.remotePort;
       }
-
+      reqcounter++;
       if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
       else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + req.url);
       if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
@@ -2543,6 +2552,7 @@ if (!cluster.isPrimary) {
     }
     var reqip = socket.remoteAddress;
     var reqport = socket.remotePort;
+    reqcounter++;
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " sent invalid request.");
     try {
@@ -2734,6 +2744,7 @@ if (!cluster.isPrimary) {
 
     var reqip = socket.remoteAddress;
     var reqport = socket.remotePort;
+    reqcounter++;
     serverconsole.locmessage("Somebody connected to " + (secure ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants to proxy " + request.url + " through this server");
     if (request.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + request.headers["user-agent"]);
@@ -2912,7 +2923,8 @@ if (!cluster.isPrimary) {
     }
 
     if (request.headers["x-svr-js-from-main-thread"] == "true") {
-      response.writeHead(204, "No Content", getCustomHeaders());
+      var headers = getCustomHeaders();
+      response.writeHead(204, "No Content", headers);
       response.end();
       return;
     }
@@ -3037,6 +3049,8 @@ if (!cluster.isPrimary) {
         reqport = request.socket.remotePort;
       }
 
+      reqcounter++;
+        
       if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + (request.headers.host == undefined ? "" : request.headers.host) + request.url);
       else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + request.url);
       if (request.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + request.headers["user-agent"]);
@@ -3946,17 +3960,17 @@ if (!cluster.isPrimary) {
                   if (configJSON.enableETag == undefined || configJSON.enableETag) {
                     fileETag = generateETag(href, stats);
                     // Check if the client's request matches the ETag value (If-None-Match)
-                    var clientETag = req.headers['if-none-match'];
+                    var clientETag = req.headers["if-none-match"];
                     if (clientETag === fileETag) {
                       var headers = getCustomHeaders();
                       headers.ETag = clientETag;
-                      res.writeHead(304, 'Not Modified', headers);
+                      res.writeHead(304, "Not Modified", headers);
                       res.end();
                       return;
                     }
 
                     // Check if the client's request doesn't match the ETag value (If-Match)
-                    var ifMatchETag = req.headers['if-match'];
+                    var ifMatchETag = req.headers["if-match"];
                     if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
                       var headers = getCustomHeaders();
                       headers.ETag = clientETag;
@@ -4276,7 +4290,6 @@ if (!cluster.isPrimary) {
         
         //Set response headers
         if (!isProxy) {
-          reqcounter++;
           var hkh = getCustomHeaders();
           var hk = Object.keys(hkh);
           for (var i = 0; i < hk.length; i++) {
@@ -4313,7 +4326,7 @@ if (!cluster.isPrimary) {
             for (var i = 0; i < nonStandardCodes.length; i++) {
               var isMatch = false;
               if (nonStandardCodes[i].regex) {
-                var createdRegex = createRegex(nonStandardCodes[i].regex, true)
+                var createdRegex = createRegex(nonStandardCodes[i].regex, true);
                 isMatch = req.url.match(createdRegex) || href.match(createdRegex);
                 regexI.push(createdRegex);
               } else {
@@ -4585,6 +4598,8 @@ function bruteForceListenerWrapper(worker) {
   };
 }
 
+var isWorkerHungUpBuff = true;
+
 function msgListener(msg) {
   for (var i = 0; i < Object.keys(cluster.workers).length; i++) {
     if (msg == "\x12END") {
@@ -4597,6 +4612,10 @@ function msgListener(msg) {
     closedMaster = true;
   } else if (msg == "\x12LISTEN" || msg.substr(0, 4) == "\x12AUTH") {
     //Do nothing!
+  } else if (msg == "\x12KILLOK") {
+    if(typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
+  } else if (msg == "\x12KILLTERMMSG") {
+    serverconsole.locmessage("Terminating unused worker process...");
   } else if (msg == "\x12SAVEGOOD") {
     serverconsole.locmessage("Configuration saved.");
   } else if (msg.indexOf("\x12SAVEERR") == 0) {
@@ -4897,6 +4916,16 @@ function start(init) {
               process.send("\x12SAVEERR" + err.message);
             }
             process.send("\x12END");
+          } else if (line == "\x14KILLPING") {
+            process.send("\x12KILLOK");
+            process.send("\x12END");
+          } else if (line == "\x14KILLREQ") {
+            if(reqcounter - reqcounterKillReq < 2) {
+              process.send("\x12KILLTERMMSG");
+              process.nextTick(commands.stop());
+            } else {
+              reqcounterKillReq = reqcounter;
+            }
           } else if (commands[line.split(" ")[0]] !== undefined && commands[line.split(" ")[0]] !== null) {
             var argss = line.split(" ");
             var command = argss.shift();
@@ -5079,7 +5108,8 @@ function start(init) {
           if (msg == "\x12CRASH") process.exit(1);
           if (msg == "\x12EADDRINUSE" || msg == "\x12EADDRNOTAVAIL" || msg == "\x12EACCES") process.exit(errors[msg.substr(1)]);
         });
-
+        
+        // Hangup check and restart
         setInterval(function () {
           if (!closedMaster && !exiting) {
             var chksocket = {};
@@ -5163,6 +5193,69 @@ function start(init) {
             }
           }
         }, 5000);
+        
+        // Termination of unused good workers
+        if(cluster.isMaster !== undefined) {
+          setTimeout(function () {
+            setInterval(function () {
+              var allClusters = Object.keys(cluster.workers);
+              var minClusters = Math.ceil(cpus / 2);
+              if(minClusters < 2) minClusters = 2;
+              var goodWorkers = [];
+              function checkWorker(callback, _id) {
+                if(typeof _id === "undefined") _id = 0;
+                if(_id >= allClusters.length) {
+                  callback();
+                  return;
+                }
+                try {
+                  if (cluster.workers[allClusters[_id]]) {
+                    isWorkerHungUpBuff = true;
+                    cluster.workers[allClusters[_id]].on("message", msgListener);
+                    cluster.workers[allClusters[_id]].send("\x14KILLPING");
+                    setTimeout(function() {
+                      if (isWorkerHungUpBuff) {
+                        checkWorker(callback, _id+1);
+                      } else {
+                        goodWorkers.push(allClusters[_id]);
+                        checkWorker(callback, _id+1);
+                      }
+                    }, 250);
+                  } else {
+                    checkWorker(callback, _id+1);
+                  }
+                } catch (err) {
+                  if (cluster.workers[allClusters[_id]]) {
+                    cluster.workers[allClusters[_id]].removeAllListeners("message");
+                    cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
+                    cluster.workers[allClusters[_id]].on("message", listenConnListener);
+                  }
+                  checkWorker(callback, _id+1);
+                }   
+              }
+              checkWorker(function() {
+                if (goodWorkers.length > minClusters) {
+                  var wN = Math.floor(Math.random() * goodWorkers.length);
+                  if (wN == goodWorkers.length) return;
+                  try {
+                    if (cluster.workers[goodWorkers[wN]]) {
+                      isWorkerHungUpBuff = true;
+                      cluster.workers[goodWorkers[wN]].on("message", msgListener);
+                      cluster.workers[goodWorkers[wN]].send("\x14KILLREQ");
+                    }
+                  } catch (err) {
+                    if (cluster.workers[goodWorkers[wN]]) {
+                      cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+                      cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+                      cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+                    }
+                    serverconsole.locwarnmessage("There was a problem, while terminating unused worker process. Reason: " + err.message);
+                  }
+                }
+              });
+            }, 120000);
+          }, 2500);
+        }
       }
     }
   }
