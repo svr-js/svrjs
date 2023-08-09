@@ -5198,61 +5198,63 @@ function start(init) {
         if(cluster.isMaster !== undefined) {
           setTimeout(function () {
             setInterval(function () {
-              var allClusters = Object.keys(cluster.workers);
-              var minClusters = Math.ceil(cpus / 2);
-              if(minClusters < 2) minClusters = 2;
-              var goodWorkers = [];
-              function checkWorker(callback, _id) {
-                if(typeof _id === "undefined") _id = 0;
-                if(_id >= allClusters.length) {
-                  callback();
-                  return;
-                }
-                try {
-                  if (cluster.workers[allClusters[_id]]) {
-                    isWorkerHungUpBuff = true;
-                    cluster.workers[allClusters[_id]].on("message", msgListener);
-                    cluster.workers[allClusters[_id]].send("\x14KILLPING");
-                    setTimeout(function() {
-                      if (isWorkerHungUpBuff) {
-                        checkWorker(callback, _id+1);
-                      } else {
-                        goodWorkers.push(allClusters[_id]);
-                        checkWorker(callback, _id+1);
-                      }
-                    }, 250);
-                  } else {
-                    checkWorker(callback, _id+1);
+              if (!closedMaster && !exiting) {
+                var allClusters = Object.keys(cluster.workers);
+                var minClusters = Math.ceil(cpus / 2);
+                if(minClusters < 2) minClusters = 2;
+                var goodWorkers = [];
+                function checkWorker(callback, _id) {
+                  if(typeof _id === "undefined") _id = 0;
+                  if(_id >= allClusters.length) {
+                    callback();
+                    return;
                   }
-                } catch (err) {
-                  if (cluster.workers[allClusters[_id]]) {
-                    cluster.workers[allClusters[_id]].removeAllListeners("message");
-                    cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
-                    cluster.workers[allClusters[_id]].on("message", listenConnListener);
-                  }
-                  checkWorker(callback, _id+1);
-                }   
-              }
-              checkWorker(function() {
-                if (goodWorkers.length > minClusters) {
-                  var wN = Math.floor(Math.random() * goodWorkers.length);
-                  if (wN == goodWorkers.length) return;
                   try {
-                    if (cluster.workers[goodWorkers[wN]]) {
+                    if (cluster.workers[allClusters[_id]]) {
                       isWorkerHungUpBuff = true;
-                      cluster.workers[goodWorkers[wN]].on("message", msgListener);
-                      cluster.workers[goodWorkers[wN]].send("\x14KILLREQ");
+                      cluster.workers[allClusters[_id]].on("message", msgListener);
+                      cluster.workers[allClusters[_id]].send("\x14KILLPING");
+                      setTimeout(function() {
+                        if (isWorkerHungUpBuff) {
+                          checkWorker(callback, _id+1);
+                        } else {
+                          goodWorkers.push(allClusters[_id]);
+                          checkWorker(callback, _id+1);
+                        }
+                      }, 250);
+                    } else {
+                      checkWorker(callback, _id+1);
                     }
                   } catch (err) {
-                    if (cluster.workers[goodWorkers[wN]]) {
-                      cluster.workers[goodWorkers[wN]].removeAllListeners("message");
-                      cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
-                      cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+                    if (cluster.workers[allClusters[_id]]) {
+                      cluster.workers[allClusters[_id]].removeAllListeners("message");
+                      cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
+                      cluster.workers[allClusters[_id]].on("message", listenConnListener);
                     }
-                    serverconsole.locwarnmessage("There was a problem, while terminating unused worker process. Reason: " + err.message);
-                  }
+                    checkWorker(callback, _id+1);
+                  }   
                 }
-              });
+                checkWorker(function() {
+                  if (goodWorkers.length > minClusters) {
+                    var wN = Math.floor(Math.random() * goodWorkers.length);
+                    if (wN == goodWorkers.length) return;
+                    try {
+                      if (cluster.workers[goodWorkers[wN]]) {
+                        isWorkerHungUpBuff = true;
+                        cluster.workers[goodWorkers[wN]].on("message", msgListener);
+                        cluster.workers[goodWorkers[wN]].send("\x14KILLREQ");
+                      }
+                    } catch (err) {
+                      if (cluster.workers[goodWorkers[wN]]) {
+                        cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+                        cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+                        cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+                      }
+                      serverconsole.locwarnmessage("There was a problem, while terminating unused worker process. Reason: " + err.message);
+                    }
+                  }
+                });
+              }
             }, 120000);
           }, 2500);
         }
