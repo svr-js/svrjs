@@ -1801,7 +1801,7 @@ if (!cluster.isPrimary) {
     }
   });
 
-  server2.once("listening", function () {
+  server2.on("listening", function () {
     listeningMessage();
   });
 
@@ -4556,10 +4556,12 @@ if (!cluster.isPrimary) {
     }
   });
 
-  server.once("listening", function () {
+  server.on("listening", function () {
     listeningMessage();
   });
 }
+
+var closedMaster = true;
 
 function listenConnListener(msg) {
   if (msg == "\x12LISTEN") {
@@ -4620,8 +4622,6 @@ function msgListener(msg) {
     serverconsole.locmessage("Configuration saved.");
   } else if (msg.indexOf("\x12SAVEERR") == 0) {
     serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + msg.substr(8));
-  } else if (msg == "\x12OPEN") {
-    closedMaster = false;
   } else if (msg == "\x12END") {
     cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
       if (msg.length > 9 && msg.indexOf("\x12ERRLIST") == 0) {
@@ -4675,12 +4675,13 @@ function msgListener(msg) {
 var messageTransmitted = false;
 
 function listeningMessage() {
-  if (messageTransmitted) return;
-  messageTransmitted = true;
+  if(typeof closedMaster !== "undefined") closedMaster = false;
   if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
     process.send("\x12LISTEN");
     return;
   }
+  if (messageTransmitted) return;
+  messageTransmitted = true;
   serverconsole.locmessage("Started server at: ");
   if (secure) {
     if (typeof sport === "number") {
@@ -4712,8 +4713,6 @@ function listeningMessage() {
     serverconsole.locmessage("For CLI help, you can type \"help\"");
   });
 }
-
-var closedMaster = false;
 
 function start(init) {
   init = Boolean(init);
@@ -4798,7 +4797,6 @@ function start(init) {
         if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
         else {
           process.send("Server opened.");
-          process.send("\x12OPEN");
         }
       } catch (err) {
         if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot open server! Reason: " + err.message);
@@ -4972,6 +4970,7 @@ function start(init) {
               }
               if (stopError) serverconsole.climessage("Some SVR.JS workers might not be stopped.");
               SVRJSInitialized = false;
+              closedMaster = true;
               var cpus = os.cpus().length;
               if (cpus > 16) cpus = 16;
               try {
@@ -5039,7 +5038,7 @@ function start(init) {
         rla.prompt();
       });
     }
-
+          
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
       //Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
@@ -5121,7 +5120,7 @@ function start(init) {
                   "X-SVR-JS-From-Main-Thread": "true",
                   "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
                 },
-                timeout: 2000,
+                timeout: 1625,
                 rejectUnauthorized: false
               }, function (res) {
                 chksocket.removeAllListeners("timeout");
@@ -5147,7 +5146,7 @@ function start(init) {
                   else crashed = false;
                 }
               });
-              connection.setTimeout(2000, function () {
+              connection.setTimeout(1625, function () {
                 if (!exiting) SVRJSFork();
                 crashed = true;
               });
@@ -5174,7 +5173,7 @@ function start(init) {
                   "X-SVR-JS-From-Main-Thread": "true",
                   "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
                 },
-                timeout: 2000
+                timeout: 1625
               }, function (res) {
                 chksocket.removeAllListeners("timeout");
                 res.destroy();
@@ -5192,15 +5191,20 @@ function start(init) {
               });
             }
           }
-        }, 5000);
+        }, 4500);
         
         // Termination of unused good workers
-        if(cluster.isMaster !== undefined) {
+        if(cluster.isPrimary !== undefined) {
           setTimeout(function () {
             setInterval(function () {
               if (!closedMaster && !exiting) {
                 var allClusters = Object.keys(cluster.workers);
-                var minClusters = Math.ceil(cpus / 2);
+                var minClusters = 0;
+                if(cpus < 8) {
+                  minClusters = Math.ceil(cpus * 0.65);
+                } else {
+                  minClusters = Math.ceil(cpus * 0.55);
+                }
                 if(minClusters < 2) minClusters = 2;
                 var goodWorkers = [];
                 function checkWorker(callback, _id) {
@@ -5255,8 +5259,8 @@ function start(init) {
                   }
                 });
               }
-            }, 120000);
-          }, 2500);
+            }, 150000);
+          }, 2000);
         }
       }
     }
