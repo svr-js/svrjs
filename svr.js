@@ -146,8 +146,10 @@ if (!singlethreaded) {
   }
 
   // Cluster & IPC shim for Bun
-  if (process.isBun && cluster.isMaster === undefined) {
+  
+  cluster.bunShim = function () {
     cluster.isMaster = !process.env.NODE_UNIQUE_ID;
+    cluster.isPrimary = cluster.isMaster;
     cluster.isWorker = !cluster.isMaster;
 
     if (cluster.isWorker) {
@@ -274,6 +276,10 @@ if (!singlethreaded) {
     };
   }
 
+  if (process.isBun && cluster.isMaster === undefined) {
+    cluster.bunShim();
+  }
+  
   // Shim cluster.isPrimary field
   if (cluster.isPrimary === undefined && cluster.isMaster !== undefined) cluster.isPrimary = cluster.isMaster;
 }
@@ -298,7 +304,18 @@ function SVRJSFork() {
   //Log
   if (SVRJSInitialized) serverconsole.locmessage("Starting next thread, because previous one hung up/crashed...");
   //Fork new worker
-  var newWorker = cluster.fork();
+  var newWorker = {};
+  try {
+    newWorker = cluster.fork();
+  } catch (err) {
+    if(err.name == "NotImplementedError") {
+      // If cluster.fork throws a NotImplementedError, shim cluster module
+      cluster.bunShim();
+      newWorker = cluster.fork();
+    } else {
+      throw err;  
+    }
+  }
   newWorker.on("error", function (err) {
     if(!reallyExiting) serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
   });
