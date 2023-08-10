@@ -221,18 +221,32 @@ if (!singlethreaded) {
           sendImplemented = false;
         }
 
+        oldLog = console.log;
+        console.log = function(a,b,c,d,e,f) {
+          if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
+            throw new Error("NOT IMPLEMENTED");
+          } else {
+            oldLog(a,b,c,d,e,f);
+          }
+        }
+        
         try {
-          eval("'use strict';(" + String(worker.send).replace(/console\.log *\( *(["'])ChildProcess\.prototype\.send\(\) - Sorry! Not implemented yet\1 *\) *;?/, "throw new Error(\"NOT IMPLEMENTED\"); //") + ")(undefined)");
+          worker.send(undefined);
         } catch (err) {
           if (err.message === "NOT IMPLEMENTED") {
             sendImplemented = false;
           }
         }
+        
+        console.log = oldLog;
 
         return sendImplemented;
       }
 
       if (!checkSendImplementation(newWorker)) {
+        var net = require("net");
+        var os = require("os");
+        
         // Create a fake IPC server for worker process to receive messages
         var fakeWorkerIPCServer = net.createServer(function (socket) {
           var receivedData = "";
@@ -276,7 +290,7 @@ if (!singlethreaded) {
     };
   }
 
-  if (process.isBun && cluster.isMaster === undefined) {
+  if (process.isBun && (cluster.isMaster === undefined || (cluster.isMaster && process.env.NODE_UNIQUE_ID))) {
     cluster.bunShim();
   }
   
