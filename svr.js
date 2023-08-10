@@ -191,6 +191,12 @@ if (!singlethreaded) {
             fakeIPCConnection.end(message);
           });
         };
+        
+        process.removeFakeIPC = function() {
+          // Close IPC server
+          process.send = function() {};
+          fakeIPCServer.close();
+        }
       }
     }
 
@@ -258,7 +264,8 @@ if (!singlethreaded) {
           socket.on("end", function () {
             newWorker.emit("message", receivedData);
           });
-        }).listen(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.P" + newWorker.process.pid + ".ipc") : (__dirname + "/temp/.P" + newWorker.process.pid + ".ipc"));
+        });
+        fakeWorkerIPCServer.listen(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.P" + newWorker.process.pid + ".ipc") : (__dirname + "/temp/.P" + newWorker.process.pid + ".ipc"));
 
         // Cleanup when worker process exits
         newWorker.on("exit", function () {
@@ -275,10 +282,13 @@ if (!singlethreaded) {
               fakeWorkerIPCConnection.end(message);
             });
           } catch (err) {
-            if (tries > 25) throw err;
+            if (tries > 25) {
+              newWorker.emit("error", err);
+              return;
+            }
 
             setTimeout(function () {
-              newWorker.send(message, undefined, undefined, tries + 1);
+              newWorker.send(message, fakeParam2, fakeParam3, fakeParam4, tries + 1);
             }, 10);
           }
         };
@@ -4803,13 +4813,9 @@ function start(init) {
   var commands = {
     close: function () {
       try {
-        if(server.listening || server2.listening) {
-          server.close();
-          if (secure && !disableNonEncryptedServer) {
-            server2.close();
-          }
-        } else {
-          throw new Error("Server is already closed.");
+        server.close();
+        if (secure && !disableNonEncryptedServer) {
+          server2.close();
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("Server closed.");
         else {
@@ -4823,15 +4829,11 @@ function start(init) {
     },
     open: function () {
       try {
-        if(!server.listening) {
-          if (secure) {
-            server.listen(sport);
-            if (!disableNonEncryptedServer) server2.listen(port);
-          } else {
-            server.listen(port); // Reopen Server
-          }
+        if (secure) {
+          server.listen(sport);
+          if (!disableNonEncryptedServer) server2.listen(port);
         } else {
-          throw new Error("Server is already opened.");
+          server.listen(port); // Reopen Server
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
         else {
@@ -4866,24 +4868,30 @@ function start(init) {
             if(server2.listening) {
               try {
                 server2.close(function() {
+                  if(!process.removeFakeIPC) {
+                    if (typeof retcode == "number") {
+                      process.exit(retcode);
+                    } else {
+                      process.exit(0);
+                    }
+                  }
+                });
+              } catch(err) {
+                if(!process.removeFakeIPC) {
                   if (typeof retcode == "number") {
                     process.exit(retcode);
                   } else {
                     process.exit(0);
                   }
-                });
-              } catch(err) {
+                }
+              }
+            } else {
+              if(!process.removeFakeIPC) {
                 if (typeof retcode == "number") {
                   process.exit(retcode);
                 } else {
                   process.exit(0);
                 }
-              }
-            } else {
-              if (typeof retcode == "number") {
-                process.exit(retcode);
-              } else {
-                process.exit(0);
               }
             }
           });
@@ -4894,6 +4902,7 @@ function start(init) {
             process.exit(0);
           }
         }
+        if(process.removeFakeIPC) process.removeFakeIPC();
       } else {
         if (typeof retcode == "number") {
           process.exit(retcode);
