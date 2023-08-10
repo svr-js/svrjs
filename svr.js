@@ -282,14 +282,8 @@ if (!singlethreaded) {
               fakeWorkerIPCConnection.end(message);
             });
           } catch (err) {
-            if (tries > 25) {
-              newWorker.emit("error", err);
-              return;
-            }
-
-            setTimeout(function () {
-              newWorker.send(message, fakeParam2, fakeParam3, fakeParam4, tries + 1);
-            }, 10);
+            if (tries > 50) throw err;
+            newWorker.send(message, fakeParam2, fakeParam3, fakeParam4, tries + 1);
           }
         };
       }
