@@ -987,6 +987,7 @@ var sni = {};
 var disableNonEncryptedServer = false;
 var disableToHTTPSRedirect = false;
 var nonStandardCodesRaw = [];
+var disableUnusedWorkerTermination = false;
 
 //Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1011,6 +1012,7 @@ if (configJSON.secure != undefined) secure = secure || configJSON.secure;
 if (configJSON.sni != undefined) sni = configJSON.sni;
 if (configJSON.disableNonEncryptedServer != undefined) disableNonEncryptedServer = configJSON.disableNonEncryptedServer;
 if (configJSON.disableToHTTPSRedirect != undefined) disableToHTTPSRedirect = configJSON.disableToHTTPSRedirect;
+if (configJSON.disableUnusedWorkerTermination != undefined) disableUnusedWorkerTermination = configJSON.disableUnusedWorkerTermination;
 if (configJSON.wwwroot != undefined) {
   var wwwroot = configJSON.wwwroot;
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
@@ -4711,7 +4713,6 @@ function msgListener(msg) {
         }
         serverconsole.locmessage(tries + " attempts left.");
       }
-      if (msg == "\x12CRASH") process.exit(1);
       if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
         var errno = errors[msg.substr(9)];
         if(errno) {
@@ -5204,7 +5205,6 @@ function start(init) {
             }
             serverconsole.locmessage(tries + " attempts left.");
           }
-          if (msg == "\x12CRASH") process.exit(1);
           if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
             var errno = errors[msg.substr(9)];
             if(errno) {
@@ -5301,7 +5301,7 @@ function start(init) {
         }, 4550);
 
         // Termination of unused good workers
-        if(cluster.isPrimary !== undefined) {
+        if(!disableUnusedWorkerTermination && cluster.isPrimary !== undefined) {
           setTimeout(function () {
             setInterval(function () {
               if (!closedMaster && !exiting) {
@@ -5412,7 +5412,8 @@ function saveConfig() {
       if (configJSONobj.disableNonEncryptedServer === undefined) configJSONobj.disableNonEncryptedServer = false;
       if (configJSONobj.disableToHTTPSRedirect === undefined) configJSONobj.disableToHTTPSRedirect = false;
       if (configJSONobj.enableETag === undefined) configJSONobj.enableETag = true;
-
+      if (configJSONobj.disableUnusedWorkerTermination === undefined) configJSONobj.disableUnusedWorkerTermination = false;
+      
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
