@@ -1089,6 +1089,18 @@ function sanitizeURL(resource) {
   else return sanitizedResource;
 }
 
+function fixNodeMojibakeURL(string) {
+  var encoded = "";
+  Buffer.from(string, "latin1").forEach(function(value) {
+    if(value > 127) {
+      encoded += "%" + (value < 16 ? "0" : "") + value.toString(16).toUpperCase();
+    } else {
+      encoded += String.fromCodePoint(value)
+    }
+  });
+  return encoded;
+}
+
 var key = "";
 var cert = "";
 
@@ -2066,17 +2078,16 @@ if (!cluster.isPrimary) {
         }
         return ph;
       }
+      
       if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost")) {
         var headers = getCustomHeaders();
         res.writeHead(204, "No Content", headers);
         res.end();
         return;
       }
-      try {
-        req.url = encodeURI(Buffer.from(req.url, "latin1").toString("utf8")).replace(/%25/gi, "%");
-      } catch (err) {
-        //URL not converted...
-      }
+        
+      req.url = fixNodeMojibakeURL(req.url);
+      
       res.writeHeadNative = res.writeHead;
       res.writeHead = function (a, b, c) {
         if (parseInt(a) >= 400 && parseInt(a) <= 599) {
@@ -2086,6 +2097,7 @@ if (!cluster.isPrimary) {
         }
         res.writeHeadNative(a, b, c);
       };
+      
       var finished = false;
       res.on("finish", function () {
         if (!finished) {
@@ -2972,12 +2984,8 @@ if (!cluster.isPrimary) {
       response.end();
       return;
     }
-
-    try {
-      request.url = encodeURI(Buffer.from(request.url, "latin1").toString("utf8")).replace(/%25/gi, "%");
-    } catch (err) {
-      //Request URL not modified...
-    }
+    
+    request.url = fixNodeMojibakeURL(request.url);
 
     var headWritten = false;
     var lastStatusCode = null;
