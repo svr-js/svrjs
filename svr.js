@@ -2137,7 +2137,7 @@ if (!cluster.isPrimary) {
         400: "The request you made is invalid.",
         417: "Expectation in Expect property couldn't be satisfied.",
         500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
-        501: "The request requires use of a function, which isn't implemented (yet) by the server."
+        501: "The request requires use of a function, which isn't currently implemented by the server."
       };
 
       //Server error calling method
@@ -2189,7 +2189,7 @@ if (!cluster.isPrimary) {
               } else if (err.code == "EACCES") {
                 additionalError = 403;
               } else if (err.code == "EMFILE") {
-                additionalError = 429;
+                additionalError = 503;
               } else if (err.code == "ELOOP") {
                 additionalError = 508;
               }
@@ -2300,7 +2300,6 @@ if (!cluster.isPrimary) {
               if (nuobject.pathname) {
                 nuobject.path = nuobject.pathname + (nuobject.search ? nuobject.search : "");
               }
-              //if(nuobject.path != "" && uobject.password != "") nuobject.path = nuobject.pathname + nuobject.href;
               nuobject.query = {};
               uobject.searchParams.forEach(function (value, key) {
                 nuobject.query[key] = value;
@@ -2594,7 +2593,7 @@ if (!cluster.isPrimary) {
             } else if (err.code == "EACCES") {
               additionalError = 403;
             } else if (err.code == "EMFILE") {
-              additionalError = 429;
+              additionalError = 503;
             } else if (err.code == "ELOOP") {
               additionalError = 508;
             }
@@ -3282,7 +3281,7 @@ if (!cluster.isPrimary) {
               } else if (err.code == "EACCES") {
                 additionalError = 403;
               } else if (err.code == "EMFILE") {
-                additionalError = 429;
+                additionalError = 503;
               } else if (err.code == "ELOOP") {
                 additionalError = 508;
               }
@@ -3677,7 +3676,7 @@ if (!cluster.isPrimary) {
                 serverconsole.errmessage("Access denied.");
                 return;
               } else if (err.code == "EMFILE") {
-                callServerError(500, undefined, generateErrorStack(err)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
+                callServerError(503);
                 return;
               } else if (err.code == "ELOOP") {
                 callServerError(508); // The symbolic link loop is detected during file system operations.
@@ -3949,7 +3948,7 @@ if (!cluster.isPrimary) {
                         callServerError(403);
                         serverconsole.errmessage("Access denied.");
                       } else if (err.code == "EMFILE") {
-                        callServerError(500, undefined, generateErrorStack(err)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
+                        callServerError(503);
                       } else if (err.code == "ELOOP") {
                         callServerError(508); // The symbolic link loop is detected during file system operations.
                         serverconsole.errmessage("Symbolic link loop detected.");
@@ -3982,7 +3981,7 @@ if (!cluster.isPrimary) {
                       callServerError(403);
                       serverconsole.errmessage("Access denied.");
                     } else if (err.code == "EMFILE") {
-                      callServerError(500, undefined, generateErrorStack(err)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
+                      callServerError(503);
                     } else if (err.code == "ELOOP") {
                       callServerError(508); // The symbolic link loop is detected during file system operations.
                       serverconsole.errmessage("Symbolic link loop detected.");
@@ -4103,7 +4102,7 @@ if (!cluster.isPrimary) {
                               callServerError(403);
                               serverconsole.errmessage("Access denied.");
                             } else if (err.code == "EMFILE") {
-                              callServerError(500, undefined, generateErrorStack(err)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
+                              callServerError(503);
                             } else if (err.code == "ELOOP") {
                               callServerError(508); // The symbolic link loop is detected during file system operations.
                               serverconsole.errmessage("Symbolic link loop detected.");
@@ -4162,7 +4161,7 @@ if (!cluster.isPrimary) {
                             callServerError(403);
                             serverconsole.errmessage("Access denied.");
                           } else if (err.code == "EMFILE") {
-                            callServerError(500, undefined, generateErrorStack(err)); // Too many file descriptors or open files were reached by the process. It is an internal server issue.
+                            callServerError(503);
                           } else if (err.code == "ELOOP") {
                             callServerError(508); // The symbolic link loop is detected during file system operations.
                             serverconsole.errmessage("Symbolic link loop detected.");
