@@ -1778,61 +1778,53 @@ if (!cluster.isPrimary) {
 
   }
   server2.on("error", function (err) {
-    if (err.code == "EADDRINUSE" || err.code == "EADDRNOTAVAIL" || err.code == "EACCES") {
-      attmtsRedir--;
-      if (cluster.isPrimary === undefined) {
-        if (err.code == "EADDRINUSE") {
-          serverconsole.locerrmessage("Address is already in use by another process.");
-        } else if (err.code == "EADDRNOTAVAIL") {
-          serverconsole.locerrmessage("Address is not available on this machine.");
-        } else if (err.code == "EACCES") {
-          serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-        } else if (err.code == "EAFNOSUPPORT") {
-          serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-        } else if (err.code == "EALREADY") {
-          serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-        } else if (err.code == "ECONNABORTED") {
-          serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-        } else if (err.code == "ECONNREFUSED") {
-          serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-        } else if (err.code == "ECONNRESET") {
-          serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-        } else if (err.code == "EDESTADDRREQ") {
-          serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-        } else if (err.code == "ENETDOWN") {
-          serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-        } else if (err.code == "ENETUNREACH") {
-          serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-        } else if (err.code == "ENOBUFS") {
-          serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-        } else if (err.code == "ENOTSOCK") {
-          serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-        } else if (err.code == "EPROTO") {
-          serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-        } else if (err.code == "EPROTONOSUPPORT") {
-          serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-        } else if (err.code == "ETIMEDOUT") {
-          serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-        } else {
-          serverconsole.locerrmessage("There was an unknown error with the server.");
-        }
-        serverconsole.locmessage(attmtsRedir + " attempts left.");
+    attmtsRedir--;
+    if (cluster.isPrimary === undefined) {
+      if (err.code == "EADDRINUSE") {
+        serverconsole.locerrmessage("Address is already in use by another process.");
+      } else if (err.code == "EADDRNOTAVAIL") {
+        serverconsole.locerrmessage("Address is not available on this machine.");
+      } else if (err.code == "EACCES") {
+        serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
+      } else if (err.code == "EAFNOSUPPORT") {
+        serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
+      } else if (err.code == "EALREADY") {
+        serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
+      } else if (err.code == "ECONNABORTED") {
+        serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
+      } else if (err.code == "ECONNREFUSED") {
+        serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
+      } else if (err.code == "ECONNRESET") {
+        serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
+      } else if (err.code == "EDESTADDRREQ") {
+        serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
+      } else if (err.code == "ENETDOWN") {
+        serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
+      } else if (err.code == "ENETUNREACH") {
+        serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
+      } else if (err.code == "ENOBUFS") {
+        serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
+      } else if (err.code == "ENOTSOCK") {
+        serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
+      } else if (err.code == "EPROTO") {
+        serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
+      } else if (err.code == "EPROTONOSUPPORT") {
+        serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
+      } else if (err.code == "ETIMEDOUT") {
+        serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
       } else {
-        process.send("\x12ERRLIST" + attmtsRedir + err.code);
+        serverconsole.locerrmessage("There was an unknown error with the server.");
       }
-      if (attmtsRedir > 0) {
-        server2.close();
-        setTimeout(start, 900);
-      } else {
-        if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
-        process.exit(errors[err.code]);
-      }
+      serverconsole.locmessage(attmtsRedir + " attempts left.");
     } else {
-      serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
-      serverconsole.locerrmessage("Stack:");
-      serverconsole.locerrmessage(generateErrorStack(err));
-      if (cluster.isPrimary !== undefined) process.send("\x12CRASH");
-      process.exit(err.code ? errors[err.code] : 1);
+      process.send("\x12ERRLIST" + attmtsRedir + err.code);
+    }
+    if (attmtsRedir > 0) {
+      server2.close();
+      setTimeout(start, 900);
+    } else {
+      if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
+      process.exit(errors[err.code]);
     }
   });
 
@@ -4531,61 +4523,53 @@ if (!cluster.isPrimary) {
   }
   //Listen port to server
   server.on("error", function (err) {
-    if (err.code == "EADDRINUSE" || err.code == "EADDRNOTAVAIL" || err.code == "EACCES") {
-      attmts--;
-      if (cluster.isPrimary === undefined) {
-        if (err.code == "EADDRINUSE") {
-          serverconsole.locerrmessage("Address is already in use by another process.");
-        } else if (err.code == "EADDRNOTAVAIL") {
-          serverconsole.locerrmessage("Address is not available on this machine.");
-        } else if (err.code == "EACCES") {
-          serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-        } else if (err.code == "EAFNOSUPPORT") {
-          serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-        } else if (err.code == "EALREADY") {
-          serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-        } else if (err.code == "ECONNABORTED") {
-          serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-        } else if (err.code == "ECONNREFUSED") {
-          serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-        } else if (err.code == "ECONNRESET") {
-          serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-        } else if (err.code == "EDESTADDRREQ") {
-          serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-        } else if (err.code == "ENETDOWN") {
-          serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-        } else if (err.code == "ENETUNREACH") {
-          serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-        } else if (err.code == "ENOBUFS") {
-          serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-        } else if (err.code == "ENOTSOCK") {
-          serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-        } else if (err.code == "EPROTO") {
-          serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-        } else if (err.code == "EPROTONOSUPPORT") {
-          serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-        } else if (err.code == "ETIMEDOUT") {
-          serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-        } else {
-          serverconsole.locerrmessage("There was an unknown error with the server.");
-        }
-        serverconsole.locmessage(attmts + " attempts left.");
+    attmts--;
+    if (cluster.isPrimary === undefined) {
+      if (err.code == "EADDRINUSE") {
+        serverconsole.locerrmessage("Address is already in use by another process.");
+      } else if (err.code == "EADDRNOTAVAIL") {
+        serverconsole.locerrmessage("Address is not available on this machine.");
+      } else if (err.code == "EACCES") {
+        serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
+      } else if (err.code == "EAFNOSUPPORT") {
+        serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
+      } else if (err.code == "EALREADY") {
+        serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
+      } else if (err.code == "ECONNABORTED") {
+        serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
+      } else if (err.code == "ECONNREFUSED") {
+        serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
+      } else if (err.code == "ECONNRESET") {
+        serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
+      } else if (err.code == "EDESTADDRREQ") {
+        serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
+      } else if (err.code == "ENETDOWN") {
+        serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
+      } else if (err.code == "ENETUNREACH") {
+        serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
+      } else if (err.code == "ENOBUFS") {
+        serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
+      } else if (err.code == "ENOTSOCK") {
+        serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
+      } else if (err.code == "EPROTO") {
+        serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
+      } else if (err.code == "EPROTONOSUPPORT") {
+        serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
+      } else if (err.code == "ETIMEDOUT") {
+        serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
       } else {
-        process.send("\x12ERRLIST" + attmts + err.code);
+        serverconsole.locerrmessage("There was an unknown error with the server.");
       }
-      if (attmts > 0) {
-        server2.close();
-        setTimeout(start, 900);
-      } else {
-        if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
-        process.exit(errors[err.code]);
-      }
+      serverconsole.locmessage(attmts + " attempts left.");
     } else {
-      serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
-      serverconsole.locerrmessage("Stack:");
-      serverconsole.locerrmessage(generateErrorStack(err));
-      if (cluster.isPrimary !== undefined) process.send("\x12CRASH");
-      process.exit(err.code ? errors[err.code] : 1);
+      process.send("\x12ERRLIST" + attmts + err.code);
+    }
+    if (attmts > 0) {
+      server2.close();
+      setTimeout(start, 900);
+    } else {
+      if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
+      process.exit(errors[err.code]);
     }
   });
 
