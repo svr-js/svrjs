@@ -1779,7 +1779,7 @@ if (!cluster.isPrimary) {
   }
   server2.on("error", function (err) {
     attmtsRedir--;
-    if (cluster.isPrimary === undefined) {
+    if (cluster.isPrimary === undefined && attmtsRedir >= 0) {
       if (err.code == "EADDRINUSE") {
         serverconsole.locerrmessage("Address is already in use by another process.");
       } else if (err.code == "EADDRNOTAVAIL") {
@@ -1817,14 +1817,29 @@ if (!cluster.isPrimary) {
       }
       serverconsole.locmessage(attmtsRedir + " attempts left.");
     } else {
-      process.send("\x12ERRLIST" + attmtsRedir + err.code);
+      try {
+        process.send("\x12ERRLIST" + attmtsRedir + err.code);
+      } catch(ex) {
+        // Probably main process exited
+      }
     }
     if (attmtsRedir > 0) {
       server2.close();
       setTimeout(start, 900);
     } else {
-      if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
-      process.exit(errors[err.code]);
+      try {
+        if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
+      } catch(ex) {
+        // Probably main process exited
+      }
+      setTimeout(function () {
+        var errno = errors[err.code];
+        if(errno) {
+          process.exit(errno);
+        } else {
+          process.exit(1);
+        }
+      }, 50);
     }
   });
 
@@ -4524,7 +4539,7 @@ if (!cluster.isPrimary) {
   //Listen port to server
   server.on("error", function (err) {
     attmts--;
-    if (cluster.isPrimary === undefined) {
+    if (cluster.isPrimary === undefined && attmts >= 0) {
       if (err.code == "EADDRINUSE") {
         serverconsole.locerrmessage("Address is already in use by another process.");
       } else if (err.code == "EADDRNOTAVAIL") {
@@ -4562,14 +4577,29 @@ if (!cluster.isPrimary) {
       }
       serverconsole.locmessage(attmts + " attempts left.");
     } else {
-      process.send("\x12ERRLIST" + attmts + err.code);
+      try {
+        process.send("\x12ERRLIST" + attmts + err.code);
+      } catch(ex) {
+        // Probably main process exited
+      }
     }
     if (attmts > 0) {
       server2.close();
       setTimeout(start, 900);
     } else {
-      if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
-      process.exit(errors[err.code]);
+      try {
+        if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
+      } catch(ex) {
+        // Probably main process exited
+      }
+      setTimeout(function () {
+        var errno = errors[err.code];
+        if(errno) {
+          process.exit(errno);
+        } else {
+          process.exit(1);
+        }
+      }, 50);
     }
   });
 
@@ -4641,7 +4671,7 @@ function msgListener(msg) {
     serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + msg.substr(8));
   } else if (msg == "\x12END") {
     cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
-      if (msg.length > 9 && msg.indexOf("\x12ERRLIST") == 0) {
+      if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
         var tries = parseInt(msg.substr(8, 1));
         var errCode = msg.substr(9);
         if (errCode == "EADDRINUSE") {
@@ -4682,7 +4712,14 @@ function msgListener(msg) {
         serverconsole.locmessage(tries + " attempts left.");
       }
       if (msg == "\x12CRASH") process.exit(1);
-      if (msg == "\x12EADDRINUSE" || msg == "\x12EADDRNOTAVAIL" || msg == "\x12EACCES") process.exit(errors[msg.substr(1)]);
+      if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
+        var errno = errors[msg.substr(9)];
+        if(errno) {
+          process.exit(errno);
+        } else {
+          process.exit(1);
+        }
+      }
     });
   } else {
     serverconsole.climessage(msg);
@@ -5127,7 +5164,7 @@ function start(init) {
           }
         }
         cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
-          if (msg.length > 9 && msg.indexOf("\x12ERRLIST") == 0) {
+          if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
             var tries = parseInt(msg.substr(8, 1));
             var errCode = msg.substr(9);
             if (errCode == "EADDRINUSE") {
@@ -5168,7 +5205,14 @@ function start(init) {
             serverconsole.locmessage(tries + " attempts left.");
           }
           if (msg == "\x12CRASH") process.exit(1);
-          if (msg == "\x12EADDRINUSE" || msg == "\x12EADDRNOTAVAIL" || msg == "\x12EACCES") process.exit(errors[msg.substr(1)]);
+          if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
+            var errno = errors[msg.substr(9)];
+            if(errno) {
+              process.exit(errno);
+            } else {
+              process.exit(1);
+            }
+          }
         });
 
         // Hangup check and restart
