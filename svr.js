@@ -146,7 +146,7 @@ if (!singlethreaded) {
   }
 
   // Cluster & IPC shim for Bun
-  
+
   cluster.bunShim = function () {
     cluster.isMaster = !process.env.NODE_UNIQUE_ID;
     cluster.isPrimary = cluster.isMaster;
@@ -191,7 +191,7 @@ if (!singlethreaded) {
             fakeIPCConnection.end(message);
           });
         };
-        
+
         process.removeFakeIPC = function() {
           // Close IPC server
           process.send = function() {};
@@ -235,7 +235,7 @@ if (!singlethreaded) {
             oldLog(a,b,c,d,e,f);
           }
         }
-        
+
         try {
           worker.send(undefined);
         } catch (err) {
@@ -243,7 +243,7 @@ if (!singlethreaded) {
             sendImplemented = false;
           }
         }
-        
+
         console.log = oldLog;
 
         return sendImplemented;
@@ -252,7 +252,7 @@ if (!singlethreaded) {
       if (!checkSendImplementation(newWorker)) {
         var net = require("net");
         var os = require("os");
-        
+
         // Create a fake IPC server for worker process to receive messages
         var fakeWorkerIPCServer = net.createServer(function (socket) {
           var receivedData = "";
@@ -297,7 +297,7 @@ if (!singlethreaded) {
   if (process.isBun && (cluster.isMaster === undefined || (cluster.isMaster && process.env.NODE_UNIQUE_ID))) {
     cluster.bunShim();
   }
-  
+
   // Shim cluster.isPrimary field
   if (cluster.isPrimary === undefined && cluster.isMaster !== undefined) cluster.isPrimary = cluster.isMaster;
 }
@@ -331,7 +331,7 @@ function SVRJSFork() {
       cluster.bunShim();
       newWorker = cluster.fork();
     } else {
-      throw err;  
+      throw err;
     }
   }
   newWorker.on("error", function (err) {
@@ -538,7 +538,7 @@ function createRegex(regex, isPath) {
 
 //IP Block list object
 function ipBlockList(rawBlockList) {
-    
+
   // Initialize the instance with empty arrays
   if (rawBlockList === undefined) rawBlockList = [];
   var instance = {
@@ -756,7 +756,7 @@ function ipBlockList(rawBlockList) {
   for (var i = 0; i < rawBlockList.length; i++) {
     instance.add(rawBlockList[i]);
   }
-  
+
   return instance;
 }
 
@@ -1277,7 +1277,7 @@ if (!disableMods) {
     // If not the master process, create a unique modloader folder name for each worker
     modloaderFolderName = ".modloader_w" + Math.floor(Math.random() * 65536);
   }
-  
+
   // Define the temporary server-side JavaScript file name
   var tempServerSideScriptName = "serverSideScript.js";
   if (!process.isBun && cluster.isPrimary === false) {
@@ -2602,7 +2602,7 @@ if (!cluster.isPrimary) {
           return;
         }
       }
-      
+
       if (err.code && err.code.indexOf("ERR_HTTP2_") == 0) {
         serverconsole.errmessage("An HTTP/2 error occured: " + err.code);
         callServerError(400);
@@ -3085,7 +3085,7 @@ if (!cluster.isPrimary) {
       }
 
       reqcounter++;
-        
+
       if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + (request.headers.host == undefined ? "" : request.headers.host) + request.url);
       else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + request.url);
       if (request.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + request.headers["user-agent"]);
@@ -3168,7 +3168,7 @@ if (!cluster.isPrimary) {
         500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
         501: "The request requires use of a function, which isn't currently implemented by the server.",
         502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-        503: "The service provided by the server is currently unavailable, possibly due of maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+        503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
         504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
         505: "The server doesn't support HTTP version used in the request.",
         506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
@@ -3732,10 +3732,10 @@ if (!cluster.isPrimary) {
                     : (fs.existsSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
                       ? fs.readFileSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")).toString()
                       : "";
-                      
+
                   // Check if custom header has HTML tag
                   var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>).)*|)(?:-->|$)/gs, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:.|$)|[^\\"])*(?:"|$)|'(?:\\(?:.|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/si);
-                  
+
                   // Generate HTML head and footer based on configuration and custom content
                   var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == ""
                     ? (!headerHasHTMLTag
@@ -3815,8 +3815,7 @@ if (!cluster.isPrimary) {
                       getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
                         // Function to check file extension
                         function checkEXT(filename, ext) {
-                          if (filename.length < ext.length) return false;
-                          return filename.toLowerCase().indexOf(ext) === filename.length - ext.length;
+                          return filename.match(new RegExp("\\." + ext.replace(/([.+*?^$()\[\]{}|\\])/,"\\$1") + "$","i"));
                         }
 
                         var directoryListingRows = [];
@@ -3947,12 +3946,12 @@ if (!cluster.isPrimary) {
                   callServerError(403);
                   serverconsole.errmessage("Directory listing is disabled.");
                 }
-                
+
 
               } else {
                 var acceptEncoding = req.headers["accept-encoding"];
                 if (!acceptEncoding) acceptEncoding = "";
-                  
+
                 // Check if the requested file exists and handle errors
                 fs.stat(readFrom, function (err, stats) {
                   if (err) {
@@ -3988,7 +3987,7 @@ if (!cluster.isPrimary) {
                   }
 
                   var filelen = stats.size;
-                  
+
                   //ETag code
                   var fileETag = undefined;
                   if (configJSON.enableETag == undefined || configJSON.enableETag) {
@@ -4012,7 +4011,7 @@ if (!cluster.isPrimary) {
                       return;
                     }
                   }
-                  
+
                   // Helper function to check if compression is allowed for the file
                   function canCompress(path, list) {
                     var canCompress = true;
@@ -4070,7 +4069,7 @@ if (!cluster.isPrimary) {
                         rhd["Content-Length"] = end - begin + 1;
                         if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
                         if(fileETag) rhd["ETag"] = fileETag;
-                        
+
                         if (req.method != "HEAD") {
                           var readStream = fs.createReadStream(readFrom, {
                             start: begin,
@@ -4256,7 +4255,7 @@ if (!cluster.isPrimary) {
           redirect(sanitizedURL, false);
           return;
         }
-        
+
         //URL REWRITING
         function rewriteURL(address, map) {
           var rewrittenAddress = address;
@@ -4321,7 +4320,7 @@ if (!cluster.isPrimary) {
             }
           }
         }
-        
+
         //Set response headers
         if (!isProxy) {
           var hkh = getCustomHeaders();
@@ -4334,7 +4333,7 @@ if (!cluster.isPrimary) {
             }
           }
         }
-        
+
         //Check if path is forbidden
         if ((isForbiddenPath(decodedHref, "config") || isForbiddenPath(decodedHref, "certificates")) && !isProxy) {
           callServerError(403);
@@ -4421,7 +4420,7 @@ if (!cluster.isPrimary) {
               return;
             }
           }
-          
+
           // Handle HTTP authentication
           if (authIndex > -1) {
             var authcode = nonStandardCodes[authIndex];
@@ -5118,7 +5117,7 @@ function start(init) {
         rla.prompt();
       });
     }
-          
+
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
       //Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
@@ -5187,7 +5186,7 @@ function start(init) {
           if (msg == "\x12CRASH") process.exit(1);
           if (msg == "\x12EADDRINUSE" || msg == "\x12EADDRNOTAVAIL" || msg == "\x12EACCES") process.exit(errors[msg.substr(1)]);
         });
-        
+
         // Hangup check and restart
         setInterval(function () {
           if (!closedMaster && !exiting) {
@@ -5272,7 +5271,7 @@ function start(init) {
             }
           }
         }, 4550);
-        
+
         // Termination of unused good workers
         if(cluster.isPrimary !== undefined) {
           setTimeout(function () {
