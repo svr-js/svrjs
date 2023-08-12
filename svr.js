@@ -3166,9 +3166,9 @@ if (!cluster.isPrimary) {
         431: "The request you sent contains headers, that are too large.",
         451: "The requested file isn't accessible for legal reasons.",
         500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
-        501: "The request requires use of a function, which isn't implemented (yet) by the server.",
+        501: "The request requires use of a function, which isn't currently implemented by the server.",
         502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-        503: "Service provided by the server isn't available (yet).</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+        503: "The service provided by the server is currently unavailable, possibly due of maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
         504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
         505: "The server doesn't support HTTP version used in the request.",
         506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
@@ -3181,7 +3181,6 @@ if (!cluster.isPrimary) {
         599: "The server couldn't connect in time, while it was acting as a proxy."
       };
 
-      //Server error calling method
       // Server error calling method
       function callServerError(errorCode, extName, stack, ch) {
         if (typeof errorCode !== "number") {
