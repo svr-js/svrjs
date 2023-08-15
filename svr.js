@@ -4440,7 +4440,22 @@ if (!cluster.isPrimary) {
           // Handle HTTP authentication
           if (authIndex > -1) {
             var authcode = nonStandardCodes[authIndex];
-
+            
+            function checkIfPasswordMatches(list, password, callback, _i) {
+                if(!_i) _i = 0;
+                var cb = function (hash) {
+                  var matches = (hash == list[_i].pass);
+                  if(matches) {
+                    callback(true);
+                  } else if(_i >= list.length-1) {
+                    callback(false);
+                  } else {
+                    checkIfPasswordMatches(list, password, callback, _i+1);
+                  }
+                }
+                cb(sha256(password + list[_i].salt));
+            }
+            
             function authorizedCallback(bruteProtection) {
               var ha = getCustomHeaders();
               ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
@@ -4465,14 +4480,13 @@ if (!cluster.isPrimary) {
               }
               var username = decodedCredentialsMatch[1];
               var password = decodedCredentialsMatch[2];
-              var authorized = false;
-              for (var i = 0; i < users.length; i++) {
-                var hash = sha256(password + users[i].salt);
-                if (users[i].name == username && users[i].pass == hash) {
-                  authorized = true;
-                  break;
-                }
+              var usernameMatch = users.filter(function (entry) {
+                return entry.name == username;
+              });
+              if(usernameMatch.length == 0) {
+                  usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  //Fake credentials
               }
+              checkIfPasswordMatches(usernameMatch, password, function(authorized) {
               if (!authorized) {
                 if (bruteProtection) {
                   if (process.send) {
@@ -4501,6 +4515,7 @@ if (!cluster.isPrimary) {
                 }
                 modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
               }
+              });
             }
             if (authcode.disableBruteProtection) {
               authorizedCallback(false);
