@@ -312,6 +312,10 @@ function generateETag(filePath, stat) {
 // Brute force-related
 var bruteForceDb = {};
 
+// PBKDF2 cache
+var pbkdf2Cache = [];
+var pbkdf2CacheIntervalId = -1;
+
 // SVR.JS worker spawn-related
 var SVRJSInitialized = false;
 var exiting = false;
@@ -4453,7 +4457,32 @@ if (!cluster.isPrimary) {
                     checkIfPasswordMatches(list, password, callback, _i+1);
                   }
                 }
-                cb(sha256(password + list[_i].salt));
+                var hashedPassword = sha256(password + list[_i].salt);
+                if(list[_i].pbkdf2) {
+                  if(crypto.__disabled__ !== undefined) {
+                    callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
+                    return;
+                  } else {
+                    var cacheEntry = pbkdf2Cache.find(function(entry) {
+                      return (entry.password == hashedPassword && entry.salt == list[_i].salt)
+                    });
+                    if(cacheEntry) {
+                      cb(cacheEntry.hash);
+                    } else {
+                      crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function(err, derivedKey) {
+                        if(err) {
+                          callServerError(500, undefined, err);
+                        } else {
+                          var key = derivedKey.toString("hex");
+                          pbkdf2Cache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
+                          cb(key);
+                        }
+                      });
+                    }
+                  }
+                } else {
+                  cb(hashedPassword);
+                }
             }
             
             function authorizedCallback(bruteProtection) {
@@ -4487,34 +4516,34 @@ if (!cluster.isPrimary) {
                   usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  //Fake credentials
               }
               checkIfPasswordMatches(usernameMatch, password, function(authorized) {
-              if (!authorized) {
-                if (bruteProtection) {
-                  if (process.send) {
-                    process.send("\x12AUTHW" + reqip);
-                  } else {
-                    if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                      invalidAttempts: 0
-                    };
-                    bruteForceDb[reqip].invalidAttempts++;
-                    if (bruteForceDb[reqip].invalidAttempts >= 10) {
-                      bruteForceDb[reqip].lastAttemptDate = new Date();
+                if (!authorized) {
+                  if (bruteProtection) {
+                    if (process.send) {
+                      process.send("\x12AUTHW" + reqip);
+                    } else {
+                      if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                        invalidAttempts: 0
+                      };
+                      bruteForceDb[reqip].invalidAttempts++;
+                      if (bruteForceDb[reqip].invalidAttempts >= 10) {
+                        bruteForceDb[reqip].lastAttemptDate = new Date();
+                      }
                     }
                   }
-                }
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("User " + username + " failed to log in.");
-              } else {
-                if (bruteProtection) {
-                  if (process.send) {
-                    process.send("\x12AUTHR" + reqip);
-                  } else {
-                    if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                      invalidAttempts: 0
-                    };
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("User " + username + " failed to log in.");
+                } else {
+                  if (bruteProtection) {
+                    if (process.send) {
+                      process.send("\x12AUTHR" + reqip);
+                    } else {
+                      if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                        invalidAttempts: 0
+                      };
+                    }
                   }
+                  modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
                 }
-                modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
-              }
               });
             }
             if (authcode.disableBruteProtection) {
@@ -4802,7 +4831,10 @@ function start(init) {
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
       if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
-      if (process.isBun) serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
+      if (process.isBun) {
+        serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
+        if(users.some(function(entry) {return entry.pbkdf2;})) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+      }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.js. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
@@ -4898,6 +4930,7 @@ function start(init) {
     },
     stop: function (retcode) {
       reallyExiting = true;
+      clearInterval(pbkdf2CacheIntervalId);
       if((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
         try {
           server.close(function() {
@@ -5018,6 +5051,13 @@ function start(init) {
           }
         }
       }, 300000);
+    }
+    if (!cluster.isPrimary) {
+      pbkdf2CacheIntervalId = setInterval(function () {
+        pbkdf2Cache = pbkdf2Cache.every(function(entry) {
+          return entry.addDate > (new Date() - 3600000);
+        });
+      }, 3600000);
     }
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {

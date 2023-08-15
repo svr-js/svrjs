@@ -196,42 +196,63 @@ function saveConfig() {
 var args = process.argv;
 var user = "";
 var action = "change";
+var hash = "auto";
 if (process.argv.length <= (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("bun") > -1 ? 2 : 1)) args.push("-h");
 for (var i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("bun") > -1 ? 2 : 1); i < args.length; i++) {
   if (args[i] == "-h" || args[i] == "--help" || args[i] == "-?" || args[i] == "/h" || args[i] == "/?") {
     console.log("SVR.JS user tool usage:");
-    console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-a|--add|-d|--delete] <username>");
+    console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [--sha256|--pbkdf2] [-a|--add|-d|--delete] <username>");
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("-a --add              -- Add an user");
     console.log("-d --delete           -- Deletes an user");
+    console.log("--sha256              -- Uses salted SHA256");
+    console.log("--pbkdf2              -- Uses PBKDF2");
     process.exit(0);
   } else if (args[i] == "-a" || args[i] == "--add") {
     if (action != "change") {
       console.log("Multiple actions specified.");
-      console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-a|--add|-d|--delete] <username>");
+      console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [--sha256|--pbkdf2] [-a|--add|-d|--delete] <username>");
       console.log("-h -? /h /? --help    -- Displays help");
       console.log("-a --add              -- Add an user");
       console.log("-d --delete           -- Deletes an user");
+      console.log("--sha256              -- Uses salted SHA256");
+      console.log("--pbkdf2              -- Uses PBKDF2");
       process.exit(1);
     }
     action = "add";
   } else if (args[i] == "-d" || args[i] == "--delete") {
     if (action != "change") {
       console.log("Multiple actions specified.");
-      console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-a|--add|-d|--delete] <username>");
+      console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [--sha256|--pbkdf2] [-a|--add|-d|--delete] <username>");
       console.log("-h -? /h /? --help    -- Displays help");
       console.log("-a --add              -- Add an user");
       console.log("-d --delete           -- Deletes an user");
+      console.log("--sha256              -- Uses salted SHA256");
+      console.log("--pbkdf2              -- Uses PBKDF2");
       process.exit(1);
     }
     action = "delete";
-  } else {
-    if (user != "") {
-      console.log("Multiple users specified.");
-      console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-a|--add|-d|--delete] <username>");
+  } else if (args[i] == "--sha256" || args[i] == "--pbkdf2") {
+    if (hash != "auto") {
+      console.log("Multiple hash types specified.");
+      console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [--sha256|--pbkdf2] [-a|--add|-d|--delete] <username>");
       console.log("-h -? /h /? --help    -- Displays help");
       console.log("-a --add              -- Add an user");
       console.log("-d --delete           -- Deletes an user");
+      console.log("--sha256              -- Uses salted SHA256");
+      console.log("--pbkdf2              -- Uses PBKDF2");
+      process.exit(1);
+    }
+    hash = (args[i] == "--sha256" ? "sha256" : "pbkdf2");
+  } else {
+    if (user != "") {
+      console.log("Multiple users specified.");
+      onsole.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [--sha256|--pbkdf2] [-a|--add|-d|--delete] <username>");
+      console.log("-h -? /h /? --help    -- Displays help");
+      console.log("-a --add              -- Add an user");
+      console.log("-d --delete           -- Deletes an user");
+      console.log("--sha256              -- Uses salted SHA256");
+      console.log("--pbkdf2              -- Uses PBKDF2");
       process.exit(1);
     }
     user = args[i];
@@ -240,11 +261,23 @@ for (var i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("b
 
 if (user == "") {
   console.log("No user specified.");
-  console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-a|--add|-d|--delete] <username>");
+  console.log("node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [--sha256|--pbkdf2] [-a|--add|-d|--delete] <username>");
   console.log("-h -? /h /? --help    -- Displays help");
   console.log("-a --add              -- Add an user");
   console.log("-d --delete           -- Deletes an user");
+  console.log("--sha256              -- Uses salted SHA256");
+  console.log("--pbkdf2              -- Uses PBKDF2");
   process.exit(1);
+}
+
+if (hash == "auto") {
+  if(crypto.__disabled__ !== "undefined") {
+    hash = "sha256";
+  } else if(process.isBun) {
+    hash = "sha256";    //Prevent PBKDF2 function event loop block in Bun
+  } else {
+    hash = "pbkdf2";    //Secure by default
+  }
 }
 
 function getUserIndex(username) {
@@ -277,20 +310,23 @@ function password(callback) {
   var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: 'Password: ',
-    terminal: false
+    prompt: 'Password: '
   });
   rl.prompt();
+  process.stdout.writeold = process.stdout.write;
+  process.stdout.write = function(s){process.stdout.writeold(s.replace(/[^\r\n]/g,""));};
   rl.once('line', (line) => {
-    //rl.close();
+    process.stdout.write = process.stdout.writeold;
     var rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
       prompt: 'Confirm password: ',
-      terminal: false
     });
     rl.prompt();
+    process.stdout.writeold = process.stdout.write;
+    process.stdout.write = function(s){process.stdout.writeold(s.replace(/[^\r\n]/g,""));};
     rl.on('line', (line2) => {
+      process.stdout.write = process.stdout.writeold;
       rl.close();
       if (line != line2) callback(false);
       else callback(line);
@@ -317,11 +353,12 @@ if (action == "delete") {
       console.log("Passwords don't match!");
       process.exit(1);
     } else {
-      var salt = generateSalt()
+      var salt = generateSalt();
       users.push({
         name: user,
-        pass: sha256(password + salt),
-        salt: salt
+        pass: (hash == "sha256" ? sha256(password + salt) : crypto.pbkdf2Sync(password, salt, 36250, 64, "sha512")),
+        salt: salt,
+        pbkdf2: (hash == "sha256" ? undefined : true)
       });
       saveConfig();
       console.log("User added successfully");
@@ -333,11 +370,12 @@ if (action == "delete") {
       console.log("Passwords don't match!");
       process.exit(1);
     } else {
-      var salt = generateSalt()
+      var salt = generateSalt();
       users[userindex] = {
         name: user,
-        pass: sha256(password + salt),
-        salt: salt
+        pass: (hash == "sha256" ? sha256(password + salt) : crypto.pbkdf2Sync(password, salt, 36250, 64, "sha512")),
+        salt: salt,
+        pbkdf2: (hash == "sha256" ? undefined : true)
       };
       saveConfig();
       console.log("Password changed successfully");
