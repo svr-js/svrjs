@@ -1077,7 +1077,12 @@ function sanitizeURL(resource) {
   // Decode URL-encoded characters while preserving certain characters
   resource = resource.replace(/%([0-9a-f]{2})/gi, function (match, hex) {
     var decodedChar = String.fromCharCode(parseInt(hex, 16));
-    return /(?![;?:@&=+$,#%])[!-~]/.test(decodedChar) ? decodedChar : "%" + hex;
+    return /(?!["<>^`{|}?#%])[!-~]/.test(decodedChar) ? decodedChar : "%" + hex;
+  });
+  // Encode certain characters
+  resource = resource.replace(/[<>^`{|}]]/g, function (character) {
+    var charCode = character.charCodeAt(0);
+    return "%" + (charcode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
   });
   var sanitizedResource = resource;
   // Ensure the resource starts with a slash
@@ -1096,14 +1101,16 @@ function sanitizeURL(resource) {
 
 function fixNodeMojibakeURL(string) {
   var encoded = "";
-  Buffer.from(string, "latin1").forEach(function(value) {
+  Buffer.from(string, "latin1").forEach(function (value) {
     if(value > 127) {
       encoded += "%" + (value < 16 ? "0" : "") + value.toString(16).toUpperCase();
     } else {
-      encoded += String.fromCodePoint(value)
+      encoded += String.fromCodePoint(value);
     }
   });
-  return encoded;
+  return encoded.replace(/%[0-9a-f-A-F]{2}/g, function (match) {
+    return match.toUpperCase();
+  });
 }
 
 var key = "";
