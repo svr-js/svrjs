@@ -993,6 +993,7 @@ var disableNonEncryptedServer = false;
 var disableToHTTPSRedirect = false;
 var nonStandardCodesRaw = [];
 var disableUnusedWorkerTermination = false;
+var rewriteDirtyURLs = false;
 
 //Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1018,6 +1019,7 @@ if (configJSON.sni != undefined) sni = configJSON.sni;
 if (configJSON.disableNonEncryptedServer != undefined) disableNonEncryptedServer = configJSON.disableNonEncryptedServer;
 if (configJSON.disableToHTTPSRedirect != undefined) disableToHTTPSRedirect = configJSON.disableToHTTPSRedirect;
 if (configJSON.disableUnusedWorkerTermination != undefined) disableUnusedWorkerTermination = configJSON.disableUnusedWorkerTermination;
+if (configJSON.rewriteDirtyURLs != undefined) rewriteDirtyURLs = configJSON.rewriteDirtyURLs;
 if (configJSON.wwwroot != undefined) {
   var wwwroot = configJSON.wwwroot;
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
@@ -4280,8 +4282,25 @@ if (!cluster.isPrimary) {
           sanitizedURL.slashes = null;
           sanitizedURL = url.format(sanitizedURL);
           serverconsole.resmessage("URL sanitized: " + req.url + " => " + sanitizedURL);
-          redirect(sanitizedURL, false);
-          return;
+          if(rewriteDirtyURLs) {
+            req.url = sanitizedURL;
+            uobject = parseURL(req.url);
+            search = uobject.search;
+            href = uobject.pathname;
+            ext = path.extname(href).toLowerCase();
+            ext = ext.substr(1, ext.length);
+            try {
+              decodedHref = decodeURIComponent(href);
+            } catch (err) {
+              //Return 400 error
+              callServerError(400);
+              serverconsole.errmessage("Bad request!");
+              return;
+            }
+          } else {
+            redirect(sanitizedURL, false);
+            return;
+          }
         }
 
         //URL REWRITING
@@ -4329,6 +4348,11 @@ if (!cluster.isPrimary) {
               rewrittenAgainURL.path = null;
               rewrittenAgainURL.href = null;
               rewrittenAgainURL.pathname = sHref;
+              rewrittenAgainURL.hostname = null;
+              rewrittenAgainURL.host = null;
+              rewrittenAgainURL.port = null;
+              rewrittenAgainURL.protocol = null;
+              rewrittenAgainURL.slashes = null;
               rewrittenAgainURL = url.format(rewrittenAgainURL);
               serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
               req.url = rewrittenAgainURL;
@@ -5510,6 +5534,7 @@ function saveConfig() {
       if (configJSONobj.disableToHTTPSRedirect === undefined) configJSONobj.disableToHTTPSRedirect = false;
       if (configJSONobj.enableETag === undefined) configJSONobj.enableETag = true;
       if (configJSONobj.disableUnusedWorkerTermination === undefined) configJSONobj.disableUnusedWorkerTermination = false;
+      if (configJSONobj.rewriteDirtyURLs === undefined) configJSONobj.rewriteDirtyURLs = false;
       
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);

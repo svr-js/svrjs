@@ -3,7 +3,7 @@
   "port": 80,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1692388365140,
+  "timestamp": 1692394031580,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
@@ -88,5 +88,6 @@
   "disableNonEncryptedServer": false,
   "disableToHTTPSRedirect": false,
   "enableETag": true,
-  "disableUnusedWorkerTermination": false
+  "disableUnusedWorkerTermination": false,
+  "rewriteDirtyURLs": true
 }
