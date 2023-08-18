@@ -314,6 +314,7 @@ var bruteForceDb = {};
 
 // PBKDF2 cache
 var pbkdf2Cache = [];
+var scryptCache = [];
 var pbkdf2CacheIntervalId = -1;
 
 // SVR.JS worker spawn-related
@@ -4458,7 +4459,29 @@ if (!cluster.isPrimary) {
                   }
                 }
                 var hashedPassword = sha256(password + list[_i].salt);
-                if(list[_i].pbkdf2) {
+                if(list[_i].scrypt) {
+                  if(!crypto.scrypt) {
+                    callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
+                    return;
+                  } else {
+                    var cacheEntry = scryptCache.find(function(entry) {
+                      return (entry.password == hashedPassword && entry.salt == list[_i].salt)
+                    });
+                    if(cacheEntry) {
+                      cb(cacheEntry.hash);
+                    } else {
+                      crypto.scrypt(password, list[_i].salt, 64, function(err, derivedKey) {
+                        if(err) {
+                          callServerError(500, undefined, err);
+                        } else {
+                          var key = derivedKey.toString("hex");
+                          scryptCache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
+                          cb(key);
+                        }
+                      });
+                    }
+                  }
+                } else if(list[_i].pbkdf2) {
                   if(crypto.__disabled__ !== undefined) {
                     callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
                     return;
@@ -4834,9 +4857,11 @@ function start(init) {
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
         if(users.some(function(entry) {return entry.pbkdf2;})) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+        if(users.some(function(entry) {return entry.scrypt;})) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
-      if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.js. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
+      if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
+      if (crypto.__disabled__ === undefined && !crypto.scrypt) serverconsole.locwarnmessage("Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work.");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
       if (secure && process.versions && process.versions.openssl && process.versions.openssl.substr(0, 2) == "1.") {
         if (new Date() > new Date("11 September 2023")) {
@@ -5055,6 +5080,9 @@ function start(init) {
     if (!cluster.isPrimary) {
       pbkdf2CacheIntervalId = setInterval(function () {
         pbkdf2Cache = pbkdf2Cache.every(function(entry) {
+          return entry.addDate > (new Date() - 3600000);
+        });
+        scryptCache = scryptCache.every(function(entry) {
           return entry.addDate > (new Date() - 3600000);
         });
       }, 3600000);
