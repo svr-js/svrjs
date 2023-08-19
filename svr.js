@@ -3760,7 +3760,7 @@ if (!cluster.isPrimary) {
                       getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
                         // Function to check file extension
                         function checkEXT(filename, ext) {
-                          return filename.match(new RegExp("\\." + ext.replace(/([.+*?^$()\[\]{}|\\])/,"\\$1") + "$","i"));
+                          return filename.match(new RegExp(ext.replace(/([.+*?^$()\[\]{}|\\])/,"\\$1") + "$","i"));
                         }
 
                         var directoryListingRows = [];
