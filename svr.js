@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.20";
+var version = "3.4.21";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -137,8 +137,10 @@ if (!singlethreaded) {
   }
 
   // Cluster & IPC shim for Bun
-  if (process.isBun && cluster.isMaster === undefined) {
+
+  cluster.bunShim = function () {
     cluster.isMaster = !process.env.NODE_UNIQUE_ID;
+    cluster.isPrimary = cluster.isMaster;
     cluster.isWorker = !cluster.isMaster;
 
     if (cluster.isWorker) {
@@ -171,7 +173,8 @@ if (!singlethreaded) {
           socket.on("end", function () {
             process.emit("message", receivedData);
           });
-        }).listen(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.W" + process.pid + ".ipc") : (__dirname + "/temp/.W" + process.pid + ".ipc"));
+        });
+        fakeIPCServer.listen(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.W" + process.pid + ".ipc") : (__dirname + "/temp/.W" + process.pid + ".ipc"));
 
         process.send = function (message) {
           // Create a fake IPC connection to send messages
@@ -179,6 +182,12 @@ if (!singlethreaded) {
             fakeIPCConnection.end(message);
           });
         };
+
+        process.removeFakeIPC = function() {
+          // Close IPC server
+          process.send = function() {};
+          fakeIPCServer.close();
+        }
       }
     }
 
@@ -209,18 +218,32 @@ if (!singlethreaded) {
           sendImplemented = false;
         }
 
+        oldLog = console.log;
+        console.log = function(a,b,c,d,e,f) {
+          if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
+            throw new Error("NOT IMPLEMENTED");
+          } else {
+            oldLog(a,b,c,d,e,f);
+          }
+        }
+
         try {
-          eval("'use strict';(" + String(worker.send).replace(/console\.log *\( *(["'])ChildProcess\.prototype\.send\(\) - Sorry! Not implemented yet\1 *\) *;?/, "throw new Error(\"NOT IMPLEMENTED\"); //") + ")(undefined)");
-        } catch (ex) {
-          if (ex.message === "NOT IMPLEMENTED") {
+          worker.send(undefined);
+        } catch (err) {
+          if (err.message === "NOT IMPLEMENTED") {
             sendImplemented = false;
           }
         }
+
+        console.log = oldLog;
 
         return sendImplemented;
       }
 
       if (!checkSendImplementation(newWorker)) {
+        var net = require("net");
+        var os = require("os");
+
         // Create a fake IPC server for worker process to receive messages
         var fakeWorkerIPCServer = net.createServer(function (socket) {
           var receivedData = "";
@@ -232,7 +255,8 @@ if (!singlethreaded) {
           socket.on("end", function () {
             newWorker.emit("message", receivedData);
           });
-        }).listen(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.P" + newWorker.process.pid + ".ipc") : (__dirname + "/temp/.P" + newWorker.process.pid + ".ipc"));
+        });
+        fakeWorkerIPCServer.listen(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.P" + newWorker.process.pid + ".ipc") : (__dirname + "/temp/.P" + newWorker.process.pid + ".ipc"));
 
         // Cleanup when worker process exits
         newWorker.on("exit", function () {
@@ -248,12 +272,9 @@ if (!singlethreaded) {
             var fakeWorkerIPCConnection = net.createConnection(os.platform() === "win32" ? path.join("\\\\?\\pipe", __dirname, "temp/.W" + newWorker.process.pid + ".ipc") : (__dirname + "/temp/.W" + newWorker.process.pid + ".ipc"), function () {
               fakeWorkerIPCConnection.end(message);
             });
-          } catch (ex) {
-            if (tries > 25) throw ex;
-
-            setTimeout(function () {
-              newWorker.send(message, undefined, undefined, tries + 1);
-            }, 10);
+          } catch (err) {
+            if (tries > 50) throw err;
+            newWorker.send(message, fakeParam2, fakeParam3, fakeParam4, tries + 1);
           }
         };
       }
@@ -263,6 +284,13 @@ if (!singlethreaded) {
       return newWorker;
     };
   }
+
+  if (process.isBun && (cluster.isMaster === undefined || (cluster.isMaster && process.env.NODE_UNIQUE_ID))) {
+    cluster.bunShim();
+  }
+
+  // Shim cluster.isPrimary field
+  if (cluster.isPrimary === undefined && cluster.isMaster !== undefined) cluster.isPrimary = cluster.isMaster;
 }
 
 var bruteForceDb = {};
@@ -275,9 +303,20 @@ function SVRJSFork() {
   //Log
   if (SVRJSInitialized) serverconsole.locmessage("Starting next thread, because previous one hung up/crashed...");
   //Fork new worker
-  var newWorker = cluster.fork();
+  var newWorker = {};
+  try {
+    newWorker = cluster.fork();
+  } catch (err) {
+    if(err.name == "NotImplementedError") {
+      // If cluster.fork throws a NotImplementedError, shim cluster module
+      cluster.bunShim();
+      newWorker = cluster.fork();
+    } else {
+      throw err;
+    }
+  }
   newWorker.on("error", function (err) {
-    serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
+    if(!reallyExiting) serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
   });
   newWorker.on("exit", function () {
     if (!exiting && Object.keys(cluster.workers).length == 0) {
@@ -905,9 +944,9 @@ if (configJSON.disableNonEncryptedServer != undefined) disableNonEncryptedServer
 if (configJSON.disableToHTTPSRedirect != undefined) disableToHTTPSRedirect = configJSON.disableToHTTPSRedirect;
 if (configJSON.wwwroot != undefined) {
   var wwwroot = configJSON.wwwroot;
-  if (cluster.isMaster || cluster.isMaster === undefined) process.chdir(wwwroot);
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
 } else {
-  if (cluster.isMaster || cluster.isMaster === undefined) process.chdir(__dirname);
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(__dirname);
 }
 
 //Compability for older mods
@@ -950,7 +989,6 @@ try {
 if (vnum === undefined) vnum = 0;
 if (process.isBun) vnum = 59;
 // NOTE: One of regexes used here is reported as vulnerable according to Devina ReDOS checker, but it's actually just FALSE POSITIVE.
-
 function sanitizeURL(resource) {
   if (resource == "*") return "*";
   if (resource == "") return "";
@@ -961,7 +999,12 @@ function sanitizeURL(resource) {
   // Decode URL-encoded characters while preserving certain characters
   resource = resource.replace(/%([0-9a-f]{2})/gi, function (match, hex) {
     var decodedChar = String.fromCharCode(parseInt(hex, 16));
-    return /(?![;?:@&=+$,#%])[!-~]/.test(decodedChar) ? decodedChar : "%" + hex;
+    return /(?!["<>^`{|}?#%])[!-~]/.test(decodedChar) ? decodedChar : "%" + hex;
+  });
+  // Encode certain characters
+  resource = resource.replace(/[<>^`{|}]]/g, function (character) {
+    var charCode = character.charCodeAt(0);
+    return "%" + (charcode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
   });
   var sanitizedResource = resource;
   // Ensure the resource starts with a slash
@@ -976,6 +1019,20 @@ function sanitizeURL(resource) {
   sanitizedResource = sanitizedResource.replace(/\/\.\.(?=(\/|$))/g, "$1").replace(/\/+/g, "/");
   if (sanitizedResource.length == 0) return "/";
   else return sanitizedResource;
+}
+
+function fixNodeMojibakeURL(string) {
+  var encoded = "";
+  Buffer.from(string, "latin1").forEach(function (value) {
+    if(value > 127) {
+      encoded += "%" + (value < 16 ? "0" : "") + value.toString(16).toUpperCase();
+    } else {
+      encoded += String.fromCodePoint(value);
+    }
+  });
+  return encoded.replace(/%[0-9a-f-A-F]{2}/g, function (match) {
+    return match.toUpperCase();
+  });
 }
 
 var key = "";
@@ -1016,10 +1073,10 @@ function LOG(s) {
   try {
     if (configJSON.enableLogging || configJSON.enableLogging == undefined) {
       if (logSync) {
-        fs.appendFileSync(__dirname + "/log/" + (cluster.isMaster ? "master" : (cluster.isMaster === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", "[" + new Date().toISOString() + "] " + s + "\r\n");
+        fs.appendFileSync(__dirname + "/log/" + (cluster.isPrimary ? "master" : (cluster.isPrimary === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", "[" + new Date().toISOString() + "] " + s + "\r\n");
       } else {
         if (!logFile) {
-          logFile = fs.createWriteStream(__dirname + "/log/" + (cluster.isMaster ? "master" : (cluster.isMaster === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", {
+          logFile = fs.createWriteStream(__dirname + "/log/" + (cluster.isPrimary ? "master" : (cluster.isPrimary === undefined ? "singlethread" : "worker")) + "-" + timestamp + ".log", {
             flags: "a",
             autoClose: false
           });
@@ -1160,11 +1217,11 @@ process.exit = function (code) {
 
 if (!disableMods) {
   var modloaderFolderName = "modloader";
-  if (cluster.isMaster === false) {
+  if (cluster.isPrimary === false) {
     modloaderFolderName = ".modloader_w" + Math.floor(Math.random() * 65536);
   }
   var tempServerSideScriptName = "serverSideScript.js";
-  if (!process.isBun && cluster.isMaster === false) {
+  if (!process.isBun && cluster.isPrimary === false) {
     tempServerSideScriptName = ".serverSideScript_w" + Math.floor(Math.random() * 65536) + ".js";
   }
   for (var i = 0; i < modFiles.length; i++) {
@@ -1234,7 +1291,7 @@ if (!disableMods) {
           }
         }
       } catch (ex) {
-        if (cluster.isMaster || cluster.isMaster === undefined) {
+        if (cluster.isPrimary || cluster.isPrimary === undefined) {
           serverconsole.locwarnmessage("There was a problem while loading a \"" + modFiles[i] + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(ex));
@@ -1263,7 +1320,7 @@ if (!disableMods) {
       }
       mods.push(amod);
     } catch (ex) {
-      if (cluster.isMaster || cluster.isMaster === undefined) {
+      if (cluster.isPrimary || cluster.isPrimary === undefined) {
         serverconsole.locwarnmessage("There was a problem while loading server side JavaScript.");
         serverconsole.locwarnmessage("Stack:");
         serverconsole.locwarnmessage(generateErrorStack(ex));
@@ -1480,7 +1537,7 @@ forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.log = getInitializePath("./log");
 
 //Create server
-if (!cluster.isMaster) {
+if (!cluster.isPrimary) {
   var reqcounter = 0;
   var server = {};
   var server2 = {};
@@ -1613,7 +1670,7 @@ if (!cluster.isMaster) {
   server2.on("error", function (err) {
     if (err.code == "EADDRINUSE" || err.code == "EADDRNOTAVAIL" || err.code == "EACCES") {
       attmtsRedir--;
-      if (cluster.isMaster === undefined) {
+      if (cluster.isPrimary === undefined) {
         if (err.code == "EADDRINUSE") {
           serverconsole.locerrmessage("Address in use by another process.");
         } else if (err.code == "EADDRNOTAVAIL") {
@@ -1629,14 +1686,14 @@ if (!cluster.isMaster) {
         server2.close();
         setTimeout(start, 900);
       } else {
-        if (cluster.isMaster !== undefined) process.send("\x12" + err.code);
+        if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
         process.exit(errors[err.code]);
       }
     } else {
       serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
       serverconsole.locerrmessage("Stack:");
       serverconsole.locerrmessage(generateErrorStack(err));
-      if (cluster.isMaster !== undefined) process.send("\x12CRASH");
+      if (cluster.isPrimary !== undefined) process.send("\x12CRASH");
       process.exit(err.code ? errors[err.code] : 1);
     }
   });
@@ -1867,11 +1924,9 @@ if (!cluster.isMaster) {
         res.end();
         return;
       }
-      try {
-        req.url = encodeURI(Buffer.from(req.url, "latin1").toString("utf8")).replace(/%25/gi, "%");
-      } catch (ex) {
-        //URL not converted...
-      }
+      
+      req.url = fixNodeMojibakeURL(req.url);
+      
       res.writeHeadNative = res.writeHead;
       res.writeHead = function (a, b, c) {
         if (parseInt(a) >= 400 && parseInt(a) <= 599) {
@@ -1920,7 +1975,7 @@ if (!cluster.isMaster) {
         400: "The request you made is invalid.",
         417: "Expectation in Expect property couldn't be satisfied.",
         500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
-        501: "The request requires use of a function, which isn't implemented (yet) by the server."
+        501: "The request requires use of a function, which isn't currently implemented by the server."
       };
 
       //Server error calling method
@@ -2588,7 +2643,7 @@ if (!cluster.isMaster) {
 
       var modFunction = ffinals;
       for (var i = proxyMods.length - 1; i >= 0; i--) {
-        modFunction = proxyMods[i].callback(req, socket, head, configJSON, serverconsole, modFunction);
+        modFunction = proxyMods[i].proxyCallback(req, socket, head, configJSON, serverconsole, modFunction);
       }
       modFunction();
     }
@@ -2760,11 +2815,7 @@ if (!cluster.isMaster) {
       return;
     }
 
-    try {
-      request.url = encodeURI(Buffer.from(request.url, "latin1").toString("utf8")).replace(/%25/gi, "%");
-    } catch (ex) {
-      //Request URL not modified...
-    }
+    request.url = fixNodeMojibakeURL(request.url);
 
     var headWritten = false;
     response.writeHeadNative = response.writeHead;
@@ -2955,9 +3006,9 @@ if (!cluster.isMaster) {
         431: "The request you sent contains headers, that are too large.",
         451: "The requested file isn't accessible for legal reasons.",
         500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
-        501: "The request requires use of a function, which isn't implemented (yet) by the server.",
+        501: "The request requires use of a function, which isn't currently implemented by the server.",
         502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-        503: "Service provided by the server isn't available (yet).</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+        503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
         504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
         505: "The server doesn't support HTTP version used in the request.",
         506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
@@ -3288,21 +3339,10 @@ if (!cluster.isMaster) {
             return;
           }
 
-          if (href == "/invoke500.svr" || (os.platform() == "win32" && href.toLowerCase() == "/invoke500.svr")) {
-            if (version.indexOf("Nightly-") === 0 && uobject.query.crash !== undefined) throw new Error("Intentionally crashed");
+          if (version.indexOf("Nightly-") === 0 && (href == "/invoke500.svr" || (os.platform() == "win32" && href.toLowerCase() == "/invoke500.svr"))) {
+            if (uobject.query.crash !== undefined) throw new Error("Intentionally crashed");
             try {
-              if (uobject.query.aprilfools === undefined) throw new Error("This page is intended to return 500 code.");
-              var hdhds = getCustomHeaders();
-              hdhds["Content-Type"] = "text/html; charset=utf-8";
-              if (uobject.query.activate === undefined) {
-                res.writeHead(599, "You may be a victim of software counterfeiting.", hdhds);
-                res.end("<html><head><title>Directory traversal prevention is not working.</title><style>body{background-color:#000;color:#fff}.a::after{content:\"\";clear:both;display:table}.button{text-decoration:none;color:#000;background-color:#f0f0f0;border:1px gray solid;padding:3px 20px 3px 20px}.button:hover{border:2px #00f solid}.close{text-decoration:none;color:#fff}</style></head><body><div style=\"text-align:center;font-family:sans-serif\"><div style=\"display:inline-block;background-color:gray\"><div style=\"background-color:#00f;color:#fff;text-align:left\"><a href=\"\" class=\"close\"><div style=\"float:right;background-color:red;padding:2px;margin-bottom:5px;margin-right:5px\"><small><b>&nbsp;&nbsp;X&nbsp;&nbsp;</b></small></div></a><div style=\"padding:5px\"><img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAXElEQVQ4ja2TwQoAIAhDXfT/v7wOERTYrEzo5HSvUpiRloiikiSMxHuDFMHsrCgkAdDPNYHnuKP4/wbqvl7uL0H0554mTYAxyifuSyEYExzPwa37XFO1KG6E7Do3hN8jFFmoGsUAAAAASUVORK5CYII=\"> Directory traversal prevention is not working.</div></div><div class=\"a\" style=\"background-color:#fff;margin:0 5px 0 5px;text-align:left\"><img style=\"margin:5px\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADZklEQVRoge2Zz0sbURDHPylqEyql3mwjBjx4EFHij4MX20O1B3/c9NhLoGAR400PIoUe4v8j1Ft/nLUXD0VED4KpVq3WgjH+nB7eCya72WT37W6k4Bceu5mZNzPf92Z2n2tERIT/GI/uOwG/eCDgjA/AY30NDyESWAYu9TU8hERgAdjQ9xv6dzgIicAykNP3OcLchRAIzAI7FtmOlgePEAh8AU4tslMtDx4BE3gL7DrodrU+WARMYAM4dtAdc9fYwSFAAm+A7So229ouOARI4IbC6h8dQSoFLS1qpFJKpvQ3wYUEkEDQISJPRQQ5PETicQRKRzyudMquI5iwIhLQDiSBvwDMzUE2a7fIZpVO2SWDCQtERPwep58A16hjgyqZcgQA4nHY3QVoAOqAM3+h8d0DC8B7CslDodbL4053qef5P2L43IEXwF6JpLERzhwWNhaDXK5Y8hz4aR4eXzuQBuzLPTHhPGN83Co50n7M4YPAZ1Ttl6ISgdFRq+Ra+/EBs4fXlIjERATbyOWQWKz0ERqNquvent1e+Zmq9WP0O8WNW4xYDIaGSmX5PHR3Q3NzuRmX2p8ZDAhMAz+o9EYdG7PLhoedrG+0v2nvqWBEYA2n1S9gZMQucyaA9rfmPRXw2gOzItJUtvato7+/tAfOz6vNadL+Q+2Br8C5K8viJ87gIESj1Waca//e4IHAPPALyLuyLu6DyuVTQF77n3efEngpoTYRiboqHxHk9hZpaFAltL7ubo7y3xZGCS2iDl/uVh8gEoGBAVU+nZ1uZ+V1nEXXcVzsQEZEnolIvevV9zfqdbxMUDuwAvwBrtyvii9c6XgrrqyrEFgCVj2nkMtBOg2JhBrptPUU6garOn4VVN6gHs8lcHGB9PXZ/6Ts61M6b/56qpZQBQIfxe1Lq3hkMvbkC2NpySuBJp2HEYEuz8mLIMmkM4GeHpOm7qpIwKEH5oEDr0ULwOammc4ZB1R6uTkQ+ATsm0Sjvd1M54x9nU95lCHwDjgxiQTA5KSZrjJOUHmVgb2qeo1qP5ynUPHoLdsDFgJjItLqi4AIcnaGzMwgiYQaMzNK5s9vq86vFJbPKq+Ab6b7XAO8xHrkLuqBJLBVy2wMsIX1s2Td3e1j4HVN0zHD75JfAXwbvV88/Kf+vvFA4L7xD6EQkx9oyJNyAAAAAElFTkSuQmCC\"><div style=\"color:#000;padding:7px 7px 5px 5px;float:right\"><big><big><span style=\"color:#5050ff\">You may be a victim of software<br>counterfeiting.</span></big></big><br><br>To use all DorianTech SVR.JS features, such as all<br>directory traversal protections; use server-side JS;<br>and recieve product support, your copy of DorianTech<br>SVR.JS must be validated as genuine.<br><br><a href=\"/invoke500.svr?aprilfools&activate\">Go online and resolve now</a><br><br></div></div><div style=\"padding:15px;border-top:1px silver solid;margin:0 5px 5px 5px;background-color:#e0e0e0;text-align:right\"><a href=\"javascript:location.reload();\" class=\"button\">Close</a></div></div></div><small>This copy of SVR.JS is not genuine.</small></body></html>");
-                serverconsole.resmessage("You may be a victim of software counterfeiting.");
-              } else {
-                res.writeHead(200, "OK", hdhds);
-                res.end("<style>body{background-color: black; color: white}</style><!DOCTYPE html>\n<!-- DON'T DELETE THE PAGE! THIS PAGE IS MEANT TO ACTIVATE SVR.JS!!! -->\n<html>\n<head>\n<title>SVR.JS Genuine Advantage</title>\n</head>\n<body>\n<h1>Activate SVR.JS</h1>\n<i>You will then be able to use all of SVR.JS features through SVR.JS Genuine Advantage!</i>\n<noscript>You need to enable JavaScript in order to activate SVR.JS.</noscript>\n<big><p id=\"activate\">Wait...</p></big>\n<script>\n  setTimeout(function () {\n    document.getElementById(\"activate\").innerHTML = \"Can't connect to DorianTech Activation Service! Check your internet connection.\";\n    'use doriantech activation technologies';\n    //#$DAT%SURL http://cscsmaterials.ddns.net/dat/doriantech.dad\n    //#$DAT%CONN __DORIANTECH__.__SVRJS__.__APRILFOOLS__.__ACTIVATE__(this,\"SVRJSSECRET32942832432\")\n    //#$DAT%ATOV __DORIANTECH__.__SVRJS__.__APRILFOOLS__.__USECOPY__(this)\n    //#$DAT%USEC this\n    //#$DAT%IFOK __JSEXECUTE__(\"document.getElementById('activate').innerHTML = __dat__.exec('HTML');\")\n  }, 2000);\n</script>\n</body>\n</html>\n<small>This copy of SVR.JS is not genuine.</small>");
-              }
-              return;
+              throw new Error("This page is intended to return 500 code.");
             } catch (ex) {
               callServerError(500, undefined, generateErrorStack(ex));
               return;
@@ -3318,35 +3358,15 @@ if (!cluster.isMaster) {
             res.writeHead(200, "OK", hdhds);
             res.end((head == "" ? "<html><head><title>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
             return;
-          } else if (href == "/zsoiebook.svr" || (os.platform() == "win32" && href.toLowerCase() == "/zsoiebook.svr")) {
-            var hdhds = getCustomHeaders();
-            hdhds["Content-Type"] = "text/html; charset=utf-8";
-            res.writeHead(200, "OK", hdhds);
-            if (typeof uobject.query.summary !== "undefined") {
-              res.end("<!DOCTYPE html>\n<html>\n  <head>\n    <title>The Summary of Book of ZSOiE</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\">And Satan created <em>Mammon</em>. His work won people from all over the school. When people abandoned them through the <em>Piracy Window</em>, so Satan went back in time and created <em>the Server</em> to continue to wreak havoc all over the school.</p>\n      <p class=\"from\">from <b>The Summary of Book of ZSOiE</b></p>\n    </section>\n  </body>\n</html>");
-              return;
-            }
-            var randomValue = Math.random();
-            if (randomValue > 0.85714) {
-              res.end("<!DOCTYPE html>\n<!-- Autor SVR.JS znalazł ChatGPT. ChatGPT pomógł autorowi w programowaniu SVR.JS. Author SVR.JS stworzył kolejny server, tym razem w bash... -->\n<!-- The author of SVR.JS found ChatGPT. ChatGPT helped the author develop SVR.JS. Author SVR.JS created another server, this time in bash... -->\n<html>\n  <head>\n    <title>The Book of ZSOiE, 7:28</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\"><em>The Server</em> continues to cultivate it's <em>Dafa</em>. <em>The Author</em> found <em>the Robot</em> and asked him for help. Then the Robot started to help the Author to improve his Server. And the Author tries to create <em>yet another server</em> without using the <em>main node</em>...</p>\n      <p class=\"from\">from <b>The Book of ZSOiE</b>, 7:28</p>\n    </section>\n  </body>\n</html>");
-            } else if (randomValue > 0.71429) {
-              res.end("<!DOCTYPE html>\n<!-- SVR.JS podzielił się na 2 gałęzie: jedną gałąź LTS SVR.JS 3.4.x i jedną gałąź najnowszych wersji SVR.JS. -->\n<!-- SVR.JS has split into 2 branches: one LTS SVR.JS 3.4.x branch and one branch of the latest versions of SVR.JS. -->\n<html>\n  <head>\n    <title>The Book of ZSOiE, 7:16</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\"><em>The Server</em> is still going. But <em>the Author</em> commanded to the Server: \"thou shalt you split to two branches.\". And the Server did split it's <em>Dafa</em>. One of two branches stopped serving on <em>old and rusty node</em>. Other one is still serving on that, but it will later <em>vanish</em>... \"<em>Mammon</em> will get confused\" - said the Author.</p>\n      <p class=\"from\">from <b>The Book of ZSOiE</b>, 7:16</p>\n    </section>\n  </body>\n</html>");
-            } else if (randomValue > 0.57143) {
-              res.end("<!DOCTYPE html>\n<!-- SVR.JS 2.x już nie otrzymuje aktualizacji zabezpieczeń, a SVR.JS 3.x jest rozwijany w kierunku niezawodności i łatwości. Dwóch z uczestników konkusru CyberSkiller z ZSOiE zostały ukazane w gazecie w artykule o najlepszych uczniach. -->\n<!-- SVR.JS 2.x no longer receives security updates and SVR.JS 3.x is being developed towards reliability and ease. Two of the participants of the CyberSkiller competition from ZSOiE were featured in the newspaper's article about the best students. -->\n<html>\n  <head>\n    <title>The Book of ZSOiE, 7:2</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\">The old Server forces died. The all-powerful new <em>Server</em> rosen from ashes of old Server like phoenix followed the ways of <em>Durability-Ease-Reliability</em> and cultivated his <em>Dafa</em>. Then, the <em>Author</em> and <em>Whyvn</em> appeared on best <em>former Mammon's</em> disciples paper.</p>\n      <p class=\"from\">from <b>The Book of ZSOiE</b>, 7:2</p>\n    </section>\n  </body>\n</html>");
-            } else if (randomValue > 0.42857) {
-              res.end("<!DOCTYPE html>\n<!-- Nastąpił koniec roku szkolnego. Autor wypróbował SVR.JS na platformie Bun. SVR.JS 3.0.0 został wreście wydany. Uczestnicy konkursu CyberSkiller z ZSOiE dostały Nagrodę Patrona. -->\n<!-- The school year has come to an end. The author tried out SVR.JS on the Bun platform. SVR.JS 3.0.0 has finally been released. Participants of the CyberSkiller competition from ZSOiE received the Patron's Award. -->\n<html>\n  <head>\n    <title>The Book of ZSOiE, 6:24</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\">Mammon had enough karmic retribution. The <em>Author</em> tried it's <em>Server</em> on <em>main node's substitute</em>. Then, the Author saw, that Server's <em>Dafa</em> is good, and that main node, it's substitute, and older Mammon are good. Meanwhile the <em>Author</em>, <em>Whyvn</em>, and <em>Snovbyn</em> rejoiced even more from their success over older Mammon.</p>\n      <p class=\"from\">from <b>The Book of ZSOiE</b>, 6:24</p>\n    </section>\n  </body>\n</html>");
-            } else if (randomValue > 0.32143) {
-              res.end("<!DOCTYPE html>\n<!-- Uczestnicy konkursu CyberSkiller uzyskali nagrody od nauczycieli ZSOiE. W tym samym czasie SVR.JS 3.0.0 zostaje niedługo wydany. -->\n<!-- Participants of the CyberSkiller competition received awards from ZSOiE teachers. At the same time, SVR.JS 3.0.0 is about to be released. -->\n<html>\n  <head>\n    <title>The Book of ZSOiE, 6:6</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\">And the <em>Server</em> is about to come. The <em>Author</em> along with <em>Whyvn</em> and <em>Snovbyn</em> passing the Mammon's test rejoiced their success over older Mammon.</p>\n      <p class=\"from\">from <b>The Book of ZSOiE</b>, 6:6</p>\n    </section>\n  </body>\n</html>");
-            } else if (randomValue > 0.14286) {
-              res.end("<!DOCTYPE html>\n<!-- Nastąpił finał konkursu CyberSkiller Challenge Poland. W finale jeden z uczestników ZSOiE w Lubsku użył serwera SVR.JS -->\n<!-- The finals of the CyberSkiller Challenge Poland competition has taken place. In the finals, one of the participants of ZSOiE in Lubsko used the SVR.JS server -->\n<html>\n  <head>\n    <title>The Book of ZSOiE, 5:25</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\">The twins of Mammon quarrelled. The <em>Author</em> with it's <em>Server</em> and it's <em>main node</em> plunged the Mammon's servers into darkness. Meanwhile <em>Whyvn</em> and <em>Snovbyn</em> helped him to break Mammon's servers. </p>\n      <p class=\"from\">from <b>The Book of ZSOiE</b>, 5:25</p>\n    </section>\n  </body>\n</html>");
-            } else {
-              res.end("<!DOCTYPE html>\n<!-- Uczniowie ZSOiE brali udział w konkursie CyberSkiller Challenge Poland i używali poleceń, który ich nauczyciel nie rozumiał. -->\n<!-- ZSOiE students took part in CyberSkiller Challenge Poland and used commands, which their teacher didn't understand. -->\n<html>\n  <head>\n    <title>The Book of ZSOiE, 3:16</title>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <style>\n      html {\n        background: maroon;\n        color: white;\n        font-style: italic;\n        text-rendering: optimizeLegibility;\n        min-height: 100%;\n      }\n\n      .svrtext {\n        margin-top: 15%;\n        font-size: 1.1em;\n        font-family: serif;\n        text-align: center;\n        line-height: 1.5;\n      }\n\n      .from {\n        font-size: 1.95em;\n        font-family: serif;\n        text-align: right;\n      }\n\n      em {\n        font-size: 1.3em;\n        line-height: 0;\n      }\n\n      a {\n        text-decoration: none;\n        color: white;\n      }\n    </style>\n  </head>\n  <body>\n    <section>\n      <p class=\"svrtext\">Mammon slept. Meanwhile, the <em>Author</em>, <em>Whyvn</em> and <em>Snovbyn</em> being in very skill-requiring challenge casted <em>tcpdump</em> and <em>mongodb</em> on him. </p>\n      <p class=\"from\">from <b>The Book of ZSOiE</b>, 3:16</p>\n    </section>\n  </body>\n</html>");
-            }
-            return;
           } else if (version.indexOf("Nightly-") === 0 && (href == "/crash.svr" || (os.platform() == "win32" && href.toLowerCase() == "/crash.svr"))) {
             throw new Error("Intentionally crashed");
           }
 
+          /////////////////////////////////////////////
+          ////THERE IS NO MORE "THE BOOK OF ZSOIE"!////
+          //// But it's in easteregg.tar.gz mod... ////
+          /////////////////////////////////////////////
+          
           var pth = decodeURIComponent(href).replace(/\/+/g, "/").substr(1);
           fs.stat("./" + pth, function (err, stats) {
             if (err) {
@@ -4131,7 +4151,7 @@ if (!cluster.isMaster) {
   server.on("error", function (err) {
     if (err.code == "EADDRINUSE" || err.code == "EADDRNOTAVAIL" || err.code == "EACCES") {
       attmts--;
-      if (cluster.isMaster === undefined) {
+      if (cluster.isPrimary === undefined) {
         if (err.code == "EADDRINUSE") {
           serverconsole.locerrmessage("Address in use by another process.");
         } else if (err.code == "EADDRNOTAVAIL") {
@@ -4147,14 +4167,14 @@ if (!cluster.isMaster) {
         server2.close();
         setTimeout(start, 900);
       } else {
-        if (cluster.isMaster !== undefined) process.send("\x12" + err.code);
+        if (cluster.isPrimary !== undefined) process.send("\x12" + err.code);
         process.exit(errors[err.code]);
       }
     } else {
       serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
       serverconsole.locerrmessage("Stack:");
       serverconsole.locerrmessage(generateErrorStack(err));
-      if (cluster.isMaster !== undefined) process.send("\x12CRASH");
+      if (cluster.isPrimary !== undefined) process.send("\x12CRASH");
       process.exit(err.code ? errors[err.code] : 1);
     }
   });
@@ -4246,7 +4266,7 @@ var messageTransmitted = false;
 function listeningMessage() {
   if (messageTransmitted) return;
   messageTransmitted = true;
-  if (!cluster.isMaster && cluster.isMaster !== undefined) {
+  if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
     process.send("\x12LISTEN");
     return;
   }
@@ -4274,7 +4294,7 @@ var closedMaster = false;
 
 function start(init) {
   init = Boolean(init);
-  if (cluster.isMaster || cluster.isMaster === undefined) {
+  if (cluster.isPrimary || cluster.isPrimary === undefined) {
     if (init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); //Print logo
       console.log();
@@ -4283,7 +4303,7 @@ function start(init) {
       if (vnum <= 57 && JSON.stringify(rewriteMap) != "[]") serverconsole.locwarnmessage("Some URL rewriting regexes will not work in Node.JS 8.x and earlier.");
       if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version!");
       if (process.isBun) serverconsole.locwarnmessage("Bun support is experimental.");
-      if (cluster.isMaster === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer.");
+      if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support!");
       if (!process.isBun && process.version == "v8.5.0") serverconsole.locwarnmessage("Your Node.JS version is vulnerable to path validation vulnerability (CVE-2017-14849).");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user.");
@@ -4312,7 +4332,7 @@ function start(init) {
   }
 
 
-  if (!cluster.isMaster) {
+  if (!cluster.isPrimary) {
     if (secure) {
       server.listen(sport);
       if (!disableNonEncryptedServer) server2.listen(port);
@@ -4329,13 +4349,13 @@ function start(init) {
         if (secure && !disableNonEncryptedServer) {
           server2.close();
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("Server closed.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Server closed.");
         else {
           process.send("Server closed.");
           process.send("\x12CLOSE");
         }
       } catch (ex) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot close server! Reason: " + ex.message);
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot close server! Reason: " + ex.message);
         else process.send("Cannot close server! Reason: " + ex.message);
       }
     },
@@ -4347,29 +4367,29 @@ function start(init) {
         } else {
           server.listen(port); // ReOpen Server
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("Server opened.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
         else {
           process.send("Server opened.");
           process.send("\x12OPEN");
         }
       } catch (ex) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot open server! Reason: " + ex.message);
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot open server! Reason: " + ex.message);
         else process.send("Cannot open server! Reason: " + ex.message);
       }
     },
     help: function () {
-      if (cluster.isMaster === undefined) serverconsole.climessage("Server commands:\n" + Object.keys(commands).join(" "));
+      if (cluster.isPrimary === undefined) serverconsole.climessage("Server commands:\n" + Object.keys(commands).join(" "));
       else process.send("Server commands:\n" + Object.keys(commands).join(" "));
     },
     mods: function () {
-      if (cluster.isMaster === undefined) serverconsole.climessage("Mods:");
+      if (cluster.isPrimary === undefined) serverconsole.climessage("Mods:");
       else process.send("Mods:");
       for (var i = 0; i < modInfos.length; i++) {
-        if (cluster.isMaster === undefined) serverconsole.climessage((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
+        if (cluster.isPrimary === undefined) serverconsole.climessage((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
         else process.send((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
       }
       if (modInfos.length == 0) {
-        if (cluster.isMaster === undefined) serverconsole.climessage("No mods installed.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("No mods installed.");
         else process.send("No mods installed.");
       }
     },
@@ -4385,8 +4405,8 @@ function start(init) {
     },
     block: function (ip) {
       if (ip == undefined || JSON.stringify(ip) == "[]") {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot block non-existent IP.");
-        else if (!cluster.isMaster) process.send("Cannot block non-existent IP.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot block non-existent IP.");
+        else if (!cluster.isPrimary) process.send("Cannot block non-existent IP.");
       } else {
         for (var i = 0; i < ip.length; i++) {
           if (ip[i].indexOf(":") == -1) {
@@ -4396,14 +4416,14 @@ function start(init) {
             blacklist.add(ip[i]);
           }
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("IPs successfully blocked.");
-        else if (!cluster.isMaster) process.send("IPs successfully blocked.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully blocked.");
+        else if (!cluster.isPrimary) process.send("IPs successfully blocked.");
       }
     },
     unblock: function (ip) {
       if (ip == undefined || JSON.stringify(ip) == "[]") {
-        if (cluster.isMaster === undefined) serverconsole.climessage("Cannot unblock non-existent IP.");
-        else if (!cluster.isMaster) process.send("Cannot unblock non-existent IP.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot unblock non-existent IP.");
+        else if (!cluster.isPrimary) process.send("Cannot unblock non-existent IP.");
       } else {
         for (var i = 0; i < ip.length; i++) {
           if (ip[i].indexOf(":") == -1) {
@@ -4411,19 +4431,19 @@ function start(init) {
           }
           blacklist.remove(ip[i]);
         }
-        if (cluster.isMaster === undefined) serverconsole.climessage("IPs successfully unblocked.");
-        else if (!cluster.isMaster) process.send("IPs successfully unblocked.");
+        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully unblocked.");
+        else if (!cluster.isPrimary) process.send("IPs successfully unblocked.");
       }
     },
     restart: function () {
-      if (cluster.isMaster === undefined) serverconsole.climessage("This command is not supported on single-threaded SVR.JS.");
+      if (cluster.isPrimary === undefined) serverconsole.climessage("This command is not supported on single-threaded SVR.JS.");
       else process.send("This command need to be run in SVR.JS master.");
     }
   };
 
 
   if (init) {
-    if (cluster.isMaster === undefined) {
+    if (cluster.isPrimary === undefined) {
       setInterval(function () {
         try {
           saveConfig();
@@ -4432,7 +4452,7 @@ function start(init) {
           throw new Error(ex);
         }
       }, 300000);
-    } else if (cluster.isMaster) {
+    } else if (cluster.isPrimary) {
       setInterval(function () {
         var allClusters = Object.keys(cluster.workers);
         for (var i = 0; i < allClusters.length; i++) {
@@ -4452,7 +4472,7 @@ function start(init) {
         }
       }, 300000);
     }
-    if (!cluster.isMaster && cluster.isMaster !== undefined) {
+    if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
         try {
           if (line == "") {
@@ -4495,7 +4515,7 @@ function start(init) {
         var argss = line.split(" ");
         var command = argss.shift();
         if (line != "") {
-          if (cluster.isMaster !== undefined) {
+          if (cluster.isPrimary !== undefined) {
             var allClusters = Object.keys(cluster.workers);
             if (command == "block") commands.block(argss);
             if (command == "unblock") commands.unblock(argss);
@@ -4577,9 +4597,9 @@ function start(init) {
       });
     }
 
-    if (cluster.isMaster || cluster.isMaster === undefined) {
+    if (cluster.isPrimary || cluster.isPrimary === undefined) {
       //Cluster forking code
-      if (cluster.isMaster !== undefined && init) {
+      if (cluster.isPrimary !== undefined && init) {
         var cpus = os.cpus().length;
         if (cpus > 16) cpus = 16;
         try {
@@ -4758,7 +4778,7 @@ function saveConfig() {
 }
 
 //Process event listeners
-if (cluster.isMaster || cluster.isMaster === undefined) {
+if (cluster.isPrimary || cluster.isPrimary === undefined) {
   process.on("uncaughtException", function (ex) {
     //CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
@@ -4805,7 +4825,7 @@ if (cluster.isMaster || cluster.isMaster === undefined) {
     }
   });
   process.on("SIGINT", function () {
-    if (cluster.isMaster !== undefined) {
+    if (cluster.isPrimary !== undefined) {
       exiting = true;
       var allClusters = Object.keys(cluster.workers);
       for (var i = 0; i < allClusters.length; i++) {

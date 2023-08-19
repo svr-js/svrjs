@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.4.20</title>
+    <title>SVR.JS 3.4.21</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.4.20</h1>
+    <h1>Welcome to SVR.JS 3.4.21</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -110,7 +110,14 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Improved reliability while loading server-side JavaScript.</li>
+      <li>Changed descriptions of 501 and 503 errors.</li>
+      <li>Disabled open proxy in default server-side JavaScript.</li>
+      <li>Fixed NotImplementedError in "cluster" module when running SVR.JS on newer versions of Bun.</li>
+      <li>Fixed redirect loops related to URL sanitizer.</li>
+      <li>Fixed SVR.JS proxy API.</li>
+      <li>Improved Bun IPC shim connection error handling.</li>
+      <li>Improved server error handling for Bun.</li>
+      <li>Updated svrpasswd tool.</li>
     </ul>
     <p>Bugs:</p>
     <ul>

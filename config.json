@@ -3,7 +3,7 @@
   "port": 80,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1680954429282,
+  "timestamp": 1692482564058,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
@@ -77,7 +77,11 @@
     }
   ],
   "allowStatus": true,
-  "dontCompress": ["/.*\\.ipxe$/","/.*\\.img$/","/.*\\.iso$/"],
+  "dontCompress": [
+    "/.*\\.ipxe$/",
+    "/.*\\.img$/",
+    "/.*\\.iso$/"
+  ],
   "enableIPSpoofing": false,
   "secure": false,
   "sni": {},

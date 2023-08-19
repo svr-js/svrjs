@@ -277,24 +277,30 @@ function password(callback) {
   var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: 'Password: ',
-    terminal: false
+    prompt: 'Password: '
   });
   rl.prompt();
-  rl.once('line', (line) => {
-    //rl.close();
+  process.stdout.writeold = process.stdout.write;
+  process.stdout.write = function (s) {
+    process.stdout.writeold(s.replace(/[^\r\n]/g, ""));
+  };
+  rl.once('line', function (line) {
+    process.stdout.write = process.stdout.writeold;
     var rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
       prompt: 'Confirm password: ',
-      terminal: false
     });
     rl.prompt();
-    rl.on('line', (line2) => {
+    process.stdout.writeold = process.stdout.write;
+    process.stdout.write = function (s) {
+      process.stdout.writeold(s.replace(/[^\r\n]/g, ""));
+    };
+    rl.on('line', function (line2) {
+      process.stdout.write = process.stdout.writeold;
       rl.close();
       if (line != line2) callback(false);
       else callback(line);
-
     });
   });
 }

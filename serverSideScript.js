@@ -62,13 +62,19 @@ if(href == "/hello.svr") {
   callServerError(403,"SVR.JS-exampleproxy"); //Server error
   serverconsole.errmessage("Client fails to recieve content."); //Log into SVR.JS
 } else if(href.indexOf("/proxy.svr/") == 0) {
+  var hn = href.split("/")[2]; //Hostname
+  if(hn != "this" && !(req.socket.realRemoteAddress ? req.socket.realRemoteAddress : req.socket.remoteAddress).match(/^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i) ) {
+    //Prevent open proxy
+    callServerError(403,"SVR.JS-exampleproxy"); //Server error
+    serverconsole.errmessage("Client fails to recieve content."); //Log into SVR.JS
+  }
   var hdrs = req.headers;
-  hdrs["Host"] = (href.split("/")[2] == "this" ? req.headers.host : href.split("/")[2]);
+  hdrs["Host"] = (hn == "this" ? req.headers.host : hn);
   hdrs["Origin"] = (req.headers.host == undefined ? "" : req.headers.host);
   var options = {
-    hostname: (href.split("/")[2] == "this" ? req.headers.host.split(":")[0] : href.split("/")[2].split(":")[0]),
-    port: (href.split("/")[2] == "this" ? req.headers.host.split(":")[1] : (href.split("/")[2].split(":")[1] == undefined ? 80 : href.split("/")[2].split(":")[1])),
-    path: req.url.replace("/proxy.svr/" + href.split("/")[2],""),
+    hostname: (hn == "this" ? req.headers.host.split(":")[0] : hn.split(":")[0]),
+    port: (hn == "this" ? req.headers.host.split(":")[1] : (hn.split(":")[1] == undefined ? 80 : hn.split(":")[1])),
+    path: req.url.replace("/proxy.svr/" + hn,""),
     method: req.method,
     headers: filterHeaders(hdrs)
   };
