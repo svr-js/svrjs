@@ -570,9 +570,9 @@ function ipBlockList(rawBlockList) {
     var validateIpv4 = /((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})/;
 
     if (validateIpv4.test(address)) {
-      groups = address.match(extractIpv4);
-      for (var i = 1; i < groups.length; i++) {
-        ipv4 += ("00" + (parseInt(groups[i], 10).toString(16))).slice(-2) + (i == 2 ? ":" : "");
+      var oldGroups = address.match(extractIpv4);
+      for (var i = 1; i < oldGroups.length; i++) {
+        ipv4 += ("00" + (parseInt(oldGroups[i], 10).toString(16))).slice(-2) + (i == 2 ? ":" : "");
       }
       address = address.replace(extractIpv4, ipv4);
     }
@@ -582,19 +582,19 @@ function ipBlockList(rawBlockList) {
     } else {
       var sides = address.split("::");
       var groupsPresent = 0;
-      for (var i = 0; i < sides.length; i++) {
-        groupsPresent += sides[i].split(":").length;
-      }
+      sides.forEach(function (side) {
+        groupsPresent += side.split(":").length;
+      });
       fullAddress += sides[0] + ":";
-      for (var i = 0; i < validGroupCount - groupsPresent; i++) {
-        fullAddress += "0000:";
+      if(validGroupCount - groupsPresent > 1) {
+        fullAddress += "0000:".repeat(validGroupCount - groupsPresent);
       }
       fullAddress += sides[1];
     }
     var groups = fullAddress.split(":");
     for (var i = 0; i < validGroupCount; i++) {
-      while (groups[i].length < validGroupSize) {
-        groups[i] = "0" + groups[i];
+      if (groups[i].length < validGroupSize) {
+        groups[i] = "0".repeat(validGroupSize - groups[i].length) + groups[i];
       }
       expandedAddress += (i != validGroupCount - 1) ? groups[i] + ":" : groups[i];
     }
@@ -623,9 +623,9 @@ function ipBlockList(rawBlockList) {
   function ipv6ToBlocks(ip) {
     var ips = ip.split(":");
     var ip2s = [];
-    for (var i = 0; i < ips.length; i++) {
-      ip2s.push(parseInt(ips[i]));
-    }
+    ips.forEach(function (ipe) {
+      ip2s.push(parseInt(ipe));
+    });
     return ip2s;
   }
 
@@ -750,17 +750,16 @@ function ipBlockList(rawBlockList) {
     if (instance.cidrs.length == 0) return false;
     var ipParsedObject = (!isIPv6 ? ipv4ToInt : ipv6ToBlocks)(rawValue);
     var checkMethod = (!isIPv6 ? checkIfIPv4CIDRMatches : checkIfIPv6CIDRMatches);
-    for (var i = 0; i < instance.cidrs.length; i++) {
-      if (checkMethod(ipParsedObject, instance.cidrs[i])) return true;
-    }
-
-    return false;
+    
+    return instance.cidrs.some(function(iCidr) {
+      return checkMethod(ipParsedObject, iCidr);
+    });
   };
 
   // Add initial raw block list values to the instance
-  for (var i = 0; i < rawBlockList.length; i++) {
-    instance.add(rawBlockList[i]);
-  }
+  rawBlockList.forEach(function (rbe) {
+    instance.add(rbe);
+  });
 
   return instance;
 }
@@ -771,18 +770,20 @@ function generateErrorStack(errorObject) {
   var errorStack = errorObject.stack ? errorObject.stack.split("\n") : [];
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
-  for (var i = 0; i < errorStack.length; i++) {
-    if (errorStack[i].indexOf(errorObject.name) == 0) return errorObject.stack;
+  if (errorStack.some(function (errorStackLine) {
+      return (errorStackLine.indexOf(errorObject.name) == 0);
+    })) {
+    return errorObject.stack;
   }
 
   // Create a new error stack with the error name and code (if available).
   var newErrorStack = [errorObject.name + (errorObject.code ? ": " + errorObject.code : "") + (errorObject.message == "" ? "" : ": " + errorObject.message)];
 
   // Process each line of the original error stack.
-  for (var i = 0; i < errorStack.length; i++) {
-    if (errorStack[i] != "") {
+  errorStack.forEach(function (errorStackLine) {
+    if (errorStackLine != "") {
       // Split the line into function and location parts (if available).
-      var errorFrame = errorStack[i].split("@");
+      var errorFrame = errorStackLine.split("@");
       var location = "";
       if (errorFrame.length > 1) location = errorFrame.pop();
       var func = errorFrame.join("@");
@@ -790,7 +791,7 @@ function generateErrorStack(errorObject) {
       // Build the new error stack entry with function and location information.
       newErrorStack.push("    at " + (func == "" ? (!location || location == "" ? "<anonymous>" : location) : (func + (!location || location == "" ? "" : " (" + location + ")"))));
     }
-  }
+  });
 
   // Join the new error stack entries with newlines and return the final stack.
   return newErrorStack.join("\n");
@@ -1034,18 +1035,17 @@ configJSON.productName = "SVR.JS";
 var blacklist = ipBlockList(rawBlackList);
 
 var nonStandardCodes = [];
-for (var i = 0; i < nonStandardCodesRaw.length; i++) {
+nonStandardCodesRaw.forEach(function (nonStandardCodeRaw) {
   var nO = {};
-  var nsKeys = Object.keys(nonStandardCodesRaw[i]);
-  for (var j = 0; j < nsKeys.length; j++) {
-    if (nsKeys[j] != "users") {
-      nO[nsKeys[j]] = nonStandardCodesRaw[i][nsKeys[j]];
+  Object.keys(nonStandardCodeRaw).forEach(function (nsKey) {
+    if (nsKey != "users") {
+      nO[nsKey] = nonStandardCodeRaw[nsKey];
     } else {
-      nO["users"] = ipBlockList(nonStandardCodesRaw[i].users);
+      nO["users"] = ipBlockList(nonStandardCodeRaw.users);
     }
-  }
+  });
   nonStandardCodes.push(nO);
-}
+});
 
 var customHeaders = (configJSON.customHeaders == undefined ? {} : JSON.parse(JSON.stringify(configJSON.customHeaders)));
 if (exposeServerVersion) {
@@ -1178,10 +1178,9 @@ function LOG(s) {
 var serverconsole = {
   climessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
-      var nmsg = msg.split("\n");
-      for (var i = 0; i < nmsg.length; i++) {
-        serverconsole.climessage(nmsg[i]);
-      }
+      msg.split("\n").forEach(function (nmsg) {
+        serverconsole.climessage(nmsg);
+      });
       return;
     }
     console.log("SERVER CLI MESSAGE: " + msg);
@@ -1190,10 +1189,9 @@ var serverconsole = {
   },
   reqmessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
-      var nmsg = msg.split("\n");
-      for (var i = 0; i < nmsg.length; i++) {
-        serverconsole.reqmessage(nmsg[i]);
-      }
+      msg.split("\n").forEach(function (nmsg) {
+        serverconsole.reqmessage(nmsg);
+      });
       return;
     }
     console.log("\x1b[34mSERVER REQUEST MESSAGE: " + msg + "\x1b[37m\x1b[0m");
@@ -1202,10 +1200,9 @@ var serverconsole = {
   },
   resmessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
-      var nmsg = msg.split("\n");
-      for (var i = 0; i < nmsg.length; i++) {
-        serverconsole.resmessage(nmsg[i]);
-      }
+      msg.split("\n").forEach(function (nmsg) {
+        serverconsole.resmessage(nmsg);
+      });
       return;
     }
     console.log("\x1b[32mSERVER RESPONSE MESSAGE: " + msg + "\x1b[37m\x1b[0m");
@@ -1214,10 +1211,9 @@ var serverconsole = {
   },
   errmessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
-      var nmsg = msg.split("\n");
-      for (var i = 0; i < nmsg.length; i++) {
-        serverconsole.errmessage(nmsg[i]);
-      }
+      msg.split("\n").forEach(function (nmsg) {
+        serverconsole.errmessage(nmsg);
+      });
       return;
     }
     console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE: " + msg + "\x1b[37m\x1b[0m");
@@ -1226,10 +1222,9 @@ var serverconsole = {
   },
   locerrmessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
-      var nmsg = msg.split("\n");
-      for (var i = 0; i < nmsg.length; i++) {
-        serverconsole.locerrmessage(nmsg[i]);
-      }
+      msg.split("\n").forEach(function (nmsg) {
+        serverconsole.locerrmessage(nmsg);
+      });
       return;
     }
     console.log("\x1b[41mSERVER ERROR MESSAGE: " + msg + "\x1b[40m\x1b[0m");
@@ -1238,10 +1233,9 @@ var serverconsole = {
   },
   locwarnmessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
-      var nmsg = msg.split("\n");
-      for (var i = 0; i < nmsg.length; i++) {
-        serverconsole.locwarnmessage(nmsg[i]);
-      }
+      msg.split("\n").forEach(function (nmsg) {
+        serverconsole.locwarnmessage(nmsg);
+      });
       return;
     }
     console.log("\x1b[43mSERVER WARNING MESSAGE: " + msg + "\x1b[40m\x1b[0m");
@@ -1250,10 +1244,9 @@ var serverconsole = {
   },
   locmessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
-      var nmsg = msg.split("\n");
-      for (var i = 0; i < nmsg.length; i++) {
-        serverconsole.locmessage(nmsg[i]);
-      }
+      msg.split("\n").forEach(function (nmsg) {
+        serverconsole.locmessage(nmsg);
+      });
       return;
     }
     console.log("SERVER MESSAGE: " + msg);
@@ -1314,9 +1307,9 @@ if (!disableMods) {
   }
 
   // Iterate through the list of mod files
-  for (var i = 0; i < modFiles.length; i++) {
+  modFiles.forEach(function (modFileRaw) {
     // Build the path to the current mod file
-    var modFile = __dirname + "/mods/" + modFiles[i];
+    var modFile = __dirname + "/mods/" + modFileRaw;
 
     try {
       // Try creating the modloader folder (if not already exists)
@@ -1337,7 +1330,7 @@ if (!disableMods) {
       }
 
       // Create a subfolder for the current mod within the modloader folder
-      fs.mkdirSync(__dirname + "/temp/" + modloaderFolderName + "/" + modFiles[i]);
+      fs.mkdirSync(__dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
     } catch (err) {
       // If there was an error creating the folder, ignore it if it's a known error
       if (err.code != "EEXIST" && err.code != "ENOENT") throw err;
@@ -1354,12 +1347,12 @@ if (!disableMods) {
           tar.x({
             file: modFile,
             sync: true,
-            C: __dirname + "/temp/" + modloaderFolderName + "/" + modFiles[i]
+            C: __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw
           });
         } else {
           // If it's not a ".tar.gz" file, unpack it using `svrmodpack`
           if (svrmodpack._errored) throw svrmodpack._errored;
-          svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFiles[i]);
+          svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
         }
 
         // Initialize variables for mod loading
@@ -1369,7 +1362,7 @@ if (!disableMods) {
         // Attempt to require the mod's index.js file, retrying up to 3 times in case of syntax errors
         for (var j = 0; j < 3; j++) {
           try {
-            Mod = require("./temp/" + modloaderFolderName + "/" + modFiles[i] + "/index.js");
+            Mod = require("./temp/" + modloaderFolderName + "/" + modFileRaw + "/index.js");
             mod = new Mod();
             break;
           } catch (err) {
@@ -1387,13 +1380,13 @@ if (!disableMods) {
         // Attempt to read the mod's info file, retrying up to 3 times
         for (var j = 0; j < 3; j++) {
           try {
-            modInfos.push(JSON.parse(fs.readFileSync(__dirname + "/temp/" + modloaderFolderName + "/" + modFiles[i] + "/mod.info")));
+            modInfos.push(JSON.parse(fs.readFileSync(__dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw + "/mod.info")));
             break;
           } catch (err) {
             if (j >= 2) {
               // If failed to read info file, add a placeholder entry to modInfos with an error message
               modInfos.push({
-                name: "Unknown mod (" + modFiles[i] + ";" + err.message + ")",
+                name: "Unknown mod (" + modFileRaw + ";" + err.message + ")",
                 version: "ERROR"
               });
             }
@@ -1406,13 +1399,13 @@ if (!disableMods) {
       } catch (err) {
         // If there was an error during mod loading, log it to the console
         if (cluster.isPrimary || cluster.isPrimary === undefined) {
-          serverconsole.locwarnmessage("There was a problem while loading a \"" + modFiles[i] + "\" mod.");
+          serverconsole.locwarnmessage("There was a problem while loading a \"" + modFileRaw + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(err));
         }
       }
     }
-  }
+  });
 
   // Check if a custom server side script file exists
   if (fs.existsSync("./serverSideScript.js") && fs.statSync("./serverSideScript.js").isFile()) {
@@ -1624,11 +1617,9 @@ function isForbiddenPath(decodedHref, match) {
     return decodedHref === forbiddenPath || (os.platform() === "win32" && decodedHref.toLowerCase() === forbiddenPath.toLowerCase());
   }
   if (typeof forbiddenPath === "object") {
-    for (var i = 0; i < forbiddenPath.length; i++) {
-      if (decodedHref === forbiddenPath[i] || (os.platform() === "win32" && decodedHref.toLowerCase() === forbiddenPath[i].toLowerCase())) {
-        return true;
-      }
-    }
+    return forbiddenPath.some(function (forbiddenPathSingle) {
+      return (decodedHref === forbiddenPathSingle || (os.platform() === "win32" && decodedHref.toLowerCase() === forbiddenPathSingle.toLowerCase()));
+    });
   }
   return false;
 }
@@ -1640,11 +1631,9 @@ function isIndexOfForbiddenPath(decodedHref, match) {
     return decodedHref === forbiddenPath || decodedHref.indexOf(forbiddenPath + "/") === 0 || (os.platform() === "win32" && (decodedHref.toLowerCase() === forbiddenPath.toLowerCase() || decodedHref.toLowerCase().indexOf(forbiddenPath.toLowerCase() + "/") === 0));
   }
   if (typeof forbiddenPath === "object") {
-    for (var i = 0; i < forbiddenPath.length; i++) {
-      if (decodedHref === forbiddenPath[i] || decodedHref.indexOf(forbiddenPath[i] + "/") === 0 || (os.platform() === "win32" && (decodedHref.toLowerCase() === forbiddenPath[i].toLowerCase() || decodedHref.toLowerCase().indexOf(forbiddenPath[i].toLowerCase() + "/") === 0))) {
-        return true;
-      }
-    }
+    return forbiddenPath.some(function (forbiddenPathSingle) {
+      return (decodedHref === forbiddenPathSingle || decodedHref.indexOf(forbiddenPathSingle + "/") === 0 || (os.platform() === "win32" && (decodedHref.toLowerCase() === forbiddenPathSingle.toLowerCase() || decodedHref.toLowerCase().indexOf(forbiddenPathSingle.toLowerCase() + "/") === 0)));
+    });
   }
   return false;
 }
@@ -1657,10 +1646,10 @@ forbiddenPaths.certificates = [];
 if (secure) {
   forbiddenPaths.certificates.push(getInitializePath(configJSON.cert));
   forbiddenPaths.certificates.push(getInitializePath(configJSON.key));
-  for (var i = 0; i < Object.keys(sni).length; i++) {
-    forbiddenPaths.certificates.push(getInitializePath(sni[Object.keys(sni)[i]].cert));
-    forbiddenPaths.certificates.push(getInitializePath(sni[Object.keys(sni)[i]].key));
-  }
+  Object.keys(sni).forEach(function (sniHostName) {
+    forbiddenPaths.certificates.push(getInitializePath(sni[sniHostName].cert));
+    forbiddenPaths.certificates.push(getInitializePath(sni[sniHostName].key));
+  });
 }
 forbiddenPaths.svrjs = getInitializePath("./" + ((__dirname[__dirname.length - 1] != "/") ? __filename.replace(__dirname + "/", "") : __filename.replace(__dirname, "")));
 forbiddenPaths.serverSideScripts = [];
@@ -1693,10 +1682,9 @@ if (!cluster.isPrimary) {
       var serverconsole = {
         climessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.climessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.climessage(nmsg);
+            });
             return;
           }
           console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -1705,10 +1693,9 @@ if (!cluster.isPrimary) {
         },
         reqmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.reqmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.reqmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -1717,10 +1704,9 @@ if (!cluster.isPrimary) {
         },
         resmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.resmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.resmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -1729,10 +1715,9 @@ if (!cluster.isPrimary) {
         },
         errmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.errmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.errmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -1741,10 +1726,9 @@ if (!cluster.isPrimary) {
         },
         locerrmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.locerrmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.locerrmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -1753,10 +1737,9 @@ if (!cluster.isPrimary) {
         },
         locwarnmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.locwarnmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.locwarnmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -1765,10 +1748,9 @@ if (!cluster.isPrimary) {
         },
         locmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.locmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.locmessage(nmsg);
+            });
             return;
           }
           console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -1907,12 +1889,12 @@ if (!cluster.isPrimary) {
     }
   }
   if (secure) {
-    for (var i = 0; i < sniCredentials.length; i++) {
-      server.addContext(sniCredentials[i].name, {
-        cert: sniCredentials[i].cert,
-        key: sniCredentials[i].key
+    sniCredentials.forEach(function (sniCredentialsSingle) {
+      server.addContext(sniCredentialsSingle.name, {
+        cert: sniCredentialsSingle.cert,
+        key: sniCredentialsSingle.key
       });
-    }
+    });
   }
   server.on("request", reqhandler);
   server.on("checkExpectation", reqhandler);
@@ -2000,10 +1982,9 @@ if (!cluster.isPrimary) {
       var serverconsole = {
         climessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.climessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.climessage(nmsg);
+            });
             return;
           }
           console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2012,10 +1993,9 @@ if (!cluster.isPrimary) {
         },
         reqmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.reqmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.reqmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2024,10 +2004,9 @@ if (!cluster.isPrimary) {
         },
         resmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.resmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.resmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2036,10 +2015,9 @@ if (!cluster.isPrimary) {
         },
         errmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.errmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.errmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2048,10 +2026,9 @@ if (!cluster.isPrimary) {
         },
         locerrmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.locerrmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.locerrmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2060,10 +2037,9 @@ if (!cluster.isPrimary) {
         },
         locwarnmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.locwarnmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.locwarnmessage(nmsg);
+            });
             return;
           }
           console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2072,10 +2048,9 @@ if (!cluster.isPrimary) {
         },
         locmessage: function (msg) {
           if (msg.indexOf("\n") != -1) {
-            var nmsg = msg.split("\n");
-            for (var i = 0; i < nmsg.length; i++) {
-              serverconsole.locmessage(nmsg[i]);
-            }
+            msg.split("\n").forEach(function (nmsg) {
+              serverconsole.locmessage(nmsg);
+            });
             return;
           }
           console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2086,10 +2061,9 @@ if (!cluster.isPrimary) {
 
       function getCustomHeaders() {
         var ph = JSON.parse(JSON.stringify(customHeaders));
-        var phk = Object.keys(ph);
-        for (var i = 0; i < phk.length; i++) {
-          if (typeof ph[phk[i]] == "string") ph[phk[i]] = ph[phk[i]].replace(/\{path\}/g, req.url);
-        }
+        Object.keys(ph).forEach(function (phk) {
+          if (typeof ph[phk] == "string") ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
+        });
         return ph;
       }
       
@@ -2174,17 +2148,16 @@ if (!cluster.isPrimary) {
           var cheaders = getCustomHeaders();
           if (ch) {
             var chon = Object.keys(cheaders);
-            var chn = Object.keys(ch);
-            for (var i = 0; i < chn.length; i++) {
-              var nhn = chn[i];
+            Object.keys(ch).forEach(function (chnS) {
+              var nhn = chnS;
               for (var j = 0; j < chon.length; j++) {
-                if (chon[j].toLowerCase() == chn[i].toLowerCase()) {
+                if (chon[j].toLowerCase() == chnS.toLowerCase()) {
                   nhn = chon[j];
                   break;
                 }
               }
-              if (ch[chn[i]]) cheaders[nhn] = ch[chn[i]];
-            }
+              if (ch[chnS]) cheaders[nhn] = ch[chnS];
+            });
           }
           cheaders["Content-Type"] = "text/html; charset=utf-8";
           if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
@@ -2212,7 +2185,6 @@ if (!cluster.isPrimary) {
               res.end();
             }
           });
-
         }
       }
 
@@ -2394,7 +2366,6 @@ if (!cluster.isPrimary) {
         serverconsole.errmessage(generateErrorStack(err));
         callServerError(500, undefined, generateErrorStack(err));
       }
-
     }
   }
 
@@ -2426,19 +2397,18 @@ if (!cluster.isPrimary) {
       var headers = JSON.parse(JSON.stringify(headers));
       headers["Date"] = (new Date()).toGMTString();
       headers["Connection"] = "close";
-      var headernames = Object.keys(headers);
-      for (var i = 0; i < headernames.length; i++) {
-        if (headernames[i].toLowerCase() == "set-cookie") {
-          for (var j = 0; j < headers[headernames[i]]; j++) {
-            if (headernames[i].match(/[^\x09\x20-\x7e\x80-\xff]|.:/) || headers[headernames[i]][j].match(/[^\x09\x20-\x7e\x80-\xff]/)) throw new Error("Invalid header!!! (" + headernames[i] + ")");
-            head += (headernames[i] + ": " + headers[headernames[i]][j]);
-          }
+      Object.keys(headers).forEach(function (headername) {
+        if (headername.toLowerCase() == "set-cookie") {
+          headers[headername].forEach(function (headerValueS) {
+            if (headername.match(/[^\x09\x20-\x7e\x80-\xff]|.:/) || headerValueS.match(/[^\x09\x20-\x7e\x80-\xff]/)) throw new Error("Invalid header!!! (" + headername + ")");
+            head += (headername + ": " + headerValueS);
+          });
         } else {
-          if (headernames[i].match(/[^\x09\x20-\x7e\x80-\xff]|.:/) || headers[headernames[i]].match(/[^\x09\x20-\x7e\x80-\xff]/)) throw new Error("Invalid header!!! (" + headernames[i] + ")");
-          head += (headernames[i] + ": " + headers[headernames[i]]);
+          if (headernames[i].match(/[^\x09\x20-\x7e\x80-\xff]|.:/) || headers[headername].match(/[^\x09\x20-\x7e\x80-\xff]/)) throw new Error("Invalid header!!! (" + headername + ")");
+          head += (headername + ": " + headers[headername]);
         }
         head += "\r\n";
-      }
+      });
       head += ("\r\n");
       res.write(head);
     };
@@ -2448,10 +2418,9 @@ if (!cluster.isPrimary) {
     var serverconsole = {
       climessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.climessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.climessage(nmsg);
+          });
           return;
         }
         console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2460,10 +2429,9 @@ if (!cluster.isPrimary) {
       },
       reqmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.reqmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.reqmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2472,10 +2440,9 @@ if (!cluster.isPrimary) {
       },
       resmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.resmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.resmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2484,10 +2451,9 @@ if (!cluster.isPrimary) {
       },
       errmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.errmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.errmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2496,10 +2462,9 @@ if (!cluster.isPrimary) {
       },
       locerrmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locerrmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locerrmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2508,10 +2473,9 @@ if (!cluster.isPrimary) {
       },
       locwarnmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locwarnmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locwarnmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2520,10 +2484,9 @@ if (!cluster.isPrimary) {
       },
       locmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locmessage(nmsg);
+          });
           return;
         }
         console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2578,17 +2541,16 @@ if (!cluster.isPrimary) {
         var cheaders = getCustomHeaders();
         if (ch) {
           var chon = Object.keys(cheaders);
-          var chn = Object.keys(ch);
-          for (var i = 0; i < chn.length; i++) {
-            var nhn = chn[i];
+          Object.keys(ch).forEach(function (chnS) {
+            var nhn = chnS;
             for (var j = 0; j < chon.length; j++) {
-              if (chon[j].toLowerCase() == chn[i].toLowerCase()) {
+              if (chon[j].toLowerCase() == chnS.toLowerCase()) {
                 nhn = chon[j];
                 break;
               }
             }
-            if (ch[chn[i]]) cheaders[nhn] = ch[chn[i]];
-          }
+            if (ch[chnS]) cheaders[nhn] = ch[chnS];
+          });
         }
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
@@ -2721,10 +2683,9 @@ if (!cluster.isPrimary) {
     var serverconsole = {
       climessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.climessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.climessage(nmsg);
+          });
           return;
         }
         console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2733,10 +2694,9 @@ if (!cluster.isPrimary) {
       },
       reqmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.reqmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.reqmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2745,10 +2705,9 @@ if (!cluster.isPrimary) {
       },
       resmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.resmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.resmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2757,10 +2716,9 @@ if (!cluster.isPrimary) {
       },
       errmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.errmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.errmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2769,10 +2727,9 @@ if (!cluster.isPrimary) {
       },
       locerrmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locerrmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locerrmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2781,10 +2738,9 @@ if (!cluster.isPrimary) {
       },
       locwarnmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locwarnmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locwarnmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2793,10 +2749,9 @@ if (!cluster.isPrimary) {
       },
       locmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locmessage(nmsg);
+          });
           return;
         }
         console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2820,14 +2775,14 @@ if (!cluster.isPrimary) {
 
     function modExecute(mods, ffinals) {
       var proxyMods = [];
-      for (var i = 0; i < mods.length; i++) {
-        if (mods[i].proxyCallback !== undefined) proxyMods.push(mods[i]);
-      }
+      mods.forEach(function (mod) {
+        if (mod.proxyCallback !== undefined) proxyMods.push(mod);
+      });
 
       var modFunction = ffinals;
-      for (var i = proxyMods.length - 1; i >= 0; i--) {
-        modFunction = proxyMods[i].callback(req, socket, head, configJSON, serverconsole, modFunction);
-      }
+      proxyMods.reverse().forEach(function(proxyMod) {
+        modFunction = proxyMod.proxyCallback(req, socket, head, configJSON, serverconsole, modFunction);
+      });
       modFunction();
     }
 
@@ -2847,10 +2802,9 @@ if (!cluster.isPrimary) {
     var serverconsole = {
       climessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.climessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.climessage(nmsg);
+          });
           return;
         }
         console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2859,10 +2813,9 @@ if (!cluster.isPrimary) {
       },
       reqmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.reqmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.reqmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2871,10 +2824,9 @@ if (!cluster.isPrimary) {
       },
       resmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.resmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.resmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2883,10 +2835,9 @@ if (!cluster.isPrimary) {
       },
       errmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.errmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.errmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
@@ -2895,10 +2846,9 @@ if (!cluster.isPrimary) {
       },
       locerrmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locerrmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locerrmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2907,10 +2857,9 @@ if (!cluster.isPrimary) {
       },
       locwarnmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locwarnmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locwarnmessage(nmsg);
+          });
           return;
         }
         console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
@@ -2919,10 +2868,9 @@ if (!cluster.isPrimary) {
       },
       locmessage: function (msg) {
         if (msg.indexOf("\n") != -1) {
-          var nmsg = msg.split("\n");
-          for (var i = 0; i < nmsg.length; i++) {
-            serverconsole.locmessage(nmsg[i]);
-          }
+          msg.split("\n").forEach(function (nmsg) {
+            serverconsole.locmessage(nmsg);
+          });
           return;
         }
         console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
@@ -2933,10 +2881,9 @@ if (!cluster.isPrimary) {
 
     function getCustomHeaders() {
       var ph = JSON.parse(JSON.stringify(customHeaders));
-      var phk = Object.keys(ph);
-      for (var i = 0; i < phk.length; i++) {
-        if (typeof ph[phk[i]] == "string") ph[phk[i]] = ph[phk[i]].replace(/\{path\}/g, request.url);
-      }
+      Object.keys(ph).forEach(function (phk) {
+        if (typeof ph[phk] == "string") ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
+      });
       return ph;
     }
 
@@ -2969,7 +2916,7 @@ if (!cluster.isPrimary) {
         if (!request.headers.host) request.headers.host = request.headers[":authority"];
         (request.headers[":path"] == undefined ? (function () {})() : request.url = request.headers[":path"]);
         request.protocol = request.headers[":scheme"];
-        var headers = [":path" || ":method"];
+        var headers = [":path", ":method"];
         for (var i = 0; i < headers.length; i++) {
           if (request.headers[headers[i]] == undefined) {
             var cheaders = getCustomHeaders();
@@ -3260,17 +3207,16 @@ if (!cluster.isPrimary) {
           // Process custom headers if provided
           if (ch) {
             var chon = Object.keys(cheaders);
-            var chn = Object.keys(ch);
-            for (var i = 0; i < chn.length; i++) {
-              var nhn = chn[i];
+            Object.keys(ch).forEach(function (chnS) {
+              var nhn = chnS;
               for (var j = 0; j < chon.length; j++) {
-                if (chon[j].toLowerCase() == chn[i].toLowerCase()) {
+                if (chon[j].toLowerCase() == chnS.toLowerCase()) {
                   nhn = chon[j];
                   break;
                 }
               }
-              if (ch[chn[i]]) cheaders[nhn] = ch[chn[i]];
-            }
+              if (ch[chnS]) cheaders[nhn] = ch[chnS];
+            });
           }
 
           cheaders["Content-Type"] = "text/html; charset=utf-8";
@@ -5193,21 +5139,21 @@ function start(init) {
               exiting = true;
               allClusters = Object.keys(cluster.workers);
             }
-            for (var i = 0; i < allClusters.length; i++) {
+            allClusters.forEach(function (clusterID) {
               try {
-                if (cluster.workers[allClusters[i]]) {
-                  cluster.workers[allClusters[i]].on("message", msgListener);
-                  cluster.workers[allClusters[i]].send(line);
+                if (cluster.workers[clusterID]) {
+                  cluster.workers[clusterID].on("message", msgListener);
+                  cluster.workers[clusterID].send(line);
                 }
               } catch (err) {
-                if (cluster.workers[allClusters[i]]) {
-                  cluster.workers[allClusters[i]].removeAllListeners("message");
-                  cluster.workers[allClusters[i]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[i]]));
-                  cluster.workers[allClusters[i]].on("message", listenConnListener);
+                if (cluster.workers[clusterID]) {
+                  cluster.workers[clusterID].removeAllListeners("message");
+                  cluster.workers[clusterID].on("message", bruteForceListenerWrapper(cluster.workers[clusterID]));
+                  cluster.workers[clusterID].on("message", listenConnListener);
                 }
                 serverconsole.climessage("Can't run command \"" + command + "\".");
               }
-            }
+            });
             if (command == "stop") {
               setTimeout(function () {
                 reallyExiting = true;
