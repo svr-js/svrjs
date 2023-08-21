@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.21";
+var version = "3.4.22";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -2026,8 +2026,10 @@ if (!cluster.isPrimary) {
                 additionalError = 404;
               } else if (ex.code == "EACCES") {
                 additionalError = 403;
+              } else if (ex.code == "ENAMETOOLONG") {
+                additionalError = 414;
               } else if (ex.code == "EMFILE") {
-                additionalError = 429;
+                additionalError = 503;
               } else if (ex.code == "ELOOP") {
                 additionalError = 508;
               }
@@ -2431,8 +2433,10 @@ if (!cluster.isPrimary) {
               additionalError = 404;
             } else if (ex.code == "EACCES") {
               additionalError = 403;
+            } else if (ex.code == "ENAMETOOLONG") {
+              additionalError = 414;
             } else if (ex.code == "EMFILE") {
-              additionalError = 429;
+              additionalError = 503;
             } else if (ex.code == "ELOOP") {
               additionalError = 508;
             }
@@ -3105,8 +3109,10 @@ if (!cluster.isPrimary) {
                 additionalError = 404;
               } else if (ex.code == "EACCES") {
                 additionalError = 403;
+              } else if (ex.code == "ENAMETOOLONG") {
+                additionalError = 414;
               } else if (ex.code == "EMFILE") {
-                additionalError = 429;
+                additionalError = 503;
               } else if (ex.code == "ELOOP") {
                 additionalError = 508;
               }
@@ -3379,8 +3385,10 @@ if (!cluster.isPrimary) {
               } else if (err.code == "EACCES") {
                 callServerError(403);
                 serverconsole.errmessage("Access denied.");
+              } else if (err.code == "ENAMETOOLONG") {
+                callServerError(414);
               } else if (err.code == "EMFILE") {
-                callServerError(429);
+                callServerError(503);
               } else if (err.code == "ELOOP") {
                 callServerError(508);
               } else {
@@ -3579,8 +3587,10 @@ if (!cluster.isPrimary) {
                       } else if (ex.code == "EACCES") {
                         callServerError(403);
                         serverconsole.errmessage("Access denied.");
-                      } else if (ex.code == "EMFILE") {
-                        callServerError(429);
+                      } else if (err.code == "ENAMETOOLONG") {
+                        callServerError(414);
+                      } else if (err.code == "EMFILE") {
+                        callServerError(503);
                       } else if (ex.code == "ELOOP") {
                         callServerError(508);
                       } else {
@@ -3609,8 +3619,10 @@ if (!cluster.isPrimary) {
                     } else if (err.code == "EACCES") {
                       callServerError(403);
                       serverconsole.errmessage("Access denied.");
+                    } else if (err.code == "ENAMETOOLONG") {
+                      callServerError(414);
                     } else if (err.code == "EMFILE") {
-                      callServerError(429);
+                      callServerError(503);
                     } else if (err.code == "ELOOP") {
                       callServerError(508);
                     } else {
@@ -3704,8 +3716,10 @@ if (!cluster.isPrimary) {
                             } else if (err.code == "EACCES") {
                               callServerError(403);
                               serverconsole.errmessage("Access denied.");
+                            } else if (err.code == "ENAMETOOLONG") {
+                              callServerError(414);
                             } else if (err.code == "EMFILE") {
-                              callServerError(429);
+                              callServerError(503);
                             } else if (err.code == "ELOOP") {
                               callServerError(508);
                             } else {
@@ -3761,8 +3775,10 @@ if (!cluster.isPrimary) {
                           } else if (ex.code == "EACCES") {
                             callServerError(403);
                             serverconsole.errmessage("Access denied.");
-                          } else if (ex.code == "EMFILE") {
-                            callServerError(429);
+                          } else if (err.code == "ENAMETOOLONG") {
+                            callServerError(414);
+                          } else if (err.code == "EMFILE") {
+                            callServerError(503);
                           } else if (ex.code == "ELOOP") {
                             callServerError(508);
                           } else {
