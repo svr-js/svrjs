@@ -2175,6 +2175,8 @@ if (!cluster.isPrimary) {
                 additionalError = 404; // Assume that file doesn't exist
               } else if (err.code == "EACCES") {
                 additionalError = 403;
+              } else if (err.code == "ENAMETOOLONG") {
+                additionalError = 414;
               } else if (err.code == "EMFILE") {
                 additionalError = 503;
               } else if (err.code == "ELOOP") {
@@ -2574,6 +2576,8 @@ if (!cluster.isPrimary) {
                 additionalError = 404; // Assume that file doesn't exist
               } else if (err.code == "EACCES") {
                 additionalError = 403;
+              } else if (err.code == "ENAMETOOLONG") {
+                additionalError = 414;
               } else if (err.code == "EMFILE") {
                 additionalError = 503;
               } else if (err.code == "ELOOP") {
@@ -3246,6 +3250,8 @@ if (!cluster.isPrimary) {
                 additionalError = 404; // Assume that file doesn't exist
               } else if (err.code == "EACCES") {
                 additionalError = 403;
+              } else if (err.code == "ENAMETOOLONG") {
+                additionalError = 414;
               } else if (err.code == "EMFILE") {
                 additionalError = 503;
               } else if (err.code == "ELOOP") {
@@ -3610,6 +3616,9 @@ if (!cluster.isPrimary) {
                 callServerError(403);
                 serverconsole.errmessage("Access denied.");
                 return;
+              } else if (err.code == "ENAMETOOLONG") {
+                callServerError(414);
+                return;
               } else if (err.code == "EMFILE") {
                 callServerError(503);
                 return;
@@ -3882,6 +3891,8 @@ if (!cluster.isPrimary) {
                       } else if (err.code == "EACCES") {
                         callServerError(403);
                         serverconsole.errmessage("Access denied.");
+                      } else if (err.code == "ENAMETOOLONG") {
+                        callServerError(414);
                       } else if (err.code == "EMFILE") {
                         callServerError(503);
                       } else if (err.code == "ELOOP") {
@@ -3915,6 +3926,8 @@ if (!cluster.isPrimary) {
                     } else if (err.code == "EACCES") {
                       callServerError(403);
                       serverconsole.errmessage("Access denied.");
+                    } else if (err.code == "ENAMETOOLONG") {
+                      callServerError(414);
                     } else if (err.code == "EMFILE") {
                       callServerError(503);
                     } else if (err.code == "ELOOP") {
@@ -4036,6 +4049,8 @@ if (!cluster.isPrimary) {
                             } else if (err.code == "EACCES") {
                               callServerError(403);
                               serverconsole.errmessage("Access denied.");
+                            } else if (err.code == "ENAMETOOLONG") {
+                              callServerError(414);
                             } else if (err.code == "EMFILE") {
                               callServerError(503);
                             } else if (err.code == "ELOOP") {
@@ -4095,6 +4110,8 @@ if (!cluster.isPrimary) {
                           } else if (err.code == "EACCES") {
                             callServerError(403);
                             serverconsole.errmessage("Access denied.");
+                          } else if (err.code == "ENAMETOOLONG") {
+                            callServerError(414);
                           } else if (err.code == "EMFILE") {
                             callServerError(503);
                           } else if (err.code == "ELOOP") {
@@ -5037,7 +5054,7 @@ function start(init) {
         scryptCache = scryptCache.filter(function(entry) {
           return entry.addDate > (new Date() - 3600000);
         });
-      }, 10000);
+      }, 1800000);
     }
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
