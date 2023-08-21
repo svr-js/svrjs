@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.7.0";
+var version = "3.7.1";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -2067,7 +2067,7 @@ if (!cluster.isPrimary) {
         return ph;
       }
       
-      if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost")) {
+      if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
         var headers = getCustomHeaders();
         res.writeHead(204, "No Content", headers);
         res.end();
@@ -2554,31 +2554,37 @@ if (!cluster.isPrimary) {
         }
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
-        fs.readFile(errorFile, function (err, data) {
-          try {
-            if (err) throw err;
-            res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-            fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
-            responseEnd();
-          } catch (err) {
-            var additionalError = 500;
-            if (err.code == "ENOENT") {
-              additionalError = 404;
-            } else if (err.code == "ENOTDIR") {
-              additionalError = 404; // Assume that file doesn't exist
-            } else if (err.code == "EACCES") {
-              additionalError = 403;
-            } else if (err.code == "EMFILE") {
-              additionalError = 503;
-            } else if (err.code == "ELOOP") {
-              additionalError = 508;
+        if(err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
+          //Disable custom error page for HTTP SSL error
+          res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+          res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")));
+          res.end();
+        } else {
+          fs.readFile(errorFile, function (err, data) {
+            try {
+              if (err) throw err;
+              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+              fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
+              responseEnd();
+            } catch (err) {
+              var additionalError = 500;
+              if (err.code == "ENOENT") {
+                additionalError = 404;
+              } else if (err.code == "ENOTDIR") {
+                additionalError = 404; // Assume that file doesn't exist
+              } else if (err.code == "EACCES") {
+                additionalError = 403;
+              } else if (err.code == "EMFILE") {
+                additionalError = 503;
+              } else if (err.code == "ELOOP") {
+                additionalError = 508;
+              }
+              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+              res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
+              res.end();
             }
-            res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-            res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
-            res.end();
-          }
-        });
-
+          });
+        }
       }
     }
     var reqip = socket.remoteAddress;
@@ -2938,7 +2944,7 @@ if (!cluster.isPrimary) {
       }
     }
 
-    if (request.headers["x-svr-js-from-main-thread"] == "true" && (!request.socket.remoteAddress || request.socket.remoteAddress == "::1" || request.socket.remoteAddress == "::ffff:127.0.0.1" || request.socket.remoteAddress == "127.0.0.1" || request.socket.remoteAddress == "localhost")) {
+    if (request.headers["x-svr-js-from-main-thread"] == "true" && (!request.socket.remoteAddress || request.socket.remoteAddress == "::1" || request.socket.remoteAddress == "::ffff:127.0.0.1" || request.socket.remoteAddress == "127.0.0.1" || request.socket.remoteAddress == "localhost" || request.socket.remoteAddress == host || request.socket.remoteAddress == "::ffff:" + host)) {
       var headers = getCustomHeaders();
       response.writeHead(204, "No Content", headers);
       response.end();
