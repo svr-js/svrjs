@@ -67,6 +67,7 @@ if(href == "/hello.svr") {
     //Prevent open proxy
     callServerError(403,"SVR.JS-exampleproxy"); //Server error
     serverconsole.errmessage("Client fails to recieve content."); //Log into SVR.JS
+    return;
   }
   var hdrs = req.headers;
   hdrs["Host"] = (hn == "this" ? req.headers.host : hn);
