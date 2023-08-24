@@ -4863,11 +4863,17 @@ function start(init) {
 
 
   if (!cluster.isPrimary) {
-    if (secure) {
-      server.listen(sport);
-      if (!disableNonEncryptedServer) server2.listen(port);
-    } else {
-      server.listen(port);
+    try {
+      server.listen(secure ? sport : port);
+    } catch(err) {
+      if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+    }
+    if (secure && !disableNonEncryptedServer) {
+      try {
+        server2.listen(port);
+      } catch(err) {
+        if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+      }
     }
   }
 
