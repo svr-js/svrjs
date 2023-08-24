@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.7.2";
+var version = "3.7.3";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -4863,11 +4863,17 @@ function start(init) {
 
 
   if (!cluster.isPrimary) {
-    if (secure) {
-      server.listen(sport);
-      if (!disableNonEncryptedServer) server2.listen(port);
-    } else {
-      server.listen(port);
+    try {
+      server.listen(secure ? sport : port);
+    } catch(err) {
+      if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+    }
+    if (secure && !disableNonEncryptedServer) {
+      try {
+        server2.listen(port);
+      } catch(err) {
+        if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+      }
     }
   }
 
