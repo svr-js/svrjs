@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.23";
+var version = "3.4.24";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -331,6 +331,7 @@ var http = require("http");
 http.STATUS_CODES[497] = "HTTP Request Sent to HTTPS Port";
 http.STATUS_CODES[598] = "Network Read Timeout Error";
 http.STATUS_CODES[599] = "Network Connect Timeout Error";
+var dns = require("dns");
 var url = require("url");
 if (url.URL && typeof URL == "undefined") URL = url.URL;
 try {
@@ -793,21 +794,33 @@ if (host != "[offline]" || ifaceEx) {
         return;
       }
       pubip = d.toString();
-      if (!domain) {
-        if (pubip.indexOf(":") == -1) {
-          var parts = pubip.split(".");
-          var p1 = parseInt(parts[0]).toString(16);
-          var p2 = parseInt(parts[1]).toString(16);
-          var p3 = parseInt(parts[2]).toString(16);
-          var p4 = parseInt(parts[3]).toString(16);
-          var pp = parseInt(pubport).toString(16);
-          domain = p1 + p2 + p3 + p4 + pp + ".nodesvr.doriantech.com";
-        } else {
-          domain = pubip.replace(/[^0-9a-zA-Z]/gi, "").toLowerCase() + ".nodesvrip6.doriantech.com";
+      if (domain) {
+        ipRequestCompleted = true;
+        process.emit("ipRequestCompleted");
+      } else {
+        var callbackDone = false;
+
+        var dnsTimeout = setTimeout(function() {
+          callbackDone = true;
+          ipRequestCompleted = true;
+          process.emit("ipRequestCompleted");
+        }, 3000);
+
+        try {
+          dns.reverse(pubip, function(err, hostnames) {
+            if(callbackDone) return;
+            clearTimeout(dnsTimeout);
+            if(!err && hostnames.length > 0) domain = hostnames[0];
+            ipRequestCompleted = true;
+            process.emit("ipRequestCompleted");
+          });
+        } catch(err) {
+          clearTimeout(dnsTimeout);
+          callbackDone = true;
+          ipRequestCompleted = true;
+          process.emit("ipRequestCompleted");
         }
       }
-      ipRequestCompleted = true;
-      process.emit("ipRequestCompleted");
     });
   });
   ipRequest.on("error", function () {
@@ -845,21 +858,33 @@ if (host != "[offline]" || ifaceEx) {
           return;
         }
         pubip = d.toString();
-        if (!domain) {
-          if (pubip.indexOf(":") == -1) {
-            var parts = pubip.split(".");
-            var p1 = parseInt(parts[0]).toString(16);
-            var p2 = parseInt(parts[1]).toString(16);
-            var p3 = parseInt(parts[2]).toString(16);
-            var p4 = parseInt(parts[3]).toString(16);
-            var pp = parseInt(pubport).toString(16);
-            domain = p1 + p2 + p3 + p4 + pp + ".nodesvr.doriantech.com";
-          } else {
-            domain = pubip.replace(/[^0-9a-zA-Z]/gi, "").toLowerCase() + ".nodesvrip6.doriantech.com";
+        if (domain) {
+          ipRequestCompleted = true;
+          process.emit("ipRequestCompleted");
+        } else {
+          var callbackDone = false;
+
+          var dnsTimeout = setTimeout(function() {
+            callbackDone = true;
+            ipRequestCompleted = true;
+            process.emit("ipRequestCompleted");
+          }, 3000);
+
+          try {
+            dns.reverse(pubip, function(err, hostnames) {
+              if(callbackDone) return;
+              clearTimeout(dnsTimeout);
+              if(!err && hostnames.length > 0) domain = hostnames[0];
+              ipRequestCompleted = true;
+              process.emit("ipRequestCompleted");
+            });
+          } catch(err) {
+            clearTimeout(dnsTimeout);
+            callbackDone = true;
+            ipRequestCompleted = true;
+            process.emit("ipRequestCompleted");
           }
         }
-        ipRequestCompleted = true;
-        process.emit("ipRequestCompleted");
       });
     });
     ipRequest2.on("error", function () {
