@@ -15,7 +15,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2020 DorianTech S.A.
+ * Copyright (c) 2020-2023 DorianTech
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  * 
@@ -666,6 +666,9 @@ function ipBlockList(rawBlockList) {
 
   // Function to add an IP or CIDR block to the block list
   instance.add = function (rawValue) {
+    // Add to raw block list
+    instance.raw.push(rawValue);
+
     // Initialize variables
     var beginIndex = instance.prepared.length;
     var cidrIndex = instance.cidrs.length;
@@ -751,7 +754,7 @@ function ipBlockList(rawBlockList) {
     if (instance.cidrs.length == 0) return false;
     var ipParsedObject = (!isIPv6 ? ipv4ToInt : ipv6ToBlocks)(rawValue);
     var checkMethod = (!isIPv6 ? checkIfIPv4CIDRMatches : checkIfIPv6CIDRMatches);
-    
+
     return instance.cidrs.some(function(iCidr) {
       return checkMethod(ipParsedObject, iCidr);
     });
@@ -1061,15 +1064,15 @@ var blacklist = ipBlockList(rawBlackList);
 
 var nonStandardCodes = [];
 nonStandardCodesRaw.forEach(function (nonStandardCodeRaw) {
-  var nO = {};
+  var newObject = {};
   Object.keys(nonStandardCodeRaw).forEach(function (nsKey) {
     if (nsKey != "users") {
-      nO[nsKey] = nonStandardCodeRaw[nsKey];
+      newObject[nsKey] = nonStandardCodeRaw[nsKey];
     } else {
-      nO["users"] = ipBlockList(nonStandardCodeRaw.users);
+      newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
     }
   });
-  nonStandardCodes.push(nO);
+  nonStandardCodes.push(newObject);
 });
 
 var customHeaders = (configJSON.customHeaders == undefined ? {} : JSON.parse(JSON.stringify(configJSON.customHeaders)));
@@ -1163,13 +1166,13 @@ if (secure) {
   cert = fs.readFileSync((configJSON.cert[0] != "/" && !configJSON.cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.cert : configJSON.cert).toString();
   var sniNames = Object.keys(sni);
   var sniCredentials = [];
-  for (var i = 0; i < sniNames.length; i++) {
+  sniNames.forEach(function (sniName) {
     sniCredentials.push({
-      name: sniNames[i],
-      cert: fs.readFileSync((sni[sniNames[i]].cert[0] != "/" && !sni[sniNames[i]].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniNames[i]].cert : sni[sniNames[i]].cert).toString(),
-      key: fs.readFileSync((sni[sniNames[i]].key[0] != "/" && !sni[sniNames[i]].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniNames[i]].key : sni[sniNames[i]].key).toString()
+      name: sniName,
+      cert: fs.readFileSync((sni[sniName].cert[0] != "/" && !sni[sniName].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].cert : sni[sniName].cert).toString(),
+      key: fs.readFileSync((sni[sniName].key[0] != "/" && !sni[sniName].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].key : sni[sniName].key).toString()
     });
-  }
+  });
 }
 
 var logFile = undefined;
@@ -2091,16 +2094,16 @@ if (!cluster.isPrimary) {
         });
         return ph;
       }
-      
+
       if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
         var headers = getCustomHeaders();
         res.writeHead(204, "No Content", headers);
         res.end();
         return;
       }
-        
+
       req.url = fixNodeMojibakeURL(req.url);
-      
+
       res.writeHeadNative = res.writeHead;
       res.writeHead = function (a, b, c) {
         if (parseInt(a) >= 400 && parseInt(a) <= 599) {
@@ -2110,7 +2113,7 @@ if (!cluster.isPrimary) {
         }
         res.writeHeadNative(a, b, c);
       };
-      
+
       var finished = false;
       res.on("finish", function () {
         if (!finished) {
@@ -2979,7 +2982,7 @@ if (!cluster.isPrimary) {
       response.end();
       return;
     }
-    
+
     request.url = fixNodeMojibakeURL(request.url);
 
     var headWritten = false;
@@ -3607,12 +3610,12 @@ if (!cluster.isPrimary) {
           } else if (version.indexOf("Nightly-") === 0 && (href == "/crash.svr" || (os.platform() == "win32" && href.toLowerCase() == "/crash.svr"))) {
             throw new Error("Intentionally crashed");
           }
-          
+
           /////////////////////////////////////////////
           ////THERE IS NO MORE "THE BOOK OF ZSOIE"!////
           //// But it's in easteregg.tar.gz mod... ////
           /////////////////////////////////////////////
-          
+
           var pth = decodeURIComponent(href).replace(/\/+/g, "/").substr(1);
           var readFrom = "./" + pth;
           fs.stat(readFrom, function (err, stats) {
@@ -4439,7 +4442,7 @@ if (!cluster.isPrimary) {
           // Handle HTTP authentication
           if (authIndex > -1) {
             var authcode = nonStandardCodes[authIndex];
-            
+
             function checkIfPasswordMatches(list, password, callback, _i) {
                 if(!_i) _i = 0;
                 var cb = function (hash) {
@@ -4501,7 +4504,7 @@ if (!cluster.isPrimary) {
                   cb(hashedPassword);
                 }
             }
-            
+
             function authorizedCallback(bruteProtection) {
               var ha = getCustomHeaders();
               ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
@@ -5504,7 +5507,7 @@ function saveConfig() {
       if (configJSONobj.enableETag === undefined) configJSONobj.enableETag = true;
       if (configJSONobj.disableUnusedWorkerTermination === undefined) configJSONobj.disableUnusedWorkerTermination = false;
       if (configJSONobj.rewriteDirtyURLs === undefined) configJSONobj.rewriteDirtyURLs = false;
-      
+
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
