@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.7.4</title>
+    <title>SVR.JS 3.7.5</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.7.4</h1>
+    <h1>Welcome to SVR.JS 3.7.5</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -42,7 +42,7 @@
         &nbsp;&nbsp;"rewriteMap": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": dorians[<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\/\\?/",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr?"<br/>
@@ -110,7 +110,8 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added reverse DNS lookup support.</li>
+      <li>Fixed non-working blacklist.</li>
+      <li>Updated SVR.JS license.</li>
     </ul>
     <p>Bugs:</p>
     <ul>

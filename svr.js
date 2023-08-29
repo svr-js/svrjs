@@ -14,13 +14,13 @@
 
 /*
  * MIT License
- * 
- * Copyright (c) 2020 DorianTech S.A.
- * 
+ *
+ * Copyright (c) 2020-2023 DorianTech
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.7.4";
+var version = "3.7.5";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -192,9 +192,9 @@ if (!singlethreaded) {
           });
         };
 
-        process.removeFakeIPC = function() {
+        process.removeFakeIPC = function () {
           // Close IPC server
-          process.send = function() {};
+          process.send = function () {};
           fakeIPCServer.close();
         }
       }
@@ -228,7 +228,7 @@ if (!singlethreaded) {
         }
 
         oldLog = console.log;
-        console.log = function(a,b,c,d,e,f) {
+        console.log = function (a,b,c,d,e,f) {
           if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
             throw new Error("NOT IMPLEMENTED");
           } else {
@@ -666,6 +666,9 @@ function ipBlockList(rawBlockList) {
 
   // Function to add an IP or CIDR block to the block list
   instance.add = function (rawValue) {
+    // Add to raw block list
+    instance.raw.push(rawValue);
+
     // Initialize variables
     var beginIndex = instance.prepared.length;
     var cidrIndex = instance.cidrs.length;
@@ -751,8 +754,8 @@ function ipBlockList(rawBlockList) {
     if (instance.cidrs.length == 0) return false;
     var ipParsedObject = (!isIPv6 ? ipv4ToInt : ipv6ToBlocks)(rawValue);
     var checkMethod = (!isIPv6 ? checkIfIPv4CIDRMatches : checkIfIPv6CIDRMatches);
-    
-    return instance.cidrs.some(function(iCidr) {
+
+    return instance.cidrs.some(function (iCidr) {
       return checkMethod(ipParsedObject, iCidr);
     });
   };
@@ -872,14 +875,14 @@ if (host != "[offline]" || ifaceEx) {
       } else {
         var callbackDone = false;
 
-        var dnsTimeout = setTimeout(function() {
+        var dnsTimeout = setTimeout(function () {
           callbackDone = true;
           ipRequestCompleted = true;
           process.emit("ipRequestCompleted");
         }, 3000);
 
         try {
-          dns.reverse(pubip, function(err, hostnames) {
+          dns.reverse(pubip, function (err, hostnames) {
             if(callbackDone) return;
             clearTimeout(dnsTimeout);
             if(!err && hostnames.length > 0) domain = hostnames[0];
@@ -936,14 +939,14 @@ if (host != "[offline]" || ifaceEx) {
         } else {
           var callbackDone = false;
 
-          var dnsTimeout = setTimeout(function() {
+          var dnsTimeout = setTimeout(function () {
             callbackDone = true;
             ipRequestCompleted = true;
             process.emit("ipRequestCompleted");
           }, 3000);
 
           try {
-            dns.reverse(pubip, function(err, hostnames) {
+            dns.reverse(pubip, function (err, hostnames) {
               if(callbackDone) return;
               clearTimeout(dnsTimeout);
               if(!err && hostnames.length > 0) domain = hostnames[0];
@@ -1061,15 +1064,15 @@ var blacklist = ipBlockList(rawBlackList);
 
 var nonStandardCodes = [];
 nonStandardCodesRaw.forEach(function (nonStandardCodeRaw) {
-  var nO = {};
+  var newObject = {};
   Object.keys(nonStandardCodeRaw).forEach(function (nsKey) {
     if (nsKey != "users") {
-      nO[nsKey] = nonStandardCodeRaw[nsKey];
+      newObject[nsKey] = nonStandardCodeRaw[nsKey];
     } else {
-      nO["users"] = ipBlockList(nonStandardCodeRaw.users);
+      newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
     }
   });
-  nonStandardCodes.push(nO);
+  nonStandardCodes.push(newObject);
 });
 
 var customHeaders = (configJSON.customHeaders == undefined ? {} : JSON.parse(JSON.stringify(configJSON.customHeaders)));
@@ -1163,13 +1166,13 @@ if (secure) {
   cert = fs.readFileSync((configJSON.cert[0] != "/" && !configJSON.cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.cert : configJSON.cert).toString();
   var sniNames = Object.keys(sni);
   var sniCredentials = [];
-  for (var i = 0; i < sniNames.length; i++) {
+  sniNames.forEach(function (sniName) {
     sniCredentials.push({
-      name: sniNames[i],
-      cert: fs.readFileSync((sni[sniNames[i]].cert[0] != "/" && !sni[sniNames[i]].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniNames[i]].cert : sni[sniNames[i]].cert).toString(),
-      key: fs.readFileSync((sni[sniNames[i]].key[0] != "/" && !sni[sniNames[i]].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniNames[i]].key : sni[sniNames[i]].key).toString()
+      name: sniName,
+      cert: fs.readFileSync((sni[sniName].cert[0] != "/" && !sni[sniName].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].cert : sni[sniName].cert).toString(),
+      key: fs.readFileSync((sni[sniName].key[0] != "/" && !sni[sniName].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].key : sni[sniName].key).toString()
     });
-  }
+  });
 }
 
 var logFile = undefined;
@@ -2091,16 +2094,16 @@ if (!cluster.isPrimary) {
         });
         return ph;
       }
-      
+
       if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
         var headers = getCustomHeaders();
         res.writeHead(204, "No Content", headers);
         res.end();
         return;
       }
-        
+
       req.url = fixNodeMojibakeURL(req.url);
-      
+
       res.writeHeadNative = res.writeHead;
       res.writeHead = function (a, b, c) {
         if (parseInt(a) >= 400 && parseInt(a) <= 599) {
@@ -2110,7 +2113,7 @@ if (!cluster.isPrimary) {
         }
         res.writeHeadNative(a, b, c);
       };
-      
+
       var finished = false;
       res.on("finish", function () {
         if (!finished) {
@@ -2815,7 +2818,7 @@ if (!cluster.isPrimary) {
       });
 
       var modFunction = ffinals;
-      proxyMods.reverse().forEach(function(proxyMod) {
+      proxyMods.reverse().forEach(function (proxyMod) {
         modFunction = proxyMod.proxyCallback(req, socket, head, configJSON, serverconsole, modFunction);
       });
       modFunction();
@@ -2925,7 +2928,7 @@ if (!cluster.isPrimary) {
     //Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
     if (configJSON.enableHTTP2 == true && request.httpVersion == "2.0") {
       try {
-        //Set HTTP/1.x methods (to prevent process warnings) 
+        //Set HTTP/1.x methods (to prevent process warnings)
         response.writeHeadNodeApi = response.writeHead;
         response.setHeaderNodeApi = response.setHeader;
         response.writeHead = function (a, b, c) {
@@ -2979,7 +2982,7 @@ if (!cluster.isPrimary) {
       response.end();
       return;
     }
-    
+
     request.url = fixNodeMojibakeURL(request.url);
 
     var headWritten = false;
@@ -3127,7 +3130,7 @@ if (!cluster.isPrimary) {
       //     }
       //   });
       // }
-      // 
+      //
       // function responseEndDeflate(d) {
       //   if (d === undefined) d = fd;
       //   zlib.deflateRaw(head + d + foot, function (err, buff) {
@@ -3465,7 +3468,7 @@ if (!cluster.isPrimary) {
           //         }
           //       });
           //     }
-          // 
+          //
           //     function responseEndDeflate(d) {
           //       if (d === undefined) d = fd;
           //       zlib.deflateRaw(head + d + foot, function (err, buff) {
@@ -3607,12 +3610,12 @@ if (!cluster.isPrimary) {
           } else if (version.indexOf("Nightly-") === 0 && (href == "/crash.svr" || (os.platform() == "win32" && href.toLowerCase() == "/crash.svr"))) {
             throw new Error("Intentionally crashed");
           }
-          
+
           /////////////////////////////////////////////
           ////THERE IS NO MORE "THE BOOK OF ZSOIE"!////
           //// But it's in easteregg.tar.gz mod... ////
           /////////////////////////////////////////////
-          
+
           var pth = decodeURIComponent(href).replace(/\/+/g, "/").substr(1);
           var readFrom = "./" + pth;
           fs.stat(readFrom, function (err, stats) {
@@ -4439,7 +4442,7 @@ if (!cluster.isPrimary) {
           // Handle HTTP authentication
           if (authIndex > -1) {
             var authcode = nonStandardCodes[authIndex];
-            
+
             function checkIfPasswordMatches(list, password, callback, _i) {
                 if(!_i) _i = 0;
                 var cb = function (hash) {
@@ -4458,13 +4461,13 @@ if (!cluster.isPrimary) {
                     callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
                     return;
                   } else {
-                    var cacheEntry = scryptCache.find(function(entry) {
+                    var cacheEntry = scryptCache.find(function (entry) {
                       return (entry.password == hashedPassword && entry.salt == list[_i].salt)
                     });
                     if(cacheEntry) {
                       cb(cacheEntry.hash);
                     } else {
-                      crypto.scrypt(password, list[_i].salt, 64, function(err, derivedKey) {
+                      crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
                         if(err) {
                           callServerError(500, undefined, err);
                         } else {
@@ -4480,13 +4483,13 @@ if (!cluster.isPrimary) {
                     callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
                     return;
                   } else {
-                    var cacheEntry = pbkdf2Cache.find(function(entry) {
+                    var cacheEntry = pbkdf2Cache.find(function (entry) {
                       return (entry.password == hashedPassword && entry.salt == list[_i].salt)
                     });
                     if(cacheEntry) {
                       cb(cacheEntry.hash);
                     } else {
-                      crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function(err, derivedKey) {
+                      crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
                         if(err) {
                           callServerError(500, undefined, err);
                         } else {
@@ -4501,7 +4504,7 @@ if (!cluster.isPrimary) {
                   cb(hashedPassword);
                 }
             }
-            
+
             function authorizedCallback(bruteProtection) {
               var ha = getCustomHeaders();
               ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
@@ -4532,7 +4535,7 @@ if (!cluster.isPrimary) {
               if(usernameMatch.length == 0) {
                   usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  //Fake credentials
               }
-              checkIfPasswordMatches(usernameMatch, password, function(authorized) {
+              checkIfPasswordMatches(usernameMatch, password, function (authorized) {
                 if (!authorized) {
                   if (bruteProtection) {
                     if (process.send) {
@@ -4850,8 +4853,8 @@ function start(init) {
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
-        if(users.some(function(entry) {return entry.pbkdf2;})) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
-        if(users.some(function(entry) {return entry.scrypt;})) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
+        if(users.some(function (entry) {return entry.pbkdf2;})) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+        if(users.some(function (entry) {return entry.scrypt;})) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
@@ -4878,7 +4881,7 @@ function start(init) {
         throw new Error("SVR.JS requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by SVR.JS.");
       }
       if (configJSON.enableHTTP2 && !secure && (typeof port != "number")) {
-        throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");   
+        throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");
       }
     }
     //Information about starting the server
@@ -4958,10 +4961,10 @@ function start(init) {
       clearInterval(pbkdf2CacheIntervalId);
       if((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
         try {
-          server.close(function() {
+          server.close(function () {
             if(server2.listening) {
               try {
-                server2.close(function() {
+                server2.close(function () {
                   if(!process.removeFakeIPC) {
                     if (typeof retcode == "number") {
                       process.exit(retcode);
@@ -5079,10 +5082,10 @@ function start(init) {
     }
     if (!cluster.isPrimary) {
       pbkdf2CacheIntervalId = setInterval(function () {
-        pbkdf2Cache = pbkdf2Cache.filter(function(entry) {
+        pbkdf2Cache = pbkdf2Cache.filter(function (entry) {
           return entry.addDate > (new Date() - 3600000);
         });
-        scryptCache = scryptCache.filter(function(entry) {
+        scryptCache = scryptCache.filter(function (entry) {
           return entry.addDate > (new Date() - 3600000);
         });
       }, 1800000);
@@ -5411,7 +5414,7 @@ function start(init) {
                       isWorkerHungUpBuff = true;
                       cluster.workers[allClusters[_id]].on("message", msgListener);
                       cluster.workers[allClusters[_id]].send("\x14KILLPING");
-                      setTimeout(function() {
+                      setTimeout(function () {
                         if (isWorkerHungUpBuff) {
                           checkWorker(callback, _id+1);
                         } else {
@@ -5429,9 +5432,9 @@ function start(init) {
                       cluster.workers[allClusters[_id]].on("message", listenConnListener);
                     }
                     checkWorker(callback, _id+1);
-                  }   
+                  }
                 }
-                checkWorker(function() {
+                checkWorker(function () {
                   if (goodWorkers.length > minClusters) {
                     var wN = Math.floor(Math.random() * goodWorkers.length);
                     if (wN == goodWorkers.length) return;
@@ -5504,7 +5507,7 @@ function saveConfig() {
       if (configJSONobj.enableETag === undefined) configJSONobj.enableETag = true;
       if (configJSONobj.disableUnusedWorkerTermination === undefined) configJSONobj.disableUnusedWorkerTermination = false;
       if (configJSONobj.rewriteDirtyURLs === undefined) configJSONobj.rewriteDirtyURLs = false;
-      
+
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
