@@ -14,13 +14,13 @@
 
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2020-2023 DorianTech
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
@@ -192,9 +192,9 @@ if (!singlethreaded) {
           });
         };
 
-        process.removeFakeIPC = function() {
+        process.removeFakeIPC = function () {
           // Close IPC server
-          process.send = function() {};
+          process.send = function () {};
           fakeIPCServer.close();
         }
       }
@@ -228,7 +228,7 @@ if (!singlethreaded) {
         }
 
         oldLog = console.log;
-        console.log = function(a,b,c,d,e,f) {
+        console.log = function (a,b,c,d,e,f) {
           if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
             throw new Error("NOT IMPLEMENTED");
           } else {
@@ -755,7 +755,7 @@ function ipBlockList(rawBlockList) {
     var ipParsedObject = (!isIPv6 ? ipv4ToInt : ipv6ToBlocks)(rawValue);
     var checkMethod = (!isIPv6 ? checkIfIPv4CIDRMatches : checkIfIPv6CIDRMatches);
 
-    return instance.cidrs.some(function(iCidr) {
+    return instance.cidrs.some(function (iCidr) {
       return checkMethod(ipParsedObject, iCidr);
     });
   };
@@ -875,14 +875,14 @@ if (host != "[offline]" || ifaceEx) {
       } else {
         var callbackDone = false;
 
-        var dnsTimeout = setTimeout(function() {
+        var dnsTimeout = setTimeout(function () {
           callbackDone = true;
           ipRequestCompleted = true;
           process.emit("ipRequestCompleted");
         }, 3000);
 
         try {
-          dns.reverse(pubip, function(err, hostnames) {
+          dns.reverse(pubip, function (err, hostnames) {
             if(callbackDone) return;
             clearTimeout(dnsTimeout);
             if(!err && hostnames.length > 0) domain = hostnames[0];
@@ -939,14 +939,14 @@ if (host != "[offline]" || ifaceEx) {
         } else {
           var callbackDone = false;
 
-          var dnsTimeout = setTimeout(function() {
+          var dnsTimeout = setTimeout(function () {
             callbackDone = true;
             ipRequestCompleted = true;
             process.emit("ipRequestCompleted");
           }, 3000);
 
           try {
-            dns.reverse(pubip, function(err, hostnames) {
+            dns.reverse(pubip, function (err, hostnames) {
               if(callbackDone) return;
               clearTimeout(dnsTimeout);
               if(!err && hostnames.length > 0) domain = hostnames[0];
@@ -2818,10 +2818,10 @@ if (!cluster.isPrimary) {
       });
 
       var modFunction = ffinals;
-      proxyMods.reverse().forEach(function(proxyMod) {
+      proxyMods.reverse().forEach(function (proxyMod) {
         modFunction = proxyMod.proxyCallback(req, socket, head, configJSON, serverconsole, modFunction);
       });
-      modFunction();
+      modfunction ();
     }
 
     function vres(req, socket, head, serverconsole) {
@@ -2928,7 +2928,7 @@ if (!cluster.isPrimary) {
     //Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
     if (configJSON.enableHTTP2 == true && request.httpVersion == "2.0") {
       try {
-        //Set HTTP/1.x methods (to prevent process warnings) 
+        //Set HTTP/1.x methods (to prevent process warnings)
         response.writeHeadNodeApi = response.writeHead;
         response.setHeaderNodeApi = response.setHeader;
         response.writeHead = function (a, b, c) {
@@ -3130,7 +3130,7 @@ if (!cluster.isPrimary) {
       //     }
       //   });
       // }
-      // 
+      //
       // function responseEndDeflate(d) {
       //   if (d === undefined) d = fd;
       //   zlib.deflateRaw(head + d + foot, function (err, buff) {
@@ -3442,7 +3442,7 @@ if (!cluster.isPrimary) {
         for (var i = mods.length - 1; i >= 0; i--) {
           modFunction = mods[i].callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
         }
-        modFunction();
+        modfunction ();
       }
 
       var vresCalled = false;
@@ -3468,7 +3468,7 @@ if (!cluster.isPrimary) {
           //         }
           //       });
           //     }
-          // 
+          //
           //     function responseEndDeflate(d) {
           //       if (d === undefined) d = fd;
           //       zlib.deflateRaw(head + d + foot, function (err, buff) {
@@ -4461,13 +4461,13 @@ if (!cluster.isPrimary) {
                     callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
                     return;
                   } else {
-                    var cacheEntry = scryptCache.find(function(entry) {
+                    var cacheEntry = scryptCache.find(function (entry) {
                       return (entry.password == hashedPassword && entry.salt == list[_i].salt)
                     });
                     if(cacheEntry) {
                       cb(cacheEntry.hash);
                     } else {
-                      crypto.scrypt(password, list[_i].salt, 64, function(err, derivedKey) {
+                      crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
                         if(err) {
                           callServerError(500, undefined, err);
                         } else {
@@ -4483,13 +4483,13 @@ if (!cluster.isPrimary) {
                     callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
                     return;
                   } else {
-                    var cacheEntry = pbkdf2Cache.find(function(entry) {
+                    var cacheEntry = pbkdf2Cache.find(function (entry) {
                       return (entry.password == hashedPassword && entry.salt == list[_i].salt)
                     });
                     if(cacheEntry) {
                       cb(cacheEntry.hash);
                     } else {
-                      crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function(err, derivedKey) {
+                      crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
                         if(err) {
                           callServerError(500, undefined, err);
                         } else {
@@ -4535,7 +4535,7 @@ if (!cluster.isPrimary) {
               if(usernameMatch.length == 0) {
                   usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  //Fake credentials
               }
-              checkIfPasswordMatches(usernameMatch, password, function(authorized) {
+              checkIfPasswordMatches(usernameMatch, password, function (authorized) {
                 if (!authorized) {
                   if (bruteProtection) {
                     if (process.send) {
@@ -4853,8 +4853,8 @@ function start(init) {
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
-        if(users.some(function(entry) {return entry.pbkdf2;})) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
-        if(users.some(function(entry) {return entry.scrypt;})) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
+        if(users.some(function (entry) {return entry.pbkdf2;})) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+        if(users.some(function (entry) {return entry.scrypt;})) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
@@ -4881,7 +4881,7 @@ function start(init) {
         throw new Error("SVR.JS requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by SVR.JS.");
       }
       if (configJSON.enableHTTP2 && !secure && (typeof port != "number")) {
-        throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");   
+        throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");
       }
     }
     //Information about starting the server
@@ -4961,10 +4961,10 @@ function start(init) {
       clearInterval(pbkdf2CacheIntervalId);
       if((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
         try {
-          server.close(function() {
+          server.close(function () {
             if(server2.listening) {
               try {
-                server2.close(function() {
+                server2.close(function () {
                   if(!process.removeFakeIPC) {
                     if (typeof retcode == "number") {
                       process.exit(retcode);
@@ -5082,10 +5082,10 @@ function start(init) {
     }
     if (!cluster.isPrimary) {
       pbkdf2CacheIntervalId = setInterval(function () {
-        pbkdf2Cache = pbkdf2Cache.filter(function(entry) {
+        pbkdf2Cache = pbkdf2Cache.filter(function (entry) {
           return entry.addDate > (new Date() - 3600000);
         });
-        scryptCache = scryptCache.filter(function(entry) {
+        scryptCache = scryptCache.filter(function (entry) {
           return entry.addDate > (new Date() - 3600000);
         });
       }, 1800000);
@@ -5414,7 +5414,7 @@ function start(init) {
                       isWorkerHungUpBuff = true;
                       cluster.workers[allClusters[_id]].on("message", msgListener);
                       cluster.workers[allClusters[_id]].send("\x14KILLPING");
-                      setTimeout(function() {
+                      setTimeout(function () {
                         if (isWorkerHungUpBuff) {
                           checkWorker(callback, _id+1);
                         } else {
@@ -5432,9 +5432,9 @@ function start(init) {
                       cluster.workers[allClusters[_id]].on("message", listenConnListener);
                     }
                     checkWorker(callback, _id+1);
-                  }   
+                  }
                 }
-                checkWorker(function() {
+                checkWorker(function () {
                   if (goodWorkers.length > minClusters) {
                     var wN = Math.floor(Math.random() * goodWorkers.length);
                     if (wN == goodWorkers.length) return;
