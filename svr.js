@@ -1143,7 +1143,7 @@ function sanitizeURL(resource) {
   // Encode certain characters
   resource = resource.replace(/[<>^`{|}]]/g, function (character) {
     var charCode = character.charCodeAt(0);
-    return "%" + (charcode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
+    return "%" + (charCode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
   });
   var sanitizedResource = resource;
   // Ensure the resource starts with a slash
@@ -2992,7 +2992,7 @@ if (!cluster.isPrimary) {
     modExecute(mods, vres(req, socket, head, serverconsole));
   }
 
-  function reqhandler(request, response, fromMain) {
+  function reqhandler(req, res, fromMain) {
     if (fromMain === undefined) fromMain = true;
     var reqIdInt = Math.round(Math.random() * 16777216);
     var reqId = "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
@@ -3079,12 +3079,12 @@ if (!cluster.isPrimary) {
     function matchHostname(hostname) {
       if (typeof hostname == "undefined" || hostname == "*") {
         return true;
-      } else if (request.headers.host && hostname.indexOf("*.") == 0 && hostname != "*.") {
+      } else if (req.headers.host && hostname.indexOf("*.") == 0 && hostname != "*.") {
         var hostnamesRoot = hostname.substr(2);
-        if (request.headers.host == hostnamesRoot || request.headers.host.indexOf("." + hostnamesRoot) == request.headers.host.length - hostnamesRoot.length - 1) {
+        if (req.headers.host == hostnamesRoot || req.headers.host.indexOf("." + hostnamesRoot) == req.headers.host.length - hostnamesRoot.length - 1) {
           return true;
         }
-      } else if (request.headers.host && request.headers.host == hostname) {
+      } else if (req.headers.host && req.headers.host == hostname) {
         return true;
       }
       return false;
@@ -3110,18 +3110,18 @@ if (!cluster.isPrimary) {
         }
       }
       Object.keys(ph).forEach(function (phk) {
-        if (typeof ph[phk] == "string") ph[phk] = ph[phk].replace(/\{path\}/g, request.url);
+        if (typeof ph[phk] == "string") ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
       });
       return ph;
     }
 
     //Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
-    if (configJSON.enableHTTP2 == true && request.httpVersion == "2.0") {
+    if (configJSON.enableHTTP2 == true && req.httpVersion == "2.0") {
       try {
         //Set HTTP/1.x methods (to prevent process warnings)
-        response.writeHeadNodeApi = response.writeHead;
-        response.setHeaderNodeApi = response.setHeader;
-        response.writeHead = function (a, b, c) {
+        res.writeHeadNodeApi = res.writeHead;
+        res.setHeaderNodeApi = res.setHeader;
+        res.writeHead = function (a, b, c) {
           var table = c;
           if (typeof (b) == "object") table = b;
           if (table == undefined) table = this.tHeaders;
@@ -3133,25 +3133,25 @@ if (!cluster.isPrimary) {
           delete table["connection"];
           delete table["keep-alive"];
           delete table["upgrade"];
-          return response.writeHeadNodeApi(a, table);
+          return res.writeHeadNodeApi(a, table);
         };
 
-        response.setHeader = function (a, b) {
-          if (a != "transfer-encoding" && a != "connection" && a != "keep-alive" && a != "upgrade") return response.setHeaderNodeApi(a, b);
+        res.setHeader = function (a, b) {
+          if (a != "transfer-encoding" && a != "connection" && a != "keep-alive" && a != "upgrade") return res.setHeaderNodeApi(a, b);
           return false;
         };
         //Set HTTP/1.x headers
-        if (!request.headers.host) request.headers.host = request.headers[":authority"];
-        (request.headers[":path"] == undefined ? (function () {})() : request.url = request.headers[":path"]);
-        request.protocol = request.headers[":scheme"];
+        if (!req.headers.host) req.headers.host = req.headers[":authority"];
+        (req.headers[":path"] == undefined ? (function () {})() : req.url = req.headers[":path"]);
+        req.protocol = req.headers[":scheme"];
         var headers = [":path", ":method"];
         for (var i = 0; i < headers.length; i++) {
-          if (request.headers[headers[i]] == undefined) {
+          if (req.headers[headers[i]] == undefined) {
             var cheaders = getCustomHeaders();
             cheaders["Content-Type"] = "text/html; charset=utf-8";
-            response.writeHead(400, "Bad Request", cheaders);
-            response.write("<html><head><title>400 Bad Request</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>400 Bad Request</h1><p>The request you sent is invalid. <p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (request.headers[":authority"] == undefined ? "" : " on " + request.headers[":authority"]) + "</i></p></body></html>");
-            response.end();
+            res.writeHead(400, "Bad Request", cheaders);
+            res.write("<html><head><title>400 Bad Request</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>400 Bad Request</h1><p>The request you sent is invalid. <p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers[":authority"] == undefined ? "" : " on " + req.headers[":authority"]) + "</i></p></body></html>");
+            res.end();
             return;
           }
         }
@@ -3159,32 +3159,32 @@ if (!cluster.isPrimary) {
         var cheaders = getCustomHeaders();
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         cheaders[":status"] = "500";
-        response.stream.respond(cheaders);
-        response.stream.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (request.headers[":authority"] == undefined ? "" : " on " + request.headers[":authority"]) + "</i></p></body></html>");
-        response.stream.end();
+        res.stream.respond(cheaders);
+        res.stream.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers[":authority"] == undefined ? "" : " on " + req.headers[":authority"]) + "</i></p></body></html>");
+        res.stream.end();
         return;
       }
     }
 
-    if (request.headers["x-svr-js-from-main-thread"] == "true" && (!request.socket.remoteAddress || request.socket.remoteAddress == "::1" || request.socket.remoteAddress == "::ffff:127.0.0.1" || request.socket.remoteAddress == "127.0.0.1" || request.socket.remoteAddress == "localhost" || request.socket.remoteAddress == host || request.socket.remoteAddress == "::ffff:" + host)) {
+    if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
       var headers = getCustomHeaders();
-      response.writeHead(204, "No Content", headers);
-      response.end();
+      res.writeHead(204, "No Content", headers);
+      res.end();
       return;
     }
 
-    request.url = fixNodeMojibakeURL(request.url);
+    req.url = fixNodeMojibakeURL(req.url);
 
     var headWritten = false;
     var lastStatusCode = null;
-    response.writeHeadNative = response.writeHead;
-    response.writeHead = function (a, b, c) {
+    res.writeHeadNative = res.writeHead;
+    res.writeHead = function (a, b, c) {
       if (!(headWritten && process.isBun && a === lastStatusCode && b === undefined && c === undefined)) {
         if (headWritten) {
           process.emitWarning("res.writeHead called multiple times.", {
             code: "WARN_SVRJS_MULTIPLE_WRITEHEAD"
           });
-          return response;
+          return res;
         } else {
           headWritten = true;
         }
@@ -3199,47 +3199,47 @@ if (!cluster.isPrimary) {
         }
         lastStatusCode = a;
       }
-      response.writeHeadNative(a, b, c);
+      res.writeHeadNative(a, b, c);
     };
     if (wwwredirect) {
-      var hostname = request.headers.host.split[":"];
+      var hostname = req.headers.host.split[":"];
       var hostport = null;
       if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
       hostname = hostname.join(":");
     }
     if (wwwredirect && hostname == domain && hostname.indexOf("www.") != 0) {
-      var lloc = (request.socket.encrypted ? "https" : "http") + "://" + hostname + (hostport ? ":" + hostport : "");
+      var lloc = (req.socket.encrypted ? "https" : "http") + "://" + hostname + (hostport ? ":" + hostport : "");
       try {
         var rheaders = getCustomHeaders();
-        rheaders["Location"] = lloc + (request.url.replace(/\/+/g, "/"));
-        response.writeHead(301, "Redirect to WWW", rheaders);
-        response.end();
+        rheaders["Location"] = lloc + (req.url.replace(/\/+/g, "/"));
+        res.writeHead(301, "Redirect to WWW", rheaders);
+        res.end();
       } catch (err) {
         var cheaders = getCustomHeaders();
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         res.writeHead(500, "Internal Server Error", cheaders);
         res.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p></body></html>");
-        response.end();
+        res.end();
       }
     } else {
       var finished = false;
-      response.on("finish", function () {
+      res.on("finish", function () {
         if (!finished) {
           finished = true;
           serverconsole.locmessage("Client disconnected.");
         }
       });
-      response.on("close", function () {
+      res.on("close", function () {
         if (!finished) {
           finished = true;
           serverconsole.locmessage("Client disconnected.");
         }
       });
       var isProxy = false;
-      if (request.url.indexOf("/") != 0 && request.url != "*") isProxy = true;
+      if (req.url.indexOf("/") != 0 && req.url != "*") isProxy = true;
       serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
 
-      if (request.socket == null) {
+      if (req.socket == null) {
         serverconsole.errmessage("Client socket is null!!!");
         return;
       }
@@ -3248,54 +3248,54 @@ if (!cluster.isPrimary) {
       var reqip = "";
       var oldport = "";
       var oldip = "";
-      if (request.headers["x-svr-js-client"] != undefined && enableIPSpoofing) {
-        var kl = request.headers["x-svr-js-client"].split(":");
+      if (req.headers["x-svr-js-client"] != undefined && enableIPSpoofing) {
+        var kl = req.headers["x-svr-js-client"].split(":");
         reqport = kl.pop();
         reqip = kl.join(":");
         try {
-          oldport = request.socket.remotePort;
-          oldip = request.socket.remoteAddress;
-          request.socket.realRemotePort = reqport;
-          request.socket.realRemoteAddress = reqip;
-          request.socket.originalRemotePort = oldport;
-          request.socket.originalRemoteAddress = oldip;
-          response.socket.realRemotePort = reqport;
-          response.socket.realRemoteAddress = reqip;
-          response.socket.originalRemotePort = oldport;
-          response.socket.originalRemoteAddress = oldip;
+          oldport = req.socket.remotePort;
+          oldip = req.socket.remoteAddress;
+          req.socket.realRemotePort = reqport;
+          req.socket.realRemoteAddress = reqip;
+          req.socket.originalRemotePort = oldport;
+          req.socket.originalRemoteAddress = oldip;
+          res.socket.realRemotePort = reqport;
+          res.socket.realRemoteAddress = reqip;
+          res.socket.originalRemotePort = oldport;
+          res.socket.originalRemoteAddress = oldip;
         } catch (err) {
           //Address setting failed
         }
-      } else if (request.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
+      } else if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
         reqport = null;
-        reqip = request.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
+        reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
         if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
         try {
-          oldport = request.socket.remotePort;
-          oldip = request.socket.remoteAddress;
-          request.socket.realRemotePort = reqport;
-          request.socket.realRemoteAddress = reqip;
-          request.socket.originalRemotePort = oldport;
-          request.socket.originalRemoteAddress = oldip;
-          response.socket.realRemotePort = reqport;
-          response.socket.realRemoteAddress = reqip;
-          response.socket.originalRemotePort = oldport;
-          response.socket.originalRemoteAddress = oldip;
+          oldport = req.socket.remotePort;
+          oldip = req.socket.remoteAddress;
+          req.socket.realRemotePort = reqport;
+          req.socket.realRemoteAddress = reqip;
+          req.socket.originalRemotePort = oldport;
+          req.socket.originalRemoteAddress = oldip;
+          res.socket.realRemotePort = reqport;
+          res.socket.realRemoteAddress = reqip;
+          res.socket.originalRemotePort = oldport;
+          res.socket.originalRemoteAddress = oldip;
         } catch (err) {
           //Address setting failed
         }
       } else {
-        reqip = request.socket.remoteAddress;
-        reqport = request.socket.remotePort;
+        reqip = req.socket.remoteAddress;
+        reqport = req.socket.remotePort;
       }
 
       reqcounter++;
 
-      if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + (request.headers.host == undefined ? "" : request.headers.host) + request.url);
-      else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + request.url);
-      if (request.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + request.headers["user-agent"]);
+      if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
+      else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + req.url);
+      if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
 
-      var acceptEncoding = request.headers["accept-encoding"];
+      var acceptEncoding = req.headers["accept-encoding"];
       if (!acceptEncoding) acceptEncoding = "";
 
       var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
@@ -3332,9 +3332,6 @@ if (!cluster.isPrimary) {
       //     }
       //   });
       // }
-
-      var req = request; // request var is req = request
-      var res = response; // response var is res = response
     
       //Error descriptions
       var serverErrorDescs = {
@@ -3503,8 +3500,8 @@ if (!cluster.isPrimary) {
             fs.readFile(errorFile, function (err, data) {
               try {
                 if (err) throw err;
-                response.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-                fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, request.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")); // Replace placeholders in error response
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")); // Replace placeholders in error response
                 responseEnd();
               } catch (err) {
                 var additionalError = 500;
@@ -3523,9 +3520,9 @@ if (!cluster.isPrimary) {
                   additionalError = 508;
                 }
 
-                response.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-                response.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, request.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
-                response.end();
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
+                res.end();
               }
             });
           }
@@ -3843,7 +3840,7 @@ if (!cluster.isPrimary) {
             var hdhds = getCustomHeaders();
             hdhds["Content-Type"] = "text/html; charset=utf-8";
             res.writeHead(200, "OK", hdhds);
-            res.end((head == "" ? "<html><head><title>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
+            res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
             return;
           } else if (version.indexOf("Nightly-") === 0 && (href == "/crash.svr" || (os.platform() == "win32" && href.toLowerCase() == "/crash.svr"))) {
             throw new Error("Intentionally crashed");
@@ -3908,13 +3905,13 @@ if (!cluster.isPrimary) {
                         if (e || !s.isFile()) {
                           fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
                             if (e || !s.isFile()) {
-                              properServe();
+                              properDirectoryListingServe();
                             } else {
                               stats = s;
                               pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
                               ext = "xhtml";
                               readFrom = "./" + pth;
-                              properServe();
+                              properDirectoryListingServe();
                             }
                           });
                         } else {
@@ -3922,7 +3919,7 @@ if (!cluster.isPrimary) {
                           pth = (pth + "/index.htm").replace(/\/+/g, "/");
                           ext = "htm";
                           readFrom = "./" + pth;
-                          properServe();
+                          properDirectoryListingServe();
                         }
                       });
                     } else {
@@ -3930,16 +3927,16 @@ if (!cluster.isPrimary) {
                       pth = (pth + "/index.html").replace(/\/+/g, "/");
                       ext = "html";
                       readFrom = "./" + pth;
-                      properServe();
+                      properDirectoryListingServe();
                     }
                   });
                 }
               });
             } else {
-              properServe();
+              properDirectoryListingServe();
             }
 
-            function properServe() {
+            function properDirectoryListingServe() {
               if (stats.isDirectory()) {
                 // Check if directory listing is enabled in the configuration
                 if (checkForEnabledDirectoryListing(req.headers.host)) {
@@ -4445,8 +4442,8 @@ if (!cluster.isPrimary) {
         if (blacklist.check(reqip) && href != "/favicon.ico") {
           var bheaders = getCustomHeaders();
           bheaders["Content-Type"] = "text/html; charset=utf8";
-          response.writeHead(403, "Client blocked", bheaders);
-          response.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the blacklist.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
+          res.writeHead(403, "Client blocked", bheaders);
+          res.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the blacklist.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
           serverconsole.errmessage("Client blocked");
           return;
         }
@@ -4584,7 +4581,7 @@ if (!cluster.isPrimary) {
           var hkh = getCustomHeaders();
           Object.keys(hkh).forEach(function(hkS) {
             try {
-              response.setHeader(hkS, hkh[hkS]);
+              res.setHeader(hkS, hkh[hkS]);
             } catch (err) {
               //Headers will not be set.
             }
