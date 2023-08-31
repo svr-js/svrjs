@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.24";
+var version = "3.4.25";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -1029,7 +1029,7 @@ function sanitizeURL(resource) {
   // Encode certain characters
   resource = resource.replace(/[<>^`{|}]]/g, function (character) {
     var charCode = character.charCodeAt(0);
-    return "%" + (charcode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
+    return "%" + (charCode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
   });
   var sanitizedResource = resource;
   // Ensure the resource starts with a slash
@@ -4085,64 +4085,69 @@ if (!cluster.isPrimary) {
             var authcode = nonStandardCodes[authIndex];
 
             function authorizedCallback(bruteProtection) {
-              var ha = getCustomHeaders();
-              ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
-              var credentials = req.headers["authorization"];
-              if (!credentials) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Content needs authorization.");
-                return;
-              }
-              var cmatch = credentials.match(/^Basic (.+)$/);
-              if (!cmatch) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var c2 = Buffer.from(cmatch[1], "base64").toString("utf8");
-              var c2match = c2.match(/^([^:]*):(.*)$/);
-              if (!c2match) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var username = c2match[1];
-              var password = c2match[2];
-              var authorized = false;
-              for (var i = 0; i < users.length; i++) {
-                var hash = sha256(password + users[i].salt);
-                if (users[i].name == username && users[i].pass == hash) {
-                  authorized = true;
-                  break;
+              try {
+                var ha = getCustomHeaders();
+                ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
+                var credentials = req.headers["authorization"];
+                if (!credentials) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Content needs authorization.");
+                  return;
                 }
-              }
-              if (!authorized) {
-                if (bruteProtection) {
-                  if (process.send) {
-                    process.send("\x12AUTHW" + reqip);
-                  } else {
-                    if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                      invalidAttempts: 0
-                    };
-                    bruteForceDb[reqip].invalidAttempts++;
-                    if (bruteForceDb[reqip].invalidAttempts >= 10) {
-                      bruteForceDb[reqip].lastAttemptDate = new Date();
+                var cmatch = credentials.match(/^Basic (.+)$/);
+                if (!cmatch) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var c2 = Buffer.from(cmatch[1], "base64").toString("utf8");
+                var c2match = c2.match(/^([^:]*):(.*)$/);
+                if (!c2match) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var username = c2match[1];
+                var password = c2match[2];
+                var authorized = false;
+                for (var i = 0; i < users.length; i++) {
+                  var hash = sha256(password + users[i].salt);
+                  if (users[i].name == username && users[i].pass == hash) {
+                    authorized = true;
+                    break;
+                  }
+                }
+                if (!authorized) {
+                  if (bruteProtection) {
+                    if (process.send) {
+                      process.send("\x12AUTHW" + reqip);
+                    } else {
+                      if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                        invalidAttempts: 0
+                      };
+                      bruteForceDb[reqip].invalidAttempts++;
+                      if (bruteForceDb[reqip].invalidAttempts >= 10) {
+                        bruteForceDb[reqip].lastAttemptDate = new Date();
+                      }
                     }
                   }
-                }
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("User " + username + " failed to log in.");
-              } else {
-                if (bruteProtection) {
-                  if (process.send) {
-                    process.send("\x12AUTHR" + reqip);
-                  } else {
-                    if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                      invalidAttempts: 0
-                    };
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("User " + username + " failed to log in.");
+                } else {
+                  if (bruteProtection) {
+                    if (process.send) {
+                      process.send("\x12AUTHR" + reqip);
+                    } else {
+                      if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                        invalidAttempts: 0
+                      };
+                    }
                   }
+                  modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
                 }
-                modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+              } catch(err) {
+                callServerError(500, undefined, generateErrorStack(err));
+                return;
               }
             }
             if (authcode.disableBruteProtection) {
