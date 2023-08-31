@@ -1470,7 +1470,7 @@ if (!disableMods) {
   if (fs.existsSync("./serverSideScript.js") && fs.statSync("./serverSideScript.js").isFile()) {
     try {
       // Prepend necessary modules and variables to the custom server side script
-      var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(headers){for(var jsn=JSON.stringify(headers,null,2).split('\\n'),njsn=[\"{\"],i=1;i<jsn.length-1;i++)0!==jsn[i].replace(/ /g,\"\").indexOf('\":')&&(eval(\"var value = \"+(\",\"==jsn[i][jsn[i].length-1]?jsn[i].substring(0,jsn[i].length-1):jsn[i]).split('\": ')[1]),\",\"==jsn[i][jsn[i].length-1]&&i==jsn.length-2?njsn.push(jsn[i].substring(0,jsn[i].length-1)):null!=value&&njsn.push(jsn[i]));return njsn.push(\"}\"),JSON.parse(njsn.join(os.EOL))}\r\n";
+      var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&(\"object\"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||\"*\"==e)return!0;if(req.headers.host&&0==e.indexOf(\"*.\")&&\"*.\"!=e){var r=e.substr(2);if(req.headers.host==r||req.headers.host.indexOf(\".\"+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||\"win32\"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n";
       var modfoot = "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
       fs.writeFileSync(__dirname + "/temp/" + tempServerSideScriptName, modhead + fs.readFileSync("./serverSideScript.js") + modfoot);
@@ -3945,15 +3945,15 @@ if (!cluster.isPrimary) {
                   res.writeHead(200, http.STATUS_CODES[200], customHeaders);
 
                   // Read custom header and footer content (if available)
-                  var customDirListingHeader = fs.existsSync("." + decodeURIComponent(href) + "/.dirhead".replace(/\/+/g, "/"))
-                    ? fs.readFileSync("." + decodeURIComponent(href) + "/.dirhead".replace(/\/+/g, "/")).toString()
-                    : (fs.existsSync("." + decodeURIComponent(href) + "/HEAD.html".replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
-                      ? fs.readFileSync("." + decodeURIComponent(href) + "/HEAD.html".replace(/\/+/g, "/")).toString()
+                  var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/"))
+                    ? fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString()
+                    : (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
+                      ? fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString()
                       : "";
-                  var customDirListingFooter = fs.existsSync("." + decodeURIComponent(href) + "/.dirfoot".replace(/\/+/g, "/"))
-                    ? fs.readFileSync("." + decodeURIComponent(href) + "/.dirfoot".replace(/\/+/g, "/")).toString()
-                    : (fs.existsSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
-                      ? fs.readFileSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")).toString()
+                  var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/"))
+                    ? fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString()
+                    : (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
+                      ? fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString()
                       : "";
 
                   // Check if custom header has HTML tag
