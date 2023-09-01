@@ -2224,9 +2224,30 @@ if (!cluster.isPrimary) {
           function medCallback(p) {
             if(p) callback(p);
             else {
-              fs.access(page404, fs.constants.F_OK, function(err) {
-                if(err) {
-                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+              if(errorCode == 404) {
+                fs.access(page404, fs.constants.F_OK, function(err) {
+                  if(err) {
+                    fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                      try {
+                        if(err) {
+                          callback(errorCode.toString() + ".html");
+                        } else {
+                          callback("." + errorCode.toString());  
+                        }
+                      } catch(err2) {
+                        callServerError(500, undefined, generateErrorStack(err2));
+                      }
+                    });
+                  } else {
+                    try {
+                      callback(page404);
+                    } catch(err2) {
+                      callServerError(500, undefined, generateErrorStack(err2));
+                    }
+                  }
+                });
+              } else {
+                    fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
                     try {
                       if(err) {
                         callback(errorCode.toString() + ".html");
@@ -2237,14 +2258,7 @@ if (!cluster.isPrimary) {
                       callServerError(500, undefined, generateErrorStack(err2));
                     }
                   });
-                } else {
-                  try {
-                    callback(page404);
-                  } catch(err2) {
-                    callServerError(500, undefined, generateErrorStack(err2));
-                  }
-                }
-              });
+               }
             }
           }
   
@@ -2670,27 +2684,41 @@ if (!cluster.isPrimary) {
         function medCallback(p) {
           if(p) callback(p);
           else {
-            fs.access(page404, fs.constants.F_OK, function(err) {
-              if(err) {
-                fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
-                  try {
-                    if(err) {
-                      callback(errorCode.toString() + ".html");
-                    } else {
-                      callback("." + errorCode.toString());  
+            if(errorCode == 404) {
+              fs.access(page404, fs.constants.F_OK, function(err) {
+                if(err) {
+                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                    try {
+                      if(err) {
+                        callback(errorCode.toString() + ".html");
+                      } else {
+                        callback("." + errorCode.toString());  
+                      }
+                    } catch(err2) {
+                      callServerError(500, undefined, generateErrorStack(err2));
                     }
+                  });
+                } else {
+                  try {
+                    callback(page404);
                   } catch(err2) {
                     callServerError(500, undefined, generateErrorStack(err2));
                   }
-                });
-              } else {
+                }
+              });
+            } else {
+              fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
                 try {
-                  callback(page404);
+                  if(err) {
+                    callback(errorCode.toString() + ".html");
+                  } else {
+                    callback("." + errorCode.toString());  
+                  }
                 } catch(err2) {
                   callServerError(500, undefined, generateErrorStack(err2));
                 }
-              }
-            });
+              });
+            }
           }
         }
   
@@ -3411,27 +3439,41 @@ if (!cluster.isPrimary) {
           function medCallback(p) {
             if(p) callback(p);
             else {
-              fs.access(page404, fs.constants.F_OK, function(err) {
-                if(err) {
-                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
-                    try {
-                      if(err) {
-                        callback(errorCode.toString() + ".html");
-                      } else {
-                        callback("." + errorCode.toString());  
+              if(errorCode == 404) {
+                fs.access(page404, fs.constants.F_OK, function(err) {
+                  if(err) {
+                    fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                      try {
+                        if(err) {
+                          callback(errorCode.toString() + ".html");
+                        } else {
+                          callback("." + errorCode.toString());  
+                        }
+                      } catch(err2) {
+                        callServerError(500, undefined, generateErrorStack(err2));
                       }
+                    });
+                  } else {
+                    try {
+                      callback(page404);
                     } catch(err2) {
                       callServerError(500, undefined, generateErrorStack(err2));
                     }
-                  });
-                } else {
+                  }
+                });
+              } else {
+                fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
                   try {
-                    callback(page404);
+                    if(err) {
+                      callback(errorCode.toString() + ".html");
+                    } else {
+                      callback("." + errorCode.toString());  
+                    }
                   } catch(err2) {
                     callServerError(500, undefined, generateErrorStack(err2));
                   }
-                }
-              });
+                });
+              }
             }
           }
   
