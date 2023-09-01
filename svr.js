@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.7.5";
+var version = "3.8.0";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -196,7 +196,7 @@ if (!singlethreaded) {
           // Close IPC server
           process.send = function () {};
           fakeIPCServer.close();
-        }
+        };
       }
     }
 
@@ -227,14 +227,14 @@ if (!singlethreaded) {
           sendImplemented = false;
         }
 
-        oldLog = console.log;
+        var oldLog = console.log;
         console.log = function (a,b,c,d,e,f) {
           if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
             throw new Error("NOT IMPLEMENTED");
           } else {
             oldLog(a,b,c,d,e,f);
           }
-        }
+        };
 
         try {
           worker.send(undefined);
@@ -292,7 +292,7 @@ if (!singlethreaded) {
       cluster._workersCounter++;
       return newWorker;
     };
-  }
+  };
 
   if (process.isBun && (cluster.isMaster === undefined || (cluster.isMaster && process.env.NODE_UNIQUE_ID))) {
     cluster.bunShim();
@@ -542,6 +542,36 @@ function createRegex(regex, isPath) {
   return new RegExp(searchString, modifiers);
 }
 
+function checkForEnabledDirectoryListing(hostname) {
+  function matchHostname(hostnameM) {
+    if (typeof hostnameM == "undefined" || hostnameM == "*") {
+      return true;
+    } else if (hostname && hostnameM.indexOf("*.") == 0 && hostnameM != "*.") {
+      var hostnamesRoot = hostnameM.substr(2);
+      if (hostname == hostnamesRoot || hostname.indexOf("." + hostnamesRoot) == hostname.length - hostnamesRoot.length - 1) {
+        return true;
+      }
+    } else if (hostname && hostname == hostnameM) {
+      return true;
+    }
+    return false;
+  }
+    
+  var main = (configJSON.enableDirectoryListing || configJSON.enableDirectoryListing === undefined);
+  if(!configJSON.enableDirectoryListingVHost) return main;
+  var vhostP = null;
+  configJSON.enableDirectoryListingVHost.every(function(vhost) {
+    if(matchHostname(vhost.host)) {
+      vhostP = vhost;
+      return false;
+    } else {
+      return true;
+    }
+  });
+  if(!vhostP || vhostP.enabled === undefined) return main;
+  else return vhostP.enabled;
+}
+
 //IP Block list object
 function ipBlockList(rawBlockList) {
 
@@ -775,8 +805,8 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (errorStack.some(function (errorStackLine) {
-      return (errorStackLine.indexOf(errorObject.name) == 0);
-    })) {
+    return (errorStackLine.indexOf(errorObject.name) == 0);
+  })) {
     return errorObject.stack;
   }
 
@@ -847,7 +877,6 @@ if (ips.length == 0) {
 }
 var host = ips[(ips.length) - 1];
 if (!host) host = "[offline]";
-var hp = host + ":" + port.toString();
 
 var ipRequestCompleted = false;
 var ipRequestGotError = false;
@@ -1023,6 +1052,7 @@ var disableToHTTPSRedirect = false;
 var nonStandardCodesRaw = [];
 var disableUnusedWorkerTermination = false;
 var rewriteDirtyURLs = false;
+var errorPages = [];
 
 //Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1049,6 +1079,7 @@ if (configJSON.disableNonEncryptedServer != undefined) disableNonEncryptedServer
 if (configJSON.disableToHTTPSRedirect != undefined) disableToHTTPSRedirect = configJSON.disableToHTTPSRedirect;
 if (configJSON.disableUnusedWorkerTermination != undefined) disableUnusedWorkerTermination = configJSON.disableUnusedWorkerTermination;
 if (configJSON.rewriteDirtyURLs != undefined) rewriteDirtyURLs = configJSON.rewriteDirtyURLs;
+if (configJSON.errorPages != undefined) errorPages = configJSON.errorPages;
 if (configJSON.wwwroot != undefined) {
   var wwwroot = configJSON.wwwroot;
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
@@ -1112,7 +1143,7 @@ function sanitizeURL(resource) {
   // Encode certain characters
   resource = resource.replace(/[<>^`{|}]]/g, function (character) {
     var charCode = character.charCodeAt(0);
-    return "%" + (charcode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
+    return "%" + (charCode < 16 ? "0" : "") + charCode.toString(16).toUpperCase();
   });
   var sanitizedResource = resource;
   // Ensure the resource starts with a slash
@@ -1439,7 +1470,7 @@ if (!disableMods) {
   if (fs.existsSync("./serverSideScript.js") && fs.statSync("./serverSideScript.js").isFile()) {
     try {
       // Prepend necessary modules and variables to the custom server side script
-      var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(headers){for(var jsn=JSON.stringify(headers,null,2).split('\\n'),njsn=[\"{\"],i=1;i<jsn.length-1;i++)0!==jsn[i].replace(/ /g,\"\").indexOf('\":')&&(eval(\"var value = \"+(\",\"==jsn[i][jsn[i].length-1]?jsn[i].substring(0,jsn[i].length-1):jsn[i]).split('\": ')[1]),\",\"==jsn[i][jsn[i].length-1]&&i==jsn.length-2?njsn.push(jsn[i].substring(0,jsn[i].length-1)):null!=value&&njsn.push(jsn[i]));return njsn.push(\"}\"),JSON.parse(njsn.join(os.EOL))}\r\n";
+      var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&(\"object\"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||\"*\"==e)return!0;if(req.headers.host&&0==e.indexOf(\"*.\")&&\"*.\"!=e){var r=e.substr(2);if(req.headers.host==r||req.headers.host.indexOf(\".\"+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||\"win32\"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n";
       var modfoot = "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
       fs.writeFileSync(__dirname + "/temp/" + tempServerSideScriptName, modhead + fs.readFileSync("./serverSideScript.js") + modfoot);
@@ -2087,8 +2118,39 @@ if (!cluster.isPrimary) {
         }
       };
 
+      function matchHostname(hostname) {
+        if (typeof hostname == "undefined" || hostname == "*") {
+          return true;
+        } else if (req.headers.host && hostname.indexOf("*.") == 0 && hostname != "*.") {
+          var hostnamesRoot = hostname.substr(2);
+          if (req.headers.host == hostnamesRoot || req.headers.host.indexOf("." + hostnamesRoot) == req.headers.host.length - hostnamesRoot.length - 1) {
+            return true;
+          }
+        } else if (req.headers.host && req.headers.host == hostname) {
+          return true;
+        }
+        return false;
+      }
+    
       function getCustomHeaders() {
         var ph = JSON.parse(JSON.stringify(customHeaders));
+        if(configJSON.customHeadersVHost) {
+          var vhostP = null;
+          configJSON.customHeadersVHost.every(function(vhost) {
+            if(matchHostname(vhost.host)) {
+              vhostP = vhost;
+              return false;
+            } else {
+              return true;
+            }
+          });
+          if(vhostP && vhostP.headers) {
+            var phNu = JSON.parse(JSON.stringify(vhostP.headers));
+            Object.keys(phNu).forEach(function (phNuK) {
+              ph[phNuK] = phNu[phNuK];
+            });
+          }
+        }
         Object.keys(ph).forEach(function (phk) {
           if (typeof ph[phk] == "string") ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
         });
@@ -2158,64 +2220,124 @@ if (!cluster.isPrimary) {
 
       //Server error calling method
       function callServerError(errorCode, extName, stack, ch) {
-        var errorFile = errorCode.toString() + ".html";
-        var errorFile2 = "." + errorCode.toString();
-        if (fs.existsSync(errorFile2)) errorFile = errorFile2;
-        if (errorCode == 404 && fs.existsSync(page404)) errorFile = page404;
-        if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
-        if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
-        if (errorCode == 500 || errorCode == 502) {
-          serverconsole.errmessage("There was an error while processing the request!");
-          serverconsole.errmessage("Stack:");
-          serverconsole.errmessage(stack);
-        }
-        if (stackHidden) stack = "[error stack hidden]";
-        if (serverErrorDescs[errorCode] === undefined) {
-          callServerError(501, extName, stack);
-        } else {
-          var cheaders = getCustomHeaders();
-          if (ch) {
-            var chon = Object.keys(cheaders);
-            Object.keys(ch).forEach(function (chnS) {
-              var nhn = chnS;
-              for (var j = 0; j < chon.length; j++) {
-                if (chon[j].toLowerCase() == chnS.toLowerCase()) {
-                  nhn = chon[j];
-                  break;
-                }
+        function getErrorFileName(list, callback, _i) {
+          function medCallback(p) {
+            if(p) callback(p);
+            else {
+              if(errorCode == 404) {
+                fs.access(page404, fs.constants.F_OK, function(err) {
+                  if(err) {
+                    fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                      try {
+                        if(err) {
+                          callback(errorCode.toString() + ".html");
+                        } else {
+                          callback("." + errorCode.toString());  
+                        }
+                      } catch(err2) {
+                        callServerError(500, undefined, generateErrorStack(err2));
+                      }
+                    });
+                  } else {
+                    try {
+                      callback(page404);
+                    } catch(err2) {
+                      callServerError(500, undefined, generateErrorStack(err2));
+                    }
+                  }
+                });
+              } else {
+                    fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                    try {
+                      if(err) {
+                        callback(errorCode.toString() + ".html");
+                      } else {
+                        callback("." + errorCode.toString());  
+                      }
+                    } catch(err2) {
+                      callServerError(500, undefined, generateErrorStack(err2));
+                    }
+                  });
+               }
+            }
+          }
+  
+          if(!_i) _i = 0;
+          if(_i >= list.length) {
+            medCallback(false);
+            return;
+          }
+  
+          if(list[_i].scode != errorCode || !matchHostname(list[_i].host)) {
+            getErrorFileName(list, callback, _i+1);
+            return;
+          } else {
+            fs.access(list[_i].path, fs.constants.F_OK, function(err) {
+              if(err) {
+                getErrorFileName(list, callback, _i+1);
+              } else {
+                medCallback(list[_i].path);  
               }
-              if (ch[chnS]) cheaders[nhn] = ch[chnS];
             });
           }
-          cheaders["Content-Type"] = "text/html; charset=utf-8";
-          if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
-          fs.readFile(errorFile, function (err, data) {
-            try {
-              if (err) throw err;
-              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
-              responseEnd();
-            } catch (err) {
-              var additionalError = 500;
-              if (err.code == "ENOENT") {
-                additionalError = 404;
-              } else if (err.code == "ENOTDIR") {
-                additionalError = 404; // Assume that file doesn't exist
-              } else if (err.code == "EACCES") {
-                additionalError = 403;
-              } else if (err.code == "ENAMETOOLONG") {
-                additionalError = 414;
-              } else if (err.code == "EMFILE") {
-                additionalError = 503;
-              } else if (err.code == "ELOOP") {
-                additionalError = 508;
-              }
-              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
-              res.end();
-            }
-          });
         }
+
+        getErrorFileName(errorPages, function(errorFile) {
+          if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
+          if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
+          if (errorCode == 500 || errorCode == 502) {
+            serverconsole.errmessage("There was an error while processing the request!");
+            serverconsole.errmessage("Stack:");
+            serverconsole.errmessage(stack);
+          }
+          if (stackHidden) stack = "[error stack hidden]";
+          if (serverErrorDescs[errorCode] === undefined) {
+            callServerError(501, extName, stack);
+          } else {
+            var cheaders = getCustomHeaders();
+            if (ch) {
+              var chon = Object.keys(cheaders);
+              Object.keys(ch).forEach(function (chnS) {
+                var nhn = chnS;
+                for (var j = 0; j < chon.length; j++) {
+                  if (chon[j].toLowerCase() == chnS.toLowerCase()) {
+                    nhn = chon[j];
+                    break;
+                  }
+                }
+                if (ch[chnS]) cheaders[nhn] = ch[chnS];
+              });
+            }
+            cheaders["Content-Type"] = "text/html; charset=utf-8";
+            if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
+            fs.readFile(errorFile, function (err, data) {
+              try {
+                if (err) throw err;
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
+                responseEnd();
+              } catch (err) {
+                var additionalError = 500;
+                if (err.code == "ENOENT") {
+                  additionalError = 404;
+                } else if (err.code == "ENOTDIR") {
+                  additionalError = 404; // Assume that file doesn't exist
+                } else if (err.code == "EACCES") {
+                  additionalError = 403;
+                } else if (err.code == "ENAMETOOLONG") {
+                  additionalError = 414;
+                } else if (err.code == "EMFILE") {
+                  additionalError = 503;
+                } else if (err.code == "ELOOP") {
+                  additionalError = 508;
+                }
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
+                res.end();
+              }
+            });
+          }
+        });
       }
 
       var reqport = "";
@@ -2553,71 +2675,136 @@ if (!cluster.isPrimary) {
 
     //Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
-      var errorFile = errorCode.toString() + ".html";
-      var errorFile2 = "." + errorCode.toString();
-      if (fs.existsSync(errorFile2)) errorFile = errorFile2;
-      if (errorCode == 404 && fs.existsSync(page404)) errorFile = page404;
-      if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
-      if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
-      if (errorCode == 500 || errorCode == 502) {
-        serverconsole.errmessage("There was an error while processing the request!");
-        serverconsole.errmessage("Stack:");
-        serverconsole.errmessage(stack);
-      }
-      if (stackHidden) stack = "[error stack hidden]";
-      if (serverErrorDescs[errorCode] === undefined) {
-        callServerError(501, extName, stack);
-      } else {
-        var cheaders = getCustomHeaders();
-        if (ch) {
-          var chon = Object.keys(cheaders);
-          Object.keys(ch).forEach(function (chnS) {
-            var nhn = chnS;
-            for (var j = 0; j < chon.length; j++) {
-              if (chon[j].toLowerCase() == chnS.toLowerCase()) {
-                nhn = chon[j];
-                break;
-              }
-            }
-            if (ch[chnS]) cheaders[nhn] = ch[chnS];
-          });
-        }
-        cheaders["Content-Type"] = "text/html; charset=utf-8";
-        if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
+      function getErrorFileName(list, callback, _i) {
         if(err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
           //Disable custom error page for HTTP SSL error
-          res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-          res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")));
-          res.end();
+          callback(errorCode.toString() + ".html");
+          return;
+        }
+        function medCallback(p) {
+          if(p) callback(p);
+          else {
+            if(errorCode == 404) {
+              fs.access(page404, fs.constants.F_OK, function(err) {
+                if(err) {
+                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                    try {
+                      if(err) {
+                        callback(errorCode.toString() + ".html");
+                      } else {
+                        callback("." + errorCode.toString());  
+                      }
+                    } catch(err2) {
+                      callServerError(500, undefined, generateErrorStack(err2));
+                    }
+                  });
+                } else {
+                  try {
+                    callback(page404);
+                  } catch(err2) {
+                    callServerError(500, undefined, generateErrorStack(err2));
+                  }
+                }
+              });
+            } else {
+              fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                try {
+                  if(err) {
+                    callback(errorCode.toString() + ".html");
+                  } else {
+                    callback("." + errorCode.toString());  
+                  }
+                } catch(err2) {
+                  callServerError(500, undefined, generateErrorStack(err2));
+                }
+              });
+            }
+          }
+        }
+  
+        if(!_i) _i = 0;
+        if(_i >= list.length) {
+          medCallback(false);
+          return;
+        }
+  
+        if(list[_i].scode != errorCode) {
+          getErrorFileName(list, callback, _i+1);
+          return;
         } else {
-          fs.readFile(errorFile, function (err, data) {
-            try {
-              if (err) throw err;
-              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
-              responseEnd();
-            } catch (err) {
-              var additionalError = 500;
-              if (err.code == "ENOENT") {
-                additionalError = 404;
-              } else if (err.code == "ENOTDIR") {
-                additionalError = 404; // Assume that file doesn't exist
-              } else if (err.code == "EACCES") {
-                additionalError = 403;
-              } else if (err.code == "ENAMETOOLONG") {
-                additionalError = 414;
-              } else if (err.code == "EMFILE") {
-                additionalError = 503;
-              } else if (err.code == "ELOOP") {
-                additionalError = 508;
-              }
-              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
-              res.end();
+          fs.access(list[_i].path, fs.constants.F_OK, function(err) {
+            if(err) {
+              getErrorFileName(list, callback, _i+1);
+            } else {
+              medCallback(list[_i].path);  
             }
           });
         }
       }
+
+      getErrorFileName(errorPages, function(errorFile) {
+        if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
+        if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
+        if (errorCode == 500 || errorCode == 502) {
+          serverconsole.errmessage("There was an error while processing the request!");
+          serverconsole.errmessage("Stack:");
+          serverconsole.errmessage(stack);
+        }
+        if (stackHidden) stack = "[error stack hidden]";
+        if (serverErrorDescs[errorCode] === undefined) {
+          callServerError(501, extName, stack);
+        } else {
+          var cheaders = getCustomHeaders();
+          if (ch) {
+            var chon = Object.keys(cheaders);
+            Object.keys(ch).forEach(function (chnS) {
+              var nhn = chnS;
+              for (var j = 0; j < chon.length; j++) {
+                if (chon[j].toLowerCase() == chnS.toLowerCase()) {
+                  nhn = chon[j];
+                  break;
+                }
+              }
+              if (ch[chnS]) cheaders[nhn] = ch[chnS];
+            });
+          }
+          cheaders["Content-Type"] = "text/html; charset=utf-8";
+          if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
+          if(err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
+          //Disable custom error page for HTTP SSL error
+            res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+            res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")));
+            res.end();
+          } else {
+            fs.readFile(errorFile, function (err, data) {
+              try {
+                if (err) throw err;
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
+                responseEnd();
+              } catch (err) {
+                var additionalError = 500;
+                if (err.code == "ENOENT") {
+                  additionalError = 404;
+                } else if (err.code == "ENOTDIR") {
+                  additionalError = 404; // Assume that file doesn't exist
+                } else if (err.code == "EACCES") {
+                  additionalError = 403;
+                } else if (err.code == "ENAMETOOLONG") {
+                  additionalError = 414;
+                } else if (err.code == "EMFILE") {
+                  additionalError = 503;
+                } else if (err.code == "ELOOP") {
+                  additionalError = 508;
+                }
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
+                res.end();
+              }
+            });
+          }
+        }
+      });
     }
     var reqip = socket.remoteAddress;
     var reqport = socket.remotePort;
@@ -2833,7 +3020,7 @@ if (!cluster.isPrimary) {
     modExecute(mods, vres(req, socket, head, serverconsole));
   }
 
-  function reqhandler(request, response, fromMain) {
+  function reqhandler(req, res, fromMain) {
     if (fromMain === undefined) fromMain = true;
     var reqIdInt = Math.round(Math.random() * 16777216);
     var reqId = "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
@@ -2917,21 +3104,52 @@ if (!cluster.isPrimary) {
       }
     };
 
+    function matchHostname(hostname) {
+      if (typeof hostname == "undefined" || hostname == "*") {
+        return true;
+      } else if (req.headers.host && hostname.indexOf("*.") == 0 && hostname != "*.") {
+        var hostnamesRoot = hostname.substr(2);
+        if (req.headers.host == hostnamesRoot || req.headers.host.indexOf("." + hostnamesRoot) == req.headers.host.length - hostnamesRoot.length - 1) {
+          return true;
+        }
+      } else if (req.headers.host && req.headers.host == hostname) {
+        return true;
+      }
+      return false;
+    }
+    
     function getCustomHeaders() {
       var ph = JSON.parse(JSON.stringify(customHeaders));
+      if(configJSON.customHeadersVHost) {
+        var vhostP = null;
+        configJSON.customHeadersVHost.every(function(vhost) {
+          if(matchHostname(vhost.host)) {
+            vhostP = vhost;
+            return false;
+          } else {
+            return true;
+          }
+        });
+        if(vhostP && vhostP.headers) {
+          var phNu = JSON.parse(JSON.stringify(vhostP.headers));
+          Object.keys(phNu).forEach(function (phNuK) {
+            ph[phNuK] = phNu[phNuK];
+          });
+        }
+      }
       Object.keys(ph).forEach(function (phk) {
-        if (typeof ph[phk] == "string") ph[phk] = ph[phk].replace(/\{path\}/g, request.url);
+        if (typeof ph[phk] == "string") ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
       });
       return ph;
     }
 
     //Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
-    if (configJSON.enableHTTP2 == true && request.httpVersion == "2.0") {
+    if (configJSON.enableHTTP2 == true && req.httpVersion == "2.0") {
       try {
         //Set HTTP/1.x methods (to prevent process warnings)
-        response.writeHeadNodeApi = response.writeHead;
-        response.setHeaderNodeApi = response.setHeader;
-        response.writeHead = function (a, b, c) {
+        res.writeHeadNodeApi = res.writeHead;
+        res.setHeaderNodeApi = res.setHeader;
+        res.writeHead = function (a, b, c) {
           var table = c;
           if (typeof (b) == "object") table = b;
           if (table == undefined) table = this.tHeaders;
@@ -2943,25 +3161,25 @@ if (!cluster.isPrimary) {
           delete table["connection"];
           delete table["keep-alive"];
           delete table["upgrade"];
-          return response.writeHeadNodeApi(a, table);
+          return res.writeHeadNodeApi(a, table);
         };
 
-        response.setHeader = function (a, b) {
-          if (a != "transfer-encoding" && a != "connection" && a != "keep-alive" && a != "upgrade") return response.setHeaderNodeApi(a, b);
+        res.setHeader = function (a, b) {
+          if (a != "transfer-encoding" && a != "connection" && a != "keep-alive" && a != "upgrade") return res.setHeaderNodeApi(a, b);
           return false;
         };
         //Set HTTP/1.x headers
-        if (!request.headers.host) request.headers.host = request.headers[":authority"];
-        (request.headers[":path"] == undefined ? (function () {})() : request.url = request.headers[":path"]);
-        request.protocol = request.headers[":scheme"];
+        if (!req.headers.host) req.headers.host = req.headers[":authority"];
+        (req.headers[":path"] == undefined ? (function () {})() : req.url = req.headers[":path"]);
+        req.protocol = req.headers[":scheme"];
         var headers = [":path", ":method"];
         for (var i = 0; i < headers.length; i++) {
-          if (request.headers[headers[i]] == undefined) {
+          if (req.headers[headers[i]] == undefined) {
             var cheaders = getCustomHeaders();
             cheaders["Content-Type"] = "text/html; charset=utf-8";
-            response.writeHead(400, "Bad Request", cheaders);
-            response.write("<html><head><title>400 Bad Request</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>400 Bad Request</h1><p>The request you sent is invalid. <p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (request.headers[":authority"] == undefined ? "" : " on " + request.headers[":authority"]) + "</i></p></body></html>");
-            response.end();
+            res.writeHead(400, "Bad Request", cheaders);
+            res.write("<html><head><title>400 Bad Request</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>400 Bad Request</h1><p>The request you sent is invalid. <p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers[":authority"] == undefined ? "" : " on " + req.headers[":authority"]) + "</i></p></body></html>");
+            res.end();
             return;
           }
         }
@@ -2969,32 +3187,32 @@ if (!cluster.isPrimary) {
         var cheaders = getCustomHeaders();
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         cheaders[":status"] = "500";
-        response.stream.respond(cheaders);
-        response.stream.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (request.headers[":authority"] == undefined ? "" : " on " + request.headers[":authority"]) + "</i></p></body></html>");
-        response.stream.end();
+        res.stream.respond(cheaders);
+        res.stream.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers[":authority"] == undefined ? "" : " on " + req.headers[":authority"]) + "</i></p></body></html>");
+        res.stream.end();
         return;
       }
     }
 
-    if (request.headers["x-svr-js-from-main-thread"] == "true" && (!request.socket.remoteAddress || request.socket.remoteAddress == "::1" || request.socket.remoteAddress == "::ffff:127.0.0.1" || request.socket.remoteAddress == "127.0.0.1" || request.socket.remoteAddress == "localhost" || request.socket.remoteAddress == host || request.socket.remoteAddress == "::ffff:" + host)) {
+    if (req.headers["x-svr-js-from-main-thread"] == "true" && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
       var headers = getCustomHeaders();
-      response.writeHead(204, "No Content", headers);
-      response.end();
+      res.writeHead(204, "No Content", headers);
+      res.end();
       return;
     }
 
-    request.url = fixNodeMojibakeURL(request.url);
+    req.url = fixNodeMojibakeURL(req.url);
 
     var headWritten = false;
     var lastStatusCode = null;
-    response.writeHeadNative = response.writeHead;
-    response.writeHead = function (a, b, c) {
+    res.writeHeadNative = res.writeHead;
+    res.writeHead = function (a, b, c) {
       if (!(headWritten && process.isBun && a === lastStatusCode && b === undefined && c === undefined)) {
         if (headWritten) {
           process.emitWarning("res.writeHead called multiple times.", {
             code: "WARN_SVRJS_MULTIPLE_WRITEHEAD"
           });
-          return response;
+          return res;
         } else {
           headWritten = true;
         }
@@ -3009,47 +3227,47 @@ if (!cluster.isPrimary) {
         }
         lastStatusCode = a;
       }
-      response.writeHeadNative(a, b, c);
+      res.writeHeadNative(a, b, c);
     };
     if (wwwredirect) {
-      var hostname = request.headers.host.split[":"];
+      var hostname = req.headers.host.split[":"];
       var hostport = null;
       if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
       hostname = hostname.join(":");
     }
     if (wwwredirect && hostname == domain && hostname.indexOf("www.") != 0) {
-      var lloc = (request.socket.encrypted ? "https" : "http") + "://" + hostname + (hostport ? ":" + hostport : "");
+      var lloc = (req.socket.encrypted ? "https" : "http") + "://" + hostname + (hostport ? ":" + hostport : "");
       try {
         var rheaders = getCustomHeaders();
-        rheaders["Location"] = lloc + (request.url.replace(/\/+/g, "/"));
-        response.writeHead(301, "Redirect to WWW", rheaders);
-        response.end();
+        rheaders["Location"] = lloc + (req.url.replace(/\/+/g, "/"));
+        res.writeHead(301, "Redirect to WWW", rheaders);
+        res.end();
       } catch (err) {
         var cheaders = getCustomHeaders();
         cheaders["Content-Type"] = "text/html; charset=utf-8";
         res.writeHead(500, "Internal Server Error", cheaders);
         res.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p></body></html>");
-        response.end();
+        res.end();
       }
     } else {
       var finished = false;
-      response.on("finish", function () {
+      res.on("finish", function () {
         if (!finished) {
           finished = true;
           serverconsole.locmessage("Client disconnected.");
         }
       });
-      response.on("close", function () {
+      res.on("close", function () {
         if (!finished) {
           finished = true;
           serverconsole.locmessage("Client disconnected.");
         }
       });
       var isProxy = false;
-      if (request.url.indexOf("/") != 0 && request.url != "*") isProxy = true;
+      if (req.url.indexOf("/") != 0 && req.url != "*") isProxy = true;
       serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
 
-      if (request.socket == null) {
+      if (req.socket == null) {
         serverconsole.errmessage("Client socket is null!!!");
         return;
       }
@@ -3058,54 +3276,54 @@ if (!cluster.isPrimary) {
       var reqip = "";
       var oldport = "";
       var oldip = "";
-      if (request.headers["x-svr-js-client"] != undefined && enableIPSpoofing) {
-        var kl = request.headers["x-svr-js-client"].split(":");
+      if (req.headers["x-svr-js-client"] != undefined && enableIPSpoofing) {
+        var kl = req.headers["x-svr-js-client"].split(":");
         reqport = kl.pop();
         reqip = kl.join(":");
         try {
-          oldport = request.socket.remotePort;
-          oldip = request.socket.remoteAddress;
-          request.socket.realRemotePort = reqport;
-          request.socket.realRemoteAddress = reqip;
-          request.socket.originalRemotePort = oldport;
-          request.socket.originalRemoteAddress = oldip;
-          response.socket.realRemotePort = reqport;
-          response.socket.realRemoteAddress = reqip;
-          response.socket.originalRemotePort = oldport;
-          response.socket.originalRemoteAddress = oldip;
+          oldport = req.socket.remotePort;
+          oldip = req.socket.remoteAddress;
+          req.socket.realRemotePort = reqport;
+          req.socket.realRemoteAddress = reqip;
+          req.socket.originalRemotePort = oldport;
+          req.socket.originalRemoteAddress = oldip;
+          res.socket.realRemotePort = reqport;
+          res.socket.realRemoteAddress = reqip;
+          res.socket.originalRemotePort = oldport;
+          res.socket.originalRemoteAddress = oldip;
         } catch (err) {
           //Address setting failed
         }
-      } else if (request.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
+      } else if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
         reqport = null;
-        reqip = request.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
+        reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
         if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
         try {
-          oldport = request.socket.remotePort;
-          oldip = request.socket.remoteAddress;
-          request.socket.realRemotePort = reqport;
-          request.socket.realRemoteAddress = reqip;
-          request.socket.originalRemotePort = oldport;
-          request.socket.originalRemoteAddress = oldip;
-          response.socket.realRemotePort = reqport;
-          response.socket.realRemoteAddress = reqip;
-          response.socket.originalRemotePort = oldport;
-          response.socket.originalRemoteAddress = oldip;
+          oldport = req.socket.remotePort;
+          oldip = req.socket.remoteAddress;
+          req.socket.realRemotePort = reqport;
+          req.socket.realRemoteAddress = reqip;
+          req.socket.originalRemotePort = oldport;
+          req.socket.originalRemoteAddress = oldip;
+          res.socket.realRemotePort = reqport;
+          res.socket.realRemoteAddress = reqip;
+          res.socket.originalRemotePort = oldport;
+          res.socket.originalRemoteAddress = oldip;
         } catch (err) {
           //Address setting failed
         }
       } else {
-        reqip = request.socket.remoteAddress;
-        reqport = request.socket.remotePort;
+        reqip = req.socket.remoteAddress;
+        reqport = req.socket.remotePort;
       }
 
       reqcounter++;
 
-      if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + (request.headers.host == undefined ? "" : request.headers.host) + request.url);
-      else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + request.url);
-      if (request.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + request.headers["user-agent"]);
+      if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
+      else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + req.url);
+      if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
 
-      var acceptEncoding = request.headers["accept-encoding"];
+      var acceptEncoding = req.headers["accept-encoding"];
       if (!acceptEncoding) acceptEncoding = "";
 
       var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
@@ -3142,10 +3360,7 @@ if (!cluster.isPrimary) {
       //     }
       //   });
       // }
-
-      var req = request; // request var is req = request
-      var res = response; // response var is res = response
-
+    
       //Error descriptions
       var serverErrorDescs = {
         200: "The request succeeded! :)",
@@ -3218,80 +3433,142 @@ if (!cluster.isPrimary) {
           throw new TypeError("Error stack parameter needs to be either a string or an instance of Error object.");
         }
 
-        var errorFile = errorCode.toString() + ".html";
-        var errorFile2 = "." + errorCode.toString();
-        if (fs.existsSync(errorFile2)) errorFile = errorFile2;
-        if (errorCode == 404 && fs.existsSync(page404)) errorFile = page404;
-
-        // Generate error stack if not provided
-        if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
-        if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
-
-        if (errorCode == 500 || errorCode == 502) {
-          serverconsole.errmessage("There was an error while processing the request!");
-          serverconsole.errmessage("Stack:");
-          serverconsole.errmessage(stack);
-        }
-
-        // Hide the error stack if specified
-        if (stackHidden) stack = "[error stack hidden]";
-
-        // Validate the error code and handle unknown codes
-        if (serverErrorDescs[errorCode] === undefined) {
-          callServerError(501, extName, stack);
-        } else {
-          var cheaders = getCustomHeaders();
-
-          // Process custom headers if provided
-          if (ch) {
-            var chon = Object.keys(cheaders);
-            Object.keys(ch).forEach(function (chnS) {
-              var nhn = chnS;
-              for (var j = 0; j < chon.length; j++) {
-                if (chon[j].toLowerCase() == chnS.toLowerCase()) {
-                  nhn = chon[j];
-                  break;
-                }
+        // Determine error file
+        
+        function getErrorFileName(list, callback, _i) {
+          function medCallback(p) {
+            if(p) callback(p);
+            else {
+              if(errorCode == 404) {
+                fs.access(page404, fs.constants.F_OK, function(err) {
+                  if(err) {
+                    fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                      try {
+                        if(err) {
+                          callback(errorCode.toString() + ".html");
+                        } else {
+                          callback("." + errorCode.toString());  
+                        }
+                      } catch(err2) {
+                        callServerError(500, undefined, generateErrorStack(err2));
+                      }
+                    });
+                  } else {
+                    try {
+                      callback(page404);
+                    } catch(err2) {
+                      callServerError(500, undefined, generateErrorStack(err2));
+                    }
+                  }
+                });
+              } else {
+                fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+                  try {
+                    if(err) {
+                      callback(errorCode.toString() + ".html");
+                    } else {
+                      callback("." + errorCode.toString());  
+                    }
+                  } catch(err2) {
+                    callServerError(500, undefined, generateErrorStack(err2));
+                  }
+                });
               }
-              if (ch[chnS]) cheaders[nhn] = ch[chnS];
+            }
+          }
+  
+          if(!_i) _i = 0;
+          if(_i >= list.length) {
+            medCallback(false);
+            return;
+          }
+  
+          if(list[_i].scode != errorCode || !matchHostname(list[_i].host)) {
+            getErrorFileName(list, callback, _i+1);
+            return;
+          } else {
+            fs.access(list[_i].path, fs.constants.F_OK, function(err) {
+              if(err) {
+                getErrorFileName(list, callback, _i+1);
+              } else {
+                medCallback(list[_i].path);  
+              }
             });
           }
-
-          cheaders["Content-Type"] = "text/html; charset=utf-8";
-
-          // Set default Allow header for 405 error if not provided
-          if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
-
-          // Read the error file and replace placeholders with error information
-          fs.readFile(errorFile, function (err, data) {
-            try {
-              if (err) throw err;
-              response.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, request.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")); // Replace placeholders in error response
-              responseEnd();
-            } catch (err) {
-              var additionalError = 500;
-              // Handle additional error cases
-              if (err.code == "ENOENT") {
-                additionalError = 404;
-              } else if (err.code == "ENOTDIR") {
-                additionalError = 404; // Assume that file doesn't exist
-              } else if (err.code == "EACCES") {
-                additionalError = 403;
-              } else if (err.code == "ENAMETOOLONG") {
-                additionalError = 414;
-              } else if (err.code == "EMFILE") {
-                additionalError = 503;
-              } else if (err.code == "ELOOP") {
-                additionalError = 508;
-              }
-
-              response.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              response.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, request.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
-              response.end();
-            }
-          });
         }
+
+        getErrorFileName(errorPages, function(errorFile) {
+
+          // Generate error stack if not provided
+          if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
+          if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
+
+          if (errorCode == 500 || errorCode == 502) {
+            serverconsole.errmessage("There was an error while processing the request!");
+            serverconsole.errmessage("Stack:");
+            serverconsole.errmessage(stack);
+          }
+
+          // Hide the error stack if specified
+          if (stackHidden) stack = "[error stack hidden]";
+
+          // Validate the error code and handle unknown codes
+          if (serverErrorDescs[errorCode] === undefined) {
+            callServerError(501, extName, stack);
+          } else {
+            var cheaders = getCustomHeaders();
+
+            // Process custom headers if provided
+            if (ch) {
+              var chon = Object.keys(cheaders);
+              Object.keys(ch).forEach(function (chnS) {
+                var nhn = chnS;
+                for (var j = 0; j < chon.length; j++) {
+                  if (chon[j].toLowerCase() == chnS.toLowerCase()) {
+                    nhn = chon[j];
+                    break;
+                  }
+                }
+                if (ch[chnS]) cheaders[nhn] = ch[chnS];
+              });
+            }
+
+            cheaders["Content-Type"] = "text/html; charset=utf-8";
+
+            // Set default Allow header for 405 error if not provided
+            if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
+
+            // Read the error file and replace placeholders with error information
+            fs.readFile(errorFile, function (err, data) {
+              try {
+                if (err) throw err;
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")); // Replace placeholders in error response
+                responseEnd();
+              } catch (err) {
+                var additionalError = 500;
+                // Handle additional error cases
+                if (err.code == "ENOENT") {
+                  additionalError = 404;
+                } else if (err.code == "ENOTDIR") {
+                  additionalError = 404; // Assume that file doesn't exist
+                } else if (err.code == "EACCES") {
+                  additionalError = 403;
+                } else if (err.code == "ENAMETOOLONG") {
+                  additionalError = 414;
+                } else if (err.code == "EMFILE") {
+                  additionalError = 503;
+                } else if (err.code == "ELOOP") {
+                  additionalError = 508;
+                }
+
+                res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
+                res.end();
+              }
+            });
+          }
+        });
       }
 
 
@@ -3605,7 +3882,7 @@ if (!cluster.isPrimary) {
             var hdhds = getCustomHeaders();
             hdhds["Content-Type"] = "text/html; charset=utf-8";
             res.writeHead(200, "OK", hdhds);
-            res.end((head == "" ? "<html><head><title>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (request.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
+            res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
             return;
           } else if (version.indexOf("Nightly-") === 0 && (href == "/crash.svr" || (os.platform() == "win32" && href.toLowerCase() == "/crash.svr"))) {
             throw new Error("Intentionally crashed");
@@ -3670,13 +3947,13 @@ if (!cluster.isPrimary) {
                         if (e || !s.isFile()) {
                           fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
                             if (e || !s.isFile()) {
-                              properServe();
+                              properDirectoryListingServe();
                             } else {
                               stats = s;
                               pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
                               ext = "xhtml";
                               readFrom = "./" + pth;
-                              properServe();
+                              properDirectoryListingServe();
                             }
                           });
                         } else {
@@ -3684,7 +3961,7 @@ if (!cluster.isPrimary) {
                           pth = (pth + "/index.htm").replace(/\/+/g, "/");
                           ext = "htm";
                           readFrom = "./" + pth;
-                          properServe();
+                          properDirectoryListingServe();
                         }
                       });
                     } else {
@@ -3692,33 +3969,33 @@ if (!cluster.isPrimary) {
                       pth = (pth + "/index.html").replace(/\/+/g, "/");
                       ext = "html";
                       readFrom = "./" + pth;
-                      properServe();
+                      properDirectoryListingServe();
                     }
                   });
                 }
               });
             } else {
-              properServe();
+              properDirectoryListingServe();
             }
 
-            function properServe() {
+            function properDirectoryListingServe() {
               if (stats.isDirectory()) {
                 // Check if directory listing is enabled in the configuration
-                if (configJSON.enableDirectoryListing || configJSON.enableDirectoryListing === undefined) {
+                if (checkForEnabledDirectoryListing(req.headers.host)) {
                   var customHeaders = getCustomHeaders();
                   customHeaders["Content-Type"] = "text/html; charset=utf-8";
                   res.writeHead(200, http.STATUS_CODES[200], customHeaders);
 
                   // Read custom header and footer content (if available)
-                  var customDirListingHeader = fs.existsSync("." + decodeURIComponent(href) + "/.dirhead".replace(/\/+/g, "/"))
-                    ? fs.readFileSync("." + decodeURIComponent(href) + "/.dirhead".replace(/\/+/g, "/")).toString()
-                    : (fs.existsSync("." + decodeURIComponent(href) + "/HEAD.html".replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
-                      ? fs.readFileSync("." + decodeURIComponent(href) + "/HEAD.html".replace(/\/+/g, "/")).toString()
+                  var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/"))
+                    ? fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString()
+                    : (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
+                      ? fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString()
                       : "";
-                  var customDirListingFooter = fs.existsSync("." + decodeURIComponent(href) + "/.dirfoot".replace(/\/+/g, "/"))
-                    ? fs.readFileSync("." + decodeURIComponent(href) + "/.dirfoot".replace(/\/+/g, "/")).toString()
-                    : (fs.existsSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
-                      ? fs.readFileSync("." + decodeURIComponent(href) + "/FOOT.html".replace(/\/+/g, "/")).toString()
+                  var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/"))
+                    ? fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString()
+                    : (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
+                      ? fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString()
                       : "";
 
                   // Check if custom header has HTML tag
@@ -4207,8 +4484,8 @@ if (!cluster.isPrimary) {
         if (blacklist.check(reqip) && href != "/favicon.ico") {
           var bheaders = getCustomHeaders();
           bheaders["Content-Type"] = "text/html; charset=utf8";
-          response.writeHead(403, "Client blocked", bheaders);
-          response.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the blacklist.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
+          res.writeHead(403, "Client blocked", bheaders);
+          res.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the blacklist.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
           serverconsole.errmessage("Client blocked");
           return;
         }
@@ -4272,15 +4549,17 @@ if (!cluster.isPrimary) {
         //URL REWRITING
         function rewriteURL(address, map) {
           var rewrittenAddress = address;
-          for (var i = 0; i < map.length; i++) {
-            if (createRegex(map[i].definingRegex).test(address)) {
-              for (var j = 0; j < map[i].replacements.length; j++) {
-                rewrittenAddress = rewrittenAddress.replace(createRegex(map[i].replacements[j].regex), map[i].replacements[j].replacement);
-              }
-              if (map[i].append) rewrittenAddress += map[i].append;
-              break;
+          map.every(function(mapEntry) {
+            if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address)) {
+              mapEntry.replacements.forEach(function (replacement) {
+                rewrittenAddress = rewrittenAddress.replace(createRegex(replacement.regex), replacement.replacement);
+              });
+              if (mapEntry.append) rewrittenAddress += mapEntry.append;
+              return false;
+            } else {
+              return true;
             }
-          }
+          });
           return rewrittenAddress;
         }
         var origHref = href;
@@ -4342,14 +4621,13 @@ if (!cluster.isPrimary) {
         //Set response headers
         if (!isProxy) {
           var hkh = getCustomHeaders();
-          var hk = Object.keys(hkh);
-          for (var i = 0; i < hk.length; i++) {
+          Object.keys(hkh).forEach(function(hkS) {
             try {
-              response.setHeader(hk[i], hkh[hk[i]]);
+              res.setHeader(hkS, hkh[hkS]);
             } catch (err) {
               //Headers will not be set.
             }
-          }
+          });
         }
 
         //Check if path is forbidden
@@ -4375,30 +4653,32 @@ if (!cluster.isPrimary) {
           var regexI = [];
           if (!isProxy && nonStandardCodes != undefined) {
             for (var i = 0; i < nonStandardCodes.length; i++) {
-              var isMatch = false;
-              if (nonStandardCodes[i].regex) {
-                var createdRegex = createRegex(nonStandardCodes[i].regex, true);
-                isMatch = req.url.match(createdRegex) || href.match(createdRegex);
-                regexI.push(createdRegex);
-              } else {
-                isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
-              }
-              if (isMatch) {
-                if (nonStandardCodes[i].scode == 401) {
-                  if (authIndex == -1) {
-                    authIndex = i;
-                  }
+              if(matchHostname(nonStandardCodes[i].host)) {
+                var isMatch = false;
+                if (nonStandardCodes[i].regex) {
+                  var createdRegex = createRegex(nonStandardCodes[i].regex, true);
+                  isMatch = req.url.match(createdRegex) || href.match(createdRegex);
+                  regexI.push(createdRegex);
                 } else {
-                  if (nonscodeIndex == -1) {
-                    if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
-                      var toBreakLoop = false;
-                      if (nonStandardCodes[i].users.check(reqip)) {
+                  isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
+                }
+                if (isMatch) {
+                  if (nonStandardCodes[i].scode == 401) {
+                    if (authIndex == -1) {
+                      authIndex = i;
+                    }
+                  } else {
+                    if (nonscodeIndex == -1) {
+                      if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
+                        var toBreakLoop = false;
+                        if (nonStandardCodes[i].users.check(reqip)) {
+                          nonscodeIndex = i;
+                          toBreakLoop = true;
+                        }
+                        if (toBreakLoop) break;
+                      } else {
                         nonscodeIndex = i;
-                        toBreakLoop = true;
                       }
-                      if (toBreakLoop) break;
-                    } else {
-                      nonscodeIndex = i;
                     }
                   }
                 }
@@ -4444,127 +4724,140 @@ if (!cluster.isPrimary) {
             var authcode = nonStandardCodes[authIndex];
 
             function checkIfPasswordMatches(list, password, callback, _i) {
-                if(!_i) _i = 0;
-                var cb = function (hash) {
-                  var matches = (hash == list[_i].pass);
-                  if(matches) {
-                    callback(true);
-                  } else if(_i >= list.length-1) {
-                    callback(false);
-                  } else {
-                    checkIfPasswordMatches(list, password, callback, _i+1);
-                  }
-                }
-                var hashedPassword = sha256(password + list[_i].salt);
-                if(list[_i].scrypt) {
-                  if(!crypto.scrypt) {
-                    callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
-                    return;
-                  } else {
-                    var cacheEntry = scryptCache.find(function (entry) {
-                      return (entry.password == hashedPassword && entry.salt == list[_i].salt)
-                    });
-                    if(cacheEntry) {
-                      cb(cacheEntry.hash);
-                    } else {
-                      crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
-                        if(err) {
-                          callServerError(500, undefined, err);
-                        } else {
-                          var key = derivedKey.toString("hex");
-                          scryptCache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
-                          cb(key);
-                        }
-                      });
-                    }
-                  }
-                } else if(list[_i].pbkdf2) {
-                  if(crypto.__disabled__ !== undefined) {
-                    callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
-                    return;
-                  } else {
-                    var cacheEntry = pbkdf2Cache.find(function (entry) {
-                      return (entry.password == hashedPassword && entry.salt == list[_i].salt)
-                    });
-                    if(cacheEntry) {
-                      cb(cacheEntry.hash);
-                    } else {
-                      crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
-                        if(err) {
-                          callServerError(500, undefined, err);
-                        } else {
-                          var key = derivedKey.toString("hex");
-                          pbkdf2Cache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
-                          cb(key);
-                        }
-                      });
-                    }
-                  }
+              if(!_i) _i = 0;
+              var cb = function (hash) {
+                var matches = (hash == list[_i].pass);
+                if(matches) {
+                  callback(true);
+                } else if(_i >= list.length-1) {
+                  callback(false);
                 } else {
-                  cb(hashedPassword);
+                  checkIfPasswordMatches(list, password, callback, _i+1);
                 }
+              };
+              var hashedPassword = sha256(password + list[_i].salt);
+              if(list[_i].scrypt) {
+                if(!crypto.scrypt) {
+                  callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
+                  return;
+                } else {
+                  var cacheEntry = scryptCache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if(cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
+                      if(err) {
+                        callServerError(500, undefined, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        scryptCache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else if(list[_i].pbkdf2) {
+                if(crypto.__disabled__ !== undefined) {
+                  callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
+                  return;
+                } else {
+                  var cacheEntry = pbkdf2Cache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if(cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
+                      if(err) {
+                        callServerError(500, undefined, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        pbkdf2Cache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else {
+                cb(hashedPassword);
+              }
             }
 
             function authorizedCallback(bruteProtection) {
-              var ha = getCustomHeaders();
-              ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
-              var credentials = req.headers["authorization"];
-              if (!credentials) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Content needs authorization.");
-                return;
-              }
-              var credentialsMatch = credentials.match(/^Basic (.+)$/);
-              if (!credentialsMatch) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
-              var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
-              if (!decodedCredentialsMatch) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var username = decodedCredentialsMatch[1];
-              var password = decodedCredentialsMatch[2];
-              var usernameMatch = users.filter(function (entry) {
-                return entry.name == username;
-              });
-              if(usernameMatch.length == 0) {
-                  usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  //Fake credentials
-              }
-              checkIfPasswordMatches(usernameMatch, password, function (authorized) {
-                if (!authorized) {
-                  if (bruteProtection) {
-                    if (process.send) {
-                      process.send("\x12AUTHW" + reqip);
-                    } else {
-                      if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                        invalidAttempts: 0
-                      };
-                      bruteForceDb[reqip].invalidAttempts++;
-                      if (bruteForceDb[reqip].invalidAttempts >= 10) {
-                        bruteForceDb[reqip].lastAttemptDate = new Date();
-                      }
-                    }
-                  }
+              try {
+                var ha = getCustomHeaders();
+                ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
+                var credentials = req.headers["authorization"];
+                if (!credentials) {
                   callServerError(401, undefined, undefined, ha);
-                  serverconsole.errmessage("User " + username + " failed to log in.");
-                } else {
-                  if (bruteProtection) {
-                    if (process.send) {
-                      process.send("\x12AUTHR" + reqip);
-                    } else {
-                      if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                        invalidAttempts: 0
-                      };
-                    }
-                  }
-                  modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                  serverconsole.errmessage("Content needs authorization.");
+                  return;
                 }
-              });
+                var credentialsMatch = credentials.match(/^Basic (.+)$/);
+                if (!credentialsMatch) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
+                var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
+                if (!decodedCredentialsMatch) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var username = decodedCredentialsMatch[1];
+                var password = decodedCredentialsMatch[2];
+                var usernameMatch = [];
+                if(!authcode.userList || authcode.userList.indexOf(username) > -1) {
+                  usernameMatch = users.filter(function (entry) {
+                    return entry.name == username;
+                  });
+                }
+                if(usernameMatch.length == 0) {
+                  usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  //Fake credentials
+                }
+                checkIfPasswordMatches(usernameMatch, password, function (authorized) {
+                  try {
+                    if (!authorized) {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHW" + reqip);
+                        } else {
+                          if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                          bruteForceDb[reqip].invalidAttempts++;
+                          if (bruteForceDb[reqip].invalidAttempts >= 10) {
+                            bruteForceDb[reqip].lastAttemptDate = new Date();
+                          }
+                        }
+                      }
+                      callServerError(401, undefined, undefined, ha);
+                      serverconsole.errmessage("User " + username + " failed to log in.");
+                    } else {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHR" + reqip);
+                        } else {
+                          if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                        }
+                      }
+                      modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                    }
+                  } catch(err) {
+                    callServerError(500, undefined, generateErrorStack(err));
+                    return;
+                  }
+                });
+              } catch(err) {
+                callServerError(500, undefined, generateErrorStack(err));
+                return;
+              }
             }
             if (authcode.disableBruteProtection) {
               authorizedCallback(false);
@@ -5507,7 +5800,8 @@ function saveConfig() {
       if (configJSONobj.enableETag === undefined) configJSONobj.enableETag = true;
       if (configJSONobj.disableUnusedWorkerTermination === undefined) configJSONobj.disableUnusedWorkerTermination = false;
       if (configJSONobj.rewriteDirtyURLs === undefined) configJSONobj.rewriteDirtyURLs = false;
-
+      if (configJSONobj.errorPages === undefined) configJSONobj.errorPages = [];
+      
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.7.5</title>
+    <title>SVR.JS 3.8.0</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.7.5</h1>
+    <h1>Welcome to SVR.JS 3.8.0</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -110,8 +110,11 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Fixed non-working blacklist.</li>
-      <li>Updated SVR.JS license.</li>
+      <li>Added partial virtual hosting support</li>
+      <li>Added <i>host</i> field to <i>nonStandardCodes</i> and <i>rewriteMap</i> properties.</li>
+      <li>Added <i>userList</i> field to <i>nonStandardCodes</i> properties (with <i>scode</i> set to 401).</li>
+      <li>Added new config.json properties: <i>errorPages</i>, <i>enableDirectoryListingVHost</i> and <i>customHeadersVHost</i>.</li>
+      <li>Improved HTTP authentication error handling.</li>
     </ul>
     <p>Bugs:</p>
     <ul>
