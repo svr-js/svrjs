@@ -463,6 +463,8 @@ try {
 }
 var mime = require("mime-types");
 var pubip = "";
+var listenAddress = undefined;
+var sListenAddress = undefined;
 var pubport = 80;
 var port = 80;
 var domain = "";
@@ -831,6 +833,39 @@ function generateErrorStack(errorObject) {
   return newErrorStack.join("\n");
 }
 
+function calculateBroadcastIPv4FromCidr(ipWithCidr) {
+  // Check if CIDR notation is valid, if it's not, return null
+  if(!ipWithCidr) return null;
+  var ipCA = ipWithCidr.split("/");
+  if(ipCA.length != 2) return null;
+  
+  // Extract IP and mask (numberic format)
+  var ip = ipCA[0];
+  var mask = parseInt(ipCA[1]);
+
+  return ip.split(".").map(function(num, index) {
+    // Calculate resulting 8-bit
+    var power = Math.max(Math.min(mask - (index*8), 8), 0);
+    return ((parseInt(num) & ((Math.pow(2,power)-1) << (8-power))) | Math.pow(2,8-power)-1).toString();
+  }).join(".");
+}
+
+function calculateNetworkIPv4FromCidr(ipWithCidr) {
+  // Check if CIDR notation is valid, if it's not, return null
+  if(!ipWithCidr) return null;
+  var ipCA = ipWithCidr.split("/");
+  if(ipCA.length != 2) return null;
+  
+  // Extract IP and mask (numberic format)
+  var ip = ipCA[0];
+  var mask = parseInt(ipCA[1]);
+
+  return ip.split(".").map(function(num, index) {
+    // Calculate resulting 8-bit
+    var power = Math.max(Math.min(mask - (index*8), 8), 0);
+    return ((parseInt(num) & ((Math.pow(2,power)-1) << (8-power)))).toString();
+  }).join(".");
+}
 
 var ifaces = {};
 var ifaceEx = null;
@@ -840,6 +875,8 @@ try {
   ifaceEx = err;
 }
 var ips = [];
+var brdIPs = ["255.255.255.255", "127.255.255.255", "0.255.255.255"];
+var netIPs = ["127.0.0.0"];
 var attmts = 5;
 var attmtsRedir = 5;
 var errors = os.constants.errno;
@@ -856,6 +893,8 @@ Object.keys(ifaces).forEach(function (ifname) {
     } else {
       ips.push(ifname, iface.address);
     }
+    brdIPs.push(calculateBroadcastIPv4FromCidr(iface.cidr));
+    netIPs.push(calculateNetworkIPv4FromCidr(iface.cidr));
     alias++;
   });
 });
@@ -1060,9 +1099,31 @@ if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
 if (configJSON.wwwredirect != undefined) wwwredirect = configJSON.wwwredirect;
 if (configJSON.port != undefined) port = configJSON.port;
 if (configJSON.pubport != undefined) pubport = configJSON.pubport;
+if (typeof port === "string") {
+  if(port.match(/^[0-9]+$/)) {
+    port = parseInt(port);
+  } else {
+    var portLMatch = port.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
+    if(portLMatch) {
+      listenAddress = portLMatch[1].replace(/^\[|\]$/g,"").replace(/^::ffff:/i,"");
+      port = parseInt(portLMatch[2]);
+    }
+  }
+}
 if (configJSON.domian != undefined) domain = configJSON.domian;
 if (configJSON.domain != undefined) domain = configJSON.domain;
 if (configJSON.sport != undefined) sport = configJSON.sport;
+if (typeof sport === "string") {
+  if(sport.match(/^[0-9]+$/)) {
+    sport = parseInt(sport);
+  } else {
+    var sportLMatch = sport.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
+    if(sportLMatch) {
+      sListenAddress = sportLMatch[1].replace(/^\[|\]$/g,"").replace(/^::ffff:/i,"");
+      sport = parseInt(sportLMatch[2]);
+    }
+  }
+}
 if (configJSON.spubport != undefined) spubport = configJSON.spubport;
 if (configJSON.page404 != undefined) page404 = configJSON.page404;
 if (configJSON.serverAdministratorEmail != undefined) serverAdmin = configJSON.serverAdministratorEmail;
@@ -1891,6 +1952,10 @@ if (!cluster.isPrimary) {
         serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
       } else if (err.code == "ETIMEDOUT") {
         serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
+      } else if (err.code == "ENOTFOUND") {
+        serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
+      } else if (err.code == "EINVAL") {
+        serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
       } else {
         serverconsole.locerrmessage("There was an unknown error with the server.");
       }
@@ -2476,7 +2541,7 @@ if (!cluster.isPrimary) {
             urlp.host = urlp.hostname + ":" + sport.toString();
             urlp.port = sport.toString();
           }
-        } else if (urlp.host == host || urlp.host == host + ":" + port.toString()) {
+        } else if (urlp.host == (listenAddress ? listenAddress : host) || urlp.host == (listenAddress ? listenAddress : host) + ":" + port.toString()) {
           urlp.protocol = "https:";
           if (sport == 443) {
             urlp.host = urlp.hostname;
@@ -4948,6 +5013,10 @@ if (!cluster.isPrimary) {
         serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
       } else if (err.code == "ETIMEDOUT") {
         serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
+      } else if (err.code == "ENOTFOUND") {
+        serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
+      } else if (err.code == "EINVAL") {
+        serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
       } else {
         serverconsole.locerrmessage("There was an unknown error with the server.");
       }
@@ -5082,6 +5151,10 @@ function msgListener(msg) {
           serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
         } else if (errCode == "ETIMEDOUT") {
           serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
+        } else if (errCode == "ENOTFOUND") {
+          serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
+        } else if (errCode == "EINVAL") {
+          serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
         } else {
           serverconsole.locerrmessage("There was an unknown error with the server.");
         }
@@ -5109,35 +5182,41 @@ function listeningMessage() {
     process.send("\x12LISTEN");
     return;
   }
+  var listenToLocalhost = (listenAddress && (listenAddress == "localhost" || listenAddress.match(/^127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || listenAddress.match(/^(?:0{0,4}:)+0{0,3}1$/)));
+  var listenToAny = (!listenAddress || listenAddress.match(/^0{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || listenAddress.match(/^(?:0{0,4}:)+0{0,4}$/));
+  var sListenToLocalhost = (sListenAddress && (sListenAddress == "localhost" || sListenAddress.match(/^127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || sListenAddress.match(/^(?:0{0,4}:)+0{0,3}1$/)));
+  var sListenToAny = (!sListenAddress || sListenAddress.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || sListenAddress.match(/^(?:0{0,4}:)+0{0,4}$/));
+  var accHost = host;
+  var sAccHost = host;
+  if(!listenToAny) accHost = listenAddress;
+  if(!sListenToAny) sAccHost = sListenAddress;
   if (messageTransmitted) return;
   messageTransmitted = true;
   serverconsole.locmessage("Started server at: ");
-  if (secure) {
+  if (secure && (sListenToLocalhost || sListenToAny)) {
     if (typeof sport === "number") {
       serverconsole.locmessage("* https://localhost" + (sport == 443 ? "" : (":" + sport)));
     } else {
       serverconsole.locmessage("* " + sport); //Unix socket or Windows named pipe
     }
   }
-  if (!(secure && disableNonEncryptedServer)) {
+  if (!(secure && disableNonEncryptedServer) && (listenToLocalhost || listenToAny)) {
     if (typeof port === "number") {
       serverconsole.locmessage("* http://localhost" + (port == 80 ? "" : (":" + port)));
     } else {
       serverconsole.locmessage("* " + port); //Unix socket or Windows named pipe
     }
   }
-  if (host != "" && host != "[offline]") {
-    if (secure && typeof sport === "number") serverconsole.locmessage("* https://" + (host.indexOf(":") > -1 ? "[" + host + "]" : host) + (sport == 443 ? "" : (":" + sport)));
-    if (!(secure && disableNonEncryptedServer) && typeof port === "number") serverconsole.locmessage("* http://" + (host.indexOf(":") > -1 ? "[" + host + "]" : host) + (port == 80 ? "" : (":" + port)));
-  }
+  if (secure && typeof sport === "number" && !sListenToLocalhost && (!sListenToAny || (host != "" && host != "[offline]"))) serverconsole.locmessage("* https://" + (sAccHost.indexOf(":") > -1 ? "[" + sAccHost + "]" : sAccHost) + (sport == 443 ? "" : (":" + sport)));
+  if (!(secure && disableNonEncryptedServer) && !listenToLocalhost && (!listenToAny || (host != "" && host != "[offline]")) && typeof port === "number") serverconsole.locmessage("* http://" + (accHost.indexOf(":") > -1 ? "[" + accHost + "]" : accHost) + (port == 80 ? "" : (":" + port)));
   ipStatusCallback(function () {
     if (pubip != "") {
-      if (secure) serverconsole.locmessage("* https://" + (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) + (spubport == 443 ? "" : (":" + spubport)));
-      if (!(secure && disableNonEncryptedServer)) serverconsole.locmessage("* http://" + (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) + (pubport == 80 ? "" : (":" + pubport)));
+      if (secure && !sListenToLocalhost) serverconsole.locmessage("* https://" + (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) + (spubport == 443 ? "" : (":" + spubport)));
+      if (!(secure && disableNonEncryptedServer) && !listenToLocalhost) serverconsole.locmessage("* http://" + (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) + (pubport == 80 ? "" : (":" + pubport)));
     }
     if (domain != "") {
-      if (secure) serverconsole.locmessage("* https://" + domain + (spubport == 443 ? "" : (":" + spubport)));
-      if (!(secure && disableNonEncryptedServer)) serverconsole.locmessage("* http://" + domain + (pubport == 80 ? "" : (":" + pubport)));
+      if (secure && !sListenToLocalhost) serverconsole.locmessage("* https://" + domain + (spubport == 443 ? "" : (":" + spubport)));
+      if (!(secure && disableNonEncryptedServer) && !listenToLocalhost) serverconsole.locmessage("* http://" + domain + (pubport == 80 ? "" : (":" + pubport)));
     }
     serverconsole.locmessage("For CLI help, you can type \"help\"");
   });
@@ -5180,28 +5259,38 @@ function start(init) {
       var CPUs = os.cpus();
       if (CPUs.length > 0) serverconsole.locmessage("CPU: " + (CPUs.length > 1 ? CPUs.length + "x " : "") + CPUs[0].model);
       //Throw errors
-      if (vnum < 64) {
-        throw new Error("SVR.JS requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by SVR.JS.");
-      }
-      if (configJSON.enableHTTP2 && !secure && (typeof port != "number")) {
-        throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");
+      if (vnum < 64) throw new Error("SVR.JS requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by SVR.JS.");
+      if (configJSON.enableHTTP2 && !secure && (typeof port != "number")) throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");
+      if (listenAddress) {
+        if (listenAddress.match(/^[0-9]+$/)) throw new Error("Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).");
+        if (listenAddress.match(/^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i)) throw new Error("SVR.JS can't listen on multicast address.");
+        if (brdIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on broadcast address.");
+        if (netIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on subnet address.");
       }
     }
     //Information about starting the server
-    if (!(secure && disableNonEncryptedServer)) serverconsole.locmessage("Starting HTTP server at " + (typeof port == "number" ? "localhost:" : "") + port.toString() + "...");
-    if (secure) serverconsole.locmessage("Starting HTTPS server at " + (typeof sport == "number" ? "localhost:" : "") + sport.toString() + "...");
+    if (!(secure && disableNonEncryptedServer)) serverconsole.locmessage("Starting HTTP server at " + (typeof port == "number" ? (listenAddress ? ((listenAddress.indexOf(":") > -1 ? "[" + listenAddress + "]" : listenAddress)) + ":" : "[::]:") : "") + port.toString() + "...");
+    if (secure) serverconsole.locmessage("Starting HTTPS server at " + (typeof sport == "number" ? (sListenAddress ? ((sListenAddress.indexOf(":") > -1 ? "[" + sListenAddress + "]" : sListenAddress)) + ":" : "[::]:") : "") + sport.toString() + "...");
   }
 
 
   if (!cluster.isPrimary) {
     try {
-      server.listen(secure ? sport : port);
+      if(typeof (secure ? sport : port) == "number" && (secure ? sListenAddress : listenAddress)) {
+        server.listen(secure ? sport : port, secure ? sListenAddress : listenAddress);
+      } else {
+        server.listen(secure ? sport : port);
+      }
     } catch(err) {
       if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
     }
     if (secure && !disableNonEncryptedServer) {
       try {
-        server2.listen(port);
+        if(typeof port == "number" && listenAddress) {
+          server2.listen(port, listenAddress);
+        } else {
+          server2.listen(port);
+        }
       } catch(err) {
         if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
       }
@@ -5228,11 +5317,17 @@ function start(init) {
     },
     open: function () {
       try {
-        if (secure) {
-          server.listen(sport);
-          if (!disableNonEncryptedServer) server2.listen(port);
+        if(typeof (secure ? sport : port) == "number" && (secure ? sListenAddress : listenAddress)) {
+          server.listen(secure ? sport : port, secure ? sListenAddress : listenAddress);
         } else {
-          server.listen(port); // Reopen Server
+          server.listen(secure ? sport : port);
+        }
+        if (secure && !disableNonEncryptedServer) {
+          if(typeof port == "number" && listenAddress) {
+            server2.listen(port, listenAddress);
+          } else {
+            server2.listen(port);
+          }
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
         else {
@@ -5596,6 +5691,10 @@ function start(init) {
               serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
             } else if (errCode == "ETIMEDOUT") {
               serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
+            } else if (errCode == "ENOTFOUND") {
+              serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
+            } else if (errCode == "EINVAL") {
+              serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
             } else {
               serverconsole.locerrmessage("There was an unknown error with the server.");
             }
@@ -5617,6 +5716,7 @@ function start(init) {
             var chksocket = {};
             if (secure && disableNonEncryptedServer) {
               chksocket = https.get({
+                hostname: (typeof sport == "number" && sListenAddress) ? sListenAddress : "localhost",
                 port: (typeof sport == "number") ? sport : undefined,
                 socketPath: (typeof sport == "number") ? undefined : sport,
                 headers: {
@@ -5642,7 +5742,11 @@ function start(init) {
               });
             } else if ((configJSON.enableHTTP2 == undefined ? false : configJSON.enableHTTP2) && !secure) {
               //It doesn't support through Unix sockets or Windows named pipes
-              var connection = http2.connect("http://localhost:" + port.toString());
+              var address = ((typeof port == "number" && listenAddress) ? listenAddress : "localhost").replace(/\/@/g,"");
+              if(address.indexOf(":") > -1) {
+                address = "[" + address + "]";
+              }
+              var connection = http2.connect("http://" + address + ":" + port.toString());
               connection.on("error", function () {
                 if (!exiting) {
                   if (!crashed) SVRJSFork();
@@ -5670,6 +5774,7 @@ function start(init) {
               });
             } else {
               chksocket = http.get({
+                hostname: (typeof port == "number" && listenAddress) ? listenAddress : "localhost",
                 port: (typeof port == "number") ? port : undefined,
                 socketPath: (typeof port == "number") ? undefined : port,
                 headers: {
