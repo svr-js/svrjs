@@ -1060,17 +1060,20 @@ function ipStatusCallback(callback) {
 }
 
 var configJSON = {};
+var configJSONRErr = undefined;
+var configJSONPErr = undefined;
 if (fs.existsSync(__dirname + "/config.json")) {
   var configJSONf = "";
   try {
     configJSONf = fs.readFileSync(__dirname + "/config.json"); //Read JSON File
+    try {
+      configJSON = JSON.parse(configJSONf); //Parse JSON
+    } catch (err2) {
+      configJSONPErr = err2;
+    }
   } catch (err) {
-    throw new Error("Cannot read JSON file.");
-  }
-  try {
-    configJSON = JSON.parse(configJSONf); //Parse JSON
-  } catch (err) {
-    throw new Error("JSON Parse error.");
+    configJSONRErr = err2;
+    //throw new Error("Cannot read JSON file.");
   }
 }
 
@@ -1412,6 +1415,9 @@ process.exit = function (code) {
   }
 };
 
+var modLoadingErrors = [];
+var SSJSError = undefined;
+
 // Load mods if the `disableMods` flag is not set
 if (!disableMods) {
   // Define the modloader folder name
@@ -1519,12 +1525,7 @@ if (!disableMods) {
           }
         }
       } catch (err) {
-        // If there was an error during mod loading, log it to the console
-        if (cluster.isPrimary || cluster.isPrimary === undefined) {
-          serverconsole.locwarnmessage("There was a problem while loading a \"" + modFileRaw + "\" mod.");
-          serverconsole.locwarnmessage("Stack:");
-          serverconsole.locwarnmessage(generateErrorStack(err));
-        }
+        modLoadingErrors.push({error: err, modName: modFileRaw});
       }
     }
   });
@@ -1564,12 +1565,7 @@ if (!disableMods) {
       // Add the loaded server side script to the mods list
       mods.push(amod);
     } catch (err) {
-      // If there was an error during server side script loading, log it to the console
-      if (cluster.isPrimary || cluster.isPrimary === undefined) {
-        serverconsole.locwarnmessage("There was a problem while loading server side JavaScript.");
-        serverconsole.locwarnmessage("Stack:");
-        serverconsole.locwarnmessage(generateErrorStack(err));
-      }
+      SSJSError = err;
     }
   }
 }
@@ -4516,7 +4512,7 @@ if (!cluster.isPrimary) {
     
 
   }
-  //Listen port to server
+  
   server.on("error", function (err) {
     attmts--;
     if (cluster.isPrimary === undefined && attmts >= 0) {
@@ -4791,6 +4787,22 @@ function start(init) {
       if (secure && configJSON.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.");
       if (disableMods) serverconsole.locwarnmessage("SVR.JS is running without mods and server-side JavaScript enabled. Web applications may not work as expected");
       console.log();
+      
+      //Display mod errors
+      if(process.isPrimary || process.isPrimary === undefined) {
+        modLoadingErrors.forEach(function(modLoadingError) {
+          serverconsole.locwarnmessage("There was a problem while loading a \"" + modLoadingError.modName + "\" mod.");
+          serverconsole.locwarnmessage("Stack:");
+          serverconsole.locwarnmessage(generateErrorStack(modLoadingError.error));
+        });
+        if(SSJSError) {
+          serverconsole.locwarnmessage("There was a problem while loading server-side JavaScript.");
+          serverconsole.locwarnmessage("Stack:");
+          serverconsole.locwarnmessage(generateErrorStack(SSJSError));
+        }
+        if(SSJSError || modLoadingErrors.length > 0) console.log();
+      }
+      
       //Print info
       serverconsole.locmessage("Server version: " + version);
       if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);
@@ -4799,6 +4811,8 @@ function start(init) {
       if (CPUs.length > 0) serverconsole.locmessage("CPU: " + (CPUs.length > 1 ? CPUs.length + "x " : "") + CPUs[0].model);
       //Throw errors
       if (vnum < 64) throw new Error("SVR.JS requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by SVR.JS.");
+      if (configJSONRErr) throw new Error("Can't read SVR.JS configuration file: " + configJSONRErr.message);
+      if (configJSONPErr) throw new Error("SVR.JS configuration parse error: " + configJSONPErr.message);
       if (configJSON.enableHTTP2 && !secure && (typeof port != "number")) throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");
       if (listenAddress) {
         if (listenAddress.match(/^[0-9]+$/)) throw new Error("Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).");
@@ -5486,7 +5500,9 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
   process.on("exit", function (code) {
     try {
-      saveConfig();
+      if(!configJSONRErr && !configJSONPErr) {
+        saveConfig();
+      }
     } catch (err) {
       serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
     }
@@ -5564,7 +5580,7 @@ try {
   serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
-  process.exit(err.errno);
+  process.exit(err.errno ? err.errno : 1);
 }
 
 //////////////////////////////////
