@@ -4643,7 +4643,7 @@ if (!cluster.isPrimary) {
           callServerError(403);
           serverconsole.errmessage("Access to SVR.JS script is denied.");
           return;
-        } else if ((isForbiddenPath(decodedHref, "svrjs") || isForbiddenPath(decodedHref, "serverSideScripts") || isIndexOfForbiddenPath(decodedHref, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose && configJSON.disableServerSideScriptExpose != undefined)) {
+        } else if ((isForbiddenPath(decodedHref, "svrjs") || isForbiddenPath(decodedHref, "serverSideScripts") || isIndexOfForbiddenPath(decodedHref, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
           callServerError(403);
           serverconsole.errmessage("Access to sources is denied.");
           return;
@@ -5789,7 +5789,7 @@ function saveConfig() {
       if (configJSONobj.stackHidden === undefined) configJSONobj.stackHidden = false;
       if (configJSONobj.enableRemoteLogBrowsing === undefined) configJSONobj.enableRemoteLogBrowsing = true;
       if (configJSONobj.exposeServerVersion === undefined) configJSONobj.exposeServerVersion = true;
-      if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = false;
+      if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = true;
       if (configJSONobj.allowStatus === undefined) configJSONobj.allowStatus = true;
       if (configJSONobj.rewriteMap === undefined) configJSONobj.rewriteMap = [];
       if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = [];
