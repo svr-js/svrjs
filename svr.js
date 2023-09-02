@@ -3282,27 +3282,7 @@ if (!cluster.isPrimary) {
       }
       res.writeHeadNative(a, b, c);
     };
-    if (wwwredirect) {
-      var hostname = req.headers.host.split[":"];
-      var hostport = null;
-      if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
-      hostname = hostname.join(":");
-    }
-    if (wwwredirect && hostname == domain && hostname.indexOf("www.") != 0) {
-      var lloc = (req.socket.encrypted ? "https" : "http") + "://" + hostname + (hostport ? ":" + hostport : "");
-      try {
-        var rheaders = getCustomHeaders();
-        rheaders["Location"] = lloc + (req.url.replace(/\/+/g, "/"));
-        res.writeHead(301, "Redirect to WWW", rheaders);
-        res.end();
-      } catch (err) {
-        var cheaders = getCustomHeaders();
-        cheaders["Content-Type"] = "text/html; charset=utf-8";
-        res.writeHead(500, "Internal Server Error", cheaders);
-        res.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p></body></html>");
-        res.end();
-      }
-    } else {
+    
       var finished = false;
       res.on("finish", function () {
         if (!finished) {
@@ -4495,7 +4475,7 @@ if (!cluster.isPrimary) {
           });
         };
       }
-
+      
       try {
         //scan blacklist
         if (blacklist.check(reqip) && href != "/favicon.ico") {
@@ -4563,6 +4543,22 @@ if (!cluster.isPrimary) {
           }
         }
 
+        //Handle redirects to addresses with www.
+        if (wwwredirect) {
+          var hostname = req.headers.host.split[":"];
+          var hostport = null;
+          if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
+          hostname = hostname.join(":");
+          if (hostname == domain && hostname.indexOf("www.") != 0) {
+            try {
+              redirect((req.socket.encrypted ? "https" : "http") + "://www." + hostname + (hostport ? ":" + hostport : "") + req.url.replace(/\/+/g, "/"));
+            } catch (err) {
+              callServerError(500, undefined, generateErrorStack(err));
+              return;
+            }
+          }
+        }
+        
         //URL REWRITING
         function rewriteURL(address, map) {
           var rewrittenAddress = address;
@@ -4916,7 +4912,7 @@ if (!cluster.isPrimary) {
         if (err.message == "Intentionally crashed") throw err; //If intentionally crashed, then crash SVR.JS
         callServerError(500, undefined, generateErrorStack(err)); //Else just return 500 error
       }
-    }
+    
 
   }
   //Listen port to server
