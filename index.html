@@ -45,7 +45,16 @@
         &nbsp;&nbsp;"disableServerSideScriptExpose": true,<br/>
         &nbsp;&nbsp;"rewriteMap": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\/\\?/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/^\\/serverSideScript\\.js($|[#?])/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/NONEXISTENT_PAGE$1"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/\\?/",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\/\\?/",<br/>
@@ -54,7 +63,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\/.+\\//",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+\\//",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/\\?/",<br/>
@@ -71,7 +80,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;},<br/>3.4.13
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\/.+/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+/",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\?/",<br/>
@@ -84,7 +93,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500\\//",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\//",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\//",<br/>
@@ -93,7 +102,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/\\/invoke500$/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500$/",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500/",<br/>
