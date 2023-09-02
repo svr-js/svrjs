@@ -16,10 +16,19 @@
   "stackHidden": false,
   "enableRemoteLogBrowsing": true,
   "exposeServerVersion": true,
-  "disableServerSideScriptExpose": false,
+  "disableServerSideScriptExpose": true,
   "rewriteMap": [
     {
-      "definingRegex": "/\\/invoke500\\/\\?/",
+      "definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",
+      "replacements": [
+        {
+          "regex": "/^\\/serverSideScript\\.js($|[#?])/",
+          "replacement": "/NONEXISTENT_PAGE$1"
+        }
+      ]
+    },
+    {
+      "definingRegex": "/^\\/invoke500\\/\\?/",
       "replacements": [
         {
           "regex": "/\\/invoke500\\/\\?/",
@@ -28,7 +37,7 @@
       ]
     },
     {
-      "definingRegex": "/\\/invoke500\\/.+\\//",
+      "definingRegex": "/^\\/invoke500\\/.+\\//",
       "replacements": [
         {
           "regex": "/\\/\\?/",
@@ -45,7 +54,7 @@
       ]
     },
     {
-      "definingRegex": "/\\/invoke500\\/.+/",
+      "definingRegex": "/^\\/invoke500\\/.+/",
       "replacements": [
         {
           "regex": "/\\?/",
@@ -58,7 +67,7 @@
       ]
     },
     {
-      "definingRegex": "/\\/invoke500\\//",
+      "definingRegex": "/^\\/invoke500\\//",
       "replacements": [
         {
           "regex": "/\\/invoke500\\//",
@@ -67,7 +76,7 @@
       ]
     },
     {
-      "definingRegex": "/\\/invoke500$/",
+      "definingRegex": "/^\\/invoke500$/",
       "replacements": [
         {
           "regex": "/\\/invoke500/",
