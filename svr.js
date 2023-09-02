@@ -2419,25 +2419,7 @@ if (!cluster.isPrimary) {
       var reqip = "";
       var oldport = "";
       var oldip = "";
-      if (req.headers["x-svr-js-client"] != undefined && enableIPSpoofing) {
-        var kl = req.headers["x-svr-js-client"].split(":");
-        reqport = kl.pop();
-        reqip = kl.join(":");
-        try {
-          oldport = req.socket.remotePort;
-          oldip = req.socket.remoteAddress;
-          req.socket.realRemotePort = reqport;
-          req.socket.realRemoteAddress = reqip;
-          req.socket.originalRemotePort = oldport;
-          req.socket.originalRemoteAddress = oldip;
-          res.socket.realRemotePort = reqport;
-          res.socket.realRemoteAddress = reqip;
-          res.socket.originalRemotePort = oldport;
-          res.socket.originalRemoteAddress = oldip;
-        } catch (err) {
-          //Nevermind...
-        }
-      } else if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
+      if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
         reqport = null;
         reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
         if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
@@ -3351,25 +3333,7 @@ if (!cluster.isPrimary) {
       var reqip = "";
       var oldport = "";
       var oldip = "";
-      if (req.headers["x-svr-js-client"] != undefined && enableIPSpoofing) {
-        var kl = req.headers["x-svr-js-client"].split(":");
-        reqport = kl.pop();
-        reqip = kl.join(":");
-        try {
-          oldport = req.socket.remotePort;
-          oldip = req.socket.remoteAddress;
-          req.socket.realRemotePort = reqport;
-          req.socket.realRemoteAddress = reqip;
-          req.socket.originalRemotePort = oldport;
-          req.socket.originalRemoteAddress = oldip;
-          res.socket.realRemotePort = reqport;
-          res.socket.realRemoteAddress = reqip;
-          res.socket.originalRemotePort = oldport;
-          res.socket.originalRemoteAddress = oldip;
-        } catch (err) {
-          //Address setting failed
-        }
-      } else if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
+      if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
         reqport = null;
         reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
         if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
@@ -3848,25 +3812,7 @@ if (!cluster.isPrimary) {
           var reqip = "";
           var oldport = "";
           var oldip = "";
-          if (req.headers["x-svr-js-client"] != undefined && enableIPSpoofing) {
-            var kl = req.headers["x-svr-js-client"].split(":");
-            reqport = kl.pop();
-            reqip = kl.join(":");
-            try {
-              oldport = req.socket.remotePort;
-              oldip = req.socket.remoteAddress;
-              req.socket.realRemotePort = reqport;
-              req.socket.realRemoteAddress = reqip;
-              req.socket.originalRemotePort = oldport;
-              req.socket.originalRemoteAddress = oldip;
-              res.socket.realRemotePort = reqport;
-              res.socket.realRemoteAddress = reqip;
-              res.socket.originalRemotePort = oldport;
-              res.socket.originalRemoteAddress = oldip;
-            } catch (err) {
-              //Nevermind...
-            }
-          } else if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
+          if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
             reqport = null;
             reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
             if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
