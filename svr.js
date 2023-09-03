@@ -24,7 +24,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-//Check if SVR.JS is running on Node.JS-compatible runtime. If not, just error it out.
+// Check if SVR.JS is running on Node.JS-compatible runtime. If not, just error it out.
 if (typeof require === "undefined") {
   if (typeof ActiveXObject !== "undefined" && typeof WScript !== "undefined") {
     // If it runs on Windows Script Host, display an error message.
@@ -48,7 +48,7 @@ if (typeof require === "undefined") {
 var secure = false;
 var disableMods = false;
 
-//ASCII art SVR.JS logo ;)
+// ASCII art SVR.JS logo ;)
 var logo = ["", "", "", "            \x1b[38;5;002m&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&", "          &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&", "         &&&\x1b[38;5;243m(((((((((((((((((((((((((((((((((((((((((((((((((((\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&\x1b[38;5;243m((((((\x1b[38;5;241m###########\x1b[38;5;243m(((((((((((((((((((((((\x1b[38;5;011m***\x1b[38;5;243m(\x1b[38;5;011m***\x1b[38;5;243m(\x1b[38;5;011m***\x1b[38;5;243m((\x1b[38;5;002m&&", "         \x1b[38;5;002m&&&\x1b[38;5;243m(((((((((((((((((((((((((((((((((((((((((((((((((((\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&&\x1b[38;5;243m(((((((((((((((((((((((((((((((((((((((((((((((((((\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&\x1b[38;5;243m((((((\x1b[38;5;241m###########\x1b[38;5;243m(((((((((((((((((((((((\x1b[38;5;011m***\x1b[38;5;243m(\x1b[38;5;015m   \x1b[38;5;243m(\x1b[38;5;011m***\x1b[38;5;243m((\x1b[38;5;002m&&", "         \x1b[38;5;002m&&&\x1b[38;5;243m(((((((((((((((((((((((((((((((((((((((((((((((((((\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&&\x1b[38;5;243m(((((((((((((((((((((((((((((((((((((((((((((((((((\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&\x1b[38;5;243m((((((\x1b[38;5;241m###########\x1b[38;5;243m(((((((((((((((((((((((\x1b[38;5;015m   \x1b[38;5;243m(\x1b[38;5;015m   \x1b[38;5;243m(\x1b[38;5;015m   \x1b[38;5;243m((\x1b[38;5;002m&&", "         \x1b[38;5;002m&&&\x1b[38;5;243m(((((((((((((((((((((((((((((((((((((((((((((((((((\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&", "         \x1b[38;5;002m&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&", "         \x1b[38;5;002m&&&&&&&&\x1b[38;5;010m#########################################\x1b[38;5;002m&&&&&&&&", "         \x1b[38;5;002m&&&&&\x1b[38;5;010m###############################################\x1b[38;5;002m&&&&&", "         \x1b[38;5;002m&&&\x1b[38;5;010m###################################################\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&\x1b[38;5;010m####\x1b[38;5;016m@@@@@@\x1b[38;5;010m#\x1b[38;5;016m@@@\x1b[38;5;010m###\x1b[38;5;016m@@@\x1b[38;5;010m#\x1b[38;5;016m@@@@@@@\x1b[38;5;010m###########\x1b[38;5;016m@@\x1b[38;5;010m##\x1b[38;5;016m@@@@@@\x1b[38;5;010m####\x1b[38;5;002m&&", "         \x1b[38;5;002m&&\x1b[38;5;010m###\x1b[38;5;016m@@\x1b[38;5;010m#######\x1b[38;5;016m@@\x1b[38;5;010m###\x1b[38;5;016m@@\x1b[38;5;010m##\x1b[38;5;016m@@\x1b[38;5;010m####\x1b[38;5;016m@@\x1b[38;5;010m##########\x1b[38;5;016m@@\x1b[38;5;010m#\x1b[38;5;016m@@\x1b[38;5;010m#########\x1b[38;5;002m&&", "         \x1b[38;5;002m&&\x1b[38;5;010m######\x1b[38;5;040m#\x1b[38;5;016m@@@@\x1b[38;5;010m##\x1b[38;5;016m@@\x1b[38;5;010m#\x1b[38;5;016m@@\x1b[38;5;010m###\x1b[38;5;016m@@@@@@@\x1b[38;5;010m#######\x1b[38;5;016m@@\x1b[38;5;010m##\x1b[38;5;016m@@\x1b[38;5;010m####\x1b[38;5;040m#\x1b[38;5;016m@@@@\x1b[38;5;010m###\x1b[38;5;002m&&", "         \x1b[38;5;002m&&\x1b[38;5;010m###\x1b[38;5;016m@@\x1b[38;5;034m%\x1b[38;5;010m###\x1b[38;5;016m@@\x1b[38;5;010m###\x1b[38;5;016m@@@\x1b[38;5;010m####\x1b[38;5;016m@@\x1b[38;5;010m####\x1b[38;5;016m@@\x1b[38;5;010m##\x1b[38;5;016m@@\x1b[38;5;010m###\x1b[38;5;016m@@@@\x1b[38;5;010m##\x1b[38;5;016m@@\x1b[38;5;034m%\x1b[38;5;010m###\x1b[38;5;016m@@\x1b[38;5;010m###\x1b[38;5;002m&&", "         \x1b[38;5;002m&&\x1b[38;5;010m#####################################################\x1b[38;5;002m&&", "         \x1b[38;5;002m&&&\x1b[38;5;010m###################################################\x1b[38;5;002m&&&", "         \x1b[38;5;002m&&&&&\x1b[38;5;010m###############################################\x1b[38;5;002m&&&&&", "         \x1b[38;5;002m&&&&&&&&\x1b[38;5;010m#########################################\x1b[38;5;002m&&&&&&&&", "         \x1b[38;5;002m&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&", "          &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&", "            &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&", "                                  \x1b[38;5;246m///////", "                                  ///////", "                                 \x1b[38;5;208m((((/))))", "                                \x1b[38;5;208m(((((/)))))", "            \x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m/\x1b[38;5;208m(((((/)))))\x1b[38;5;246m//\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m///\x1b[38;5;247m*\x1b[38;5;246m/", "           //\x1b[38;5;247m*\x1b[38;5;246m///////\x1b[38;5;247m*\x1b[38;5;246m///////\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m/\x1b[38;5;208m(((((/)))))\x1b[38;5;246m//\x1b[38;5;247m*\x1b[38;5;246m///////\x1b[38;5;247m*\x1b[38;5;246m///////\x1b[38;5;247m*\x1b[38;5;246m//", "           *\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;208m(((((/)))))\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*\x1b[38;5;246m/\x1b[38;5;247m*", "                                 \x1b[38;5;208m((((/))))", "", "", "", "\x1b[0m"];
 
 var fs = require("fs");
@@ -84,7 +84,7 @@ var os = require("os");
 var version = "Nightly-GitMain";
 var singlethreaded = false;
 
-if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
+if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
 
 var args = process.argv;
 for (var i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("bun") > -1 ? 2 : 1); i < args.length; i++) {
@@ -324,9 +324,9 @@ var reallyExiting = false;
 var crashed = false;
 
 function SVRJSFork() {
-  //Log
+  // Log
   if (SVRJSInitialized) serverconsole.locmessage("Starting next thread, because previous one hung up/crashed...");
-  //Fork new worker
+  // Fork new worker
   var newWorker = {};
   try {
     newWorker = cluster.fork();
@@ -360,16 +360,16 @@ var url = require("url");
 var dns = require("dns");
 try {
   var gracefulFs = require("graceful-fs");
-  if (!process.isBun) gracefulFs.gracefulify(fs); //Bun + graceful-fs + SVR.JS + requests about static content = 500 Internal Server Error!
+  if (!process.isBun) gracefulFs.gracefulify(fs); // Bun + graceful-fs + SVR.JS + requests about static content = 500 Internal Server Error!
 } catch (err) {
-  //Don't use graceful-fs
+  // Don't use graceful-fs
 }
 var path = require("path");
 var hexstrbase64 = undefined;
 try {
   hexstrbase64 = require("./hexstrbase64/index.js");
 } catch (err) {
-  //Don't use hexstrbase64
+  // Don't use hexstrbase64
 }
 var svrmodpack = undefined;
 try {
@@ -574,7 +574,7 @@ function checkForEnabledDirectoryListing(hostname) {
   else return vhostP.enabled;
 }
 
-//IP Block list object
+// IP Block list object
 function ipBlockList(rawBlockList) {
 
   // Initialize the instance with empty arrays
@@ -1065,19 +1065,19 @@ var configJSONPErr = undefined;
 if (fs.existsSync(__dirname + "/config.json")) {
   var configJSONf = "";
   try {
-    configJSONf = fs.readFileSync(__dirname + "/config.json"); //Read JSON File
+    configJSONf = fs.readFileSync(__dirname + "/config.json"); // Read JSON File
     try {
-      configJSON = JSON.parse(configJSONf); //Parse JSON
+      configJSON = JSON.parse(configJSONf); // Parse JSON
     } catch (err2) {
       configJSONPErr = err2;
     }
   } catch (err) {
     configJSONRErr = err2;
-    //throw new Error("Cannot read JSON file.");
+    // throw new Error("Cannot read JSON file.");
   }
 }
 
-//Default server configuration properties
+// Default server configuration properties
 var rawBlackList = [];
 var users = [];
 var page404 = "404.html";
@@ -1097,7 +1097,7 @@ var rewriteDirtyURLs = false;
 var errorPages = [];
 var useWebRootServerSideScript = true;
 
-//Get properties from config.json
+// Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
 if (configJSON.wwwredirect != undefined) wwwredirect = configJSON.wwwredirect;
 if (configJSON.port != undefined) port = configJSON.port;
@@ -1153,7 +1153,7 @@ if (configJSON.wwwroot != undefined) {
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(__dirname);
 }
 
-//Compability for older mods
+// Compability for older mods
 configJSON.version = version;
 configJSON.productName = "SVR.JS";
 
@@ -1187,13 +1187,12 @@ var vnum = 0;
 try {
   vnum = process.config.variables.node_module_version;
 } catch (err) {
-  //Version number not retrieved
+  // Version number not retrieved
 }
 
 if (vnum === undefined) vnum = 0;
 if (process.isBun) vnum = 64;
 
-// NOTE: One of regexes used here is reported as vulnerable according to Devina ReDOS checker, but it's actually just FALSE POSITIVE.
 function sanitizeURL(resource) {
   if (resource == "*") return "*";
   if (resource == "") return "";
@@ -1228,6 +1227,8 @@ function sanitizeURL(resource) {
 
 function fixNodeMojibakeURL(string) {
   var encoded = "";
+
+  //Encode URLs
   Buffer.from(string, "latin1").forEach(function (value) {
     if(value > 127) {
       encoded += "%" + (value < 16 ? "0" : "") + value.toString(16).toUpperCase();
@@ -1235,6 +1236,8 @@ function fixNodeMojibakeURL(string) {
       encoded += String.fromCodePoint(value);
     }
   });
+
+  //Upper case the URL encodings
   return encoded.replace(/%[0-9a-f-A-F]{2}/g, function (match) {
     return match.toUpperCase();
   });
@@ -1257,7 +1260,7 @@ if (!fs.existsSync(__dirname + "/config.json")) {
   saveConfig();
 }
 
-//Load SNI
+// Load SNI
 if (secure) {
   key = fs.readFileSync((configJSON.key[0] != "/" && !configJSON.key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.key : configJSON.key).toString();
   cert = fs.readFileSync((configJSON.cert[0] != "/" && !configJSON.cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.cert : configJSON.cert).toString();
@@ -1275,7 +1278,7 @@ if (secure) {
 var logFile = undefined;
 var logSync = false;
 
-//Logging function
+// Logging function
 function LOG(s) {
   try {
     if (configJSON.enableLogging || configJSON.enableLogging == undefined) {
@@ -1300,6 +1303,7 @@ function LOG(s) {
   }
 }
 
+// Server console function
 var serverconsole = {
   climessage: function (msg) {
     if (msg.indexOf("\n") != -1) {
@@ -1380,7 +1384,7 @@ var serverconsole = {
   }
 };
 
-//Wrap around process.exit, so log contents can flush.
+// Wrap around process.exit, so log contents can flush.
 process.unsafeExit = process.exit;
 process.exit = function (code) {
   if (logFile && logFile.writable && !logFile.pending) {
@@ -1397,13 +1401,13 @@ process.exit = function (code) {
             logSync = true;
             process.unsafeExit(code);
           }
-        }, 50); //Interval
+        }, 50); // Interval
       }
       setTimeout(function () {
         logFile = undefined;
         logSync = true;
         process.unsafeExit(code);
-      }, 10000); //timeout
+      }, 10000); // timeout
     } catch (err) {
       logFile = undefined;
       logSync = true;
@@ -1571,6 +1575,7 @@ if (!disableMods) {
 }
 
 
+// SHA256 function
 function sha256(s) {
   if (crypto.__disabled__ === undefined) {
     var hash = crypto.createHash("SHA256");
@@ -1761,6 +1766,7 @@ function isIndexOfForbiddenPath(decodedHref, match) {
 }
 
 
+// Set up forbidden paths
 var forbiddenPaths = {};
 
 forbiddenPaths.config = getInitializePath("./config.json");
@@ -1787,7 +1793,7 @@ forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./node_module
 forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.log = getInitializePath("./log");
 
-//Create server
+// Create server
 if (!cluster.isPrimary) {
   var reqcounter = 0;
   var reqcounterKillReq = 0;
@@ -1907,6 +1913,7 @@ if (!cluster.isPrimary) {
   } else {
     server2.on("connect", connhandler);
   }
+
   server2.on("error", function (err) {
     attmtsRedir--;
     if (cluster.isPrimary === undefined && attmtsRedir >= 0) {
@@ -2059,7 +2066,7 @@ if (!cluster.isPrimary) {
             sock._parent.destroy(a, b, c);
             sock.destroyed = sock._parent.destroyed;
           } catch (err) {
-            //Socket is probably already destroyed.
+            // Socket is probably already destroyed.
           }
         };
       } else {
@@ -2067,7 +2074,7 @@ if (!cluster.isPrimary) {
         try {
           if (sock._parent.toDestroy) sock._parent.destroy();
         } catch (err) {
-          //Socket is probably already destroyed.
+          // Socket is probably already destroyed.
         }
       }
     });
@@ -2094,13 +2101,13 @@ if (!cluster.isPrimary) {
     }
   }
 
-  //Patches from Node.JS v18.0.0
+  // Patches from Node.JS v18.0.0
   if (server.requestTimeout !== undefined && server.requestTimeout === 0) server.requestTimeout = 300000;
   if (server2.requestTimeout !== undefined && server2.requestTimeout === 0) server2.requestTimeout = 300000;
 
   function reqerrhandler(err, socket, fromMain) {
     if (fromMain === undefined) fromMain = true;
-    //Define response object similar to Node.JS native one
+    // Define response object similar to Node.JS native one
     var res = {};
     res.socket = socket;
     res.write = function (x) {
@@ -2117,7 +2124,7 @@ if (!cluster.isPrimary) {
         try {
           socket.destroy();
         } catch (err) {
-          //Socket is probably already destroyed
+          // Socket is probably already destroyed
         }
       });
     };
@@ -2250,11 +2257,11 @@ if (!cluster.isPrimary) {
       497: "You sent non-TLS request to the HTTPS server."
     };
 
-    //Server error calling method
+    // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
       function getErrorFileName(list, callback, _i) {
         if(err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
-          //Disable custom error page for HTTP SSL error
+          // Disable custom error page for HTTP SSL error
           callback(errorCode.toString() + ".html");
           return;
         }
@@ -2348,7 +2355,7 @@ if (!cluster.isPrimary) {
           cheaders["Content-Type"] = "text/html; charset=utf-8";
           if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
           if(err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
-          //Disable custom error page for HTTP SSL error
+            // Disable custom error page for HTTP SSL error
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
             res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (extName == undefined ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")));
             res.end();
@@ -2429,14 +2436,14 @@ if (!cluster.isPrimary) {
       function checkHeaders(beginsFromFirst) {
         for (var i = (beginsFromFirst ? 0 : 1); i < packetLines.length; i++) {
           var header = packetLines[i];
-          if (header == "") return false; //Beginning of body
+          if (header == "") return false; // Beginning of body
           else if (header.indexOf(":") < 1) {
             serverconsole.errmessage("Invalid header.");
             callServerError(400);
             return true;
           } else if (header.length > 8192) {
             serverconsole.errmessage("Header too large.");
-            callServerError(431); //Headers too large
+            callServerError(431); // Headers too large
             return true;
           }
         }
@@ -2448,7 +2455,7 @@ if (!cluster.isPrimary) {
       if (String(packetLine1[0]).indexOf(":") > 0) {
         if (!checkHeaders(true)) {
           serverconsole.errmessage("The request is invalid (it may be a part of larger invalid request).");
-          callServerError(400); //Also malformed Packet
+          callServerError(400); // Also malformed Packet
           return;
         }
       }
@@ -2456,21 +2463,21 @@ if (!cluster.isPrimary) {
       if (String(packetLine1[packetLine1.length - 1]).length < 50) httpVersion = packetLine1.pop();
       if (packetLine1.length != 1) {
         serverconsole.errmessage("The head of request is invalid.");
-        callServerError(400); //Malformed Packet
+        callServerError(400); // Malformed Packet
       } else if (!httpVersion.toString().match(/^HTTP[\/]/i)) {
         serverconsole.errmessage("Invalid protocol.");
-        callServerError(400); //bad protocol version
+        callServerError(400); // bad protocol version
       } else if (http.METHODS.indexOf(method) == -1) {
         serverconsole.errmessage("Invalid method.");
-        callServerError(405); //Also malformed Packet
+        callServerError(405); // Also malformed Packet
       } else {
         if (checkHeaders(false)) return;
         if (packetLine1[0].length > 255) {
           serverconsole.errmessage("URI too long.");
-          callServerError(414); //Also malformed Packet
+          callServerError(414); // Also malformed Packet
         } else {
           serverconsole.errmessage("The request is invalid.");
-          callServerError(400); //Also malformed Packet
+          callServerError(400); // Also malformed Packet
         }
       }
     } catch (err) {
@@ -2720,10 +2727,10 @@ if (!cluster.isPrimary) {
       return ph;
     }
 
-    //Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
+    // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
     if (configJSON.enableHTTP2 == true && req.httpVersion == "2.0") {
       try {
-        //Set HTTP/1.x methods (to prevent process warnings)
+        // Set HTTP/1.x methods (to prevent process warnings)
         res.writeHeadNodeApi = res.writeHead;
         res.setHeaderNodeApi = res.setHeader;
         res.writeHead = function (a, b, c) {
@@ -2745,7 +2752,8 @@ if (!cluster.isPrimary) {
           if (a != "transfer-encoding" && a != "connection" && a != "keep-alive" && a != "upgrade") return res.setHeaderNodeApi(a, b);
           return false;
         };
-        //Set HTTP/1.x headers
+
+        // Set HTTP/1.x headers
         if (!req.headers.host) req.headers.host = req.headers[":authority"];
         (req.headers[":path"] == undefined ? (function () {})() : req.url = req.headers[":path"]);
         req.protocol = req.headers[":scheme"];
@@ -2829,6 +2837,7 @@ if (!cluster.isPrimary) {
       return;
     }
 
+    // Set up X-Forwarded-For
     var reqport = "";
     var reqip = "";
     var oldport = "";
@@ -2849,7 +2858,7 @@ if (!cluster.isPrimary) {
         res.socket.originalRemotePort = oldport;
         res.socket.originalRemoteAddress = oldip;
       } catch (err) {
-        //Address setting failed
+        // Address setting failed
       }
     } else {
       reqip = req.socket.remoteAddress;
@@ -2876,6 +2885,8 @@ if (!cluster.isPrimary) {
       res.end();
     }
 
+    /*
+    UNUSED CODE:
     // function responseEndGzip(d) {
     //   if (d === undefined) d = fd;
     //   zlib.gzip(head + d + foot, function (err, buff) {
@@ -2899,8 +2910,9 @@ if (!cluster.isPrimary) {
     //     }
     //   });
     // }
+    */
 
-    //Error descriptions
+    // Error descriptions
     var serverErrorDescs = {
       200: "The request succeeded! :)",
       201: "New resource has been created.",
@@ -2973,7 +2985,6 @@ if (!cluster.isPrimary) {
       }
 
       // Determine error file
-
       function getErrorFileName(list, callback, _i) {
         function medCallback(p) {
           if(p) callback(p);
@@ -3037,7 +3048,6 @@ if (!cluster.isPrimary) {
       }
 
       getErrorFileName(errorPages, function(errorFile) {
-
         // Generate error stack if not provided
         if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
         if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
@@ -3241,7 +3251,7 @@ if (!cluster.isPrimary) {
     try {
       decodedHref = decodeURIComponent(href);
     } catch (err) {
-      //Return 400 error
+      // Return 400 error
       callServerError(400);
       serverconsole.errmessage("Bad request!");
       return;
@@ -3252,12 +3262,15 @@ if (!cluster.isPrimary) {
       return;
     }
 
-    //MOD EXCECUTION FUNCTION
+    // MOD EXCECUTION FUNCTION
     function modExecute(mods, ffinals) {
+      // Prepare modFunction
       var modFunction = ffinals;
       for (var i = mods.length - 1; i >= 0; i--) {
         modFunction = mods[i].callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
       }
+
+      // Execute modfunction
       modFunction();
     }
 
@@ -3273,6 +3286,8 @@ if (!cluster.isPrimary) {
         } else {
           vresCalled = true;
         }
+        /*
+        UNUSED CODE
         //     function responseEndGzip(d) {
         //       if (d === undefined) d = fd;
         //       zlib.gzip(head + d + foot, function (err, buff) {
@@ -3296,6 +3311,7 @@ if (!cluster.isPrimary) {
         //         }
         //       });
         //     }
+        */
 
         function responseEnd(d) {
           if (d === undefined) d = fd;
@@ -3328,7 +3344,7 @@ if (!cluster.isPrimary) {
             res.socket.originalRemotePort = oldport;
             res.socket.originalRemoteAddress = oldip;
           } catch (err) {
-            //Nevermind...
+            // Nevermind...
           }
         } else {
           reqip = req.socket.remoteAddress;
@@ -3460,7 +3476,7 @@ if (!cluster.isPrimary) {
             }
           }
 
-          //Check if index file exists
+          // Check if index file exists
           if (req.url == "/" || stats.isDirectory()) {
             fs.stat(readFrom + "/.notindex".replace(/\/+/g, "/"), function (e) {
               if (e) {
@@ -3780,7 +3796,7 @@ if (!cluster.isPrimary) {
 
                 var filelen = stats.size;
 
-                //ETag code
+                // ETag code
                 var fileETag = undefined;
                 if (configJSON.enableETag == undefined || configJSON.enableETag) {
                   fileETag = generateETag(href, stats);
@@ -3820,11 +3836,11 @@ if (!cluster.isPrimary) {
 
                 // Check for browser quirks and adjust compression accordingly
                 if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
-                  isCompressable = false; //Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
+                  isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
                 } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
-                  isCompressable = false; //Netscape 4.06-4.08 doesn't handle compressed data properly.
+                  isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
                 } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
-                  isCompressable = false; //w3m doesn't handle compressed data properly outside of HTML documents.
+                  isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
                 }
 
                 // Handle partial content request
@@ -4003,8 +4019,9 @@ if (!cluster.isPrimary) {
     }
 
     try {
-      //scan blacklist
+      // scan blacklist
       if (blacklist.check(reqip) && href != "/favicon.ico") {
+        // Return client blocked message
         var bheaders = getCustomHeaders();
         bheaders["Content-Type"] = "text/html; charset=utf8";
         res.writeHead(403, "Client blocked", bheaders);
@@ -4014,28 +4031,32 @@ if (!cluster.isPrimary) {
       }
 
       if (req.url == "*") {
+        // Handle "*" URL
         if (req.method == "OPTIONS") {
+          // Respond with list of methods
           var hdss = getCustomHeaders();
           hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
           res.writeHead(204, "No Content", hdss);
           res.end();
           return;
         } else {
+          // SVR.JS doesn't understand that request, throw a 400 error
           callServerError(400);
           return;
         }
       }
 
       if (req.method == "CONNECT") {
+        // CONNECT requests should be handled in "connect" event.
         callServerError(501);
         serverconsole.errmessage("CONNECT requests aren't supported. Your JS runtime probably doesn't support 'connect' handler for HTTP library.");
         return;
       }
 
-      //SANITIZE URL
+      // Sanitize URL
       var sanitizedHref = sanitizeURL(href);
 
-      //Check if URL is "dirty"
+      // Check if URL is "dirty"
       if (href != sanitizedHref && !isProxy) {
         var sanitizedURL = uobject;
         sanitizedURL.path = null;
@@ -4058,7 +4079,7 @@ if (!cluster.isPrimary) {
           try {
             decodedHref = decodeURIComponent(href);
           } catch (err) {
-            //Return 400 error
+            // Return 400 error
             callServerError(400);
             serverconsole.errmessage("Bad request!");
             return;
@@ -4069,9 +4090,8 @@ if (!cluster.isPrimary) {
         }
       }
 
-      //Handle redirects to HTTPS
+      // Handle redirects to HTTPS
       if(secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
-
         var hostx = req.headers.host;
         if (hostx === undefined) {
           serverconsole.errmessage("Bad request!");
@@ -4091,8 +4111,9 @@ if (!cluster.isPrimary) {
             urlp = parseURL("http:" + url.path);
           }
         } catch (err) {
-        //URL parse error...
+          // URL parse error...
         }
+
         if (urlp.host == "localhost" || urlp.host == "localhost:" + port.toString() || urlp.host == "127.0.0.1" || urlp.host == "127.0.0.1:" + port.toString() || urlp.host == "::1" || urlp.host == "::1:" + port.toString()) {
           urlp.protocol = "https:";
           if (sport == 443) {
@@ -4141,14 +4162,14 @@ if (!cluster.isPrimary) {
             requestURL = requestURL.join("/");
           }
         } catch (err) {
-        //Leave URL as it is...
+          // Leave URL as it is...
         }
+
         redirect(lloc + requestURL);
         return;
-
       }
 
-      //Handle redirects to addresses with www.
+      // Handle redirects to addresses with www.
       if (wwwredirect) {
         var hostname = req.headers.host.split[":"];
         var hostport = null;
@@ -4159,7 +4180,7 @@ if (!cluster.isPrimary) {
         }
       }
 
-      //Handle URL rewriting
+      // Handle URL rewriting
       function rewriteURL(address, map) {
         var rewrittenAddress = address;
         map.every(function(mapEntry) {
@@ -4190,7 +4211,7 @@ if (!cluster.isPrimary) {
           try {
             decodedHref = decodeURIComponent(href);
           } catch (err) {
-            //Return 400 error
+            // Return 400 error
             callServerError(400);
             serverconsole.errmessage("Bad request!");
             return;
@@ -4222,7 +4243,7 @@ if (!cluster.isPrimary) {
             try {
               decodedHref = decodeURIComponent(href);
             } catch (err) {
-              //Return 400 error
+              // Return 400 error
               callServerError(400);
               serverconsole.errmessage("Bad request!");
               return;
@@ -4231,19 +4252,19 @@ if (!cluster.isPrimary) {
         }
       }
 
-      //Set response headers
+      // Set response headers
       if (!isProxy) {
         var hkh = getCustomHeaders();
         Object.keys(hkh).forEach(function(hkS) {
           try {
             res.setHeader(hkS, hkh[hkS]);
           } catch (err) {
-            //Headers will not be set.
+            // Headers will not be set.
           }
         });
       }
 
-      //Check if path is forbidden
+      // Check if path is forbidden
       if ((isForbiddenPath(decodedHref, "config") || isForbiddenPath(decodedHref, "certificates")) && !isProxy) {
         callServerError(403);
         serverconsole.errmessage("Access to configuration file/certificates is denied.");
@@ -4264,31 +4285,31 @@ if (!cluster.isPrimary) {
         var nonscodeIndex = -1;
         var authIndex = -1;
         var regexI = [];
+
+        // Scan for non-standard codes
         if (!isProxy && nonStandardCodes != undefined) {
           for (var i = 0; i < nonStandardCodes.length; i++) {
             if(matchHostname(nonStandardCodes[i].host)) {
               var isMatch = false;
               if (nonStandardCodes[i].regex) {
+                // Regex match
                 var createdRegex = createRegex(nonStandardCodes[i].regex, true);
                 isMatch = req.url.match(createdRegex) || href.match(createdRegex);
                 regexI.push(createdRegex);
               } else {
+                // Non-regex match
                 isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
               }
               if (isMatch) {
                 if (nonStandardCodes[i].scode == 401) {
+                  // HTTP authentication
                   if (authIndex == -1) {
                     authIndex = i;
                   }
                 } else {
                   if (nonscodeIndex == -1) {
                     if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
-                      var toBreakLoop = false;
-                      if (nonStandardCodes[i].users.check(reqip)) {
-                        nonscodeIndex = i;
-                        toBreakLoop = true;
-                      }
-                      if (toBreakLoop) break;
+                      if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
                     } else {
                       nonscodeIndex = i;
                     }
@@ -4336,6 +4357,7 @@ if (!cluster.isPrimary) {
         if (authIndex > -1) {
           var authcode = nonStandardCodes[authIndex];
 
+          // Function to check if passwords match
           function checkIfPasswordMatches(list, password, callback, _i) {
             if(!_i) _i = 0;
             var cb = function (hash) {
@@ -4430,7 +4452,7 @@ if (!cluster.isPrimary) {
                 });
               }
               if(usernameMatch.length == 0) {
-                usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  //Fake credentials
+                usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  // Fake credentials
               }
               checkIfPasswordMatches(usernameMatch, password, function (authorized) {
                 try {
@@ -4474,8 +4496,10 @@ if (!cluster.isPrimary) {
             }
           }
           if (authcode.disableBruteProtection) {
+            // Don't brute-force protect it, just do HTTP authentication
             authorizedCallback(false);
           } else if (!process.send) {
+            // Query data from JS object database
             if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
               if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
                 invalidAttempts: 5
@@ -4488,6 +4512,7 @@ if (!cluster.isPrimary) {
           } else {
             var listenerEmitted = false;
 
+            // Listen for brute-force protection response
             function authMessageListener(message) {
               if (listenerEmitted) return;
               if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
@@ -4641,7 +4666,7 @@ function msgListener(msg) {
   if (msg == "\x12CLOSE") {
     closedMaster = true;
   } else if (msg == "\x12LISTEN" || msg.substr(0, 4) == "\x12AUTH") {
-    //Do nothing!
+    // Do nothing!
   } else if (msg == "\x12KILLOK") {
     if(typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
   } else if (msg == "\x12KILLTERMMSG") {
@@ -4733,14 +4758,14 @@ function listeningMessage() {
     if (typeof sport === "number") {
       serverconsole.locmessage("* https://localhost" + (sport == 443 ? "" : (":" + sport)));
     } else {
-      serverconsole.locmessage("* " + sport); //Unix socket or Windows named pipe
+      serverconsole.locmessage("* " + sport); // Unix socket or Windows named pipe
     }
   }
   if (!(secure && disableNonEncryptedServer) && (listenToLocalhost || listenToAny)) {
     if (typeof port === "number") {
       serverconsole.locmessage("* http://localhost" + (port == 80 ? "" : (":" + port)));
     } else {
-      serverconsole.locmessage("* " + port); //Unix socket or Windows named pipe
+      serverconsole.locmessage("* " + port); // Unix socket or Windows named pipe
     }
   }
   if (secure && typeof sport === "number" && !sListenToLocalhost && (!sListenToAny || (host != "" && host != "[offline]"))) serverconsole.locmessage("* https://" + (sAccHost.indexOf(":") > -1 ? "[" + sAccHost + "]" : sAccHost) + (sport == 443 ? "" : (":" + sport)));
@@ -4762,10 +4787,10 @@ function start(init) {
   init = Boolean(init);
   if (cluster.isPrimary || cluster.isPrimary === undefined) {
     if (init) {
-      for (i = 0; i < logo.length; i++) console.log(logo[i]); //Print logo
+      for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
       console.log("Welcome to DorianTech SVR.JS server.");
-      //Print warnings
+      // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
       if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
@@ -4789,7 +4814,7 @@ function start(init) {
       if (disableMods) serverconsole.locwarnmessage("SVR.JS is running without mods and server-side JavaScript enabled. Web applications may not work as expected");
       console.log();
 
-      //Display mod errors
+      // Display mod and server-side JavaScript errors
       if(process.isPrimary || process.isPrimary === undefined) {
         modLoadingErrors.forEach(function(modLoadingError) {
           serverconsole.locwarnmessage("There was a problem while loading a \"" + modLoadingError.modName + "\" mod.");
@@ -4804,13 +4829,14 @@ function start(init) {
         if(SSJSError || modLoadingErrors.length > 0) console.log();
       }
 
-      //Print info
+      // Print info
       serverconsole.locmessage("Server version: " + version);
       if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);
       else serverconsole.locmessage("Node.JS version: " + process.version);
       var CPUs = os.cpus();
       if (CPUs.length > 0) serverconsole.locmessage("CPU: " + (CPUs.length > 1 ? CPUs.length + "x " : "") + CPUs[0].model);
-      //Throw errors
+
+      // Throw errors
       if (vnum < 64) throw new Error("SVR.JS requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by SVR.JS.");
       if (configJSONRErr) throw new Error("Can't read SVR.JS configuration file: " + configJSONRErr.message);
       if (configJSONPErr) throw new Error("SVR.JS configuration parse error: " + configJSONPErr.message);
@@ -4822,7 +4848,8 @@ function start(init) {
         if (netIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on subnet address.");
       }
     }
-    //Information about starting the server
+
+    // Information about starting the server
     if (!(secure && disableNonEncryptedServer)) serverconsole.locmessage("Starting HTTP server at " + (typeof port == "number" ? (listenAddress ? ((listenAddress.indexOf(":") > -1 ? "[" + listenAddress + "]" : listenAddress)) + ":" : "[::]:") : "") + port.toString() + "...");
     if (secure) serverconsole.locmessage("Starting HTTPS server at " + (typeof sport == "number" ? (sListenAddress ? ((sListenAddress.indexOf(":") > -1 ? "[" + sListenAddress + "]" : sListenAddress)) + ":" : "[::]:") : "") + sport.toString() + "...");
   }
@@ -4851,7 +4878,7 @@ function start(init) {
     }
   }
 
-  //SVR.JS commmands
+  // SVR.JS commmands
   var commands = {
     close: function () {
       try {
@@ -5046,10 +5073,10 @@ function start(init) {
       process.on("message", function (line) {
         try {
           if (line == "") {
-            //Does Nothing
+            // Does Nothing
             process.send("\x12END");
           } else if (line == "\x14SAVECONF") {
-            //Save configuration file
+            // Save configuration file
             try {
               saveConfig();
               process.send("\x12SAVEGOOD");
@@ -5120,12 +5147,12 @@ function start(init) {
               var cpus = os.cpus().length;
               if (cpus > 16) cpus = 16;
               try {
-                var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; //1 core deleted for safety...
+                var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
                 if (cpus > useAvailableCores) cpus = useAvailableCores;
               } catch (err) {
-                //Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
+                // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
               }
-              if (cpus < 1) cpus = 1; //If SVR.JS is run on Haiku or if useAvailableCores = 0
+              if (cpus < 1) cpus = 1; // If SVR.JS is run on Haiku or if useAvailableCores = 0
               for (var i = 0; i < cpus; i++) {
                 if (i == 0) {
                   SVRJSFork();
@@ -5186,17 +5213,17 @@ function start(init) {
     }
 
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
-      //Cluster forking code
+      // Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
         var cpus = os.cpus().length;
         if (cpus > 16) cpus = 16;
         try {
-          var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; //1 core deleted for safety...
+          var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
           if (cpus > useAvailableCores) cpus = useAvailableCores;
         } catch (err) {
-          //Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
+          // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
         }
-        if (cpus < 1) cpus = 1; //If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
+        if (cpus < 1) cpus = 1; // If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
         for (var i = 0; i < cpus; i++) {
           if (i == 0) {
             SVRJSFork();
@@ -5295,7 +5322,7 @@ function start(init) {
                 crashed = true;
               });
             } else if ((configJSON.enableHTTP2 == undefined ? false : configJSON.enableHTTP2) && !secure) {
-              //It doesn't support through Unix sockets or Windows named pipes
+              // It doesn't support through Unix sockets or Windows named pipes
               var address = ((typeof port == "number" && listenAddress) ? listenAddress : "localhost").replace(/\/@/g,"");
               if(address.indexOf(":") > -1) {
                 address = "[" + address + "]";
@@ -5425,7 +5452,7 @@ function start(init) {
   }
 }
 
-//Save configuration file
+// Save configuration file
 function saveConfig() {
   for (var i = 0; i < 3; i++) {
     try {
@@ -5483,17 +5510,17 @@ function saveConfig() {
   }
 }
 
-//Process event listeners
+// Process event listeners
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   process.on("uncaughtException", function (err) {
-    //CRASH HANDLER
+    // CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(generateErrorStack(err));
     process.exit(err.errno);
   });
   process.on("unhandledRejection", function (err) {
-    //CRASH HANDLER
+    // CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
@@ -5510,18 +5537,18 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     try {
       deleteFolderRecursive(__dirname + "/temp");
     } catch (err) {
-      //Error!
+      // Error!
     }
     try {
       fs.mkdirSync(__dirname + "/temp");
     } catch (err) {
-      //Error!
+      // Error!
     }
     if (process.isBun) {
       try {
-        fs.writeFileSync(__dirname + "/temp/serverSideScript.js", "//Placeholder server-side JavaScript to workaround Bun bug.\r\n");
+        fs.writeFileSync(__dirname + "/temp/serverSideScript.js", "// Placeholder server-side JavaScript to workaround Bun bug.\r\n");
       } catch (err) {
-        //Error!
+        // Error!
       }
     }
     serverconsole.locmessage("Server closed with exit code: " + code);
@@ -5544,7 +5571,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
             cluster.workers[allClusters[i]].send("stop");
           }
         } catch (err) {
-          //Worker will crash with EPIPE anyway.
+          // Worker will crash with EPIPE anyway.
         }
       }
     }
@@ -5553,14 +5580,14 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
 } else {
   process.on("uncaughtException", function (err) {
-    //CRASH HANDLER
+    // CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(generateErrorStack(err));
     process.exit(err.errno);
   });
   process.on("unhandledRejection", function (err) {
-    //CRASH HANDLER
+    // CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
@@ -5574,7 +5601,8 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     }
   });
 }
-//Call start
+
+// Start SVR.JS!
 try {
   start(true);
 } catch (err) {
