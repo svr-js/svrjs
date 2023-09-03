@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.27";
+var version = "3.4.28";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -2064,31 +2064,37 @@ if (!cluster.isPrimary) {
       }
     }
 
-    var reqport = "";
-    var reqip = "";
-    var oldport = "";
+    var reqip = req.socket.remoteAddress;
+    var reqport = req.socket.remotePort;
     var oldip = "";
-    if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
-      reqport = null;
-      reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
-      if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
-      try {
-        oldport = req.socket.remotePort;
-        oldip = req.socket.remoteAddress;
-        req.socket.realRemotePort = reqport;
-        req.socket.realRemoteAddress = reqip;
-        req.socket.originalRemotePort = oldport;
-        req.socket.originalRemoteAddress = oldip;
-        res.socket.realRemotePort = reqport;
-        res.socket.realRemoteAddress = reqip;
-        res.socket.originalRemotePort = oldport;
-        res.socket.originalRemoteAddress = oldip;
-      } catch (ex) {
-        //Nevermind...
+    var oldport = "";
+    var isForwardedValid = true;
+    if(enableIPSpoofing) {
+      if (req.headers["x-forwarded-for"] != undefined) {
+        var preparedReqIP = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
+        var preparedReqIPvalid = net.isIP(preparedReqIP);
+        if(preparedReqIPvalid) {
+          if (preparedReqIPvalid == 4 && req.socket.remoteAddress && req.socket.remoteAddress.indexOf(":") > -1) preparedReqIP = "::ffff:" + preparedReqIP;
+          reqip = preparedReqIP;
+          reqport = null;
+          try {
+            oldport = req.socket.remotePort;
+            oldip = req.socket.remoteAddress;
+            req.socket.realRemotePort = reqport;
+            req.socket.realRemoteAddress = reqip;
+            req.socket.originalRemotePort = oldport;
+            req.socket.originalRemoteAddress = oldip;
+            res.socket.realRemotePort = reqport;
+            res.socket.realRemoteAddress = reqip;
+            res.socket.originalRemotePort = oldport;
+            res.socket.originalRemoteAddress = oldip;
+          } catch (err) {
+            // Address setting failed
+          }
+        } else {
+          isForwardedValid = false;
+        }
       }
-    } else {
-      reqip = req.socket.remoteAddress;
-      reqport = req.socket.remotePort;
     }
 
     if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
@@ -2102,7 +2108,7 @@ if (!cluster.isPrimary) {
         return;
       }
       var hostx = req.headers.host;
-      if (hostx === undefined) {
+      if (hostx === undefined || !isForwardedValid) {
         serverconsole.errmessage("Bad request!");
         callServerError(400);
         return;
@@ -2887,31 +2893,37 @@ if (!cluster.isPrimary) {
         return;
       }
 
-      var reqport = "";
-      var reqip = "";
-      var oldport = "";
+      var reqip = request.socket.remoteAddress;
+      var reqport = request.socket.remotePort;
       var oldip = "";
-      if (request.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
-        reqport = null;
-        reqip = request.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
-        if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
-        try {
-          oldport = request.socket.remotePort;
-          oldip = request.socket.remoteAddress;
-          request.socket.realRemotePort = reqport;
-          request.socket.realRemoteAddress = reqip;
-          request.socket.originalRemotePort = oldport;
-          request.socket.originalRemoteAddress = oldip;
-          response.socket.realRemotePort = reqport;
-          response.socket.realRemoteAddress = reqip;
-          response.socket.originalRemotePort = oldport;
-          response.socket.originalRemoteAddress = oldip;
-        } catch (ex) {
-          //Address setting failed
+      var oldport = "";
+      var isForwardedValid = true;
+      if(enableIPSpoofing) {
+        if (request.headers["x-forwarded-for"] != undefined) {
+          var preparedReqIP = request.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
+          var preparedReqIPvalid = net.isIP(preparedReqIP);
+          if(preparedReqIPvalid) {
+            if (preparedReqIPvalid == 4 && request.socket.remoteAddress && request.socket.remoteAddress.indexOf(":") > -1) preparedReqIP = "::ffff:" + preparedReqIP;
+            reqip = preparedReqIP;
+            reqport = null;
+            try {
+              oldport = request.socket.remotePort;
+              oldip = request.socket.remoteAddress;
+              request.socket.realRemotePort = reqport;
+              request.socket.realRemoteAddress = reqip;
+              request.socket.originalRemotePort = oldport;
+              request.socket.originalRemoteAddress = oldip;
+              response.socket.realRemotePort = reqport;
+              response.socket.realRemoteAddress = reqip;
+              response.socket.originalRemotePort = oldport;
+              response.socket.originalRemoteAddress = oldip;
+            } catch (err) {
+               // Address setting failed
+            }
+          } else {
+            isForwardedValid = false;
+          }
         }
-      } else {
-        reqip = request.socket.remoteAddress;
-        reqport = request.socket.remotePort;
       }
 
       if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (request.method == "GET" ? "content in " : (request.method == "POST" ? "to post content in " : (request.method == "PUT" ? "to add content in " : (request.method == "DELETE" ? "to delete content in " : (request.method == "PATCH" ? "to patch content in " : "to access content using " + request.method + " method in "))))) + (request.headers.host == undefined ? "" : request.headers.host) + request.url);
@@ -3009,7 +3021,6 @@ if (!cluster.isPrimary) {
         599: "The server couldn't connect in time, while it was acting as a proxy."
       };
 
-      //Server error calling method
       // Server error calling method
       function callServerError(errorCode, extName, stack, ch) {
         if (typeof errorCode !== "number") {
@@ -3257,31 +3268,37 @@ if (!cluster.isPrimary) {
             return;
           }
 
-          var reqport = "";
-          var reqip = "";
-          var oldport = "";
+          var reqip = req.socket.remoteAddress;
+          var reqport = req.socket.remotePort;
           var oldip = "";
-          if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
-            reqport = null;
-            reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
-            if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
-            try {
-              oldport = req.socket.remotePort;
-              oldip = req.socket.remoteAddress;
-              req.socket.realRemotePort = reqport;
-              req.socket.realRemoteAddress = reqip;
-              req.socket.originalRemotePort = oldport;
-              req.socket.originalRemoteAddress = oldip;
-              res.socket.realRemotePort = reqport;
-              res.socket.realRemoteAddress = reqip;
-              res.socket.originalRemotePort = oldport;
-              res.socket.originalRemoteAddress = oldip;
-            } catch (ex) {
-              //Nevermind...
+          var oldport = "";
+          var isForwardedValid = true;
+          if(enableIPSpoofing) {
+            if (req.headers["x-forwarded-for"] != undefined) {
+              var preparedReqIP = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
+              var preparedReqIPvalid = net.isIP(preparedReqIP);
+              if(preparedReqIPvalid) {
+                 if (preparedReqIPvalid == 4 && req.socket.remoteAddress && req.socket.remoteAddress.indexOf(":") > -1) preparedReqIP = "::ffff:" + preparedReqIP;
+                 reqip = preparedReqIP;
+                 reqport = null;
+                 try {
+                   oldport = req.socket.remotePort;
+                   oldip = req.socket.remoteAddress;
+                   req.socket.realRemotePort = reqport;
+                   req.socket.realRemoteAddress = reqip;
+                   req.socket.originalRemotePort = oldport;
+                   req.socket.originalRemoteAddress = oldip;
+                   res.socket.realRemotePort = reqport;
+                   res.socket.realRemoteAddress = reqip;
+                   res.socket.originalRemotePort = oldport;
+                   res.socket.originalRemoteAddress = oldip;
+                 } catch (err) {
+                   // Address setting failed
+                 }
+              } else {
+                isForwardedValid = false;
+              }
             }
-          } else {
-            reqip = req.socket.remoteAddress;
-            reqport = req.socket.remotePort;
           }
 
           function checkLevel(e) {
@@ -3488,7 +3505,6 @@ if (!cluster.isPrimary) {
                               } else {
                                 statsa.push("<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=[BAD] width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") + "\"><nocode>" + ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</nocode></a></td><td>-</td><td>-</td></tr>\r\n");
                               }
-
                             } else {
                               var entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") + (estats.isDirectory() ? "/" : "") + "\">" + ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</a></td><td>" + (estats.isDirectory() ? "-" : sizify(estats.size.toString())) + "</td><td>" + estats.mtime.toDateString() + "</td></tr>\r\n";
                               if (estats.isDirectory()) {
@@ -3837,6 +3853,12 @@ if (!cluster.isPrimary) {
           return;
         }
 
+        if(!isForwardedValid) {
+          serverconsole.errmessage("X-Forwarded-For header is invalid.");
+          callServerError(400);
+          return;
+        }
+        
         //SANITIZE URL
         var sanitizedHref = sanitizeURL(href);
 
@@ -3855,8 +3877,8 @@ if (!cluster.isPrimary) {
           redirect(sanitizedURL, false);
           return;
         }
+      
         //URL REWRITING
-
         function rewriteURL(address, map) {
           var rewrittenAddress = address;
           for (var i = 0; i < map.length; i++) {
