@@ -2838,31 +2838,37 @@ if (!cluster.isPrimary) {
     }
 
     // Set up X-Forwarded-For
-    var reqport = "";
-    var reqip = "";
-    var oldport = "";
+    var reqip = req.socket.remoteAddress;
+    var reqport = req.socket.remotePort;
     var oldip = "";
-    if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
-      reqport = null;
-      reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
-      if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
-      try {
-        oldport = req.socket.remotePort;
-        oldip = req.socket.remoteAddress;
-        req.socket.realRemotePort = reqport;
-        req.socket.realRemoteAddress = reqip;
-        req.socket.originalRemotePort = oldport;
-        req.socket.originalRemoteAddress = oldip;
-        res.socket.realRemotePort = reqport;
-        res.socket.realRemoteAddress = reqip;
-        res.socket.originalRemotePort = oldport;
-        res.socket.originalRemoteAddress = oldip;
-      } catch (err) {
-        // Address setting failed
+    var oldport = "";
+    var isForwardedValid = true;
+    if(enableIPSpoofing) {
+      if (req.headers["x-forwarded-for"] != undefined) {
+        var preparedReqIP = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
+        var preparedReqIPvalid = net.isIP(preparedReqIP);
+        if(preparedReqIPvalid) {
+          if (preparedReqIPvalid == 4 && req.socket.remoteAddress && req.socket.remoteAddress.indexOf(":") > -1) preparedReqIP = "::ffff:" + preparedReqIP;
+          reqip = preparedReqIP
+          reqport = null;
+          try {
+            oldport = req.socket.remotePort;
+            oldip = req.socket.remoteAddress;
+            req.socket.realRemotePort = reqport;
+            req.socket.realRemoteAddress = reqip;
+            req.socket.originalRemotePort = oldport;
+            req.socket.originalRemoteAddress = oldip;
+            res.socket.realRemotePort = reqport;
+            res.socket.realRemoteAddress = reqip;
+            res.socket.originalRemotePort = oldport;
+            res.socket.originalRemoteAddress = oldip;
+          } catch (err) {
+            // Address setting failed
+          }
+        } else {
+          isForwardedValid = false;
+        }
       }
-    } else {
-      reqip = req.socket.remoteAddress;
-      reqport = req.socket.remotePort;
     }
 
     reqcounter++;
@@ -3323,34 +3329,7 @@ if (!cluster.isPrimary) {
           serverconsole.errmessage("Client socket is null!!!");
           return;
         }
-
-        var reqport = "";
-        var reqip = "";
-        var oldport = "";
-        var oldip = "";
-        if (req.headers["x-forwarded-for"] != undefined && enableIPSpoofing) {
-          reqport = null;
-          reqip = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
-          if (reqip.indexOf(":") == -1) reqip = "::ffff:" + reqip;
-          try {
-            oldport = req.socket.remotePort;
-            oldip = req.socket.remoteAddress;
-            req.socket.realRemotePort = reqport;
-            req.socket.realRemoteAddress = reqip;
-            req.socket.originalRemotePort = oldport;
-            req.socket.originalRemoteAddress = oldip;
-            res.socket.realRemotePort = reqport;
-            res.socket.realRemoteAddress = reqip;
-            res.socket.originalRemotePort = oldport;
-            res.socket.originalRemoteAddress = oldip;
-          } catch (err) {
-            // Nevermind...
-          }
-        } else {
-          reqip = req.socket.remoteAddress;
-          reqport = req.socket.remotePort;
-        }
-
+        
         // Function to check the level of a path relative to the web root
         function checkPathLevel(path) {
           // Split the path into an array of components based on "/"
@@ -4090,11 +4069,18 @@ if (!cluster.isPrimary) {
         }
       }
 
+      // Check for invalid X-Forwarded-For header
+      if(!isForwardedValid) {
+        serverconsole.errmessage("X-Forwarded-For header is invalid.");
+        callServerError(400);
+        return;
+      }
+      
       // Handle redirects to HTTPS
       if(secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
         var hostx = req.headers.host;
         if (hostx === undefined) {
-          serverconsole.errmessage("Bad request!");
+          serverconsole.errmessage("Host header is missing.");
           callServerError(400);
           return;
         }

@@ -1,9 +1,9 @@
 {
   "users": [],
-  "port": 80,
+  "port": 5555,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1693732189583,
+  "timestamp": 1693743065822,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
@@ -91,7 +91,7 @@
     "/.*\\.img$/",
     "/.*\\.iso$/"
   ],
-  "enableIPSpoofing": false,
+  "enableIPSpoofing": true,
   "secure": false,
   "sni": {},
   "disableNonEncryptedServer": false,
