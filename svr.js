@@ -2849,7 +2849,7 @@ if (!cluster.isPrimary) {
         var preparedReqIPvalid = net.isIP(preparedReqIP);
         if(preparedReqIPvalid) {
           if (preparedReqIPvalid == 4 && req.socket.remoteAddress && req.socket.remoteAddress.indexOf(":") > -1) preparedReqIP = "::ffff:" + preparedReqIP;
-          reqip = preparedReqIP
+          reqip = preparedReqIP;
           reqport = null;
           try {
             oldport = req.socket.remotePort;
