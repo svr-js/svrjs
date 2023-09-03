@@ -4032,6 +4032,13 @@ if (!cluster.isPrimary) {
         return;
       }
 
+      // Check for invalid X-Forwarded-For header
+      if(!isForwardedValid) {
+        serverconsole.errmessage("X-Forwarded-For header is invalid.");
+        callServerError(400);
+        return;
+      }
+
       // Sanitize URL
       var sanitizedHref = sanitizeURL(href);
 
@@ -4067,13 +4074,6 @@ if (!cluster.isPrimary) {
           redirect(sanitizedURL, false);
           return;
         }
-      }
-
-      // Check for invalid X-Forwarded-For header
-      if(!isForwardedValid) {
-        serverconsole.errmessage("X-Forwarded-For header is invalid.");
-        callServerError(400);
-        return;
       }
       
       // Handle redirects to HTTPS
