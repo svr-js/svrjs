@@ -558,7 +558,7 @@ function checkForEnabledDirectoryListing(hostname) {
     }
     return false;
   }
-    
+
   var main = (configJSON.enableDirectoryListing || configJSON.enableDirectoryListing === undefined);
   if(!configJSON.enableDirectoryListingVHost) return main;
   var vhostP = null;
@@ -838,7 +838,7 @@ function calculateBroadcastIPv4FromCidr(ipWithCidr) {
   if(!ipWithCidr) return null;
   var ipCA = ipWithCidr.split("/");
   if(ipCA.length != 2) return null;
-  
+
   // Extract IP and mask (numberic format)
   var ip = ipCA[0];
   var mask = parseInt(ipCA[1]);
@@ -855,7 +855,7 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
   if(!ipWithCidr) return null;
   var ipCA = ipWithCidr.split("/");
   if(ipCA.length != 2) return null;
-  
+
   // Extract IP and mask (numberic format)
   var ip = ipCA[0];
   var mask = parseInt(ipCA[1]);
@@ -1978,6 +1978,7 @@ if (!cluster.isPrimary) {
   });
 
   server2.on("listening", function () {
+    attmtsRedir = 5;
     listeningMessage();
   });
 
@@ -2096,7 +2097,7 @@ if (!cluster.isPrimary) {
   //Patches from Node.JS v18.0.0
   if (server.requestTimeout !== undefined && server.requestTimeout === 0) server.requestTimeout = 300000;
   if (server2.requestTimeout !== undefined && server2.requestTimeout === 0) server2.requestTimeout = 300000;
-  
+
   function reqerrhandler(err, socket, fromMain) {
     if (fromMain === undefined) fromMain = true;
     //Define response object similar to Node.JS native one
@@ -2297,13 +2298,13 @@ if (!cluster.isPrimary) {
             }
           }
         }
-  
+
         if(!_i) _i = 0;
         if(_i >= list.length) {
           medCallback(false);
           return;
         }
-  
+
         if(list[_i].scode != errorCode) {
           getErrorFileName(list, callback, _i+1);
           return;
@@ -2693,7 +2694,7 @@ if (!cluster.isPrimary) {
       }
       return false;
     }
-    
+
     function getCustomHeaders() {
       var ph = JSON.parse(JSON.stringify(customHeaders));
       if(configJSON.customHeadersVHost) {
@@ -2805,7 +2806,7 @@ if (!cluster.isPrimary) {
       }
       res.writeHeadNative(a, b, c);
     };
-    
+
     var finished = false;
     res.on("finish", function () {
       if (!finished) {
@@ -2898,7 +2899,7 @@ if (!cluster.isPrimary) {
     //     }
     //   });
     // }
-    
+
     //Error descriptions
     var serverErrorDescs = {
       200: "The request succeeded! :)",
@@ -2972,7 +2973,7 @@ if (!cluster.isPrimary) {
       }
 
       // Determine error file
-        
+
       function getErrorFileName(list, callback, _i) {
         function medCallback(p) {
           if(p) callback(p);
@@ -3014,13 +3015,13 @@ if (!cluster.isPrimary) {
             }
           }
         }
-  
+
         if(!_i) _i = 0;
         if(_i >= list.length) {
           medCallback(false);
           return;
         }
-          
+
         if(list[_i].scode != errorCode || !matchHostname(list[_i].host)) {
           getErrorFileName(list, callback, _i+1);
           return;
@@ -3405,7 +3406,9 @@ if (!cluster.isPrimary) {
           res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
           return;
         } else if (version.indexOf("Nightly-") === 0 && (href == "/crash.svr" || (os.platform() == "win32" && href.toLowerCase() == "/crash.svr"))) {
-          throw new Error("Intentionally crashed");
+          process.nextTick(function () {
+            throw new Error("Intentionally crashed");
+          });
         }
 
         /////////////////////////////////////////////
@@ -3998,7 +4001,7 @@ if (!cluster.isPrimary) {
         });
       };
     }
-      
+
     try {
       //scan blacklist
       if (blacklist.check(reqip) && href != "/favicon.ico") {
@@ -4065,10 +4068,10 @@ if (!cluster.isPrimary) {
           return;
         }
       }
-        
+
       //Handle redirects to HTTPS
       if(secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
-          
+
         var hostx = req.headers.host;
         if (hostx === undefined) {
           serverconsole.errmessage("Bad request!");
@@ -4081,7 +4084,7 @@ if (!cluster.isPrimary) {
           serverconsole.errmessage("This server will never be a proxy.");
           return;
         }
-      
+
         var urlp = parseURL("http://" + hostx);
         try {
           if (urlp.path.indexOf("//") == 0) {
@@ -4144,7 +4147,7 @@ if (!cluster.isPrimary) {
         return;
 
       }
-        
+
       //Handle redirects to addresses with www.
       if (wwwredirect) {
         var hostname = req.headers.host.split[":"];
@@ -4155,7 +4158,7 @@ if (!cluster.isPrimary) {
           redirect((req.socket.encrypted ? "https" : "http") + "://www." + hostname + (hostport ? ":" + hostport : "") + req.url.replace(/\/+/g, "/"));
         }
       }
-        
+
       //Handle URL rewriting
       function rewriteURL(address, map) {
         var rewrittenAddress = address;
@@ -4446,7 +4449,7 @@ if (!cluster.isPrimary) {
                       }
                     }
                     callServerError(401, undefined, undefined, ha);
-                    serverconsole.errmessage("User " + username + " failed to log in.");
+                    serverconsole.errmessage("User \"" + username + "\" failed to log in.");
                   } else {
                     if (bruteProtection) {
                       if (process.send) {
@@ -4457,6 +4460,7 @@ if (!cluster.isPrimary) {
                         };
                       }
                     }
+                    serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
                     modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
                   }
                 } catch(err) {
@@ -4505,14 +4509,10 @@ if (!cluster.isPrimary) {
         }
       }
     } catch (err) {
-      //CRASH HANDLER
-      if (err.message == "Intentionally crashed") throw err; //If intentionally crashed, then crash SVR.JS
-      callServerError(500, undefined, generateErrorStack(err)); //Else just return 500 error
+      callServerError(500, undefined, generateErrorStack(err));
     }
-    
-
   }
-  
+
   server.on("error", function (err) {
     attmts--;
     if (cluster.isPrimary === undefined && attmts >= 0) {
@@ -4584,6 +4584,7 @@ if (!cluster.isPrimary) {
   });
 
   server.on("listening", function () {
+    attmts = 5;
     listeningMessage();
   });
 }
@@ -4787,7 +4788,7 @@ function start(init) {
       if (secure && configJSON.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.");
       if (disableMods) serverconsole.locwarnmessage("SVR.JS is running without mods and server-side JavaScript enabled. Web applications may not work as expected");
       console.log();
-      
+
       //Display mod errors
       if(process.isPrimary || process.isPrimary === undefined) {
         modLoadingErrors.forEach(function(modLoadingError) {
@@ -4802,7 +4803,7 @@ function start(init) {
         }
         if(SSJSError || modLoadingErrors.length > 0) console.log();
       }
-      
+
       //Print info
       serverconsole.locmessage("Server version: " + version);
       if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);
