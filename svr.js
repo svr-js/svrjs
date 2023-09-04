@@ -1147,7 +1147,7 @@ if (configJSON.disableUnusedWorkerTermination != undefined) disableUnusedWorkerT
 if (configJSON.rewriteDirtyURLs != undefined) rewriteDirtyURLs = configJSON.rewriteDirtyURLs;
 if (configJSON.errorPages != undefined) errorPages = configJSON.errorPages;
 if (configJSON.useWebRootServerSideScript != undefined) useWebRootServerSideScript = configJSON.useWebRootServerSideScript;
-if (configJSON.exposeModsInErrorPages != undefined) exposeServerVersion = configJSON.exposeModsInErrorPages;
+if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = configJSON.exposeModsInErrorPages;
 if (configJSON.wwwroot != undefined) {
   var wwwroot = configJSON.wwwroot;
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
