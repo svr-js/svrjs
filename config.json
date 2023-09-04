@@ -1,9 +1,9 @@
 {
   "users": [],
-  "port": 5555,
+  "port": 80,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1693744950022,
+  "timestamp": 1693865100955,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
@@ -100,5 +100,6 @@
   "disableUnusedWorkerTermination": false,
   "rewriteDirtyURLs": true,
   "errorPages": [],
-  "useWebRootServerSideScript": true
+  "useWebRootServerSideScript": true,
+  "exposeModsInErrorPages": true
 }
