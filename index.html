@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.9.1</title>
+    <title>SVR.JS 3.9.2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.9.1</h1>
+    <h1>Welcome to SVR.JS 3.9.2</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -117,7 +117,7 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added new config.json property - exposeModsInErrorPages</li>
+      <li>Mitigated security vulnerability: SVR.JS mods and server-side JavaScript using req.url are no longer vulnerable to path traversal (not including query strings).</li>
     </ul>
     <p>Bugs:</p>
     <ul>
