@@ -4043,7 +4043,8 @@ if (!cluster.isPrimary) {
 
       // Sanitize URL
       var sanitizedHref = sanitizeURL(href);
-
+      var preparedReqUrl = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+      
       // Check if URL is "dirty"
       if (href != sanitizedHref && !isProxy) {
         var sanitizedURL = uobject;
@@ -4074,6 +4075,14 @@ if (!cluster.isPrimary) {
           }
         } else {
           redirect(sanitizedURL, false);
+          return;
+        }
+      } else if(req.url != preparedReqUrl && !isProxy) {
+        serverconsole.resmessage("URL sanitized: " + req.url + " => " + preparedReqUrl);
+        if(rewriteDirtyURLs) {
+          req.url = preparedReqUrl;
+        } else {
+          redirect(preparedReqUrl, false);
           return;
         }
       }
