@@ -4215,7 +4215,9 @@ if (!cluster.isPrimary) {
           }
 
           var sHref = sanitizeURL(href);
-          if (sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
+          var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+          
+          if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
             callServerError(403);
             serverconsole.errmessage("Content blocked.");
             return;

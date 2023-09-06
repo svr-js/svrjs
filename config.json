@@ -1,9 +1,9 @@
 {
   "users": [],
-  "port": 5555,
+  "port": 80,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1694020816055,
+  "timestamp": 1694024561052,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
