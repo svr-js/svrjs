@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.29";
+var version = "3.4.30";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -3863,6 +3863,7 @@ if (!cluster.isPrimary) {
         
         //SANITIZE URL
         var sanitizedHref = sanitizeURL(href);
+        var preparedReqUrl = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
 
         if (href.toLowerCase() != sanitizedHref.toLowerCase() && !isProxy) {
           var sanitizedURL = uobject;
@@ -3877,6 +3878,10 @@ if (!cluster.isPrimary) {
           sanitizedURL = url.format(sanitizedURL);
           serverconsole.resmessage("URL sanitized: " + req.url + " => " + sanitizedURL);
           redirect(sanitizedURL, false);
+          return;
+        } else if(req.url != preparedReqUrl && !isProxy) {
+          serverconsole.resmessage("URL sanitized: " + req.url + " => " + preparedReqUrl);
+          redirect(preparedReqUrl, false);
           return;
         }
       
@@ -3916,7 +3921,9 @@ if (!cluster.isPrimary) {
             }
 
             var sHref = sanitizeURL(href);
-            if (sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
+            var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+
+            if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
               callServerError(403);
               serverconsole.errmessage("Content blocked.");
               return;
