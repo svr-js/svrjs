@@ -3274,9 +3274,19 @@ if (!cluster.isPrimary) {
     function modExecute(mods, ffinals) {
       // Prepare modFunction
       var modFunction = ffinals;
-      for (var i = mods.length - 1; i >= 0; i--) {
-        modFunction = mods[i].callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
+      var useMods = mods;
+      
+      if(isProxy) {
+        // Get list of forward proxy mods
+        useMods = [];
+        mods.forEach(function (mod) {
+          if (mod.proxyCallback !== undefined) useMods.push(mod);
+        });
       }
+      
+      useMods.reverse().forEach(function (modO) {
+        modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
+      });
 
       // Execute modfunction
       modFunction();
