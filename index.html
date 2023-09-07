@@ -119,7 +119,7 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Mitigated security vulnerability: SVR.JS mods and server-side JavaScript using req.url are no longer vulnerable to path traversal (not including query strings).</li>
+      <li>Mitigated security vulnerability: SVR.JS mods and server-side JavaScript not using href or uobject.pathname in some path checks are no longer vulnerable to access control bypass (from SVR.JS configuration).</li>
     </ul>
     <p>Bugs:</p>
     <ul>

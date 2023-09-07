@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.30";
+var version = "3.4.31";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -3217,8 +3217,17 @@ if (!cluster.isPrimary) {
       //MOD EXCECUTION FUNCTION
       function modExecute(mods, ffinals) {
         var modFunction = ffinals;
-        for (var i = mods.length - 1; i >= 0; i--) {
-          modFunction = mods[i].callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
+        var useMods = mods;
+        
+        if(isProxy) {
+          useMods = [];
+          for (var i = 0; i < mods.length; i++) {
+            if (mods[i].proxyCallback !== undefined) proxyMods.push(mods[i]);
+          }
+        }
+        
+        for (var i = useMods.length - 1; i >= 0; i--) {
+          modFunction = useMods[i].callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
         }
         modFunction();
       }
