@@ -223,28 +223,31 @@ if (!singlethreaded) {
       function checkSendImplementation(worker) {
         var sendImplemented = true;
 
-        if (!worker.send) {
-          sendImplemented = false;
-        }
-
-        var oldLog = console.log;
-        console.log = function (a,b,c,d,e,f) {
-          if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
-            throw new Error("NOT IMPLEMENTED");
-          } else {
-            oldLog(a,b,c,d,e,f);
-          }
-        };
-
-        try {
-          worker.send(undefined);
-        } catch (err) {
-          if (err.message === "NOT IMPLEMENTED") {
+        if (!(process.versions && process.versions.bun && process.versions.bun[0] != "0")) {
+          if (!worker.send) {
             sendImplemented = false;
           }
-        }
 
-        console.log = oldLog;
+          var oldLog = console.log;
+          console.log = function (a,b,c,d,e,f) {
+            if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
+              throw new Error("NOT IMPLEMENTED");
+            } else {
+              oldLog(a,b,c,d,e,f);
+            }
+          };
+
+          try {
+            worker.send(undefined);
+          } catch (err) {
+            if (err.message === "NOT IMPLEMENTED") {
+              sendImplemented = false;
+            }
+            console.log(err);
+          }
+
+          console.log = oldLog;
+        }
 
         return sendImplemented;
       }
@@ -5083,7 +5086,6 @@ function start(init) {
     }
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
-        if(line === undefined) return;          // Workaround for Bun 1.0.0
         try {
           if (line == "") {
             // Does Nothing
