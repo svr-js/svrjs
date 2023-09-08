@@ -1491,7 +1491,7 @@ if (!disableMods) {
           // If it's not a ".tar.gz" file, unpack it using `svrmodpack`
           if (svrmodpack._errored) throw svrmodpack._errored;
           svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
-          svrmodpackUsed = false;
+          svrmodpackUsed = true;
         }
 
         // Initialize variables for mod loading
