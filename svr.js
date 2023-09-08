@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.31";
+var version = "3.4.32";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -213,29 +213,31 @@ if (!singlethreaded) {
 
       function checkSendImplementation(worker) {
         var sendImplemented = true;
-
-        if (!worker.send) {
-          sendImplemented = false;
-        }
-
-        oldLog = console.log;
-        console.log = function(a,b,c,d,e,f) {
-          if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
-            throw new Error("NOT IMPLEMENTED");
-          } else {
-            oldLog(a,b,c,d,e,f);
-          }
-        }
-
-        try {
-          worker.send(undefined);
-        } catch (err) {
-          if (err.message === "NOT IMPLEMENTED") {
+        
+        if (!(process.versions && process.versions.bun && process.versions.bun[0] != "0")) {
+          if (!worker.send) {
             sendImplemented = false;
           }
-        }
 
-        console.log = oldLog;
+          oldLog = console.log;
+          console.log = function(a,b,c,d,e,f) {
+            if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
+              throw new Error("NOT IMPLEMENTED");
+            } else {
+              oldLog(a,b,c,d,e,f);
+            }
+          }
+
+          try {
+            worker.send(undefined);
+          } catch (err) {
+            if (err.message === "NOT IMPLEMENTED") {
+              sendImplemented = false;
+            }
+          }
+
+          console.log = oldLog;
+        }
 
         return sendImplemented;
       }
@@ -1242,6 +1244,8 @@ process.exit = function (code) {
   }
 };
 
+var svrmodpackUsed = false;
+
 if (!disableMods) {
   var modloaderFolderName = "modloader";
   if (cluster.isPrimary === false) {
@@ -1284,6 +1288,7 @@ if (!disableMods) {
           } else {
             if (svrmodpack._errored) throw svrmodpack._errored;
             svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFiles[i]);
+            svrmodpackUsed = true;
           }
         }
         extract();
@@ -4329,6 +4334,7 @@ function start(init) {
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
       if (vnum <= 57 && JSON.stringify(rewriteMap) != "[]") serverconsole.locwarnmessage("Some URL rewriting regexes will not work in Node.JS 8.x and earlier.");
       if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version!");
+      if (svrmodpackUsed) serverconsole.locwarnmessage("The \"svrmodpack\" library is deprecated. Mods using svrmodpack format may not work in future SVR.JS versions.");
       if (process.isBun) serverconsole.locwarnmessage("Bun support is experimental.");
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support!");

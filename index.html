@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.4.30</title>
+    <title>SVR.JS 3.4.32</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.4.30</h1>
+    <h1>Welcome to SVR.JS 3.4.32</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -119,11 +119,13 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Mitigated security vulnerability: SVR.JS mods and server-side JavaScript not using href or uobject.pathname in some path checks are no longer vulnerable to access control bypass (from SVR.JS configuration).</li>
+      <li>Added "svrmodpack" deprecation warning.</li>
+      <li>Removed unmaintained primitive analytics mod.</li>
+      <li>Removed unmaintained and undocumented hexstrbase64 library.</li>
+      <li>Added TypeError workaround for Bun 1.0.0</li>
     </ul>
     <p>Bugs:</p>
     <ul>
-      <li>Some very old mods requiring hexstrbase64 will fail to load.</li>
       <li>On first load server-side JavaScript will fail to load when SVR.JS is running on Bun.</li>
     </ul>
     <br/>
