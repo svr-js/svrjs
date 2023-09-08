@@ -4803,7 +4803,6 @@ function start(init) {
       console.log("Welcome to DorianTech SVR.JS server.");
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
-      if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
       if (svrmodpackUsed) serverconsole.locwarnmessage("The \"svrmodpack\" library is deprecated. Mods using svrmodpack format may not work in future SVR.JS versions.");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
@@ -4853,6 +4852,7 @@ function start(init) {
       if (configJSONRErr) throw new Error("Can't read SVR.JS configuration file: " + configJSONRErr.message);
       if (configJSONPErr) throw new Error("SVR.JS configuration parse error: " + configJSONPErr.message);
       if (configJSON.enableHTTP2 && !secure && (typeof port != "number")) throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");
+      if (configJSON.enableHTTP2 && http2.__disabled__ !== undefined) throw new Error("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
       if (listenAddress) {
         if (listenAddress.match(/^[0-9]+$/)) throw new Error("Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).");
         if (listenAddress.match(/^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i)) throw new Error("SVR.JS can't listen on multicast address.");
