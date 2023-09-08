@@ -2282,7 +2282,7 @@ if (!cluster.isPrimary) {
                       if(err) {
                         callback(errorCode.toString() + ".html");
                       } else {
-                        callback("." + errorCode.toString());  
+                        callback("." + errorCode.toString());
                       }
                     } catch(err2) {
                       callServerError(500, undefined, generateErrorStack(err2));
@@ -2302,7 +2302,7 @@ if (!cluster.isPrimary) {
                   if(err) {
                     callback(errorCode.toString() + ".html");
                   } else {
-                    callback("." + errorCode.toString());  
+                    callback("." + errorCode.toString());
                   }
                 } catch(err2) {
                   callServerError(500, undefined, generateErrorStack(err2));
@@ -2326,7 +2326,7 @@ if (!cluster.isPrimary) {
             if(err) {
               getErrorFileName(list, callback, _i+1);
             } else {
-              medCallback(list[_i].path);  
+              medCallback(list[_i].path);
             }
           });
         }
@@ -4290,7 +4290,7 @@ if (!cluster.isPrimary) {
         callServerError(403);
         serverconsole.errmessage("Access to log files is denied.");
         return;
-      } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion && process.cwd() == __dirname) {
+      } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
         callServerError(403);
         serverconsole.errmessage("Access to SVR.JS script is denied.");
         return;
