@@ -3,7 +3,7 @@
   "port": 80,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1694196507492,
+  "timestamp": 1694212357224,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
@@ -14,7 +14,7 @@
   "enableDirectoryListingWithDefaultHead": false,
   "serverAdministratorEmail": "[no contact information]",
   "stackHidden": false,
-  "enableRemoteLogBrowsing": true,
+  "enableRemoteLogBrowsing": false,
   "exposeServerVersion": true,
   "disableServerSideScriptExpose": true,
   "rewriteMap": [
