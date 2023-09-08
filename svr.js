@@ -5083,6 +5083,7 @@ function start(init) {
     }
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
+        if(line === undefined) return;          // Workaround for Bun 1.0.0
         try {
           if (line == "") {
             // Does Nothing
