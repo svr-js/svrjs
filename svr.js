@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.9.3";
+var version = "3.9.4";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -223,28 +223,31 @@ if (!singlethreaded) {
       function checkSendImplementation(worker) {
         var sendImplemented = true;
 
-        if (!worker.send) {
-          sendImplemented = false;
-        }
-
-        var oldLog = console.log;
-        console.log = function (a,b,c,d,e,f) {
-          if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
-            throw new Error("NOT IMPLEMENTED");
-          } else {
-            oldLog(a,b,c,d,e,f);
-          }
-        };
-
-        try {
-          worker.send(undefined);
-        } catch (err) {
-          if (err.message === "NOT IMPLEMENTED") {
+        if (!(process.versions && process.versions.bun && process.versions.bun[0] != "0")) {
+          if (!worker.send) {
             sendImplemented = false;
           }
-        }
 
-        console.log = oldLog;
+          var oldLog = console.log;
+          console.log = function (a,b,c,d,e,f) {
+            if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
+              throw new Error("NOT IMPLEMENTED");
+            } else {
+              oldLog(a,b,c,d,e,f);
+            }
+          };
+
+          try {
+            worker.send(undefined);
+          } catch (err) {
+            if (err.message === "NOT IMPLEMENTED") {
+              sendImplemented = false;
+            }
+            console.log(err);
+          }
+
+          console.log = oldLog;
+        }
 
         return sendImplemented;
       }
@@ -1423,6 +1426,7 @@ process.exit = function (code) {
 
 var modLoadingErrors = [];
 var SSJSError = undefined;
+var svrmodpackUsed = false;
 
 // Load mods if the `disableMods` flag is not set
 if (!disableMods) {
@@ -1487,6 +1491,7 @@ if (!disableMods) {
           // If it's not a ".tar.gz" file, unpack it using `svrmodpack`
           if (svrmodpack._errored) throw svrmodpack._errored;
           svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
+          svrmodpackUsed = true;
         }
 
         // Initialize variables for mod loading
@@ -4801,7 +4806,7 @@ function start(init) {
       console.log("Welcome to DorianTech SVR.JS server.");
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
-      if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
+      if (svrmodpackUsed) serverconsole.locwarnmessage("The \"svrmodpack\" library is deprecated. Mods using svrmodpack format may not work in future SVR.JS versions.");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
@@ -4850,6 +4855,7 @@ function start(init) {
       if (configJSONRErr) throw new Error("Can't read SVR.JS configuration file: " + configJSONRErr.message);
       if (configJSONPErr) throw new Error("SVR.JS configuration parse error: " + configJSONPErr.message);
       if (configJSON.enableHTTP2 && !secure && (typeof port != "number")) throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by SVR.JS.");
+      if (configJSON.enableHTTP2 && http2.__disabled__ !== undefined) throw new Error("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
       if (listenAddress) {
         if (listenAddress.match(/^[0-9]+$/)) throw new Error("Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).");
         if (listenAddress.match(/^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i)) throw new Error("SVR.JS can't listen on multicast address.");
