@@ -1423,6 +1423,7 @@ process.exit = function (code) {
 
 var modLoadingErrors = [];
 var SSJSError = undefined;
+var svrmodpackUsed = false;
 
 // Load mods if the `disableMods` flag is not set
 if (!disableMods) {
@@ -1487,6 +1488,7 @@ if (!disableMods) {
           // If it's not a ".tar.gz" file, unpack it using `svrmodpack`
           if (svrmodpack._errored) throw svrmodpack._errored;
           svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
+          svrmodpackUsed = false;
         }
 
         // Initialize variables for mod loading
@@ -4802,6 +4804,7 @@ function start(init) {
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
       if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with SVR.JS");
+      if (svrmodpackUsed) serverconsole.locwarnmessage("The \"svrmodpack\" library is deprecated. Mods using svrmodpack format may not work in future SVR.JS versions.");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
