@@ -14,7 +14,7 @@
   "enableDirectoryListingWithDefaultHead": false,
   "serverAdministratorEmail": "[no contact information]",
   "stackHidden": false,
-  "enableRemoteLogBrowsing": true,
+  "enableRemoteLogBrowsing": false,
   "exposeServerVersion": true,
   "disableServerSideScriptExpose": true,
   "rewriteMap": [

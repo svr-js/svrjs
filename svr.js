@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.32";
+var version = "3.4.34";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -1561,11 +1561,10 @@ if (secure) {
 forbiddenPaths.svrjs = getInitializePath("./" + ((__dirname[__dirname.length - 1] != "/") ? __filename.replace(__dirname + "/", "") : __filename.replace(__dirname, "")));
 forbiddenPaths.serverSideScripts = [];
 forbiddenPaths.serverSideScripts.push("/serverSideScript.js");
-forbiddenPaths.serverSideScripts.push(getInitializePath("./temp/serverSideScript.js"));
 forbiddenPaths.serverSideScriptDirectories = [];
-forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./temp/modloader"));
 forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./node_modules"));
 forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
+forbiddenPaths.temp = getInitializePath("./temp");
 forbiddenPaths.log = getInitializePath("./log");
 
 //Create server
@@ -3981,11 +3980,15 @@ if (!cluster.isPrimary) {
           callServerError(403);
           serverconsole.errmessage("Access to configuration file/certificates is denied.");
           return;
-        } else if (checkIfIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !(configJSON.enableRemoteLogBrowsing || configJSON.enableRemoteLogBrowsing == undefined)) {
+        } else if (checkIfIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
+          callServerError(403);
+          serverconsole.errmessage("Access to temporary folder is denied.");
+          return;
+        } else if (checkIfIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && configJSON.enableRemoteLogBrowsing) {
           callServerError(403);
           serverconsole.errmessage("Access to log files is denied.");
           return;
-        } else if (checkIfForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion && process.cwd() == __dirname) {
+        } else if (checkIfForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
           callServerError(403);
           serverconsole.errmessage("Access to SVR.JS script is denied.");
           return;
@@ -4793,7 +4796,7 @@ function saveConfig() {
       if (configJSONobj.enableDirectoryListingWithDefaultHead === undefined) configJSONobj.enableDirectoryListingWithDefaultHead = false;
       if (configJSONobj.serverAdministratorEmail === undefined) configJSONobj.serverAdministratorEmail = "[no contact information]";
       if (configJSONobj.stackHidden === undefined) configJSONobj.stackHidden = false;
-      if (configJSONobj.enableRemoteLogBrowsing === undefined) configJSONobj.enableRemoteLogBrowsing = true;
+      if (configJSONobj.enableRemoteLogBrowsing === undefined) configJSONobj.enableRemoteLogBrowsing = false;
       if (configJSONobj.exposeServerVersion === undefined) configJSONobj.exposeServerVersion = true;
       if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = true;
       if (configJSONobj.allowStatus === undefined) configJSONobj.allowStatus = true;
