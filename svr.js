@@ -1449,7 +1449,7 @@ if (!disableMods) {
 
   // Define the temporary server-side JavaScript file name
   var tempServerSideScriptName = "serverSideScript.js";
-  if (!process.isBun && cluster.isPrimary === false) {
+  if (!(process.isBun && process.versions.bun && process.versions.bun[0] == "0") && cluster.isPrimary === false) {
     // If not the master process and it's not Bun, create a unique temporary server-side JavaScript file name for each worker
     tempServerSideScriptName = ".serverSideScript_w" + Math.floor(Math.random() * 65536) + ".js";
   }
@@ -5575,7 +5575,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     } catch (err) {
       // Error!
     }
-    if (process.isBun) {
+    if (process.isBun && process.versions.bun && process.versions.bun[0] == "0") {
       try {
         fs.writeFileSync(__dirname + "/temp/serverSideScript.js", "// Placeholder server-side JavaScript to workaround Bun bug.\r\n");
       } catch (err) {
