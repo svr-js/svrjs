@@ -4287,7 +4287,7 @@ if (!cluster.isPrimary) {
         callServerError(403);
         serverconsole.errmessage("Access to configuration file/certificates is denied.");
         return;
-      } else if (isForbiddenPath(decodedHref, "temp") && !isProxy) {
+      } else if (isIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
         callServerError(403);
         serverconsole.errmessage("Access to temporary folder is denied.");
         return;
