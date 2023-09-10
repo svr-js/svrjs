@@ -1151,11 +1151,12 @@ if (configJSON.rewriteDirtyURLs != undefined) rewriteDirtyURLs = configJSON.rewr
 if (configJSON.errorPages != undefined) errorPages = configJSON.errorPages;
 if (configJSON.useWebRootServerSideScript != undefined) useWebRootServerSideScript = configJSON.useWebRootServerSideScript;
 if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = configJSON.exposeModsInErrorPages;
-if (configJSON.wwwroot != undefined) {
-  var wwwroot = configJSON.wwwroot;
-  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
-} else {
-  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(__dirname);
+
+var wwwrootError = null;
+try {
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
+} catch(err) {
+  wwwrootError = err;
 }
 
 // Compability for older mods
@@ -4871,6 +4872,7 @@ function start(init) {
         if (netIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on subnet address.");
       }
       if(certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
+      if(wwwrootError) throw new Error("There was a problem with your web root: " + wwwrootError.message);
     }
 
     // Information about starting the server
