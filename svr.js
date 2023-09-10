@@ -1265,19 +1265,24 @@ if (!fs.existsSync(__dirname + "/config.json")) {
   saveConfig();
 }
 
+var certificateError = null;
 // Load SNI
 if (secure) {
-  key = fs.readFileSync((configJSON.key[0] != "/" && !configJSON.key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.key : configJSON.key).toString();
-  cert = fs.readFileSync((configJSON.cert[0] != "/" && !configJSON.cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.cert : configJSON.cert).toString();
-  var sniNames = Object.keys(sni);
-  var sniCredentials = [];
-  sniNames.forEach(function (sniName) {
-    sniCredentials.push({
-      name: sniName,
-      cert: fs.readFileSync((sni[sniName].cert[0] != "/" && !sni[sniName].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].cert : sni[sniName].cert).toString(),
-      key: fs.readFileSync((sni[sniName].key[0] != "/" && !sni[sniName].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].key : sni[sniName].key).toString()
+  try {
+    key = fs.readFileSync((configJSON.key[0] != "/" && !configJSON.key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.key : configJSON.key).toString();
+    cert = fs.readFileSync((configJSON.cert[0] != "/" && !configJSON.cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.cert : configJSON.cert).toString();
+    var sniNames = Object.keys(sni);
+    var sniCredentials = [];
+    sniNames.forEach(function (sniName) {
+      sniCredentials.push({
+        name: sniName,
+        cert: fs.readFileSync((sni[sniName].cert[0] != "/" && !sni[sniName].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].cert : sni[sniName].cert).toString(),
+        key: fs.readFileSync((sni[sniName].key[0] != "/" && !sni[sniName].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].key : sni[sniName].key).toString()
+      });
     });
-  });
+  } catch(err) {
+    certificateError = err;
+  }
 }
 
 var logFile = undefined;
@@ -4865,6 +4870,7 @@ function start(init) {
         if (brdIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on broadcast address.");
         if (netIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on subnet address.");
       }
+      if(certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
     }
 
     // Information about starting the server
