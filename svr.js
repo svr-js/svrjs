@@ -5628,7 +5628,9 @@ try {
   serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
-  process.exit(err.errno ? err.errno : 1);
+  setTimeout(function() {
+    process.exit(err.errno ? err.errno : 1);
+  }, 10);
 }
 
 //////////////////////////////////
