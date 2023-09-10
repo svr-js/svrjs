@@ -289,6 +289,10 @@ if (!singlethreaded) {
             newWorker.send(message, fakeParam2, fakeParam3, fakeParam4, tries + 1);
           }
         };
+      } else {
+        newWorker.on("exit", function () {
+          delete cluster.workers[newWorker.id];
+        });
       }
 
       cluster.workers[newWorker.id] = newWorker;
