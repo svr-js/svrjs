@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.9.4</title>
+    <title>SVR.JS 3.9.6</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.9.4</h1>
+    <h1>Welcome to SVR.JS 3.9.6</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -36,7 +36,7 @@
         &nbsp;&nbsp;"enableDirectoryListingWithDefaultHead": false,<br/>
         &nbsp;&nbsp;"serverAdministratorEmail": "[no contact information]",<br/>
         &nbsp;&nbsp;"stackHidden": false,<br/>
-        &nbsp;&nbsp;"enableRemoteLogBrowsing": true,<br/>
+        &nbsp;&nbsp;"enableRemoteLogBrowsing": false,<br/>
         &nbsp;&nbsp;"exposeServerVersion": true,<br/>
         &nbsp;&nbsp;"disableServerSideScriptExpose": false,<br/>
         &nbsp;&nbsp;"rewriteMap": [<br/>
@@ -117,11 +117,10 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Changed warning about no support for HTTP/2.</li>
-      <li>Added "svrmodpack" deprecation warning.</li>
-      <li>Removed unmaintained primitive analytics mod.</li>
-      <li>Removed unmaintained and undocumented hexstrbase64 library.</li>
-      <li>Added TypeError workaround for Bun 1.0.0</li>
+      <li>Changed enableRemoteLogBrowsing property to be false by default.</li>
+      <li>Fixed log files only partially saving on failed master startup.</li>
+      <li>Mitigated security vulnerability: Sensitive data is no longer leaked from temp directory inside SVR.JS installation directory.</li>
+      <li>SVR.JS now logs certificate loading errors.</li>
     </ul>
     <p>Bugs:</p>
     <ul>

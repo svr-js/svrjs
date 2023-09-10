@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.9.4";
+var version = "3.9.6";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -1265,19 +1265,24 @@ if (!fs.existsSync(__dirname + "/config.json")) {
   saveConfig();
 }
 
+var certificateError = null;
 // Load SNI
 if (secure) {
-  key = fs.readFileSync((configJSON.key[0] != "/" && !configJSON.key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.key : configJSON.key).toString();
-  cert = fs.readFileSync((configJSON.cert[0] != "/" && !configJSON.cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.cert : configJSON.cert).toString();
-  var sniNames = Object.keys(sni);
-  var sniCredentials = [];
-  sniNames.forEach(function (sniName) {
-    sniCredentials.push({
-      name: sniName,
-      cert: fs.readFileSync((sni[sniName].cert[0] != "/" && !sni[sniName].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].cert : sni[sniName].cert).toString(),
-      key: fs.readFileSync((sni[sniName].key[0] != "/" && !sni[sniName].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].key : sni[sniName].key).toString()
+  try {
+    key = fs.readFileSync((configJSON.key[0] != "/" && !configJSON.key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.key : configJSON.key).toString();
+    cert = fs.readFileSync((configJSON.cert[0] != "/" && !configJSON.cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + configJSON.cert : configJSON.cert).toString();
+    var sniNames = Object.keys(sni);
+    var sniCredentials = [];
+    sniNames.forEach(function (sniName) {
+      sniCredentials.push({
+        name: sniName,
+        cert: fs.readFileSync((sni[sniName].cert[0] != "/" && !sni[sniName].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].cert : sni[sniName].cert).toString(),
+        key: fs.readFileSync((sni[sniName].key[0] != "/" && !sni[sniName].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].key : sni[sniName].key).toString()
+      });
     });
-  });
+  } catch(err) {
+    certificateError = err;
+  }
 }
 
 var logFile = undefined;
@@ -1793,11 +1798,10 @@ if (useWebRootServerSideScript) {
 } else {
   forbiddenPaths.serverSideScripts.push(getInitializePath("./serverSideScript.js"));
 }
-forbiddenPaths.serverSideScripts.push(getInitializePath("./temp/serverSideScript.js"));
 forbiddenPaths.serverSideScriptDirectories = [];
-forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./temp/modloader"));
 forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./node_modules"));
 forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
+forbiddenPaths.temp = getInitializePath("./temp");
 forbiddenPaths.log = getInitializePath("./log");
 
 // Create server
@@ -2283,7 +2287,7 @@ if (!cluster.isPrimary) {
                       if(err) {
                         callback(errorCode.toString() + ".html");
                       } else {
-                        callback("." + errorCode.toString());  
+                        callback("." + errorCode.toString());
                       }
                     } catch(err2) {
                       callServerError(500, undefined, generateErrorStack(err2));
@@ -2303,7 +2307,7 @@ if (!cluster.isPrimary) {
                   if(err) {
                     callback(errorCode.toString() + ".html");
                   } else {
-                    callback("." + errorCode.toString());  
+                    callback("." + errorCode.toString());
                   }
                 } catch(err2) {
                   callServerError(500, undefined, generateErrorStack(err2));
@@ -2327,7 +2331,7 @@ if (!cluster.isPrimary) {
             if(err) {
               getErrorFileName(list, callback, _i+1);
             } else {
-              medCallback(list[_i].path);  
+              medCallback(list[_i].path);
             }
           });
         }
@@ -4283,11 +4287,15 @@ if (!cluster.isPrimary) {
         callServerError(403);
         serverconsole.errmessage("Access to configuration file/certificates is denied.");
         return;
-      } else if (isIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !(configJSON.enableRemoteLogBrowsing || configJSON.enableRemoteLogBrowsing == undefined)) {
+      } else if (isIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
+        callServerError(403);
+        serverconsole.errmessage("Access to temporary folder is denied.");
+        return;
+      } else if (isIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
         callServerError(403);
         serverconsole.errmessage("Access to log files is denied.");
         return;
-      } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion && process.cwd() == __dirname) {
+      } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
         callServerError(403);
         serverconsole.errmessage("Access to SVR.JS script is denied.");
         return;
@@ -4862,6 +4870,7 @@ function start(init) {
         if (brdIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on broadcast address.");
         if (netIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on subnet address.");
       }
+      if(certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
     }
 
     // Information about starting the server
@@ -5498,7 +5507,7 @@ function saveConfig() {
       if (configJSONobj.enableDirectoryListingWithDefaultHead === undefined) configJSONobj.enableDirectoryListingWithDefaultHead = false;
       if (configJSONobj.serverAdministratorEmail === undefined) configJSONobj.serverAdministratorEmail = "[no contact information]";
       if (configJSONobj.stackHidden === undefined) configJSONobj.stackHidden = false;
-      if (configJSONobj.enableRemoteLogBrowsing === undefined) configJSONobj.enableRemoteLogBrowsing = true;
+      if (configJSONobj.enableRemoteLogBrowsing === undefined) configJSONobj.enableRemoteLogBrowsing = false;
       if (configJSONobj.exposeServerVersion === undefined) configJSONobj.exposeServerVersion = true;
       if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = true;
       if (configJSONobj.allowStatus === undefined) configJSONobj.allowStatus = true;
@@ -5514,7 +5523,7 @@ function saveConfig() {
       if (configJSONobj.errorPages === undefined) configJSONobj.errorPages = [];
       if (configJSONobj.useWebRootServerSideScript === undefined) configJSONobj.useWebRootServerSideScript = true;
       if (configJSONobj.exposeModsInErrorPages === undefined) configJSONobj.exposeModsInErrorPages = true;
-      
+
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
@@ -5625,7 +5634,9 @@ try {
   serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
-  process.exit(err.errno ? err.errno : 1);
+  setTimeout(function() {
+    process.exit(err.errno ? err.errno : 1);
+  }, 10);
 }
 
 //////////////////////////////////
