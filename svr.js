@@ -2970,7 +2970,7 @@ if (!cluster.isPrimary) {
       res.write(head + d + foot);
       res.end();
     }
-    
+
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
       if (typeof errorCode !== "number") {
@@ -3006,7 +3006,7 @@ if (!cluster.isPrimary) {
                       if(err) {
                         callback(errorCode.toString() + ".html");
                       } else {
-                        callback("." + errorCode.toString());  
+                        callback("." + errorCode.toString());
                       }
                     } catch(err2) {
                       callServerError(500, undefined, generateErrorStack(err2));
@@ -3026,7 +3026,7 @@ if (!cluster.isPrimary) {
                   if(err) {
                     callback(errorCode.toString() + ".html");
                   } else {
-                    callback("." + errorCode.toString());  
+                    callback("." + errorCode.toString());
                   }
                 } catch(err2) {
                   callServerError(500, undefined, generateErrorStack(err2));
@@ -3050,7 +3050,7 @@ if (!cluster.isPrimary) {
             if(err) {
               getErrorFileName(list, callback, _i+1);
             } else {
-              medCallback(list[_i].path);  
+              medCallback(list[_i].path);
             }
           });
         }
@@ -3276,7 +3276,7 @@ if (!cluster.isPrimary) {
       // Prepare modFunction
       var modFunction = ffinals;
       var useMods = mods;
-      
+
       if(isProxy) {
         // Get list of forward proxy mods
         useMods = [];
@@ -3284,7 +3284,7 @@ if (!cluster.isPrimary) {
           if (mod.proxyCallback !== undefined) useMods.push(mod);
         });
       }
-      
+
       useMods.reverse().forEach(function (modO) {
         modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
       });
@@ -3316,7 +3316,7 @@ if (!cluster.isPrimary) {
           serverconsole.errmessage("Client socket is null!!!");
           return;
         }
-        
+
         // Function to check the level of a path relative to the web root
         function checkPathLevel(path) {
           // Split the path into an array of components based on "/"
@@ -4029,7 +4029,7 @@ if (!cluster.isPrimary) {
       // Sanitize URL
       var sanitizedHref = sanitizeURL(href);
       var preparedReqUrl = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
-      
+
       // Check if URL is "dirty"
       if (href != sanitizedHref && !isProxy) {
         var sanitizedURL = uobject;
@@ -4071,7 +4071,7 @@ if (!cluster.isPrimary) {
           return;
         }
       }
-      
+
       // Handle redirects to HTTPS
       if(secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
         var hostx = req.headers.host;
@@ -4201,7 +4201,7 @@ if (!cluster.isPrimary) {
 
           var sHref = sanitizeURL(href);
           var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
-          
+
           if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
             callServerError(403);
             serverconsole.errmessage("Content blocked.");
