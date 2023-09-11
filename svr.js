@@ -2329,10 +2329,9 @@ if (!cluster.isPrimary) {
     var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
     var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
 
-    function responseEnd(d) {
-      res.write(head);
-      res.write(d);
-      res.write(foot);
+    function responseEnd(body) {
+      //If body is Buffer, then it is converted to String anyway.
+      res.write(head + body + foot);
       res.end();
     }
 
@@ -2961,10 +2960,9 @@ if (!cluster.isPrimary) {
     var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
     var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
 
-    function responseEnd(d) {
-      res.write(head);
-      res.write(d);
-      res.write(foot);
+    function responseEnd(body) {
+      //If body is Buffer, then it is converted to String anyway. 
+      res.write(head + body + foot);
       res.end();
     }
 
