@@ -9,12 +9,12 @@
 //  ext - File extension of requested file
 //  uobject - Request URL object
 //  search - Request URL queries
-//  defaultPage - An index page location (deprecated, always returns 'index.json')
+//  defaultPage - An index page location (deprecated, always returns 'index.html')
 //  users - A list of users (deprecated)
 //  page404 - 404 Not Found page location
 //  head - A head of server response
 //  foot - A foot of server response
-//  fd - A response body used by responseEnd method
+//  fd - Currently unused
 //  elseCallback - Method summoning SVR.JS internal callbacks
 //  callServerError - Method to end with server error
 //  getCustomHeaders - Method to get headers defined in config.json file

@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.9.6";
+var version = "3.10.0";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -151,6 +151,7 @@ if (!singlethreaded) {
     cluster.isMaster = !process.env.NODE_UNIQUE_ID;
     cluster.isPrimary = cluster.isMaster;
     cluster.isWorker = !cluster.isMaster;
+    cluster.__shimmed__ = true;
 
     if (cluster.isWorker) {
       // Shim the cluster.worker object for worker processes
@@ -289,6 +290,10 @@ if (!singlethreaded) {
             newWorker.send(message, fakeParam2, fakeParam3, fakeParam4, tries + 1);
           }
         };
+      } else {
+        newWorker.on("exit", function () {
+          delete cluster.workers[newWorker.id];
+        });
       }
 
       cluster.workers[newWorker.id] = newWorker;
@@ -325,6 +330,7 @@ var SVRJSInitialized = false;
 var exiting = false;
 var reallyExiting = false;
 var crashed = false;
+var threadLimitWarned = false;
 
 function SVRJSFork() {
   // Log
@@ -332,27 +338,47 @@ function SVRJSFork() {
   // Fork new worker
   var newWorker = {};
   try {
-    newWorker = cluster.fork();
+    if (!threadLimitWarned && cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0") {
+      threadLimitWarned = true;
+      serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+    }
+    if (!(cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0" && Object.keys(cluster.workers) > 0)) {
+      newWorker = cluster.fork();
+    } else {
+      if (SVRJSInitialized) serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+    }
   } catch (err) {
     if(err.name == "NotImplementedError") {
       // If cluster.fork throws a NotImplementedError, shim cluster module
       cluster.bunShim();
-      newWorker = cluster.fork();
+      if (!threadLimitWarned && cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0") {
+        threadLimitWarned = true;
+        serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+      }
+      if (!(cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0" && Object.keys(cluster.workers) > 0)) {
+        newWorker = cluster.fork();
+      } else {
+        if (SVRJSInitialized) serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+      }
     } else {
       throw err;
     }
   }
-  newWorker.on("error", function (err) {
-    if(!reallyExiting) serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
-  });
-  newWorker.on("exit", function () {
-    if (!exiting && Object.keys(cluster.workers).length == 0) {
-      crashed = true;
-      SVRJSFork();
-    }
-  });
-  newWorker.on("message", bruteForceListenerWrapper(newWorker));
-  newWorker.on("message", listenConnListener);
+
+  // Add event listeners
+  if(newWorker.on) {
+    newWorker.on("error", function (err) {
+      if(!reallyExiting) serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
+    });
+    newWorker.on("exit", function () {
+      if (!exiting && Object.keys(cluster.workers).length == 0) {
+        crashed = true;
+        SVRJSFork();
+      }
+    });
+    newWorker.on("message", bruteForceListenerWrapper(newWorker));
+    newWorker.on("message", listenConnListener);
+  }
 }
 
 var http = require("http");
@@ -1151,11 +1177,12 @@ if (configJSON.rewriteDirtyURLs != undefined) rewriteDirtyURLs = configJSON.rewr
 if (configJSON.errorPages != undefined) errorPages = configJSON.errorPages;
 if (configJSON.useWebRootServerSideScript != undefined) useWebRootServerSideScript = configJSON.useWebRootServerSideScript;
 if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = configJSON.exposeModsInErrorPages;
-if (configJSON.wwwroot != undefined) {
-  var wwwroot = configJSON.wwwroot;
-  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(wwwroot);
-} else {
-  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(__dirname);
+
+var wwwrootError = null;
+try {
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
+} catch(err) {
+  wwwrootError = err;
 }
 
 // Compability for older mods
@@ -1266,6 +1293,7 @@ if (!fs.existsSync(__dirname + "/config.json")) {
 }
 
 var certificateError = null;
+
 // Load SNI
 if (secure) {
   try {
@@ -1444,7 +1472,7 @@ if (!disableMods) {
 
   // Define the temporary server-side JavaScript file name
   var tempServerSideScriptName = "serverSideScript.js";
-  if (!process.isBun && cluster.isPrimary === false) {
+  if (!(process.isBun && process.versions.bun && process.versions.bun[0] == "0") && cluster.isPrimary === false) {
     // If not the master process and it's not Bun, create a unique temporary server-side JavaScript file name for each worker
     tempServerSideScriptName = ".serverSideScript_w" + Math.floor(Math.random() * 65536) + ".js";
   }
@@ -1803,6 +1831,57 @@ forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./node_module
 forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.temp = getInitializePath("./temp");
 forbiddenPaths.log = getInitializePath("./log");
+
+// Error descriptions
+var serverErrorDescs = {
+  200: "The request succeeded! :)",
+  201: "New resource has been created.",
+  202: "The request has been accepted for processing, but the processing has not been completed.",
+  400: "The request you made is invalid.",
+  401: "You need to authenticate yourself in order to access the requested file.",
+  402: "You need to pay in order to access the requested file.",
+  403: "You don't have access to the requested file.",
+  404: "The requested file doesn't exist. If you have typed URL manually, then please check the spelling.",
+  405: "Method used to access the requested file isn't allowed.",
+  406: "The request is capable of generating only not acceptable content.",
+  407: "You need to authenticate yourself in order to use the proxy.",
+  408: "You have timed out.",
+  409: "The request you sent conflicts with the current state of the server.",
+  410: "The requested file is permanently deleted.",
+  411: "Content-Length property is required.",
+  412: "The server doesn't meet preconditions you put in the request.",
+  413: "The request you sent is too large.",
+  414: "URL you sent is too long.",
+  415: "The media type of request you sent isn't supported by the server.",
+  416: "Content-Range you sent is unsatisfiable.",
+  417: "Expectation in Expect property couldn't be satisfied.",
+  418: "The server (teapot) can't brew any coffee! ;)",
+  421: "The request you made isn't intended for this server.",
+  422: "The server couldn't process content sent by you.",
+  423: "The requested file is locked.",
+  424: "The request depends on another failed request.",
+  425: "The server is unwilling to risk processing a request that might be replayed.",
+  426: "You need to upgrade protocols you use to request a file.",
+  428: "The request you sent needs to be conditional, but it isn't.",
+  429: "You sent too much requests to the server.",
+  431: "The request you sent contains headers, that are too large.",
+  451: "The requested file isn't accessible for legal reasons.",
+  497: "You sent non-TLS request to the HTTPS server.",
+  500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  501: "The request requires use of a function, which isn't currently implemented by the server.",
+  502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  505: "The server doesn't support HTTP version used in the request.",
+  506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  507: "The server ran out of disk space neccessary to complete the request.",
+  508: "The server detected an infinite loop while processing the request.",
+  509: "The server has it's bandwidth limit exceeded.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  510: "The server requires an extended HTTP request. The request you made isn't an extended HTTP request.",
+  511: "You need to authenticate yourself in order to get network access.",
+  598: "The server couldn't get response in time, while it was acting as a proxy.",
+  599: "The server couldn't connect in time, while it was acting as a proxy."
+};
 
 // Create server
 if (!cluster.isPrimary) {
@@ -2250,23 +2329,11 @@ if (!cluster.isPrimary) {
     var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
     var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
 
-    var fd = "";
-
-    function responseEnd(d) {
-      if (d === undefined) d = fd;
-      res.write(head + d + foot);
+    function responseEnd(body) {
+      //If body is Buffer, then it is converted to String anyway.
+      res.write(head + body + foot);
       res.end();
     }
-
-    var serverErrorDescs = {
-      400: "The request you made is invalid.",
-      405: "Method used to access the requested file isn't allowed.",
-      408: "You have timed out.",
-      414: "URL you sent is too long.",
-      431: "The request you sent contains headers, that are too large.",
-      451: "The requested file isn't accessible for legal reasons.",
-      497: "You sent non-TLS request to the HTTPS server."
-    };
 
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
@@ -2375,8 +2442,7 @@ if (!cluster.isPrimary) {
               try {
                 if (err) throw err;
                 res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-                fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"));
-                responseEnd();
+                responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")));
               } catch (err) {
                 var additionalError = 500;
                 if (err.code == "ENOENT") {
@@ -2894,90 +2960,11 @@ if (!cluster.isPrimary) {
     var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
     var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
 
-    var fd = "";
-
-    function responseEnd(d) {
-      if (d === undefined) d = fd;
-      res.write(head + d + foot);
+    function responseEnd(body) {
+      //If body is Buffer, then it is converted to String anyway. 
+      res.write(head + body + foot);
       res.end();
     }
-
-    /*
-    UNUSED CODE:
-    // function responseEndGzip(d) {
-    //   if (d === undefined) d = fd;
-    //   zlib.gzip(head + d + foot, function (err, buff) {
-    //     if (err) {
-    //       throw err;
-    //     } else {
-    //       res.write(buff);
-    //       res.end();
-    //     }
-    //   });
-    // }
-    //
-    // function responseEndDeflate(d) {
-    //   if (d === undefined) d = fd;
-    //   zlib.deflateRaw(head + d + foot, function (err, buff) {
-    //     if (err) {
-    //       throw err;
-    //     } else {
-    //       res.write(buff);
-    //       res.end();
-    //     }
-    //   });
-    // }
-    */
-
-    // Error descriptions
-    var serverErrorDescs = {
-      200: "The request succeeded! :)",
-      201: "New resource has been created.",
-      202: "The request has been accepted for processing, but the processing has not been completed.",
-      400: "The request you made is invalid.",
-      401: "You need to authenticate yourself in order to access the requested file.",
-      402: "You need to pay in order to access the requested file.",
-      403: "You don't have access to the requested file.",
-      404: "The requested file doesn't exist. If you have typed URL manually, then please check the spelling.",
-      405: "Method used to access the requested file isn't allowed.",
-      406: "The request is capable of generating only not acceptable content.",
-      407: "You need to authenticate yourself in order to use the proxy.",
-      408: "You have timed out.",
-      409: "The request you sent conflicts with the current state of the server.",
-      410: "The requested file is permanently deleted.",
-      411: "Content-Length property is required.",
-      412: "The server doesn't meet preconditions you put in the request.",
-      413: "The request you sent is too large.",
-      414: "URL you sent is too long.",
-      415: "The media type of request you sent isn't supported by the server.",
-      416: "Content-Range you sent is unsatisfiable.",
-      417: "Expectation in Expect property couldn't be satisfied.",
-      418: "The server (teapot) can't brew any coffee! ;)",
-      421: "The request you made isn't intended for this server.",
-      422: "The server couldn't process content sent by you.",
-      423: "The requested file is locked.",
-      424: "The request depends on another failed request.",
-      425: "The server is unwilling to risk processing a request that might be replayed.",
-      426: "You need to upgrade protocols you use to request a file.",
-      428: "The request you sent needs to be conditional, but it isn't.",
-      429: "You sent too much requests to the server.",
-      431: "The request you sent contains headers, that are too large.",
-      451: "The requested file isn't accessible for legal reasons.",
-      500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      501: "The request requires use of a function, which isn't currently implemented by the server.",
-      502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      505: "The server doesn't support HTTP version used in the request.",
-      506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      507: "The server ran out of disk space neccessary to complete the request.",
-      508: "The server detected an infinite loop while processing the request.",
-      509: "The server has it's bandwidth limit exceeded.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      510: "The server requires an extended HTTP request. The request you made isn't an extended HTTP request.",
-      511: "You need to authenticate yourself in order to get network access.",
-      598: "The server couldn't get response in time, while it was acting as a proxy.",
-      599: "The server couldn't connect in time, while it was acting as a proxy."
-    };
 
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
@@ -3014,7 +3001,7 @@ if (!cluster.isPrimary) {
                       if(err) {
                         callback(errorCode.toString() + ".html");
                       } else {
-                        callback("." + errorCode.toString());  
+                        callback("." + errorCode.toString());
                       }
                     } catch(err2) {
                       callServerError(500, undefined, generateErrorStack(err2));
@@ -3034,7 +3021,7 @@ if (!cluster.isPrimary) {
                   if(err) {
                     callback(errorCode.toString() + ".html");
                   } else {
-                    callback("." + errorCode.toString());  
+                    callback("." + errorCode.toString());
                   }
                 } catch(err2) {
                   callServerError(500, undefined, generateErrorStack(err2));
@@ -3058,7 +3045,7 @@ if (!cluster.isPrimary) {
             if(err) {
               getErrorFileName(list, callback, _i+1);
             } else {
-              medCallback(list[_i].path);  
+              medCallback(list[_i].path);
             }
           });
         }
@@ -3109,8 +3096,7 @@ if (!cluster.isPrimary) {
             try {
               if (err) throw err;
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              fd += data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")); // Replace placeholders in error response
-              responseEnd();
+              responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName) + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]"))); // Replace placeholders in error response
             } catch (err) {
               var additionalError = 500;
               // Handle additional error cases
@@ -3284,7 +3270,7 @@ if (!cluster.isPrimary) {
       // Prepare modFunction
       var modFunction = ffinals;
       var useMods = mods;
-      
+
       if(isProxy) {
         // Get list of forward proxy mods
         useMods = [];
@@ -3292,9 +3278,9 @@ if (!cluster.isPrimary) {
           if (mod.proxyCallback !== undefined) useMods.push(mod);
         });
       }
-      
+
       useMods.reverse().forEach(function (modO) {
-        modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
+        modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
       });
 
       // Execute modfunction
@@ -3313,44 +3299,12 @@ if (!cluster.isPrimary) {
         } else {
           vresCalled = true;
         }
-        /*
-        UNUSED CODE
-        //     function responseEndGzip(d) {
-        //       if (d === undefined) d = fd;
-        //       zlib.gzip(head + d + foot, function (err, buff) {
-        //         if (err) {
-        //           throw err;
-        //         } else {
-        //           res.write(buff);
-        //           res.end();
-        //         }
-        //       });
-        //     }
-        //
-        //     function responseEndDeflate(d) {
-        //       if (d === undefined) d = fd;
-        //       zlib.deflateRaw(head + d + foot, function (err, buff) {
-        //         if (err) {
-        //           throw err;
-        //         } else {
-        //           res.write(buff);
-        //           res.end();
-        //         }
-        //       });
-        //     }
-        */
-
-        function responseEnd(d) {
-          if (d === undefined) d = fd;
-          res.write(head + d + foot);
-          res.end();
-        }
 
         if (req.socket == null) {
           serverconsole.errmessage("Client socket is null!!!");
           return;
         }
-        
+
         // Function to check the level of a path relative to the web root
         function checkPathLevel(path) {
           // Split the path into an array of components based on "/"
@@ -4063,7 +4017,7 @@ if (!cluster.isPrimary) {
       // Sanitize URL
       var sanitizedHref = sanitizeURL(href);
       var preparedReqUrl = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
-      
+
       // Check if URL is "dirty"
       if (href != sanitizedHref && !isProxy) {
         var sanitizedURL = uobject;
@@ -4105,7 +4059,7 @@ if (!cluster.isPrimary) {
           return;
         }
       }
-      
+
       // Handle redirects to HTTPS
       if(secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
         var hostx = req.headers.host;
@@ -4235,7 +4189,7 @@ if (!cluster.isPrimary) {
 
           var sHref = sanitizeURL(href);
           var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
-          
+
           if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
             callServerError(403);
             serverconsole.errmessage("Content blocked.");
@@ -4505,7 +4459,7 @@ if (!cluster.isPrimary) {
                       }
                     }
                     serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
-                    modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                    modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
                   }
                 } catch(err) {
                   callServerError(500, undefined, generateErrorStack(err));
@@ -4552,7 +4506,7 @@ if (!cluster.isPrimary) {
             process.send("\x12AUTHQ" + reqip);
           }
         } else {
-          modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+          modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
         }
       }
     } catch (err) {
@@ -4871,6 +4825,7 @@ function start(init) {
         if (netIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on subnet address.");
       }
       if(certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
+      if(wwwrootError) throw new Error("There was a problem with your web root: " + wwwrootError.message);
     }
 
     // Information about starting the server
@@ -5569,7 +5524,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     } catch (err) {
       // Error!
     }
-    if (process.isBun) {
+    if (process.isBun && process.versions.bun && process.versions.bun[0] == "0") {
       try {
         fs.writeFileSync(__dirname + "/temp/serverSideScript.js", "// Placeholder server-side JavaScript to workaround Bun bug.\r\n");
       } catch (err) {

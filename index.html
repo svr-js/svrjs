@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.9.6</title>
+    <title>SVR.JS 3.10.0</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.9.6</h1>
+    <h1>Welcome to SVR.JS 3.10.0</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -117,14 +117,10 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Changed enableRemoteLogBrowsing property to be false by default.</li>
-      <li>Fixed log files only partially saving on failed master startup.</li>
-      <li>Mitigated security vulnerability: Sensitive data is no longer leaked from temp directory inside SVR.JS installation directory.</li>
-      <li>SVR.JS now logs certificate loading errors.</li>
-    </ul>
-    <p>Bugs:</p>
-    <ul>
-      <li>On first load server-side JavaScript will fail to load when SVR.JS is running on Bun.</li>
+      <li>Added warning about worker count being limited to one when using Bun 1.0 and newer with shimmed (not native) clustering module.</li>
+      <li>Disabled server-side JavaScript bug workaround for Bun 1.0 and newer (it's not needed anymore for these Bun versions).</li>
+      <li>Improved clustering shim for Bun.</li>
+      <li>Improved web root error handling.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>
