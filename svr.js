@@ -2291,7 +2291,6 @@ if (!cluster.isPrimary) {
       408: "You have timed out.",
       414: "URL you sent is too long.",
       431: "The request you sent contains headers, that are too large.",
-      451: "The requested file isn't accessible for legal reasons.",
       497: "You sent non-TLS request to the HTTPS server."
     };
 
@@ -2990,6 +2989,7 @@ if (!cluster.isPrimary) {
       429: "You sent too much requests to the server.",
       431: "The request you sent contains headers, that are too large.",
       451: "The requested file isn't accessible for legal reasons.",
+      497: "You sent non-TLS request to the HTTPS server.",
       500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
       501: "The request requires use of a function, which isn't currently implemented by the server.",
       502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
