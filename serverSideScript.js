@@ -14,7 +14,7 @@
 //  page404 - 404 Not Found page location
 //  head - A head of server response
 //  foot - A foot of server response
-//  fd - A response body used by responseEnd method
+//  fd - Currently unused
 //  elseCallback - Method summoning SVR.JS internal callbacks
 //  callServerError - Method to end with server error
 //  getCustomHeaders - Method to get headers defined in config.json file
