@@ -2970,34 +2970,7 @@ if (!cluster.isPrimary) {
       res.write(head + d + foot);
       res.end();
     }
-
-    /*
-    UNUSED CODE:
-    // function responseEndGzip(d) {
-    //   if (d === undefined) d = fd;
-    //   zlib.gzip(head + d + foot, function (err, buff) {
-    //     if (err) {
-    //       throw err;
-    //     } else {
-    //       res.write(buff);
-    //       res.end();
-    //     }
-    //   });
-    // }
-    //
-    // function responseEndDeflate(d) {
-    //   if (d === undefined) d = fd;
-    //   zlib.deflateRaw(head + d + foot, function (err, buff) {
-    //     if (err) {
-    //       throw err;
-    //     } else {
-    //       res.write(buff);
-    //       res.end();
-    //     }
-    //   });
-    // }
-    */
-
+    
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
       if (typeof errorCode !== "number") {
@@ -3332,32 +3305,6 @@ if (!cluster.isPrimary) {
         } else {
           vresCalled = true;
         }
-        /*
-        UNUSED CODE
-        //     function responseEndGzip(d) {
-        //       if (d === undefined) d = fd;
-        //       zlib.gzip(head + d + foot, function (err, buff) {
-        //         if (err) {
-        //           throw err;
-        //         } else {
-        //           res.write(buff);
-        //           res.end();
-        //         }
-        //       });
-        //     }
-        //
-        //     function responseEndDeflate(d) {
-        //       if (d === undefined) d = fd;
-        //       zlib.deflateRaw(head + d + foot, function (err, buff) {
-        //         if (err) {
-        //           throw err;
-        //         } else {
-        //           res.write(buff);
-        //           res.end();
-        //         }
-        //       });
-        //     }
-        */
 
         function responseEnd(d) {
           if (d === undefined) d = fd;
