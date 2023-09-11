@@ -2330,7 +2330,9 @@ if (!cluster.isPrimary) {
     var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
 
     function responseEnd(d) {
-      res.write(head + d + foot);
+      res.write(head);
+      res.write(d);
+      res.write(foot);
       res.end();
     }
 
@@ -2960,7 +2962,9 @@ if (!cluster.isPrimary) {
     var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
 
     function responseEnd(d) {
-      res.write(head + d + foot);
+      res.write(head);
+      res.write(d);
+      res.write(foot);
       res.end();
     }
 
