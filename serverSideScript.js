@@ -9,7 +9,7 @@
 //  ext - File extension of requested file
 //  uobject - Request URL object
 //  search - Request URL queries
-//  defaultPage - An index page location (deprecated, always returns 'index.json')
+//  defaultPage - An index page location (deprecated, always returns 'index.html')
 //  users - A list of users (deprecated)
 //  page404 - 404 Not Found page location
 //  head - A head of server response
