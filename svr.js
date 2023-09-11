@@ -1831,6 +1831,57 @@ forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.temp = getInitializePath("./temp");
 forbiddenPaths.log = getInitializePath("./log");
 
+// Error descriptions
+var serverErrorDescs = {
+  200: "The request succeeded! :)",
+  201: "New resource has been created.",
+  202: "The request has been accepted for processing, but the processing has not been completed.",
+  400: "The request you made is invalid.",
+  401: "You need to authenticate yourself in order to access the requested file.",
+  402: "You need to pay in order to access the requested file.",
+  403: "You don't have access to the requested file.",
+  404: "The requested file doesn't exist. If you have typed URL manually, then please check the spelling.",
+  405: "Method used to access the requested file isn't allowed.",
+  406: "The request is capable of generating only not acceptable content.",
+  407: "You need to authenticate yourself in order to use the proxy.",
+  408: "You have timed out.",
+  409: "The request you sent conflicts with the current state of the server.",
+  410: "The requested file is permanently deleted.",
+  411: "Content-Length property is required.",
+  412: "The server doesn't meet preconditions you put in the request.",
+  413: "The request you sent is too large.",
+  414: "URL you sent is too long.",
+  415: "The media type of request you sent isn't supported by the server.",
+  416: "Content-Range you sent is unsatisfiable.",
+  417: "Expectation in Expect property couldn't be satisfied.",
+  418: "The server (teapot) can't brew any coffee! ;)",
+  421: "The request you made isn't intended for this server.",
+  422: "The server couldn't process content sent by you.",
+  423: "The requested file is locked.",
+  424: "The request depends on another failed request.",
+  425: "The server is unwilling to risk processing a request that might be replayed.",
+  426: "You need to upgrade protocols you use to request a file.",
+  428: "The request you sent needs to be conditional, but it isn't.",
+  429: "You sent too much requests to the server.",
+  431: "The request you sent contains headers, that are too large.",
+  451: "The requested file isn't accessible for legal reasons.",
+  497: "You sent non-TLS request to the HTTPS server.",
+  500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  501: "The request requires use of a function, which isn't currently implemented by the server.",
+  502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  505: "The server doesn't support HTTP version used in the request.",
+  506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  507: "The server ran out of disk space neccessary to complete the request.",
+  508: "The server detected an infinite loop while processing the request.",
+  509: "The server has it's bandwidth limit exceeded.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  510: "The server requires an extended HTTP request. The request you made isn't an extended HTTP request.",
+  511: "You need to authenticate yourself in order to get network access.",
+  598: "The server couldn't get response in time, while it was acting as a proxy.",
+  599: "The server couldn't connect in time, while it was acting as a proxy."
+};
+
 // Create server
 if (!cluster.isPrimary) {
   var reqcounter = 0;
@@ -2284,15 +2335,6 @@ if (!cluster.isPrimary) {
       res.write(head + d + foot);
       res.end();
     }
-
-    var serverErrorDescs = {
-      400: "The request you made is invalid.",
-      405: "Method used to access the requested file isn't allowed.",
-      408: "You have timed out.",
-      414: "URL you sent is too long.",
-      431: "The request you sent contains headers, that are too large.",
-      497: "You sent non-TLS request to the HTTPS server."
-    };
 
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
@@ -2954,57 +2996,6 @@ if (!cluster.isPrimary) {
     //   });
     // }
     */
-
-    // Error descriptions
-    var serverErrorDescs = {
-      200: "The request succeeded! :)",
-      201: "New resource has been created.",
-      202: "The request has been accepted for processing, but the processing has not been completed.",
-      400: "The request you made is invalid.",
-      401: "You need to authenticate yourself in order to access the requested file.",
-      402: "You need to pay in order to access the requested file.",
-      403: "You don't have access to the requested file.",
-      404: "The requested file doesn't exist. If you have typed URL manually, then please check the spelling.",
-      405: "Method used to access the requested file isn't allowed.",
-      406: "The request is capable of generating only not acceptable content.",
-      407: "You need to authenticate yourself in order to use the proxy.",
-      408: "You have timed out.",
-      409: "The request you sent conflicts with the current state of the server.",
-      410: "The requested file is permanently deleted.",
-      411: "Content-Length property is required.",
-      412: "The server doesn't meet preconditions you put in the request.",
-      413: "The request you sent is too large.",
-      414: "URL you sent is too long.",
-      415: "The media type of request you sent isn't supported by the server.",
-      416: "Content-Range you sent is unsatisfiable.",
-      417: "Expectation in Expect property couldn't be satisfied.",
-      418: "The server (teapot) can't brew any coffee! ;)",
-      421: "The request you made isn't intended for this server.",
-      422: "The server couldn't process content sent by you.",
-      423: "The requested file is locked.",
-      424: "The request depends on another failed request.",
-      425: "The server is unwilling to risk processing a request that might be replayed.",
-      426: "You need to upgrade protocols you use to request a file.",
-      428: "The request you sent needs to be conditional, but it isn't.",
-      429: "You sent too much requests to the server.",
-      431: "The request you sent contains headers, that are too large.",
-      451: "The requested file isn't accessible for legal reasons.",
-      497: "You sent non-TLS request to the HTTPS server.",
-      500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      501: "The request requires use of a function, which isn't currently implemented by the server.",
-      502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      505: "The server doesn't support HTTP version used in the request.",
-      506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      507: "The server ran out of disk space neccessary to complete the request.",
-      508: "The server detected an infinite loop while processing the request.",
-      509: "The server has it's bandwidth limit exceeded.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-      510: "The server requires an extended HTTP request. The request you made isn't an extended HTTP request.",
-      511: "You need to authenticate yourself in order to get network access.",
-      598: "The server couldn't get response in time, while it was acting as a proxy.",
-      599: "The server couldn't connect in time, while it was acting as a proxy."
-    };
 
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
