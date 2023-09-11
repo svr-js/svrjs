@@ -338,7 +338,7 @@ function SVRJSFork() {
   // Fork new worker
   var newWorker = {};
   try {
-    if (cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0" && !threadLimitWarned) {
+    if (!threadLimitWarned && cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0") {
       threadLimitWarned = true;
       serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
     }
@@ -351,7 +351,7 @@ function SVRJSFork() {
     if(err.name == "NotImplementedError") {
       // If cluster.fork throws a NotImplementedError, shim cluster module
       cluster.bunShim();
-      if (cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0" && !threadLimitWarned) {
+      if (!threadLimitWarned && cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0") {
         threadLimitWarned = true;
         serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
       }
@@ -1293,6 +1293,7 @@ if (!fs.existsSync(__dirname + "/config.json")) {
 }
 
 var certificateError = null;
+
 // Load SNI
 if (secure) {
   try {
