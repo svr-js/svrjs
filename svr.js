@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.34";
+var version = "3.4.35";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -142,6 +142,7 @@ if (!singlethreaded) {
     cluster.isMaster = !process.env.NODE_UNIQUE_ID;
     cluster.isPrimary = cluster.isMaster;
     cluster.isWorker = !cluster.isMaster;
+    cluster.__shimmed__ = true;
 
     if (cluster.isWorker) {
       // Shim the cluster.worker object for worker processes
@@ -279,6 +280,10 @@ if (!singlethreaded) {
             newWorker.send(message, fakeParam2, fakeParam3, fakeParam4, tries + 1);
           }
         };
+      } else {
+        newWorker.on("exit", function () {
+          delete cluster.workers[newWorker.id];
+        });
       }
 
       cluster.workers[newWorker.id] = newWorker;
@@ -300,6 +305,7 @@ var bruteForceDb = {};
 var SVRJSInitialized = false;
 var exiting = false;
 var crashed = false;
+var threadLimitWarned = false;
 
 function SVRJSFork() {
   //Log
@@ -307,12 +313,28 @@ function SVRJSFork() {
   //Fork new worker
   var newWorker = {};
   try {
-    newWorker = cluster.fork();
+    if (!threadLimitWarned && cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0") {
+      threadLimitWarned = true;
+      serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+    }
+    if (!(cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0" && Object.keys(cluster.workers) > 0)) {
+      newWorker = cluster.fork();
+    } else {
+      if (SVRJSInitialized) serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+    }
   } catch (err) {
     if(err.name == "NotImplementedError") {
       // If cluster.fork throws a NotImplementedError, shim cluster module
       cluster.bunShim();
-      newWorker = cluster.fork();
+      if (!threadLimitWarned && cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0") {
+        threadLimitWarned = true;
+        serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+      }
+      if (!(cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0" && Object.keys(cluster.workers) > 0)) {
+        newWorker = cluster.fork();
+      } else {
+        if (SVRJSInitialized) serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
+      }
     } else {
       throw err;
     }
@@ -1252,7 +1274,7 @@ if (!disableMods) {
     modloaderFolderName = ".modloader_w" + Math.floor(Math.random() * 65536);
   }
   var tempServerSideScriptName = "serverSideScript.js";
-  if (!process.isBun && cluster.isPrimary === false) {
+  if (!(process.isBun && process.versions.bun && process.versions.bun[0] == "0") && cluster.isPrimary === false) {
     tempServerSideScriptName = ".serverSideScript_w" + Math.floor(Math.random() * 65536) + ".js";
   }
   for (var i = 0; i < modFiles.length; i++) {
