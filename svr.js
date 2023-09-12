@@ -500,23 +500,15 @@ if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
 var modFiles = fs.readdirSync(__dirname + "/mods").sort();
 var modInfos = [];
 
-function sizify(x) {
-  if (x < 1000) return x.toString();
-  if (x < 10000) return (Math.round(x / 10) / 100).toString() + "K";
-  if (x < 100000) return (Math.round(x / 100) / 10).toString() + "K";
-  if (x < 1000000) return (Math.round(x / 1000)).toString() + "K";
-  if (x < 10000000) return (Math.round(x / 10000) / 100).toString() + "M";
-  if (x < 100000000) return (Math.round(x / 100000) / 10).toString() + "M";
-  if (x < 1000000000) return (Math.round(x / 1000000)).toString() + "M";
-  if (x < 10000000000) return (Math.round(x / 10000000) / 100).toString() + "G";
-  if (x < 100000000000) return (Math.round(x / 100000000) / 10).toString() + "G";
-  if (x < 1000000000000) return (Math.round(x / 1000000000)).toString() + "G";
-  if (x < 10000000000000) return (Math.round(x / 10000000000) / 100).toString() + "T";
-  if (x < 100000000000000) return (Math.round(x / 100000000000) / 10).toString() + "T";
-  if (x < 1000000000000000) return (Math.round(x / 1000000000000)).toString() + "T";
-  if (x < 10000000000000000) return (Math.round(x / 10000000000000) / 100).toString() + "P";
-  if (x < 100000000000000000) return (Math.round(x / 100000000000000) / 10).toString() + "P";
-  return (Math.round(x / 1000000000000000)).toString() + "P";
+function sizify(bytes) {
+  if (bytes == 0) return "0";
+  if (bytes < 0) bytes = -bytes;
+  var prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
+  var exponent = Math.floor(Math.log10 ? Math.log10(bytes) : (Math.log(bytes) / Math.log(10)));
+  var prefixIndex = Math.floor(exponent / 3);
+  if (prefixIndex >= prefixes.length - 1) prefixIndex = prefixes.length - 1;
+  var prefixIndexMod = exponent - (prefixIndex * 3);
+  return (Math.round(bytes / Math.pow(10, Math.max(0, exponent - Math.max(2, prefixIndexMod)))) / (exponent > 2 ? Math.pow(10, Math.max(0, 2 - prefixIndexMod)) : 1)).toString() + prefixes[prefixIndex];
 }
 
 function getOS() {
