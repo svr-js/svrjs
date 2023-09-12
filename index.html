@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.4.35</title>
+    <title>SVR.JS 3.4.36</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.4.35</h1>
+    <h1>Welcome to SVR.JS 3.4.36</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -38,7 +38,7 @@
         &nbsp;&nbsp;"stackHidden": false,<br/>
         &nbsp;&nbsp;"enableRemoteLogBrowsing": false,<br/>
         &nbsp;&nbsp;"exposeServerVersion": true,<br/>
-        &nbsp;&nbsp;"disableServerSideScriptExpose": false,<br/>
+        &nbsp;&nbsp;"disableServerSideScriptExpose": true,<br/>
         &nbsp;&nbsp;"rewriteMap": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",<br/>
@@ -119,9 +119,8 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added warning about worker count being limited to one when using Bun 1.0 and newer with shimmed (not native) clustering module.</li>
-      <li>Disabled server-side JavaScript bug workaround for Bun 1.0 and newer (it's not needed anymore for these Bun versions).</li>
-      <li>Improved clustering shim for Bun.</li>
+      <li>Removed undocumented and non-working code.</li>
+      <li>Fixed bug: .notindex files in directories no longer cause server timeouts, due of non-working undocumented code.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>
