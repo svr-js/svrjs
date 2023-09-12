@@ -2642,7 +2642,7 @@ if (!cluster.isPrimary) {
       });
 
       var modFunction = ffinals;
-      proxyMods.slice().reverse().forEach(function (proxyMod) {
+      proxyMods.reverse().forEach(function (proxyMod) {
         modFunction = proxyMod.proxyCallback(req, socket, head, configJSON, serverconsole, modFunction);
       });
       modFunction();
@@ -3245,7 +3245,7 @@ if (!cluster.isPrimary) {
     function modExecute(mods, ffinals) {
       // Prepare modFunction
       var modFunction = ffinals;
-      var useMods = mods;
+      var useMods = mods.slice();
 
       if(isProxy) {
         // Get list of forward proxy mods
@@ -3255,7 +3255,7 @@ if (!cluster.isPrimary) {
         });
       }
 
-      useMods.slice().reverse().forEach(function (modO) {
+      useMods.reverse().forEach(function (modO) {
         modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
       });
 
