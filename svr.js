@@ -3396,39 +3396,35 @@ if (!cluster.isPrimary) {
 
           // Check if index file exists
           if (req.url == "/" || stats.isDirectory()) {
-            fs.stat(readFrom + "/.notindex".replace(/\/+/g, "/"), function (e) {
-              if (e) {
-                fs.stat((readFrom + "/index.html").replace(/\/+/g, "/"), function (e, s) {
+            fs.stat((readFrom + "/index.html").replace(/\/+/g, "/"), function (e, s) {
+              if (e || !s.isFile()) {
+                fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
                   if (e || !s.isFile()) {
-                    fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
-                      if (e || !s.isFile()) {
-                        fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
-                          if (e || !s.isFile()) {
-                            properDirectoryListingServe();
-                          } else {
-                            stats = s;
-                            pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
-                            ext = "xhtml";
-                            readFrom = "./" + pth;
-                            properDirectoryListingServe();
-                          }
-                        });
-                      } else {
-                        stats = s;
-                        pth = (pth + "/index.htm").replace(/\/+/g, "/");
-                        ext = "htm";
-                        readFrom = "./" + pth;
-                        properDirectoryListingServe();
-                      }
-                    });
+                    fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
+                    if (e || !s.isFile()) {
+                      properDirectoryListingServe();
+                    } else {
+                      stats = s;
+                      pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
+                      ext = "xhtml";
+                      readFrom = "./" + pth;
+                      properDirectoryListingServe();
+                    }
+                  });
                   } else {
                     stats = s;
-                    pth = (pth + "/index.html").replace(/\/+/g, "/");
-                    ext = "html";
+                    pth = (pth + "/index.htm").replace(/\/+/g, "/");
+                    ext = "htm";
                     readFrom = "./" + pth;
                     properDirectoryListingServe();
                   }
                 });
+              } else {
+                stats = s;
+                pth = (pth + "/index.html").replace(/\/+/g, "/");
+                ext = "html";
+                readFrom = "./" + pth;
+                properDirectoryListingServe();
               }
             });
           } else {
