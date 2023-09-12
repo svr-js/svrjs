@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.10.0";
+var version = "3.10.1";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -435,14 +435,6 @@ try {
     _errored: err
   };
 }
-var prettyBytes = undefined;
-try {
-  prettyBytes = require("pretty-bytes");
-} catch (err) {
-  prettyBytes = {
-    _errored: err
-  };
-}
 var http2 = {};
 try {
   http2 = require("http2");
@@ -508,31 +500,15 @@ if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
 var modFiles = fs.readdirSync(__dirname + "/mods").sort();
 var modInfos = [];
 
-function sizify(x) {
-  try {
-    if (prettyBytes._errored) throw prettyBytes._errored;
-    return prettyBytes(parseInt(x), {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).replace(/ /g, "").replace(/B/ig, "").replace(/k/g, "K");
-  } catch (err) {
-    if (x < 1000) return x.toString();
-    if (x < 10000) return (Math.round(x / 10) / 100).toString() + "K";
-    if (x < 100000) return (Math.round(x / 100) / 10).toString() + "K";
-    if (x < 1000000) return (Math.round(x / 1000)).toString() + "K";
-    if (x < 10000000) return (Math.round(x / 10000) / 100).toString() + "M";
-    if (x < 100000000) return (Math.round(x / 100000) / 10).toString() + "M";
-    if (x < 1000000000) return (Math.round(x / 1000000)).toString() + "M";
-    if (x < 10000000000) return (Math.round(x / 10000000) / 100).toString() + "G";
-    if (x < 100000000000) return (Math.round(x / 100000000) / 10).toString() + "G";
-    if (x < 1000000000000) return (Math.round(x / 1000000000)).toString() + "G";
-    if (x < 10000000000000) return (Math.round(x / 10000000000) / 100).toString() + "T";
-    if (x < 100000000000000) return (Math.round(x / 100000000000) / 10).toString() + "T";
-    if (x < 1000000000000000) return (Math.round(x / 1000000000000)).toString() + "T";
-    if (x < 10000000000000000) return (Math.round(x / 10000000000000) / 100).toString() + "P";
-    if (x < 100000000000000000) return (Math.round(x / 100000000000000) / 10).toString() + "P";
-    return (Math.round(x / 1000000000000000)).toString() + "P";
-  }
+function sizify(bytes) {
+  if (bytes == 0) return "0";
+  if (bytes < 0) bytes = -bytes;
+  var prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
+  var exponent = Math.floor(Math.log10 ? Math.log10(bytes) : (Math.log(bytes) / Math.log(10)));
+  var prefixIndex = Math.floor(exponent / 3);
+  if (prefixIndex >= prefixes.length - 1) prefixIndex = prefixes.length - 1;
+  var prefixIndexMod = exponent - (prefixIndex * 3);
+  return (Math.round(bytes / Math.pow(10, Math.max(0, exponent - Math.max(2, prefixIndexMod)))) / (exponent > 2 ? Math.pow(10, Math.max(0, 2 - prefixIndexMod)) : 1)).toString() + prefixes[prefixIndex];
 }
 
 function getOS() {
@@ -3356,15 +3332,7 @@ if (!cluster.isPrimary) {
           return;
         }
 
-        if (version.indexOf("Nightly-") === 0 && (href == "/invoke500.svr" || (os.platform() == "win32" && href.toLowerCase() == "/invoke500.svr"))) {
-          if (uobject.query.crash !== undefined) throw new Error("Intentionally crashed");
-          try {
-            throw new Error("This page is intended to return 500 code.");
-          } catch (err) {
-            callServerError(500, undefined, generateErrorStack(err));
-            return;
-          }
-        } else if (allowStatus && (href == "/svrjsstatus.svr" || (os.platform() == "win32" && href.toLowerCase() == "/svrjsstatus.svr"))) {
+        if (allowStatus && (href == "/svrjsstatus.svr" || (os.platform() == "win32" && href.toLowerCase() == "/svrjsstatus.svr"))) {
           function formatRelativeTime(relativeTime) {
             var days = Math.floor(relativeTime / 60 / (60 * 24));
             var dateDiff = new Date(relativeTime * 1000);
@@ -3375,10 +3343,6 @@ if (!cluster.isPrimary) {
           res.writeHead(200, "OK", hdhds);
           res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
           return;
-        } else if (version.indexOf("Nightly-") === 0 && (href == "/crash.svr" || (os.platform() == "win32" && href.toLowerCase() == "/crash.svr"))) {
-          process.nextTick(function () {
-            throw new Error("Intentionally crashed");
-          });
         }
 
         /////////////////////////////////////////////
@@ -3432,46 +3396,42 @@ if (!cluster.isPrimary) {
 
           // Check if index file exists
           if (req.url == "/" || stats.isDirectory()) {
-            fs.stat(readFrom + "/.notindex".replace(/\/+/g, "/"), function (e) {
-              if (e) {
-                fs.stat((readFrom + "/index.html").replace(/\/+/g, "/"), function (e, s) {
+            fs.stat((readFrom + "/index.html").replace(/\/+/g, "/"), function (e, s) {
+              if (e || !s.isFile()) {
+                fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
                   if (e || !s.isFile()) {
-                    fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
-                      if (e || !s.isFile()) {
-                        fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
-                          if (e || !s.isFile()) {
-                            properDirectoryListingServe();
-                          } else {
-                            stats = s;
-                            pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
-                            ext = "xhtml";
-                            readFrom = "./" + pth;
-                            properDirectoryListingServe();
-                          }
-                        });
-                      } else {
-                        stats = s;
-                        pth = (pth + "/index.htm").replace(/\/+/g, "/");
-                        ext = "htm";
-                        readFrom = "./" + pth;
-                        properDirectoryListingServe();
-                      }
-                    });
+                    fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
+                    if (e || !s.isFile()) {
+                      properDirectoryListingAndStaticFileServe();
+                    } else {
+                      stats = s;
+                      pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
+                      ext = "xhtml";
+                      readFrom = "./" + pth;
+                      properDirectoryListingAndStaticFileServe();
+                    }
+                  });
                   } else {
                     stats = s;
-                    pth = (pth + "/index.html").replace(/\/+/g, "/");
-                    ext = "html";
+                    pth = (pth + "/index.htm").replace(/\/+/g, "/");
+                    ext = "htm";
                     readFrom = "./" + pth;
-                    properDirectoryListingServe();
+                    properDirectoryListingAndStaticFileServe();
                   }
                 });
+              } else {
+                stats = s;
+                pth = (pth + "/index.html").replace(/\/+/g, "/");
+                ext = "html";
+                readFrom = "./" + pth;
+                properDirectoryListingAndStaticFileServe();
               }
             });
           } else {
-            properDirectoryListingServe();
+            properDirectoryListingAndStaticFileServe();
           }
 
-          function properDirectoryListingServe() {
+          function properDirectoryListingAndStaticFileServe() {
             if (stats.isDirectory()) {
               // Check if directory listing is enabled in the configuration
               if (checkForEnabledDirectoryListing(req.headers.host)) {
