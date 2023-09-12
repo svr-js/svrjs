@@ -2642,7 +2642,7 @@ if (!cluster.isPrimary) {
       });
 
       var modFunction = ffinals;
-      proxyMods.reverse().forEach(function (proxyMod) {
+      proxyMods.slice().reverse().forEach(function (proxyMod) {
         modFunction = proxyMod.proxyCallback(req, socket, head, configJSON, serverconsole, modFunction);
       });
       modFunction();
@@ -3255,7 +3255,7 @@ if (!cluster.isPrimary) {
         });
       }
 
-      useMods.reverse().forEach(function (modO) {
+      useMods.slice().reverse().forEach(function (modO) {
         modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
       });
 
