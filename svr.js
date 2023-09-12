@@ -435,14 +435,6 @@ try {
     _errored: err
   };
 }
-var prettyBytes = undefined;
-try {
-  prettyBytes = require("pretty-bytes");
-} catch (err) {
-  prettyBytes = {
-    _errored: err
-  };
-}
 var http2 = {};
 try {
   http2 = require("http2");
@@ -509,30 +501,22 @@ var modFiles = fs.readdirSync(__dirname + "/mods").sort();
 var modInfos = [];
 
 function sizify(x) {
-  try {
-    if (prettyBytes._errored) throw prettyBytes._errored;
-    return prettyBytes(parseInt(x), {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).replace(/ /g, "").replace(/B/ig, "").replace(/k/g, "K");
-  } catch (err) {
-    if (x < 1000) return x.toString();
-    if (x < 10000) return (Math.round(x / 10) / 100).toString() + "K";
-    if (x < 100000) return (Math.round(x / 100) / 10).toString() + "K";
-    if (x < 1000000) return (Math.round(x / 1000)).toString() + "K";
-    if (x < 10000000) return (Math.round(x / 10000) / 100).toString() + "M";
-    if (x < 100000000) return (Math.round(x / 100000) / 10).toString() + "M";
-    if (x < 1000000000) return (Math.round(x / 1000000)).toString() + "M";
-    if (x < 10000000000) return (Math.round(x / 10000000) / 100).toString() + "G";
-    if (x < 100000000000) return (Math.round(x / 100000000) / 10).toString() + "G";
-    if (x < 1000000000000) return (Math.round(x / 1000000000)).toString() + "G";
-    if (x < 10000000000000) return (Math.round(x / 10000000000) / 100).toString() + "T";
-    if (x < 100000000000000) return (Math.round(x / 100000000000) / 10).toString() + "T";
-    if (x < 1000000000000000) return (Math.round(x / 1000000000000)).toString() + "T";
-    if (x < 10000000000000000) return (Math.round(x / 10000000000000) / 100).toString() + "P";
-    if (x < 100000000000000000) return (Math.round(x / 100000000000000) / 10).toString() + "P";
-    return (Math.round(x / 1000000000000000)).toString() + "P";
-  }
+  if (x < 1000) return x.toString();
+  if (x < 10000) return (Math.round(x / 10) / 100).toString() + "K";
+  if (x < 100000) return (Math.round(x / 100) / 10).toString() + "K";
+  if (x < 1000000) return (Math.round(x / 1000)).toString() + "K";
+  if (x < 10000000) return (Math.round(x / 10000) / 100).toString() + "M";
+  if (x < 100000000) return (Math.round(x / 100000) / 10).toString() + "M";
+  if (x < 1000000000) return (Math.round(x / 1000000)).toString() + "M";
+  if (x < 10000000000) return (Math.round(x / 10000000) / 100).toString() + "G";
+  if (x < 100000000000) return (Math.round(x / 100000000) / 10).toString() + "G";
+  if (x < 1000000000000) return (Math.round(x / 1000000000)).toString() + "G";
+  if (x < 10000000000000) return (Math.round(x / 10000000000) / 100).toString() + "T";
+  if (x < 100000000000000) return (Math.round(x / 100000000000) / 10).toString() + "T";
+  if (x < 1000000000000000) return (Math.round(x / 1000000000000)).toString() + "T";
+  if (x < 10000000000000000) return (Math.round(x / 10000000000000) / 100).toString() + "P";
+  if (x < 100000000000000000) return (Math.round(x / 100000000000000) / 10).toString() + "P";
+  return (Math.round(x / 1000000000000000)).toString() + "P";
 }
 
 function getOS() {
