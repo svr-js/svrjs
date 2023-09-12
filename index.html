@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.10.1</title>
+    <title>SVR.JS 3.10.2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.10.1</h1>
+    <h1>Welcome to SVR.JS 3.10.2</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -117,10 +117,7 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Dropped "pretty-bytes" dependency.</li>
-      <li>Removed undocumented and non-working code.</li>
-      <li>Fixed bug: .notindex files in directories no longer cause server timeouts, due of non-working undocumented code.</li>
-      <li>Replaced function converting byte count to human-readable representation with new one.</li>
+      <li>Fixed bug with mods executing in wrong order (bug was related with access control vulnerability fix; bug was not present in LTS versions)</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>

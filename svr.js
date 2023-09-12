@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.10.1";
+var version = "3.10.2";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -3245,7 +3245,7 @@ if (!cluster.isPrimary) {
     function modExecute(mods, ffinals) {
       // Prepare modFunction
       var modFunction = ffinals;
-      var useMods = mods;
+      var useMods = mods.slice();
 
       if(isProxy) {
         // Get list of forward proxy mods
