@@ -4231,7 +4231,7 @@ if (!cluster.isPrimary) {
                 // Regex match
                 var createdRegex = createRegex(nonStandardCodes[i].regex, true);
                 isMatch = req.url.match(createdRegex) || href.match(createdRegex);
-                regexI.push(createdRegex);
+                regexI[i] = createdRegex;
               } else {
                 // Non-regex match
                 isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
