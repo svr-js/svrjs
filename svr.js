@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.36";
+var version = "3.4.37";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -4021,7 +4021,7 @@ if (!cluster.isPrimary) {
                 var searchString = regexObj.join("/");
                 var rx = RegExp(searchString, modifiers);
                 mth = req.url.match(rx) || href.match(rx);
-                regexI.push(rx);
+                regexI[i] = rx;
               } else {
                 mth = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
               }
