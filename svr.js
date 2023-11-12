@@ -4590,6 +4590,7 @@ function bruteForceListenerWrapper(worker) {
 }
 
 var isWorkerHungUpBuff = true;
+var isWorkerHungUpBuff2 = true;
 
 function msgListener(msg) {
   for (var i = 0; i < Object.keys(cluster.workers).length; i++) {
@@ -4605,6 +4606,8 @@ function msgListener(msg) {
     // Do nothing!
   } else if (msg == "\x12KILLOK") {
     if(typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
+  } else if (msg == "\x12PINGOK") {
+    if(typeof isWorkerHungUpBuff2 != "undefined") isWorkerHungUpBuff2 = false;
   } else if (msg == "\x12KILLTERMMSG") {
     serverconsole.locmessage("Terminating unused worker process...");
   } else if (msg == "\x12SAVEGOOD") {
@@ -4981,21 +4984,55 @@ function start(init) {
     } else if (cluster.isPrimary) {
       setInterval(function () {
         var allClusters = Object.keys(cluster.workers);
-        for (var i = 0; i < allClusters.length; i++) {
+        var goodWorkers = [];
+        function checkWorker(callback, _id) {
+          if(typeof _id === "undefined") _id = 0;
+          if(_id >= allClusters.length) {
+            callback();
+            return;
+          }
           try {
-            if (cluster.workers[allClusters[i]]) {
-              cluster.workers[allClusters[i]].on("message", msgListener);
-              cluster.workers[allClusters[i]].send("\x14SAVECONF");
+            if (cluster.workers[allClusters[_id]]) {
+              isWorkerHungUpBuff2 = true;
+              cluster.workers[allClusters[_id]].on("message", msgListener);
+              cluster.workers[allClusters[_id]].send("\x14PINGPING");
+              setTimeout(function () {
+                if (isWorkerHungUpBuff2) {
+                  checkWorker(callback, _id+1);
+                } else {
+                  goodWorkers.push(allClusters[_id]);
+                  checkWorker(callback, _id+1);
+                }
+              }, 250);
+            } else {
+              checkWorker(callback, _id+1);
             }
           } catch (err) {
-            if (cluster.workers[allClusters[i]]) {
-              cluster.workers[allClusters[i]].removeAllListeners("message");
-              cluster.workers[allClusters[i]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[i]]));
-              cluster.workers[allClusters[i]].on("message", listenConnListener);
+            if (cluster.workers[allClusters[_id]]) {
+              cluster.workers[allClusters[_id]].removeAllListeners("message");
+              cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
+              cluster.workers[allClusters[_id]].on("message", listenConnListener);
             }
-            serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
+            checkWorker(callback, _id+1);
           }
         }
+        checkWorker(function () {
+            var wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
+            try {
+              if (cluster.workers[goodWorkers[wN]]) {
+                isWorkerHungUpBuff2 = true;
+                cluster.workers[goodWorkers[wN]].on("message", msgListener);
+                cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
+              }
+            } catch (err) {
+              if (cluster.workers[goodWorkers[wN]]) {
+                cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+                cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+                cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+              }
+              serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
+            }
+        });
       }, 300000);
     }
     if (!cluster.isPrimary) {
@@ -5026,6 +5063,12 @@ function start(init) {
           } else if (line == "\x14KILLPING") {
             if(!reallyExiting) {
               process.send("\x12KILLOK");
+              process.send("\x12END");
+            }
+            // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
+          } else if (line == "\x14PINGPING") {
+            if(!reallyExiting) {
+              process.send("\x12PINGOK");
               process.send("\x12END");
             }
             // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
