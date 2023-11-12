@@ -2798,7 +2798,11 @@ if (!cluster.isPrimary) {
           delete table["connection"];
           delete table["keep-alive"];
           delete table["upgrade"];
-          return res.writeHeadNodeApi(a, table);
+          if(res.stream && res.stream.destroyed) {
+            return false;
+          } else {
+            return res.writeHeadNodeApi(a, table);
+          }
         };
 
         res.setHeader = function (a, b) {
