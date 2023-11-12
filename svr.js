@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.37";
+var version = "3.4.38";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -340,7 +340,7 @@ function SVRJSFork() {
     }
   }
   newWorker.on("error", function (err) {
-    if(!reallyExiting) serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
+    serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
   });
   newWorker.on("exit", function () {
     if (!exiting && Object.keys(cluster.workers).length == 0) {
@@ -2815,7 +2815,11 @@ if (!cluster.isPrimary) {
           delete table["connection"];
           delete table["keep-alive"];
           delete table["upgrade"];
-          return response.writeHeadNodeApi(a, table);
+          if(res.stream && res.stream.destroyed) {
+            return false;
+          } else {
+            return res.writeHeadNodeApi(a, table);
+          }
         };
 
         response.setHeader = function (a, b) {
@@ -4263,6 +4267,8 @@ function bruteForceListenerWrapper(worker) {
   };
 }
 
+var isWorkerHungUpBuff2 = true;
+
 function msgListener(msg) {
   for (var i = 0; i < Object.keys(cluster.workers).length; i++) {
     if (msg == "\x12END") {
@@ -4279,6 +4285,8 @@ function msgListener(msg) {
     serverconsole.locmessage("Configuration saved.");
   } else if (msg.indexOf("\x12SAVEERR") == 0) {
     serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + msg.substr(8));
+  } else if (msg == "\x12PINGOK") {
+    if(typeof isWorkerHungUpBuff2 != "undefined") isWorkerHungUpBuff2 = false;
   } else if (msg == "\x12OPEN") {
     closedMaster = false;
   } else if (msg == "\x12END") {
@@ -4504,21 +4512,55 @@ function start(init) {
     } else if (cluster.isPrimary) {
       setInterval(function () {
         var allClusters = Object.keys(cluster.workers);
-        for (var i = 0; i < allClusters.length; i++) {
+        var goodWorkers = [];
+        function checkWorker(callback, _id) {
+          if(typeof _id === "undefined") _id = 0;
+          if(_id >= allClusters.length) {
+            callback();
+            return;
+          }
           try {
-            if (cluster.workers[allClusters[i]]) {
-              cluster.workers[allClusters[i]].on("message", msgListener);
-              cluster.workers[allClusters[i]].send("\x14SAVECONF");
+            if (cluster.workers[allClusters[_id]]) {
+              isWorkerHungUpBuff2 = true;
+              cluster.workers[allClusters[_id]].on("message", msgListener);
+              cluster.workers[allClusters[_id]].send("\x14PINGPING");
+              setTimeout(function () {
+                if (isWorkerHungUpBuff2) {
+                  checkWorker(callback, _id+1);
+                } else {
+                  goodWorkers.push(allClusters[_id]);
+                  checkWorker(callback, _id+1);
+                }
+              }, 250);
+            } else {
+              checkWorker(callback, _id+1);
             }
-          } catch (ex) {
-            if (cluster.workers[allClusters[i]]) {
-              cluster.workers[allClusters[i]].removeAllListeners("message");
-              cluster.workers[allClusters[i]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[i]]));
-              cluster.workers[allClusters[i]].on("message", listenConnListener);
+          } catch (err) {
+            if (cluster.workers[allClusters[_id]]) {
+              cluster.workers[allClusters[_id]].removeAllListeners("message");
+              cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
+              cluster.workers[allClusters[_id]].on("message", listenConnListener);
             }
-            serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + ex.message);
+            checkWorker(callback, _id+1);
           }
         }
+        checkWorker(function () {
+            var wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
+            try {
+              if (cluster.workers[goodWorkers[wN]]) {
+                isWorkerHungUpBuff2 = true;
+                cluster.workers[goodWorkers[wN]].on("message", msgListener);
+                cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
+              }
+            } catch (err) {
+              if (cluster.workers[goodWorkers[wN]]) {
+                cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+                cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+                cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+              }
+              serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+            }
+        });
       }, 300000);
     }
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
@@ -4535,6 +4577,9 @@ function start(init) {
             } catch (ex) {
               process.send("\x12SAVEERR" + ex.message);
             }
+            process.send("\x12END");
+          } else if (line == "\x14PINGPING") {
+            process.send("\x12PINGOK");
             process.send("\x12END");
           } else if (commands[line.split(" ")[0]] !== undefined && commands[line.split(" ")[0]] !== null) {
             var argss = line.split(" ");
