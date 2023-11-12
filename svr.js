@@ -4617,7 +4617,7 @@ function msgListener(msg) {
   } else if (msg == "\x12SAVEGOOD") {
     serverconsole.locmessage("Configuration saved.");
   } else if (msg.indexOf("\x12SAVEERR") == 0) {
-    serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + msg.substr(8));
+    serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + msg.substr(8));
   } else if (msg == "\x12END") {
     cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
       if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
@@ -5034,7 +5034,7 @@ function start(init) {
                 cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
                 cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
               }
-              serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
+              serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
             }
         });
       }, 300000);
@@ -5425,7 +5425,7 @@ function start(init) {
                         cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
                         cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
                       }
-                      serverconsole.locwarnmessage("There was a problem, while terminating unused worker process. Reason: " + err.message);
+                      serverconsole.locwarnmessage("There was a problem while terminating unused worker process. Reason: " + err.message);
                     }
                   }
                 });
@@ -5519,7 +5519,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
         saveConfig();
       }
     } catch (err) {
-      serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
+      serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
     }
     try {
       deleteFolderRecursive(__dirname + "/temp");
