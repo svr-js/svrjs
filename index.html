@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.10.3</title>
+    <title>SVR.JS 3.11.0</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,11 +12,11 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.10.3</h1>
+    <h1>Welcome to SVR.JS 3.11.0</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
-    <p>If you see this page, that means, that the server is properly working. You can further configure the server and replace <i>index.html</i> and <i>tests.html</i> pages with custom ones.</p>
+    <p>If you see this page that means that the server is working properly. You can further configure the server and replace <i>index.html</i> and <i>tests.html</i> pages with custom ones.</p>
     <p>Default <i>config.json</i> looks like this:</p>
     <div style="background-color: #e0e0e0; padding: 5px; text-align: left; display: inline-block;">
       <code>
@@ -117,7 +117,10 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Fixed bug with non-standard code regex replacements</li>
+      <li>SVR.JS now sends configuration file saving request to one random good worker instead of all workers to prevent configuration file corruption.</li>
+      <li>Fixed crashes due to destroyed HTTP/2 stream (Node.JS bug: <a href="https://github.com/nodejs/node/issues/24470">https://github.com/nodejs/node/issues/24470</a>)</li>
+      <li>Fixed language errors in HTTP error code descriptions, error console messages and the index page.</li>
+      <li>Updated the logo in the SVR.JS log viewer.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>

@@ -81,7 +81,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.10.3";
+var version = "3.11.0";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -1811,52 +1811,52 @@ forbiddenPaths.log = getInitializePath("./log");
 // Error descriptions
 var serverErrorDescs = {
   200: "The request succeeded! :)",
-  201: "New resource has been created.",
+  201: "A new resource has been created.",
   202: "The request has been accepted for processing, but the processing has not been completed.",
   400: "The request you made is invalid.",
   401: "You need to authenticate yourself in order to access the requested file.",
   402: "You need to pay in order to access the requested file.",
   403: "You don't have access to the requested file.",
-  404: "The requested file doesn't exist. If you have typed URL manually, then please check the spelling.",
+  404: "The requested file doesn't exist. If you have typed the URL manually, then please check the spelling.",
   405: "Method used to access the requested file isn't allowed.",
-  406: "The request is capable of generating only not acceptable content.",
+  406: "The request is capable of generating only unacceptable content.",
   407: "You need to authenticate yourself in order to use the proxy.",
   408: "You have timed out.",
   409: "The request you sent conflicts with the current state of the server.",
   410: "The requested file is permanently deleted.",
   411: "Content-Length property is required.",
-  412: "The server doesn't meet preconditions you put in the request.",
+  412: "The server doesn't meet the preconditions you put in the request.",
   413: "The request you sent is too large.",
-  414: "URL you sent is too long.",
+  414: "The URL you sent is too long.",
   415: "The media type of request you sent isn't supported by the server.",
-  416: "Content-Range you sent is unsatisfiable.",
-  417: "Expectation in Expect property couldn't be satisfied.",
+  416: "The requested content range (Content-Range header) you sent is unsatisfiable.",
+  417: "The expectation specified in the Expect property couldn't be satisfied.",
   418: "The server (teapot) can't brew any coffee! ;)",
   421: "The request you made isn't intended for this server.",
   422: "The server couldn't process content sent by you.",
   423: "The requested file is locked.",
   424: "The request depends on another failed request.",
   425: "The server is unwilling to risk processing a request that might be replayed.",
-  426: "You need to upgrade protocols you use to request a file.",
+  426: "You need to upgrade the protocols you use to request a file.",
   428: "The request you sent needs to be conditional, but it isn't.",
-  429: "You sent too much requests to the server.",
-  431: "The request you sent contains headers, that are too large.",
+  429: "You sent too many requests to the server.",
+  431: "The request you sent contains headers that are too large.",
   451: "The requested file isn't accessible for legal reasons.",
-  497: "You sent non-TLS request to the HTTPS server.",
-  500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>Please contact with developer/administrator at <i>{contact}</i>.",
-  501: "The request requires use of a function, which isn't currently implemented by the server.",
-  502: "The server had an error, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-  503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-  504: "The server couldn't get response in time, while it was acting as a gateway.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-  505: "The server doesn't support HTTP version used in the request.",
-  506: "Variant header is configured to be engaged in content negotiation.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
-  507: "The server ran out of disk space neccessary to complete the request.",
+  497: "You sent a non-TLS request to the HTTPS server.",
+  500: "The server had an unexpected error. Below, the error stack is shown: </p><code>{stack}</code><p>You may need to contact the server administrator at <i>{contact}</i>.",
+  501: "The request requires the use of a function, which isn't currently implemented by the server.",
+  502: "The server had an error while it was acting as a gateway.</p><p>You may need to contact the server administrator at <i>{contact}</i>.",
+  503: "The service provided by the server is currently unavailable, possibly due to maintenance downtime or capacity problems. Please try again later.</p><p>You may need to contact the server administrator at <i>{contact}</i>.",
+  504: "The server couldn't get a response in time while it was acting as a gateway.</p><p>You may need to contact the server administrator at <i>{contact}</i>.",
+  505: "The server doesn't support the HTTP version used in the request.",
+  506: "The Variant header is configured to be engaged in content negotiation.</p><p>You may need to contact the server administrator at <i>{contact}</i>.",
+  507: "The server ran out of disk space necessary to complete the request.",
   508: "The server detected an infinite loop while processing the request.",
-  509: "The server has it's bandwidth limit exceeded.</p><p>Please contact with developer/administrator at <i>{contact}</i>.",
+  509: "The server has its bandwidth limit exceeded.</p><p>You may need to contact the server administrator at <i>{contact}</i>.",
   510: "The server requires an extended HTTP request. The request you made isn't an extended HTTP request.",
   511: "You need to authenticate yourself in order to get network access.",
-  598: "The server couldn't get response in time, while it was acting as a proxy.",
-  599: "The server couldn't connect in time, while it was acting as a proxy."
+  598: "The server couldn't get a response in time while it was acting as a proxy.",
+  599: "The server couldn't connect in time while it was acting as a proxy."
 };
 
 // Create server
@@ -2798,7 +2798,11 @@ if (!cluster.isPrimary) {
           delete table["connection"];
           delete table["keep-alive"];
           delete table["upgrade"];
-          return res.writeHeadNodeApi(a, table);
+          if(res.stream && res.stream.destroyed) {
+            return false;
+          } else {
+            return res.writeHeadNodeApi(a, table);
+          }
         };
 
         res.setHeader = function (a, b) {
@@ -4590,6 +4594,7 @@ function bruteForceListenerWrapper(worker) {
 }
 
 var isWorkerHungUpBuff = true;
+var isWorkerHungUpBuff2 = true;
 
 function msgListener(msg) {
   for (var i = 0; i < Object.keys(cluster.workers).length; i++) {
@@ -4605,12 +4610,14 @@ function msgListener(msg) {
     // Do nothing!
   } else if (msg == "\x12KILLOK") {
     if(typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
+  } else if (msg == "\x12PINGOK") {
+    if(typeof isWorkerHungUpBuff2 != "undefined") isWorkerHungUpBuff2 = false;
   } else if (msg == "\x12KILLTERMMSG") {
     serverconsole.locmessage("Terminating unused worker process...");
   } else if (msg == "\x12SAVEGOOD") {
     serverconsole.locmessage("Configuration saved.");
   } else if (msg.indexOf("\x12SAVEERR") == 0) {
-    serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + msg.substr(8));
+    serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + msg.substr(8));
   } else if (msg == "\x12END") {
     cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
       if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
@@ -4981,21 +4988,55 @@ function start(init) {
     } else if (cluster.isPrimary) {
       setInterval(function () {
         var allClusters = Object.keys(cluster.workers);
-        for (var i = 0; i < allClusters.length; i++) {
+        var goodWorkers = [];
+        function checkWorker(callback, _id) {
+          if(typeof _id === "undefined") _id = 0;
+          if(_id >= allClusters.length) {
+            callback();
+            return;
+          }
           try {
-            if (cluster.workers[allClusters[i]]) {
-              cluster.workers[allClusters[i]].on("message", msgListener);
-              cluster.workers[allClusters[i]].send("\x14SAVECONF");
+            if (cluster.workers[allClusters[_id]]) {
+              isWorkerHungUpBuff2 = true;
+              cluster.workers[allClusters[_id]].on("message", msgListener);
+              cluster.workers[allClusters[_id]].send("\x14PINGPING");
+              setTimeout(function () {
+                if (isWorkerHungUpBuff2) {
+                  checkWorker(callback, _id+1);
+                } else {
+                  goodWorkers.push(allClusters[_id]);
+                  checkWorker(callback, _id+1);
+                }
+              }, 250);
+            } else {
+              checkWorker(callback, _id+1);
             }
           } catch (err) {
-            if (cluster.workers[allClusters[i]]) {
-              cluster.workers[allClusters[i]].removeAllListeners("message");
-              cluster.workers[allClusters[i]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[i]]));
-              cluster.workers[allClusters[i]].on("message", listenConnListener);
+            if (cluster.workers[allClusters[_id]]) {
+              cluster.workers[allClusters[_id]].removeAllListeners("message");
+              cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
+              cluster.workers[allClusters[_id]].on("message", listenConnListener);
             }
-            serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
+            checkWorker(callback, _id+1);
           }
         }
+        checkWorker(function () {
+            var wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
+            try {
+              if (cluster.workers[goodWorkers[wN]]) {
+                isWorkerHungUpBuff2 = true;
+                cluster.workers[goodWorkers[wN]].on("message", msgListener);
+                cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
+              }
+            } catch (err) {
+              if (cluster.workers[goodWorkers[wN]]) {
+                cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+                cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+                cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+              }
+              serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+            }
+        });
       }, 300000);
     }
     if (!cluster.isPrimary) {
@@ -5026,6 +5067,12 @@ function start(init) {
           } else if (line == "\x14KILLPING") {
             if(!reallyExiting) {
               process.send("\x12KILLOK");
+              process.send("\x12END");
+            }
+            // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
+          } else if (line == "\x14PINGPING") {
+            if(!reallyExiting) {
+              process.send("\x12PINGOK");
               process.send("\x12END");
             }
             // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
@@ -5378,7 +5425,7 @@ function start(init) {
                         cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
                         cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
                       }
-                      serverconsole.locwarnmessage("There was a problem, while terminating unused worker process. Reason: " + err.message);
+                      serverconsole.locwarnmessage("There was a problem while terminating unused worker process. Reason: " + err.message);
                     }
                   }
                 });
@@ -5472,7 +5519,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
         saveConfig();
       }
     } catch (err) {
-      serverconsole.locwarnmessage("There was a problem, while saving configuration file. Reason: " + err.message);
+      serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
     }
     try {
       deleteFolderRecursive(__dirname + "/temp");
