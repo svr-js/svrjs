@@ -5520,7 +5520,7 @@ function saveConfig() {
       if (configJSONobj.exposeModsInErrorPages === undefined) configJSONobj.exposeModsInErrorPages = true;
       if (configJSONobj.disableTrailingSlashRedirects === undefined) configJSONobj.disableTrailingSlashRedirects = false;
       
-      var configString = JSON.stringify(configJSONobj, null, 2);
+      var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
     } catch (err) {
