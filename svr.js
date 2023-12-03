@@ -4293,6 +4293,35 @@ if (!cluster.isPrimary) {
           }
         }
 
+        // Trailing slash redirection
+        function redirectTrailingSlashes(callback) {
+          if (!configJSON.disableTrailingSlashRedirects && href[href.length-1] != "/") {
+            fs.stat("." + decodeURIComponent(href), function (err, stats) {
+              if(err || !stats.isDirectory()) {
+                try {
+                  callback();
+                } catch(ex) {
+                  callServerError(500, undefined, ex);
+                }
+              } else {
+                var destinationURL = uobject;
+                destinationURL.path = null;
+                destinationURL.href = null;
+                destinationURL.pathname += "/";
+                destinationURL.hostname = null;
+                destinationURL.host = null;
+                destinationURL.port = null;
+                destinationURL.protocol = null;
+                destinationURL.slashes = null;
+                destinationURL = url.format(destinationURL);
+                redirect(destinationURL);
+              }
+            });
+          } else {
+            callback();
+          }
+        }
+        
         // Handle HTTP authentication
         if (authIndex > -1) {
           var authcode = nonStandardCodes[authIndex];
@@ -4423,7 +4452,9 @@ if (!cluster.isPrimary) {
                       }
                     }
                     serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
-                    modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                    redirectTrailingSlashes(function () {
+                      modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                    });
                   }
                 } catch(err) {
                   callServerError(500, undefined, generateErrorStack(err));
@@ -4470,7 +4501,9 @@ if (!cluster.isPrimary) {
             process.send("\x12AUTHQ" + reqip);
           }
         } else {
-          modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+          redirectTrailingSlashes(function () {
+            modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+          });
         }
       }
     } catch (err) {
@@ -5485,7 +5518,8 @@ function saveConfig() {
       if (configJSONobj.errorPages === undefined) configJSONobj.errorPages = [];
       if (configJSONobj.useWebRootServerSideScript === undefined) configJSONobj.useWebRootServerSideScript = true;
       if (configJSONobj.exposeModsInErrorPages === undefined) configJSONobj.exposeModsInErrorPages = true;
-
+      if (configJSONobj.disableTrailingSlashRedirects === undefined) configJSONobj.disableTrailingSlashRedirects = false;
+      
       var configString = JSON.stringify(configJSONobj, null, 2);
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
