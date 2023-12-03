@@ -1167,11 +1167,11 @@ try {
 }
 
 try {
-  environmentVariables.forEach(function(value, key) {
-    process.env[key] = value;
+  Object.keys(environmentVariables).forEach(function(key) {
+    process.env[key] = environmentVariables[key];
   });
 } catch(err) {
-  
+  // Failed to set environment variables.
 }
 
 // Compability for older mods
