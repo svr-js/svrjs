@@ -3,7 +3,7 @@
   "port": 80,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1699810857032,
+  "timestamp": 1701600932028,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
@@ -89,7 +89,10 @@
   "dontCompress": [
     "/.*\\.ipxe$/",
     "/.*\\.img$/",
-    "/.*\\.iso$/"
+    "/.*\\.iso$/",
+    "/.*\\.png$/",
+    "/.*\\.jpg$/",
+    "/.*\\.webp$/"
   ],
   "enableIPSpoofing": true,
   "secure": false,
@@ -101,5 +104,6 @@
   "rewriteDirtyURLs": true,
   "errorPages": [],
   "useWebRootServerSideScript": true,
-  "exposeModsInErrorPages": true
+  "exposeModsInErrorPages": true,
+  "disableTrailingSlashRedirects": false
 }
