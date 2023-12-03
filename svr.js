@@ -4316,11 +4316,11 @@ if (!cluster.isPrimary) {
 
         // Trailing slash redirection
         function redirectTrailingSlashes(callback) {
-          if (!disableTrailingSlashRedirects && href[href.length - 1] != "/") {
+          if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
             fs.stat("." + decodeURIComponent(href), function (err, stats) {
               if (err || !stats.isDirectory()) {
                 try {
-                  callback();
+                  callback();  
                 } catch (err) {
                   callServerError(500, undefined, err);
                 }
@@ -4328,7 +4328,7 @@ if (!cluster.isPrimary) {
                 var destinationURL = uobject;
                 destinationURL.path = null;
                 destinationURL.href = null;
-                destinationURL.pathname += "/";
+                destinationURL.pathname = origHref + "/";
                 destinationURL.hostname = null;
                 destinationURL.host = null;
                 destinationURL.port = null;
