@@ -1,4 +1,3 @@
-
 /////////////////////////////////////////
 //                                     //
 //             S V R . J S             //
@@ -22,7 +21,7 @@
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ */
 
 // Check if SVR.JS is running on Node.JS-compatible runtime. If not, just error it out.
 if (typeof require === "undefined") {
@@ -81,7 +80,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.11.0";
+var version = "3.12.0";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -230,11 +229,11 @@ if (!singlethreaded) {
           }
 
           var oldLog = console.log;
-          console.log = function (a,b,c,d,e,f) {
-            if(a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
+          console.log = function (a, b, c, d, e, f) {
+            if (a == "ChildProcess.prototype.send() - Sorry! Not implemented yet") {
               throw new Error("NOT IMPLEMENTED");
             } else {
-              oldLog(a,b,c,d,e,f);
+              oldLog(a, b, c, d, e, f);
             }
           };
 
@@ -312,8 +311,9 @@ if (!singlethreaded) {
 
 // ETag-related
 var ETagDB = {};
+
 function generateETag(filePath, stat) {
-  if(!ETagDB[filePath + "-" + stat.size + "-" + stat.mtime]) ETagDB[filePath + "-" + stat.size + "-" + stat.mtime] = sha256(filePath + "-" + stat.size + "-" + stat.mtime);
+  if (!ETagDB[filePath + "-" + stat.size + "-" + stat.mtime]) ETagDB[filePath + "-" + stat.size + "-" + stat.mtime] = sha256(filePath + "-" + stat.size + "-" + stat.mtime);
   return ETagDB[filePath + "-" + stat.size + "-" + stat.mtime];
 }
 
@@ -348,7 +348,7 @@ function SVRJSFork() {
       if (SVRJSInitialized) serverconsole.locwarnmessage("SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.");
     }
   } catch (err) {
-    if(err.name == "NotImplementedError") {
+    if (err.name == "NotImplementedError") {
       // If cluster.fork throws a NotImplementedError, shim cluster module
       cluster.bunShim();
       if (!threadLimitWarned && cluster.__shimmed__ && process.isBun && process.versions.bun && process.versions.bun[0] != "0") {
@@ -366,9 +366,9 @@ function SVRJSFork() {
   }
 
   // Add event listeners
-  if(newWorker.on) {
+  if (newWorker.on) {
     newWorker.on("error", function (err) {
-      if(!reallyExiting) serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
+      if (!reallyExiting) serverconsole.locwarnmessage("There was a problem when handling SVR.JS worker! (from master process side) Reason: " + err.message);
     });
     newWorker.on("exit", function () {
       if (!exiting && Object.keys(cluster.workers).length == 0) {
@@ -500,15 +500,16 @@ if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
 var modFiles = fs.readdirSync(__dirname + "/mods").sort();
 var modInfos = [];
 
-function sizify(bytes) {
+function sizify(bytes, addI) {
   if (bytes == 0) return "0";
   if (bytes < 0) bytes = -bytes;
   var prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
-  var exponent = Math.floor(Math.log10 ? Math.log10(bytes) : (Math.log(bytes) / Math.log(10)));
-  var prefixIndex = Math.floor(exponent / 3);
+  var prefixIndex = Math.floor(Math.log2 ? Math.log2(bytes) / 10 : (Math.log(bytes) / (Math.log(2) * 10)));
   if (prefixIndex >= prefixes.length - 1) prefixIndex = prefixes.length - 1;
-  var prefixIndexMod = exponent - (prefixIndex * 3);
-  return (Math.round(bytes / Math.pow(10, Math.max(0, exponent - Math.max(2, prefixIndexMod)))) / (exponent > 2 ? Math.pow(10, Math.max(0, 2 - prefixIndexMod)) : 1)).toString() + prefixes[prefixIndex];
+  var prefixIndexTranslated = Math.pow(2, 10 * prefixIndex);
+  var decimalPoints = 2 - Math.floor(Math.log10 ? Math.log10(bytes / prefixIndexTranslated) : (Math.log(bytes / prefixIndexTranslated) / Math.log(10)));
+  if (decimalPoints < 0) decimalPoints = 0;
+  return (Math.ceil((bytes / prefixIndexTranslated) * Math.pow(10, decimalPoints)) / Math.pow(10, decimalPoints)) + prefixes[prefixIndex] + ((prefixIndex > 0 && addI) ? "i" : "");
 }
 
 function getOS() {
@@ -542,7 +543,7 @@ function getOS() {
 
 function createRegex(regex, isPath) {
   var regexStrMatch = regex.match(/^\/((?:\\.|[^\/\\])*)\/([a-zA-Z0-9]*)$/);
-  if (!regexStrMatch) throw new Error("Invalid regex!");
+  if (!regexStrMatch) throw new Error("Invalid regular expression: " + regex);
   var searchString = regexStrMatch[1];
   var modifiers = regexStrMatch[2];
   if (isPath && !modifiers.match(/i/i) && os.platform() == "win32") modifiers += "i";
@@ -565,17 +566,17 @@ function checkForEnabledDirectoryListing(hostname) {
   }
 
   var main = (configJSON.enableDirectoryListing || configJSON.enableDirectoryListing === undefined);
-  if(!configJSON.enableDirectoryListingVHost) return main;
+  if (!configJSON.enableDirectoryListingVHost) return main;
   var vhostP = null;
-  configJSON.enableDirectoryListingVHost.every(function(vhost) {
-    if(matchHostname(vhost.host)) {
+  configJSON.enableDirectoryListingVHost.every(function (vhost) {
+    if (matchHostname(vhost.host)) {
       vhostP = vhost;
       return false;
     } else {
       return true;
     }
   });
-  if(!vhostP || vhostP.enabled === undefined) return main;
+  if (!vhostP || vhostP.enabled === undefined) return main;
   else return vhostP.enabled;
 }
 
@@ -624,7 +625,7 @@ function ipBlockList(rawBlockList) {
         groupsPresent += side.split(":").length;
       });
       fullAddress += sides[0] + ":";
-      if(validGroupCount - groupsPresent > 1) {
+      if (validGroupCount - groupsPresent > 1) {
         fullAddress += "0000:".repeat(validGroupCount - groupsPresent);
       }
       fullAddress += sides[1];
@@ -812,8 +813,8 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (errorStack.some(function (errorStackLine) {
-    return (errorStackLine.indexOf(errorObject.name) == 0);
-  })) {
+      return (errorStackLine.indexOf(errorObject.name) == 0);
+    })) {
     return errorObject.stack;
   }
 
@@ -840,35 +841,35 @@ function generateErrorStack(errorObject) {
 
 function calculateBroadcastIPv4FromCidr(ipWithCidr) {
   // Check if CIDR notation is valid, if it's not, return null
-  if(!ipWithCidr) return null;
+  if (!ipWithCidr) return null;
   var ipCA = ipWithCidr.split("/");
-  if(ipCA.length != 2) return null;
+  if (ipCA.length != 2) return null;
 
   // Extract IP and mask (numberic format)
   var ip = ipCA[0];
   var mask = parseInt(ipCA[1]);
 
-  return ip.split(".").map(function(num, index) {
+  return ip.split(".").map(function (num, index) {
     // Calculate resulting 8-bit
-    var power = Math.max(Math.min(mask - (index*8), 8), 0);
-    return ((parseInt(num) & ((Math.pow(2,power)-1) << (8-power))) | Math.pow(2,8-power)-1).toString();
+    var power = Math.max(Math.min(mask - (index * 8), 8), 0);
+    return ((parseInt(num) & ((Math.pow(2, power) - 1) << (8 - power))) | Math.pow(2, 8 - power) - 1).toString();
   }).join(".");
 }
 
 function calculateNetworkIPv4FromCidr(ipWithCidr) {
   // Check if CIDR notation is valid, if it's not, return null
-  if(!ipWithCidr) return null;
+  if (!ipWithCidr) return null;
   var ipCA = ipWithCidr.split("/");
-  if(ipCA.length != 2) return null;
+  if (ipCA.length != 2) return null;
 
   // Extract IP and mask (numberic format)
   var ip = ipCA[0];
   var mask = parseInt(ipCA[1]);
 
-  return ip.split(".").map(function(num, index) {
+  return ip.split(".").map(function (num, index) {
     // Calculate resulting 8-bit
-    var power = Math.max(Math.min(mask - (index*8), 8), 0);
-    return ((parseInt(num) & ((Math.pow(2,power)-1) << (8-power)))).toString();
+    var power = Math.max(Math.min(mask - (index * 8), 8), 0);
+    return ((parseInt(num) & ((Math.pow(2, power) - 1) << (8 - power)))).toString();
   }).join(".");
 }
 
@@ -956,13 +957,13 @@ if (host != "[offline]" || ifaceEx) {
 
         try {
           dns.reverse(pubip, function (err, hostnames) {
-            if(callbackDone) return;
+            if (callbackDone) return;
             clearTimeout(dnsTimeout);
-            if(!err && hostnames.length > 0) domain = hostnames[0];
+            if (!err && hostnames.length > 0) domain = hostnames[0];
             ipRequestCompleted = true;
             process.emit("ipRequestCompleted");
           });
-        } catch(err) {
+        } catch (err) {
           clearTimeout(dnsTimeout);
           callbackDone = true;
           ipRequestCompleted = true;
@@ -1020,13 +1021,13 @@ if (host != "[offline]" || ifaceEx) {
 
           try {
             dns.reverse(pubip, function (err, hostnames) {
-              if(callbackDone) return;
+              if (callbackDone) return;
               clearTimeout(dnsTimeout);
-              if(!err && hostnames.length > 0) domain = hostnames[0];
+              if (!err && hostnames.length > 0) domain = hostnames[0];
               ipRequestCompleted = true;
               process.emit("ipRequestCompleted");
             });
-          } catch(err) {
+          } catch (err) {
             clearTimeout(dnsTimeout);
             callbackDone = true;
             ipRequestCompleted = true;
@@ -1102,6 +1103,8 @@ var rewriteDirtyURLs = false;
 var errorPages = [];
 var useWebRootServerSideScript = true;
 var exposeModsInErrorPages = true;
+var disableTrailingSlashRedirects = false;
+var environmentVariables = {};
 
 // Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1109,12 +1112,12 @@ if (configJSON.wwwredirect != undefined) wwwredirect = configJSON.wwwredirect;
 if (configJSON.port != undefined) port = configJSON.port;
 if (configJSON.pubport != undefined) pubport = configJSON.pubport;
 if (typeof port === "string") {
-  if(port.match(/^[0-9]+$/)) {
+  if (port.match(/^[0-9]+$/)) {
     port = parseInt(port);
   } else {
     var portLMatch = port.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
-    if(portLMatch) {
-      listenAddress = portLMatch[1].replace(/^\[|\]$/g,"").replace(/^::ffff:/i,"");
+    if (portLMatch) {
+      listenAddress = portLMatch[1].replace(/^\[|\]$/g, "").replace(/^::ffff:/i, "");
       port = parseInt(portLMatch[2]);
     }
   }
@@ -1123,12 +1126,12 @@ if (configJSON.domian != undefined) domain = configJSON.domian;
 if (configJSON.domain != undefined) domain = configJSON.domain;
 if (configJSON.sport != undefined) sport = configJSON.sport;
 if (typeof sport === "string") {
-  if(sport.match(/^[0-9]+$/)) {
+  if (sport.match(/^[0-9]+$/)) {
     sport = parseInt(sport);
   } else {
     var sportLMatch = sport.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
-    if(sportLMatch) {
-      sListenAddress = sportLMatch[1].replace(/^\[|\]$/g,"").replace(/^::ffff:/i,"");
+    if (sportLMatch) {
+      sListenAddress = sportLMatch[1].replace(/^\[|\]$/g, "").replace(/^::ffff:/i, "");
       sport = parseInt(sportLMatch[2]);
     }
   }
@@ -1153,12 +1156,22 @@ if (configJSON.rewriteDirtyURLs != undefined) rewriteDirtyURLs = configJSON.rewr
 if (configJSON.errorPages != undefined) errorPages = configJSON.errorPages;
 if (configJSON.useWebRootServerSideScript != undefined) useWebRootServerSideScript = configJSON.useWebRootServerSideScript;
 if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = configJSON.exposeModsInErrorPages;
+if (configJSON.disableTrailingSlashRedirects != undefined) disableTrailingSlashRedirects = configJSON.disableTrailingSlashRedirects;
+if (configJSON.environmentVariables != undefined) environmentVariables = configJSON.environmentVariables;
 
 var wwwrootError = null;
 try {
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
-} catch(err) {
+} catch (err) {
   wwwrootError = err;
+}
+
+try {
+  Object.keys(environmentVariables).forEach(function (key) {
+    process.env[key] = environmentVariables[key];
+  });
+} catch (err) {
+  // Failed to set environment variables.
 }
 
 // Compability for older mods
@@ -1205,7 +1218,7 @@ function sanitizeURL(resource) {
   if (resource == "*") return "*";
   if (resource == "") return "";
   // Remove null characters
-  resource = resource.replace(/%00/ig, "").replace(/\0/g,"");
+  resource = resource.replace(/%00/ig, "").replace(/\0/g, "");
   // Check if URL is malformed (e.g. %c0%af or %u002f or simply %as)
   if (resource.match(/%(?:c[01]|f[ef]|(?![0-9a-f]{2}).{2}|.{0,1}$)/gi)) throw new URIError("URI malformed");
   // Decode URL-encoded characters while preserving certain characters
@@ -1238,7 +1251,7 @@ function fixNodeMojibakeURL(string) {
 
   //Encode URLs
   Buffer.from(string, "latin1").forEach(function (value) {
-    if(value > 127) {
+    if (value > 127) {
       encoded += "%" + (value < 16 ? "0" : "") + value.toString(16).toUpperCase();
     } else {
       encoded += String.fromCodePoint(value);
@@ -1284,7 +1297,7 @@ if (secure) {
         key: fs.readFileSync((sni[sniName].key[0] != "/" && !sni[sniName].key.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].key : sni[sniName].key).toString()
       });
     });
-  } catch(err) {
+  } catch (err) {
     certificateError = err;
   }
 }
@@ -1545,7 +1558,10 @@ if (!disableMods) {
           }
         }
       } catch (err) {
-        modLoadingErrors.push({error: err, modName: modFileRaw});
+        modLoadingErrors.push({
+          error: err,
+          modName: modFileRaw
+        });
       }
     }
   });
@@ -2026,7 +2042,7 @@ if (!cluster.isPrimary) {
     } else {
       try {
         process.send("\x12ERRLIST" + attmtsRedir + err.code);
-      } catch(ex) {
+      } catch (err) {
         // Probably main process exited
       }
     }
@@ -2036,12 +2052,12 @@ if (!cluster.isPrimary) {
     } else {
       try {
         if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
-      } catch(ex) {
+      } catch (err) {
         // Probably main process exited
       }
       setTimeout(function () {
         var errno = errors[err.code];
-        if(errno) {
+        if (errno) {
           process.exit(errno);
         } else {
           process.exit(1);
@@ -2314,45 +2330,46 @@ if (!cluster.isPrimary) {
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
       function getErrorFileName(list, callback, _i) {
-        if(err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
+        if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
           // Disable custom error page for HTTP SSL error
           callback(errorCode.toString() + ".html");
           return;
         }
+
         function medCallback(p) {
-          if(p) callback(p);
+          if (p) callback(p);
           else {
-            if(errorCode == 404) {
-              fs.access(page404, fs.constants.F_OK, function(err) {
-                if(err) {
-                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+            if (errorCode == 404) {
+              fs.access(page404, fs.constants.F_OK, function (err) {
+                if (err) {
+                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function (err) {
                     try {
-                      if(err) {
+                      if (err) {
                         callback(errorCode.toString() + ".html");
                       } else {
                         callback("." + errorCode.toString());
                       }
-                    } catch(err2) {
+                    } catch (err2) {
                       callServerError(500, undefined, generateErrorStack(err2));
                     }
                   });
                 } else {
                   try {
                     callback(page404);
-                  } catch(err2) {
+                  } catch (err2) {
                     callServerError(500, undefined, generateErrorStack(err2));
                   }
                 }
               });
             } else {
-              fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+              fs.access("." + errorCode.toString(), fs.constants.F_OK, function (err) {
                 try {
-                  if(err) {
+                  if (err) {
                     callback(errorCode.toString() + ".html");
                   } else {
                     callback("." + errorCode.toString());
                   }
-                } catch(err2) {
+                } catch (err2) {
                   callServerError(500, undefined, generateErrorStack(err2));
                 }
               });
@@ -2360,19 +2377,19 @@ if (!cluster.isPrimary) {
           }
         }
 
-        if(!_i) _i = 0;
-        if(_i >= list.length) {
+        if (!_i) _i = 0;
+        if (_i >= list.length) {
           medCallback(false);
           return;
         }
 
-        if(list[_i].scode != errorCode) {
-          getErrorFileName(list, callback, _i+1);
+        if (list[_i].scode != errorCode) {
+          getErrorFileName(list, callback, _i + 1);
           return;
         } else {
-          fs.access(list[_i].path, fs.constants.F_OK, function(err) {
-            if(err) {
-              getErrorFileName(list, callback, _i+1);
+          fs.access(list[_i].path, fs.constants.F_OK, function (err) {
+            if (err) {
+              getErrorFileName(list, callback, _i + 1);
             } else {
               medCallback(list[_i].path);
             }
@@ -2380,7 +2397,7 @@ if (!cluster.isPrimary) {
         }
       }
 
-      getErrorFileName(errorPages, function(errorFile) {
+      getErrorFileName(errorPages, function (errorFile) {
         if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
         if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
         if (errorCode == 500 || errorCode == 502) {
@@ -2408,7 +2425,7 @@ if (!cluster.isPrimary) {
           }
           cheaders["Content-Type"] = "text/html; charset=utf-8";
           if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
-          if(err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
+          if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
             // Disable custom error page for HTTP SSL error
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
             res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode]).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/{contact}/g, serverAdmin.replace(/\./g, "[dot]").replace(/@/g, "[at]")));
@@ -2757,17 +2774,17 @@ if (!cluster.isPrimary) {
 
     function getCustomHeaders() {
       var ph = JSON.parse(JSON.stringify(customHeaders));
-      if(configJSON.customHeadersVHost) {
+      if (configJSON.customHeadersVHost) {
         var vhostP = null;
-        configJSON.customHeadersVHost.every(function(vhost) {
-          if(matchHostname(vhost.host)) {
+        configJSON.customHeadersVHost.every(function (vhost) {
+          if (matchHostname(vhost.host)) {
             vhostP = vhost;
             return false;
           } else {
             return true;
           }
         });
-        if(vhostP && vhostP.headers) {
+        if (vhostP && vhostP.headers) {
           var phNu = JSON.parse(JSON.stringify(vhostP.headers));
           Object.keys(phNu).forEach(function (phNuK) {
             ph[phNuK] = phNu[phNuK];
@@ -2798,7 +2815,7 @@ if (!cluster.isPrimary) {
           delete table["connection"];
           delete table["keep-alive"];
           delete table["upgrade"];
-          if(res.stream && res.stream.destroyed) {
+          if (res.stream && res.stream.destroyed) {
             return false;
           } else {
             return res.writeHeadNodeApi(a, table);
@@ -2863,8 +2880,8 @@ if (!cluster.isPrimary) {
         } else {
           serverconsole.resmessage("Server responded with " + a.toString() + " code.");
         }
-        if(typeof b != "string" && http.STATUS_CODES[a]) {
-          if(!c) c = b;
+        if (typeof b != "string" && http.STATUS_CODES[a]) {
+          if (!c) c = b;
           b = http.STATUS_CODES[a];
         }
         lastStatusCode = a;
@@ -2900,11 +2917,11 @@ if (!cluster.isPrimary) {
     var oldip = "";
     var oldport = "";
     var isForwardedValid = true;
-    if(enableIPSpoofing) {
+    if (enableIPSpoofing) {
       if (req.headers["x-forwarded-for"] != undefined) {
         var preparedReqIP = req.headers["x-forwarded-for"].split(",")[0].replace(/ /g, "");
         var preparedReqIPvalid = net.isIP(preparedReqIP);
-        if(preparedReqIPvalid) {
+        if (preparedReqIPvalid) {
           if (preparedReqIPvalid == 4 && req.socket.remoteAddress && req.socket.remoteAddress.indexOf(":") > -1) preparedReqIP = "::ffff:" + preparedReqIP;
           reqip = preparedReqIP;
           reqport = null;
@@ -2971,39 +2988,39 @@ if (!cluster.isPrimary) {
       // Determine error file
       function getErrorFileName(list, callback, _i) {
         function medCallback(p) {
-          if(p) callback(p);
+          if (p) callback(p);
           else {
-            if(errorCode == 404) {
-              fs.access(page404, fs.constants.F_OK, function(err) {
-                if(err) {
-                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+            if (errorCode == 404) {
+              fs.access(page404, fs.constants.F_OK, function (err) {
+                if (err) {
+                  fs.access("." + errorCode.toString(), fs.constants.F_OK, function (err) {
                     try {
-                      if(err) {
+                      if (err) {
                         callback(errorCode.toString() + ".html");
                       } else {
                         callback("." + errorCode.toString());
                       }
-                    } catch(err2) {
+                    } catch (err2) {
                       callServerError(500, undefined, generateErrorStack(err2));
                     }
                   });
                 } else {
                   try {
                     callback(page404);
-                  } catch(err2) {
+                  } catch (err2) {
                     callServerError(500, undefined, generateErrorStack(err2));
                   }
                 }
               });
             } else {
-              fs.access("." + errorCode.toString(), fs.constants.F_OK, function(err) {
+              fs.access("." + errorCode.toString(), fs.constants.F_OK, function (err) {
                 try {
-                  if(err) {
+                  if (err) {
                     callback(errorCode.toString() + ".html");
                   } else {
                     callback("." + errorCode.toString());
                   }
-                } catch(err2) {
+                } catch (err2) {
                   callServerError(500, undefined, generateErrorStack(err2));
                 }
               });
@@ -3011,19 +3028,19 @@ if (!cluster.isPrimary) {
           }
         }
 
-        if(!_i) _i = 0;
-        if(_i >= list.length) {
+        if (!_i) _i = 0;
+        if (_i >= list.length) {
           medCallback(false);
           return;
         }
 
-        if(list[_i].scode != errorCode || !matchHostname(list[_i].host)) {
-          getErrorFileName(list, callback, _i+1);
+        if (list[_i].scode != errorCode || !matchHostname(list[_i].host)) {
+          getErrorFileName(list, callback, _i + 1);
           return;
         } else {
-          fs.access(list[_i].path, fs.constants.F_OK, function(err) {
-            if(err) {
-              getErrorFileName(list, callback, _i+1);
+          fs.access(list[_i].path, fs.constants.F_OK, function (err) {
+            if (err) {
+              getErrorFileName(list, callback, _i + 1);
             } else {
               medCallback(list[_i].path);
             }
@@ -3031,7 +3048,7 @@ if (!cluster.isPrimary) {
         }
       }
 
-      getErrorFileName(errorPages, function(errorFile) {
+      getErrorFileName(errorPages, function (errorFile) {
         // Generate error stack if not provided
         if (Object.prototype.toString.call(stack) === "[object Error]") stack = generateErrorStack(stack);
         if (stack === undefined) stack = generateErrorStack(new Error("Unknown error"));
@@ -3160,7 +3177,7 @@ if (!cluster.isPrimary) {
       form.parse(req, function (err, fields, files) {
         // If there was an error, call the server error function with status code determined by error
         if (err) {
-          if(err.httpCode) callServerError(err.httpCode);
+          if (err.httpCode) callServerError(err.httpCode);
           else callServerError(400);
           return;
         }
@@ -3251,7 +3268,7 @@ if (!cluster.isPrimary) {
       var modFunction = ffinals;
       var useMods = mods.slice();
 
-      if(isProxy) {
+      if (isProxy) {
         // Get list of forward proxy mods
         useMods = [];
         mods.forEach(function (mod) {
@@ -3295,14 +3312,14 @@ if (!cluster.isPrimary) {
           var levelDownCount = 0;
 
           // Loop through the path components
-          for (var i = 0; i < pathComponents.length; i += 1) {
+          for (var i = 0; i < pathComponents.length; i++) {
             // If the component is "..", decrement the levelUpCount
             if (".." === pathComponents[i]) {
-              levelUpCount -= 1;
+              levelUpCount--;
             }
             // If the component is not "." or an empty string, increment the levelDownCount
             else if ("." !== pathComponents[i] && "" !== pathComponents[i]) {
-              levelDownCount += 1;
+              levelDownCount++;
             }
           }
 
@@ -3317,7 +3334,7 @@ if (!cluster.isPrimary) {
         if (isProxy) {
           var eheaders = getCustomHeaders();
           eheaders["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(501, "Not implemented", eheaders);
+          res.writeHead(501, "Not Implemented", eheaders);
           res.write("<html><head><title>Proxy not implemented</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>Proxy not implemented</h1><p>SVR.JS doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use SVR.JS as a proxy.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "</i></p></body></html>");
           res.end();
           serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
@@ -3345,7 +3362,7 @@ if (!cluster.isPrimary) {
           var hdhds = getCustomHeaders();
           hdhds["Content-Type"] = "text/html; charset=utf-8";
           res.writeHead(200, "OK", hdhds);
-          res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
+          res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
           return;
         }
 
@@ -3405,16 +3422,16 @@ if (!cluster.isPrimary) {
                 fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
                   if (e || !s.isFile()) {
                     fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
-                    if (e || !s.isFile()) {
-                      properDirectoryListingAndStaticFileServe();
-                    } else {
-                      stats = s;
-                      pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
-                      ext = "xhtml";
-                      readFrom = "./" + pth;
-                      properDirectoryListingAndStaticFileServe();
-                    }
-                  });
+                      if (e || !s.isFile()) {
+                        properDirectoryListingAndStaticFileServe();
+                      } else {
+                        stats = s;
+                        pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
+                        ext = "xhtml";
+                        readFrom = "./" + pth;
+                        properDirectoryListingAndStaticFileServe();
+                      }
+                    });
                   } else {
                     stats = s;
                     pth = (pth + "/index.htm").replace(/\/+/g, "/");
@@ -3444,28 +3461,28 @@ if (!cluster.isPrimary) {
                 res.writeHead(200, http.STATUS_CODES[200], customHeaders);
 
                 // Read custom header and footer content (if available)
-                var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/"))
-                  ? fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString()
-                  : (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
-                    ? fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString()
-                    : "";
-                var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/"))
-                  ? fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString()
-                  : (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/"))
-                    ? fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString()
-                    : "";
+                var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")) ?
+                  fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString() :
+                  (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
+                  fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
+                  "";
+                var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")) ?
+                  fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString() :
+                  (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
+                  fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
+                  "";
 
                 // Check if custom header has HTML tag
                 var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
 
                 // Generate HTML head and footer based on configuration and custom content
-                var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == ""
-                  ? (!headerHasHTMLTag
-                    ? "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>"
-                    : customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>"))
-                  : head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
-      (!headerHasHTMLTag ? customDirListingHeader : "") +
-      "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
+                var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
+                    (!headerHasHTMLTag ?
+                      "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
+                      customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
+                    head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+                  (!headerHasHTMLTag ? customDirListingHeader : "") +
+                  "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
 
                 var htmlFoot = "</table><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p>" + customDirListingFooter + (!configJSON.enableDirectoryListingWithDefaultHead || foot == "" ? "</body></html>" : foot);
 
@@ -3537,7 +3554,7 @@ if (!cluster.isPrimary) {
                     getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
                       // Function to check file extension
                       function checkEXT(filename, ext) {
-                        return filename.match(new RegExp("\\." + ext.replace(/^\./,"").replace(/([.+*?^$()\[\]{}|\\])/,"\\$1") + "$","i"));
+                        return filename.match(new RegExp("\\." + ext.replace(/^\./, "").replace(/([.+*?^$()\[\]{}|\\])/, "\\$1") + "$", "i"));
                       }
 
                       var directoryListingRows = [];
@@ -3549,45 +3566,45 @@ if (!cluster.isPrimary) {
                             if (estats) {
                               directoryListingRows.push(
                                 "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-              (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
-              "\"><nocode>" +
-              ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-              "</nocode></a></td><td>-</td><td>" +
-              estats.mtime.toDateString() +
-              "</td></tr>\r\n"
+                                (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
+                                "\"><nocode>" +
+                                ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                                "</nocode></a></td><td>-</td><td>" +
+                                estats.mtime.toDateString() +
+                                "</td></tr>\r\n"
                               );
                             } else {
                               directoryListingRows.push(
                                 "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-              (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
-              "\"><nocode>" +
-              ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-              "</nocode></a></td><td>-</td><td>-</td></tr>\r\n"
+                                (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
+                                "\"><nocode>" +
+                                ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                                "</nocode></a></td><td>-</td><td>-</td></tr>\r\n"
                               );
                             }
                           } else {
                             var entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-          (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
-          (estats.isDirectory() ? "/" : "") +
-          "\">" +
-          ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-          "</a></td><td>" +
-          (estats.isDirectory() ? "-" : sizify(estats.size.toString())) +
-          "</td><td>" +
-          estats.mtime.toDateString() +
-          "</td></tr>\r\n";
+                              (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
+                              (estats.isDirectory() ? "/" : "") +
+                              "\">" +
+                              ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                              "</a></td><td>" +
+                              (estats.isDirectory() ? "-" : sizify(estats.size.toString())) +
+                              "</td><td>" +
+                              estats.mtime.toDateString() +
+                              "</td></tr>\r\n";
 
                             // Determine the file type and set the appropriate image and alt text
                             if (estats.isDirectory()) {
                               entry = entry.replace("[img]", "/.dirimages/directory.png").replace("[alt]", "[DIR]");
                             } else if (!estats.isFile()) {
                               entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-            (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
-            "\">" +
-            ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-            "</a></td><td>-</td><td>" +
-            estats.mtime.toDateString() +
-            "</td></tr>\r\n";
+                                (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
+                                "\">" +
+                                ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                                "</a></td><td>-</td><td>" +
+                                estats.mtime.toDateString() +
+                                "</td></tr>\r\n";
 
                               // Determine the special file types (block device, character device, etc.)
                               if (estats.isBlockDevice()) {
@@ -3733,7 +3750,7 @@ if (!cluster.isPrimary) {
                   if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
                     var headers = getCustomHeaders();
                     headers.ETag = clientETag;
-                    callServerError(412,undefined,undefined,headers);
+                    callServerError(412, undefined, undefined, headers);
                     return;
                   }
                 }
@@ -3750,7 +3767,13 @@ if (!cluster.isPrimary) {
                   return canCompress;
                 }
 
-                var isCompressable = canCompress(href, dontCompress);
+                var isCompressable = true;
+                try {
+                  isCompressable = canCompress(href, dontCompress);
+                } catch (err) {
+                  callServerError(500, undefined, generateErrorStack(err));
+                  return;
+                }
 
                 // Check for browser quirks and adjust compression accordingly
                 if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
@@ -3764,7 +3787,6 @@ if (!cluster.isPrimary) {
                 // Handle partial content request
                 if (ext != "html" && req.headers["range"]) {
                   try {
-                    if (err) throw err;
                     var rhd = getCustomHeaders();
                     rhd["Accept-Ranges"] = "bytes";
                     rhd["Content-Range"] = "bytes */" + filelen;
@@ -3794,7 +3816,7 @@ if (!cluster.isPrimary) {
                       rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
                       rhd["Content-Length"] = end - begin + 1;
                       if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
-                      if(fileETag) rhd["ETag"] = fileETag;
+                      if (fileETag) rhd["ETag"] = fileETag;
 
                       if (req.method != "HEAD") {
                         var readStream = fs.createReadStream(readFrom, {
@@ -3840,7 +3862,6 @@ if (!cluster.isPrimary) {
                   }
                 } else {
                   try {
-                    if (err) throw err;
                     var hdhds = getCustomHeaders();
                     if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
                       hdhds["Content-Encoding"] = "br";
@@ -3858,7 +3879,7 @@ if (!cluster.isPrimary) {
                     if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
                     delete hdhds["Content-Type"];
                     if (!(mime.contentType(ext) == false) && ext != "") hdhds["Content-Type"] = mime.contentType(ext);
-                    if(fileETag) hdhds["ETag"] = fileETag;
+                    if (fileETag) hdhds["ETag"] = fileETag;
 
                     if (req.method != "HEAD") {
                       var readStream = fs.createReadStream(readFrom);
@@ -3958,7 +3979,7 @@ if (!cluster.isPrimary) {
           res.end();
           return;
         } else {
-          // SVR.JS doesn't understand that request, throw a 400 error
+          // SVR.JS doesn't understand that request, so throw an 400 error
           callServerError(400);
           return;
         }
@@ -3972,7 +3993,7 @@ if (!cluster.isPrimary) {
       }
 
       // Check for invalid X-Forwarded-For header
-      if(!isForwardedValid) {
+      if (!isForwardedValid) {
         serverconsole.errmessage("X-Forwarded-For header is invalid.");
         callServerError(400);
         return;
@@ -3995,7 +4016,7 @@ if (!cluster.isPrimary) {
         sanitizedURL.slashes = null;
         sanitizedURL = url.format(sanitizedURL);
         serverconsole.resmessage("URL sanitized: " + req.url + " => " + sanitizedURL);
-        if(rewriteDirtyURLs) {
+        if (rewriteDirtyURLs) {
           req.url = sanitizedURL;
           uobject = parseURL(req.url);
           search = uobject.search;
@@ -4014,9 +4035,9 @@ if (!cluster.isPrimary) {
           redirect(sanitizedURL, false);
           return;
         }
-      } else if(req.url != preparedReqUrl && !isProxy) {
+      } else if (req.url != preparedReqUrl && !isProxy) {
         serverconsole.resmessage("URL sanitized: " + req.url + " => " + preparedReqUrl);
-        if(rewriteDirtyURLs) {
+        if (rewriteDirtyURLs) {
           req.url = preparedReqUrl;
         } else {
           redirect(preparedReqUrl, false);
@@ -4025,7 +4046,7 @@ if (!cluster.isPrimary) {
       }
 
       // Handle redirects to HTTPS
-      if(secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
+      if (secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
         var hostx = req.headers.host;
         if (hostx === undefined) {
           serverconsole.errmessage("Host header is missing.");
@@ -4117,7 +4138,7 @@ if (!cluster.isPrimary) {
       // Handle URL rewriting
       function rewriteURL(address, map) {
         var rewrittenAddress = address;
-        map.every(function(mapEntry) {
+        map.every(function (mapEntry) {
           if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address)) {
             mapEntry.replacements.forEach(function (replacement) {
               rewrittenAddress = rewrittenAddress.replace(createRegex(replacement.regex), replacement.replacement);
@@ -4191,7 +4212,7 @@ if (!cluster.isPrimary) {
       // Set response headers
       if (!isProxy) {
         var hkh = getCustomHeaders();
-        Object.keys(hkh).forEach(function(hkS) {
+        Object.keys(hkh).forEach(function (hkS) {
           try {
             res.setHeader(hkS, hkh[hkS]);
           } catch (err) {
@@ -4229,7 +4250,7 @@ if (!cluster.isPrimary) {
         // Scan for non-standard codes
         if (!isProxy && nonStandardCodes != undefined) {
           for (var i = 0; i < nonStandardCodes.length; i++) {
-            if(matchHostname(nonStandardCodes[i].host)) {
+            if (matchHostname(nonStandardCodes[i].host)) {
               var isMatch = false;
               if (nonStandardCodes[i].regex) {
                 // Regex match
@@ -4288,8 +4309,37 @@ if (!cluster.isPrimary) {
             return;
           } else {
             callServerError(nonscode.scode);
-            serverconsole.errmessage("Client fails recieving content.");
+            serverconsole.errmessage("Client fails receiving content.");
             return;
+          }
+        }
+
+        // Trailing slash redirection
+        function redirectTrailingSlashes(callback) {
+          if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
+            fs.stat("." + decodeURIComponent(href), function (err, stats) {
+              if (err || !stats.isDirectory()) {
+                try {
+                  callback();  
+                } catch (err) {
+                  callServerError(500, undefined, err);
+                }
+              } else {
+                var destinationURL = uobject;
+                destinationURL.path = null;
+                destinationURL.href = null;
+                destinationURL.pathname = origHref + "/";
+                destinationURL.hostname = null;
+                destinationURL.host = null;
+                destinationURL.port = null;
+                destinationURL.protocol = null;
+                destinationURL.slashes = null;
+                destinationURL = url.format(destinationURL);
+                redirect(destinationURL);
+              }
+            });
+          } else {
+            callback();
           }
         }
 
@@ -4299,57 +4349,67 @@ if (!cluster.isPrimary) {
 
           // Function to check if passwords match
           function checkIfPasswordMatches(list, password, callback, _i) {
-            if(!_i) _i = 0;
+            if (!_i) _i = 0;
             var cb = function (hash) {
               var matches = (hash == list[_i].pass);
-              if(matches) {
+              if (matches) {
                 callback(true);
-              } else if(_i >= list.length-1) {
+              } else if (_i >= list.length - 1) {
                 callback(false);
               } else {
-                checkIfPasswordMatches(list, password, callback, _i+1);
+                checkIfPasswordMatches(list, password, callback, _i + 1);
               }
             };
             var hashedPassword = sha256(password + list[_i].salt);
-            if(list[_i].scrypt) {
-              if(!crypto.scrypt) {
+            if (list[_i].scrypt) {
+              if (!crypto.scrypt) {
                 callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
                 return;
               } else {
                 var cacheEntry = scryptCache.find(function (entry) {
                   return (entry.password == hashedPassword && entry.salt == list[_i].salt);
                 });
-                if(cacheEntry) {
+                if (cacheEntry) {
                   cb(cacheEntry.hash);
                 } else {
                   crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
-                    if(err) {
+                    if (err) {
                       callServerError(500, undefined, err);
                     } else {
                       var key = derivedKey.toString("hex");
-                      scryptCache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
+                      scryptCache.push({
+                        hash: key,
+                        password: hashedPassword,
+                        salt: list[_i].salt,
+                        addDate: new Date()
+                      });
                       cb(key);
                     }
                   });
                 }
               }
-            } else if(list[_i].pbkdf2) {
-              if(crypto.__disabled__ !== undefined) {
+            } else if (list[_i].pbkdf2) {
+              if (crypto.__disabled__ !== undefined) {
                 callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
                 return;
               } else {
                 var cacheEntry = pbkdf2Cache.find(function (entry) {
                   return (entry.password == hashedPassword && entry.salt == list[_i].salt);
                 });
-                if(cacheEntry) {
+                if (cacheEntry) {
                   cb(cacheEntry.hash);
                 } else {
                   crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
-                    if(err) {
+                    if (err) {
                       callServerError(500, undefined, err);
                     } else {
                       var key = derivedKey.toString("hex");
-                      pbkdf2Cache.push({hash: key, password: hashedPassword, salt: list[_i].salt, addDate: new Date()});
+                      pbkdf2Cache.push({
+                        hash: key,
+                        password: hashedPassword,
+                        salt: list[_i].salt,
+                        addDate: new Date()
+                      });
                       cb(key);
                     }
                   });
@@ -4386,13 +4446,17 @@ if (!cluster.isPrimary) {
               var username = decodedCredentialsMatch[1];
               var password = decodedCredentialsMatch[2];
               var usernameMatch = [];
-              if(!authcode.userList || authcode.userList.indexOf(username) > -1) {
+              if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
                 usernameMatch = users.filter(function (entry) {
                   return entry.name == username;
                 });
               }
-              if(usernameMatch.length == 0) {
-                usernameMatch.push({name: username, pass: "FAKEPASS", salt: "FAKESALT"});  // Fake credentials
+              if (usernameMatch.length == 0) {
+                usernameMatch.push({
+                  name: username,
+                  pass: "FAKEPASS",
+                  salt: "FAKESALT"
+                }); // Fake credentials
               }
               checkIfPasswordMatches(usernameMatch, password, function (authorized) {
                 try {
@@ -4423,14 +4487,16 @@ if (!cluster.isPrimary) {
                       }
                     }
                     serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
-                    modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                    redirectTrailingSlashes(function () {
+                      modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                    });
                   }
-                } catch(err) {
+                } catch (err) {
                   callServerError(500, undefined, generateErrorStack(err));
                   return;
                 }
               });
-            } catch(err) {
+            } catch (err) {
               callServerError(500, undefined, generateErrorStack(err));
               return;
             }
@@ -4470,7 +4536,9 @@ if (!cluster.isPrimary) {
             process.send("\x12AUTHQ" + reqip);
           }
         } else {
-          modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+          redirectTrailingSlashes(function () {
+            modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+          });
         }
       }
     } catch (err) {
@@ -4524,7 +4592,7 @@ if (!cluster.isPrimary) {
     } else {
       try {
         process.send("\x12ERRLIST" + attmts + err.code);
-      } catch(ex) {
+      } catch (err) {
         // Probably main process exited
       }
     }
@@ -4534,12 +4602,12 @@ if (!cluster.isPrimary) {
     } else {
       try {
         if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
-      } catch(ex) {
+      } catch (err) {
         // Probably main process exited
       }
       setTimeout(function () {
         var errno = errors[err.code];
-        if(errno) {
+        if (errno) {
           process.exit(errno);
         } else {
           process.exit(1);
@@ -4609,9 +4677,9 @@ function msgListener(msg) {
   } else if (msg == "\x12LISTEN" || msg.substr(0, 4) == "\x12AUTH") {
     // Do nothing!
   } else if (msg == "\x12KILLOK") {
-    if(typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
+    if (typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
   } else if (msg == "\x12PINGOK") {
-    if(typeof isWorkerHungUpBuff2 != "undefined") isWorkerHungUpBuff2 = false;
+    if (typeof isWorkerHungUpBuff2 != "undefined") isWorkerHungUpBuff2 = false;
   } else if (msg == "\x12KILLTERMMSG") {
     serverconsole.locmessage("Terminating unused worker process...");
   } else if (msg == "\x12SAVEGOOD") {
@@ -4666,7 +4734,7 @@ function msgListener(msg) {
       }
       if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
         var errno = errors[msg.substr(9)];
-        if(errno) {
+        if (errno) {
           process.exit(errno);
         } else {
           process.exit(1);
@@ -4681,7 +4749,7 @@ function msgListener(msg) {
 var messageTransmitted = false;
 
 function listeningMessage() {
-  if(typeof closedMaster !== "undefined") closedMaster = false;
+  if (typeof closedMaster !== "undefined") closedMaster = false;
   if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
     process.send("\x12LISTEN");
     return;
@@ -4692,8 +4760,8 @@ function listeningMessage() {
   var sListenToAny = (!sListenAddress || sListenAddress.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || sListenAddress.match(/^(?:0{0,4}:)+0{0,4}$/));
   var accHost = host;
   var sAccHost = host;
-  if(!listenToAny) accHost = listenAddress;
-  if(!sListenToAny) sAccHost = sListenAddress;
+  if (!listenToAny) accHost = listenAddress;
+  if (!sListenToAny) sAccHost = sListenAddress;
   if (messageTransmitted) return;
   messageTransmitted = true;
   serverconsole.locmessage("Started server at: ");
@@ -4739,8 +4807,12 @@ function start(init) {
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
-        if(users.some(function (entry) {return entry.pbkdf2;})) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
-        if(users.some(function (entry) {return entry.scrypt;})) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
+        if (users.some(function (entry) {
+            return entry.pbkdf2;
+          })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+        if (users.some(function (entry) {
+            return entry.scrypt;
+          })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
@@ -4748,9 +4820,9 @@ function start(init) {
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
       if (secure && process.versions && process.versions.openssl && process.versions.openssl.substr(0, 2) == "1.") {
         if (new Date() > new Date("11 September 2023")) {
-          serverconsole.locwarnmessage("OpenSSL 1.x is no longer recieving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+          serverconsole.locwarnmessage("OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
         } else {
-          serverconsole.locwarnmessage("OpenSSL 1.x will no longer recieve security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+          serverconsole.locwarnmessage("OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
         }
       }
       if (secure && configJSON.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.");
@@ -4758,18 +4830,18 @@ function start(init) {
       console.log();
 
       // Display mod and server-side JavaScript errors
-      if(process.isPrimary || process.isPrimary === undefined) {
-        modLoadingErrors.forEach(function(modLoadingError) {
+      if (process.isPrimary || process.isPrimary === undefined) {
+        modLoadingErrors.forEach(function (modLoadingError) {
           serverconsole.locwarnmessage("There was a problem while loading a \"" + modLoadingError.modName + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(modLoadingError.error));
         });
-        if(SSJSError) {
+        if (SSJSError) {
           serverconsole.locwarnmessage("There was a problem while loading server-side JavaScript.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(SSJSError));
         }
-        if(SSJSError || modLoadingErrors.length > 0) console.log();
+        if (SSJSError || modLoadingErrors.length > 0) console.log();
       }
 
       // Print info
@@ -4791,8 +4863,8 @@ function start(init) {
         if (brdIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on broadcast address.");
         if (netIPs.indexOf(listenAddress) > -1) throw new Error("SVR.JS can't listen on subnet address.");
       }
-      if(certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
-      if(wwwrootError) throw new Error("There was a problem with your web root: " + wwwrootError.message);
+      if (certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
+      if (wwwrootError) throw new Error("There was a problem with your web root: " + wwwrootError.message);
     }
 
     // Information about starting the server
@@ -4803,23 +4875,23 @@ function start(init) {
 
   if (!cluster.isPrimary) {
     try {
-      if(typeof (secure ? sport : port) == "number" && (secure ? sListenAddress : listenAddress)) {
+      if (typeof (secure ? sport : port) == "number" && (secure ? sListenAddress : listenAddress)) {
         server.listen(secure ? sport : port, secure ? sListenAddress : listenAddress);
       } else {
         server.listen(secure ? sport : port);
       }
-    } catch(err) {
-      if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+    } catch (err) {
+      if (err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
     }
     if (secure && !disableNonEncryptedServer) {
       try {
-        if(typeof port == "number" && listenAddress) {
+        if (typeof port == "number" && listenAddress) {
           server2.listen(port, listenAddress);
         } else {
           server2.listen(port);
         }
-      } catch(err) {
-        if(err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+      } catch (err) {
+        if (err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
       }
     }
   }
@@ -4844,13 +4916,13 @@ function start(init) {
     },
     open: function () {
       try {
-        if(typeof (secure ? sport : port) == "number" && (secure ? sListenAddress : listenAddress)) {
+        if (typeof (secure ? sport : port) == "number" && (secure ? sListenAddress : listenAddress)) {
           server.listen(secure ? sport : port, secure ? sListenAddress : listenAddress);
         } else {
           server.listen(secure ? sport : port);
         }
         if (secure && !disableNonEncryptedServer) {
-          if(typeof port == "number" && listenAddress) {
+          if (typeof port == "number" && listenAddress) {
             server2.listen(port, listenAddress);
           } else {
             server2.listen(port);
@@ -4884,13 +4956,13 @@ function start(init) {
     stop: function (retcode) {
       reallyExiting = true;
       clearInterval(pbkdf2CacheIntervalId);
-      if((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
+      if ((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
         try {
           server.close(function () {
-            if(server2.listening) {
+            if (server2.listening) {
               try {
                 server2.close(function () {
-                  if(!process.removeFakeIPC) {
+                  if (!process.removeFakeIPC) {
                     if (typeof retcode == "number") {
                       process.exit(retcode);
                     } else {
@@ -4898,8 +4970,8 @@ function start(init) {
                     }
                   }
                 });
-              } catch(err) {
-                if(!process.removeFakeIPC) {
+              } catch (err) {
+                if (!process.removeFakeIPC) {
                   if (typeof retcode == "number") {
                     process.exit(retcode);
                   } else {
@@ -4908,7 +4980,7 @@ function start(init) {
                 }
               }
             } else {
-              if(!process.removeFakeIPC) {
+              if (!process.removeFakeIPC) {
                 if (typeof retcode == "number") {
                   process.exit(retcode);
                 } else {
@@ -4917,14 +4989,14 @@ function start(init) {
               }
             }
           });
-        } catch(err) {
+        } catch (err) {
           if (typeof retcode == "number") {
             process.exit(retcode);
           } else {
             process.exit(0);
           }
         }
-        if(process.removeFakeIPC) process.removeFakeIPC();
+        if (process.removeFakeIPC) process.removeFakeIPC();
       } else {
         if (typeof retcode == "number") {
           process.exit(retcode);
@@ -4989,9 +5061,10 @@ function start(init) {
       setInterval(function () {
         var allClusters = Object.keys(cluster.workers);
         var goodWorkers = [];
+
         function checkWorker(callback, _id) {
-          if(typeof _id === "undefined") _id = 0;
-          if(_id >= allClusters.length) {
+          if (typeof _id === "undefined") _id = 0;
+          if (_id >= allClusters.length) {
             callback();
             return;
           }
@@ -5002,14 +5075,14 @@ function start(init) {
               cluster.workers[allClusters[_id]].send("\x14PINGPING");
               setTimeout(function () {
                 if (isWorkerHungUpBuff2) {
-                  checkWorker(callback, _id+1);
+                  checkWorker(callback, _id + 1);
                 } else {
                   goodWorkers.push(allClusters[_id]);
-                  checkWorker(callback, _id+1);
+                  checkWorker(callback, _id + 1);
                 }
               }, 250);
             } else {
-              checkWorker(callback, _id+1);
+              checkWorker(callback, _id + 1);
             }
           } catch (err) {
             if (cluster.workers[allClusters[_id]]) {
@@ -5017,25 +5090,25 @@ function start(init) {
               cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
               cluster.workers[allClusters[_id]].on("message", listenConnListener);
             }
-            checkWorker(callback, _id+1);
+            checkWorker(callback, _id + 1);
           }
         }
         checkWorker(function () {
-            var wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
-            try {
-              if (cluster.workers[goodWorkers[wN]]) {
-                isWorkerHungUpBuff2 = true;
-                cluster.workers[goodWorkers[wN]].on("message", msgListener);
-                cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
-              }
-            } catch (err) {
-              if (cluster.workers[goodWorkers[wN]]) {
-                cluster.workers[goodWorkers[wN]].removeAllListeners("message");
-                cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
-                cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
-              }
-              serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+          var wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
+          try {
+            if (cluster.workers[goodWorkers[wN]]) {
+              isWorkerHungUpBuff2 = true;
+              cluster.workers[goodWorkers[wN]].on("message", msgListener);
+              cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
             }
+          } catch (err) {
+            if (cluster.workers[goodWorkers[wN]]) {
+              cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+              cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+              cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+            }
+            serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+          }
         });
       }, 300000);
     }
@@ -5065,19 +5138,19 @@ function start(init) {
             }
             process.send("\x12END");
           } else if (line == "\x14KILLPING") {
-            if(!reallyExiting) {
+            if (!reallyExiting) {
               process.send("\x12KILLOK");
               process.send("\x12END");
             }
             // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
           } else if (line == "\x14PINGPING") {
-            if(!reallyExiting) {
+            if (!reallyExiting) {
               process.send("\x12PINGOK");
               process.send("\x12END");
             }
             // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
           } else if (line == "\x14KILLREQ") {
-            if(reqcounter - reqcounterKillReq < 2) {
+            if (reqcounter - reqcounterKillReq < 2) {
               process.send("\x12KILLTERMMSG");
               process.nextTick(commands.stop);
             } else {
@@ -5269,7 +5342,7 @@ function start(init) {
           }
           if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
             var errno = errors[msg.substr(9)];
-            if(errno) {
+            if (errno) {
               process.exit(errno);
             } else {
               process.exit(1);
@@ -5309,8 +5382,8 @@ function start(init) {
               });
             } else if ((configJSON.enableHTTP2 == undefined ? false : configJSON.enableHTTP2) && !secure) {
               // It doesn't support through Unix sockets or Windows named pipes
-              var address = ((typeof port == "number" && listenAddress) ? listenAddress : "localhost").replace(/\/@/g,"");
-              if(address.indexOf(":") > -1) {
+              var address = ((typeof port == "number" && listenAddress) ? listenAddress : "localhost").replace(/\/@/g, "");
+              if (address.indexOf(":") > -1) {
                 address = "[" + address + "]";
               }
               var connection = http2.connect("http://" + address + ":" + port.toString());
@@ -5369,18 +5442,19 @@ function start(init) {
         }, 4550);
 
         // Termination of unused good workers
-        if(!disableUnusedWorkerTermination && cluster.isPrimary !== undefined) {
+        if (!disableUnusedWorkerTermination && cluster.isPrimary !== undefined) {
           setTimeout(function () {
             setInterval(function () {
               if (!closedMaster && !exiting) {
                 var allClusters = Object.keys(cluster.workers);
                 var minClusters = 0;
                 minClusters = Math.ceil(cpus * 0.625);
-                if(minClusters < 2) minClusters = 2;
+                if (minClusters < 2) minClusters = 2;
                 var goodWorkers = [];
+
                 function checkWorker(callback, _id) {
-                  if(typeof _id === "undefined") _id = 0;
-                  if(_id >= allClusters.length) {
+                  if (typeof _id === "undefined") _id = 0;
+                  if (_id >= allClusters.length) {
                     callback();
                     return;
                   }
@@ -5391,14 +5465,14 @@ function start(init) {
                       cluster.workers[allClusters[_id]].send("\x14KILLPING");
                       setTimeout(function () {
                         if (isWorkerHungUpBuff) {
-                          checkWorker(callback, _id+1);
+                          checkWorker(callback, _id + 1);
                         } else {
                           goodWorkers.push(allClusters[_id]);
-                          checkWorker(callback, _id+1);
+                          checkWorker(callback, _id + 1);
                         }
                       }, 250);
                     } else {
-                      checkWorker(callback, _id+1);
+                      checkWorker(callback, _id + 1);
                     }
                   } catch (err) {
                     if (cluster.workers[allClusters[_id]]) {
@@ -5406,7 +5480,7 @@ function start(init) {
                       cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
                       cluster.workers[allClusters[_id]].on("message", listenConnListener);
                     }
-                    checkWorker(callback, _id+1);
+                    checkWorker(callback, _id + 1);
                   }
                 }
                 checkWorker(function () {
@@ -5485,8 +5559,10 @@ function saveConfig() {
       if (configJSONobj.errorPages === undefined) configJSONobj.errorPages = [];
       if (configJSONobj.useWebRootServerSideScript === undefined) configJSONobj.useWebRootServerSideScript = true;
       if (configJSONobj.exposeModsInErrorPages === undefined) configJSONobj.exposeModsInErrorPages = true;
+      if (configJSONobj.disableTrailingSlashRedirects === undefined) configJSONobj.disableTrailingSlashRedirects = false;
+      if (configJSONobj.environmentVariables === undefined) configJSONobj.environmentVariables = {};
 
-      var configString = JSON.stringify(configJSONobj, null, 2);
+      var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
     } catch (err) {
@@ -5515,7 +5591,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
   process.on("exit", function (code) {
     try {
-      if(!configJSONRErr && !configJSONPErr) {
+      if (!configJSONRErr && !configJSONPErr) {
         saveConfig();
       }
     } catch (err) {
@@ -5596,7 +5672,7 @@ try {
   serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
-  setTimeout(function() {
+  setTimeout(function () {
     process.exit(err.errno ? err.errno : 1);
   }, 10);
 }
