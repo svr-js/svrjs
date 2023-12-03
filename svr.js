@@ -3312,14 +3312,14 @@ if (!cluster.isPrimary) {
           var levelDownCount = 0;
 
           // Loop through the path components
-          for (var i = 0; i < pathComponents.length; i += 1) {
+          for (var i = 0; i < pathComponents.length; i++) {
             // If the component is "..", decrement the levelUpCount
             if (".." === pathComponents[i]) {
-              levelUpCount -= 1;
+              levelUpCount--;
             }
             // If the component is not "." or an empty string, increment the levelDownCount
             else if ("." !== pathComponents[i] && "" !== pathComponents[i]) {
-              levelDownCount += 1;
+              levelDownCount++;
             }
           }
 
@@ -3334,7 +3334,7 @@ if (!cluster.isPrimary) {
         if (isProxy) {
           var eheaders = getCustomHeaders();
           eheaders["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(501, "Not implemented", eheaders);
+          res.writeHead(501, "Not Implemented", eheaders);
           res.write("<html><head><title>Proxy not implemented</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>Proxy not implemented</h1><p>SVR.JS doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use SVR.JS as a proxy.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "</i></p></body></html>");
           res.end();
           serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
