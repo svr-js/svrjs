@@ -500,15 +500,16 @@ if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
 var modFiles = fs.readdirSync(__dirname + "/mods").sort();
 var modInfos = [];
 
-function sizify(bytes) {
+function sizify(bytes, addI) {
   if (bytes == 0) return "0";
   if (bytes < 0) bytes = -bytes;
   var prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
-  var exponent = Math.floor(Math.log10 ? Math.log10(bytes) : (Math.log(bytes) / Math.log(10)));
-  var prefixIndex = Math.floor(exponent / 3);
+  var prefixIndex = Math.floor(Math.log2 ? Math.log2(bytes) / 10 : (Math.log(bytes) / Math.log(2) * 10));
   if (prefixIndex >= prefixes.length - 1) prefixIndex = prefixes.length - 1;
-  var prefixIndexMod = exponent - (prefixIndex * 3);
-  return (Math.round(bytes / Math.pow(10, Math.max(0, exponent - Math.max(2, prefixIndexMod)))) / (exponent > 2 ? Math.pow(10, Math.max(0, 2 - prefixIndexMod)) : 1)).toString() + prefixes[prefixIndex];
+  var prefixIndexTranslated = Math.pow(2, 10 * prefixIndex);
+  var decimalPoints = 2 - Math.floor(Math.log10 ? Math.log10(bytes/prefixIndexTranslated) : (Math.log(bytes/prefixIndexTranslated) / Math.log(10)));
+  if (decimalPoints < 0) decimalPoints = 0;
+  return (Math.ceil((bytes / prefixIndexTranslated) * Math.pow(10, decimalPoints))/Math.pow(10, decimalPoints)) + prefixes[prefixIndex] + ((prefixIndex > 0 && addI) ? "i" : "");
 }
 
 function getOS() {
@@ -3357,7 +3358,7 @@ if (!cluster.isPrimary) {
           var hdhds = getCustomHeaders();
           hdhds["Content-Type"] = "text/html; charset=utf-8";
           res.writeHead(200, "OK", hdhds);
-          res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
+          res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + "<br/><hr/>Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>Total request count: " + reqcounter + "<br/>Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s" + (process.memoryUsage ? ("<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B") : "") + (process.cpuUsage ? ("<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%") : "") + "<br/>Thread PID: " + process.pid + "<br/>" + (foot == "" ? "</body></html>" : foot));
           return;
         }
 
@@ -3970,7 +3971,7 @@ if (!cluster.isPrimary) {
           res.end();
           return;
         } else {
-          // SVR.JS doesn't understand that request, throw a 400 error
+          // SVR.JS doesn't understand that request, so throw an 400 error
           callServerError(400);
           return;
         }
