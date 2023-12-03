@@ -2042,7 +2042,7 @@ if (!cluster.isPrimary) {
     } else {
       try {
         process.send("\x12ERRLIST" + attmtsRedir + err.code);
-      } catch (ex) {
+      } catch (err) {
         // Probably main process exited
       }
     }
@@ -2052,7 +2052,7 @@ if (!cluster.isPrimary) {
     } else {
       try {
         if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
-      } catch (ex) {
+      } catch (err) {
         // Probably main process exited
       }
       setTimeout(function () {
@@ -4321,8 +4321,8 @@ if (!cluster.isPrimary) {
               if (err || !stats.isDirectory()) {
                 try {
                   callback();
-                } catch (ex) {
-                  callServerError(500, undefined, ex);
+                } catch (err) {
+                  callServerError(500, undefined, err);
                 }
               } else {
                 var destinationURL = uobject;
@@ -4592,7 +4592,7 @@ if (!cluster.isPrimary) {
     } else {
       try {
         process.send("\x12ERRLIST" + attmts + err.code);
-      } catch (ex) {
+      } catch (err) {
         // Probably main process exited
       }
     }
@@ -4602,7 +4602,7 @@ if (!cluster.isPrimary) {
     } else {
       try {
         if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
-      } catch (ex) {
+      } catch (err) {
         // Probably main process exited
       }
       setTimeout(function () {
