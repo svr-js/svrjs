@@ -3763,7 +3763,13 @@ if (!cluster.isPrimary) {
                   return canCompress;
                 }
 
-                var isCompressable = canCompress(href, dontCompress);
+                var isCompressable = true;
+                try {
+                  isCompressable = canCompress(href, dontCompress);
+                } catch(err) {
+                  callServerError(500, undefined, generateErrorStack(err));
+                  return;
+                }
 
                 // Check for browser quirks and adjust compression accordingly
                 if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
@@ -3777,7 +3783,6 @@ if (!cluster.isPrimary) {
                 // Handle partial content request
                 if (ext != "html" && req.headers["range"]) {
                   try {
-                    if (err) throw err;
                     var rhd = getCustomHeaders();
                     rhd["Accept-Ranges"] = "bytes";
                     rhd["Content-Range"] = "bytes */" + filelen;
@@ -3853,7 +3858,6 @@ if (!cluster.isPrimary) {
                   }
                 } else {
                   try {
-                    if (err) throw err;
                     var hdhds = getCustomHeaders();
                     if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
                       hdhds["Content-Encoding"] = "br";
