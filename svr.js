@@ -4288,7 +4288,7 @@ if (!cluster.isPrimary) {
             return;
           } else {
             callServerError(nonscode.scode);
-            serverconsole.errmessage("Client fails recieving content.");
+            serverconsole.errmessage("Client fails receiving content.");
             return;
           }
         }
@@ -4781,9 +4781,9 @@ function start(init) {
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
       if (secure && process.versions && process.versions.openssl && process.versions.openssl.substr(0, 2) == "1.") {
         if (new Date() > new Date("11 September 2023")) {
-          serverconsole.locwarnmessage("OpenSSL 1.x is no longer recieving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+          serverconsole.locwarnmessage("OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
         } else {
-          serverconsole.locwarnmessage("OpenSSL 1.x will no longer recieve security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+          serverconsole.locwarnmessage("OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
         }
       }
       if (secure && configJSON.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.");
