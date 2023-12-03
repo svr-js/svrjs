@@ -105,5 +105,6 @@
   "errorPages": [],
   "useWebRootServerSideScript": true,
   "exposeModsInErrorPages": true,
-  "disableTrailingSlashRedirects": false
+  "disableTrailingSlashRedirects": false,
+  "environmentVariables": {}
 }

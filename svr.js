@@ -1102,6 +1102,8 @@ var rewriteDirtyURLs = false;
 var errorPages = [];
 var useWebRootServerSideScript = true;
 var exposeModsInErrorPages = true;
+var disableTrailingSlashRedirects = false;
+var environmentVariables = {};
 
 // Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1153,12 +1155,22 @@ if (configJSON.rewriteDirtyURLs != undefined) rewriteDirtyURLs = configJSON.rewr
 if (configJSON.errorPages != undefined) errorPages = configJSON.errorPages;
 if (configJSON.useWebRootServerSideScript != undefined) useWebRootServerSideScript = configJSON.useWebRootServerSideScript;
 if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = configJSON.exposeModsInErrorPages;
+if (configJSON.disableTrailingSlashRedirects != undefined) disableTrailingSlashRedirects = configJSON.disableTrailingSlashRedirects;
+if (configJSON.environmentVariables != undefined) environmentVariables = configJSON.environmentVariables;
 
 var wwwrootError = null;
 try {
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
 } catch(err) {
   wwwrootError = err;
+}
+
+try {
+  environmentVariables.forEach(function(value, key) {
+    process.env[key] = value;
+  });
+} catch(err) {
+  
 }
 
 // Compability for older mods
@@ -4295,7 +4307,7 @@ if (!cluster.isPrimary) {
 
         // Trailing slash redirection
         function redirectTrailingSlashes(callback) {
-          if (!configJSON.disableTrailingSlashRedirects && href[href.length-1] != "/") {
+          if (!disableTrailingSlashRedirects && href[href.length-1] != "/") {
             fs.stat("." + decodeURIComponent(href), function (err, stats) {
               if(err || !stats.isDirectory()) {
                 try {
@@ -5519,7 +5531,8 @@ function saveConfig() {
       if (configJSONobj.useWebRootServerSideScript === undefined) configJSONobj.useWebRootServerSideScript = true;
       if (configJSONobj.exposeModsInErrorPages === undefined) configJSONobj.exposeModsInErrorPages = true;
       if (configJSONobj.disableTrailingSlashRedirects === undefined) configJSONobj.disableTrailingSlashRedirects = false;
-      
+      if (configJSONobj.environmentVariables === undefined) configJSONobj.environmentVariables = {};
+
       var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
       fs.writeFileSync(__dirname + "/config.json", configString);
       break;
