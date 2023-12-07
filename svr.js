@@ -504,7 +504,7 @@ function sizify(bytes, addI) {
   if (bytes == 0) return "0";
   if (bytes < 0) bytes = -bytes;
   var prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
-  var prefixIndex = Math.floor(Math.log2 ? Math.log2(bytes) / 10 : (Math.log(bytes) / Math.log(2) * 10));
+  var prefixIndex = Math.floor(Math.log2 ? Math.log2(bytes) / 10 : (Math.log(bytes) / (Math.log(2) * 10)));
   if (prefixIndex >= prefixes.length - 1) prefixIndex = prefixes.length - 1;
   var prefixIndexTranslated = Math.pow(2, 10 * prefixIndex);
   var decimalPoints = 2 - Math.floor(Math.log10 ? Math.log10(bytes / prefixIndexTranslated) : (Math.log(bytes / prefixIndexTranslated) / Math.log(10)));
