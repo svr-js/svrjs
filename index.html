@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.4.38</title>
+    <title>SVR.JS 3.4.39</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.4.38</h1>
+    <h1>Welcome to SVR.JS 3.4.39</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -119,9 +119,8 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>SVR.JS now sends configuration file saving request to one random good worker instead of all workers to prevent configuration file corruption.</li>
-      <li>Fixed crashes due to destroyed HTTP/2 stream (Node.JS bug: <a href="https://github.com/nodejs/node/issues/24470">https://github.com/nodejs/node/issues/24470</a>)</li>
-      <li>Fixed crash while trying to report communication problem with workers.</li>
+      <li>Invalid compression exclusion list regexes no longer crash SVR.JS.</li>
+      <li>Fixed multiple XSS vulnerabilities.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>
