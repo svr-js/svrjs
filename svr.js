@@ -1878,6 +1878,9 @@ var serverErrorDescs = {
 // Create server
 if (!cluster.isPrimary) {
   var reqcounter = 0;
+  var malformedcounter = 0;
+  var err4xxcounter = 0;
+  var err5xxcounter = 0;
   var reqcounterKillReq = 0;
   var server = {};
   var server2 = {};
@@ -2211,6 +2214,8 @@ if (!cluster.isPrimary) {
       });
     };
     res.writeHead = function (code, name, headers) {
+      if(code >= 400 && code <= 499) err4xxcounter++;
+      if(code >= 500 && code <= 599) err5xxcounter++;
       var head = ("HTTP/1.1 " + code.toString() + " " + name + "\r\n");
       var headers = JSON.parse(JSON.stringify(headers));
       headers["Date"] = (new Date()).toGMTString();
@@ -2463,6 +2468,7 @@ if (!cluster.isPrimary) {
     var reqip = socket.remoteAddress;
     var reqport = socket.remotePort;
     reqcounter++;
+    malformedcounter++;
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " sent invalid request.");
     try {
@@ -2875,6 +2881,8 @@ if (!cluster.isPrimary) {
         } else {
           headWritten = true;
         }
+        if(a >= 400 && a <= 499) err4xxcounter++;
+        if(a >= 500 && a <= 599) err5xxcounter++;
         if (parseInt(a) >= 400 && parseInt(a) <= 599) {
           serverconsole.errmessage("Server responded with " + a.toString() + " code.");
         } else {
@@ -3364,7 +3372,11 @@ if (!cluster.isPrimary) {
           statusBody += "Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>";
           statusBody += "OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>";
           statusBody += "Total request count: " + reqcounter + "<br/>";
-          statusBody += "Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s";
+          statusBody += "Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s<br/>";
+          statusBody += "Client errors (4xx): " + err4xxcounter + "<br/>";
+          statusBody += "Server errors (5xx): " + err5xxcounter + "<br/>";
+          statusBody += "Average error rate: " + (Math.round(((err4xxcounter + err5xxcounter) / reqcounter) * 10000) / 100) + "%<br/>";
+          statusBody += "Malformed HTTP requests: " + malformedcounter;
           if(process.memoryUsage) statusBody += "<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B";
           if(process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
           statusBody += "<br/>Thread PID: " + process.pid + "<br/>";
