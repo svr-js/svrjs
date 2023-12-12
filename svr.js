@@ -2871,8 +2871,8 @@ if (!cluster.isPrimary) {
     var headWritten = false;
     var lastStatusCode = null;
     res.writeHeadNative = res.writeHead;
-    res.writeHead = function (a, b, c) {
-      if (!(headWritten && process.isBun && a === lastStatusCode && b === undefined && c === undefined)) {
+    res.writeHead = function (code, codeDescription, headers) {
+      if (!(headWritten && process.isBun && code === lastStatusCode && codeDescription === undefined && codeDescription === undefined)) {
         if (headWritten) {
           process.emitWarning("res.writeHead called multiple times.", {
             code: "WARN_SVRJS_MULTIPLE_WRITEHEAD"
@@ -2881,20 +2881,20 @@ if (!cluster.isPrimary) {
         } else {
           headWritten = true;
         }
-        if(a >= 400 && a <= 499) err4xxcounter++;
-        if(a >= 500 && a <= 599) err5xxcounter++;
-        if (parseInt(a) >= 400 && parseInt(a) <= 599) {
-          serverconsole.errmessage("Server responded with " + a.toString() + " code.");
+        if (code >= 400 && code <= 499) err4xxcounter++;
+        if (code >= 500 && code <= 599) err5xxcounter++;
+        if (code >= 400 && code <= 599) {
+          serverconsole.errmessage("Server responded with " + code.toString() + " code.");
         } else {
-          serverconsole.resmessage("Server responded with " + a.toString() + " code.");
+          serverconsole.resmessage("Server responded with " + code.toString() + " code.");
         }
-        if (typeof b != "string" && http.STATUS_CODES[a]) {
-          if (!c) c = b;
-          b = http.STATUS_CODES[a];
+        if (typeof codeDescription != "string" && http.STATUS_CODES[code]) {
+          if (!headers) headers = codeDescription;
+          codeDescription = http.STATUS_CODES[code];
         }
-        lastStatusCode = a;
+        lastStatusCode = code;
       }
-      res.writeHeadNative(a, b, c);
+      res.writeHeadNative(code, codeDescription, headers);
     };
 
     var finished = false;
