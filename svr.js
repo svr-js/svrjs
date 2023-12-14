@@ -2810,6 +2810,9 @@ if (!cluster.isPrimary) {
       return ph;
     }
 
+    // Process the Host header
+    if (typeof req.headers.host == "string") req.headers.host = req.headers.host.toLowerCase().replace(/^\.$/g,"");
+
     // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
     if (configJSON.enableHTTP2 == true && req.httpVersion == "2.0") {
       try {
