@@ -2111,6 +2111,9 @@ if (!cluster.isPrimary) {
         cert: sniCredentialsSingle.cert,
         key: sniCredentialsSingle.key
       });
+      try {
+        server._contexts[server._contexts.length-1][0] = new RegExp("^" + sniCredentialsSingle.name.replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "\.?$", "i");
+      } catch(ex) {}
     });
   }
   server.on("request", reqhandler);
