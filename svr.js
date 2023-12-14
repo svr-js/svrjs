@@ -1292,7 +1292,7 @@ if (secure) {
     var sniNames = Object.keys(sni);
     var sniCredentials = [];
     sniNames.forEach(function (sniName) {
-      if(typeof sniName === "string" && sniName.match(/\*[^*.]*\*[^*.]*(?:\.|$)/)) {
+      if(typeof sniName === "string" && sniName.match(/\*[^*.:]*\*[^*.:]*(?:\.|:|$)/)) {
         sniReDos = true;
       }
       sniCredentials.push({
@@ -2116,7 +2116,8 @@ if (!cluster.isPrimary) {
         key: sniCredentialsSingle.key
       });
       try {
-        server._contexts[server._contexts.length-1][0] = new RegExp("^" + sniCredentialsSingle.name.replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "\.?$", "i");
+        var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
+        server._contexts[server._contexts.length-1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
       } catch(ex) {}
     });
   }
