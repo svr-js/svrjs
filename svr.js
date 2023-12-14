@@ -1282,6 +1282,7 @@ if (!fs.existsSync(__dirname + "/config.json")) {
 }
 
 var certificateError = null;
+var sniReDos = false;
 
 // Load SNI
 if (secure) {
@@ -1291,6 +1292,9 @@ if (secure) {
     var sniNames = Object.keys(sni);
     var sniCredentials = [];
     sniNames.forEach(function (sniName) {
+      if(typeof sniName === "string" && sniName.match(/\*[^*.]*\*[^*.]*(?:\.|$)/)) {
+        sniReDos = true;
+      }
       sniCredentials.push({
         name: sniName,
         cert: fs.readFileSync((sni[sniName].cert[0] != "/" && !sni[sniName].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniName].cert : sni[sniName].cert).toString(),
@@ -4892,6 +4896,7 @@ function start(init) {
       }
       if (certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
       if (wwwrootError) throw new Error("There was a problem with your web root: " + wwwrootError.message);
+      if (sniReDos) throw new Error("Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.");
     }
 
     // Information about starting the server
