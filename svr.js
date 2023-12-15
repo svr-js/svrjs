@@ -71,7 +71,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.39";
+var version = "3.4.40";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -1109,6 +1109,9 @@ if (secure) {
   var sniNames = Object.keys(sni);
   var sniCredentials = [];
   for (var i = 0; i < sniNames.length; i++) {
+    if(typeof sniNames[i] === "string" && sniNames[i].match(/\*[^*.:]*\*[^*.:]*(?:\.|:|$)/)) {
+      throw new Error("Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.");
+    }
     sniCredentials.push({
       name: sniNames[i],
       cert: fs.readFileSync((sni[sniNames[i]].cert[0] != "/" && !sni[sniNames[i]].cert.match(/^[A-Z0-9]:\\/)) ? __dirname + "/" + sni[sniNames[i]].cert : sni[sniNames[i]].cert).toString(),
