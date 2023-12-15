@@ -2117,6 +2117,7 @@ if (!cluster.isPrimary) {
       });
       try {
         var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
+        if(!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/,"");
         server._contexts[server._contexts.length-1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
       } catch(ex) {}
     });
@@ -2811,9 +2812,6 @@ if (!cluster.isPrimary) {
       return ph;
     }
 
-    // Process the Host header
-    if (typeof req.headers.host == "string") req.headers.host = req.headers.host.toLowerCase().replace(/^\.$/g,"");
-
     // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
     if (configJSON.enableHTTP2 == true && req.httpVersion == "2.0") {
       try {
@@ -2966,9 +2964,17 @@ if (!cluster.isPrimary) {
 
     reqcounter++;
 
+    // Process the Host header
+    var oldHostHeader = req.headers.host;
+    if (typeof req.headers.host == "string") {
+      req.headers.host = req.headers.host.toLowerCase();
+      if(!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/^\.$/g,"");
+    }
+    
     if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
     else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + req.url);
     if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
+    if (oldHostHeader && oldHostHeader != req.headers.host) serverconsole.resmessage("Host name rewritten: " + oldHostHeader + " => " + req.headers.host);
 
     var acceptEncoding = req.headers["accept-encoding"];
     if (!acceptEncoding) acceptEncoding = "";
