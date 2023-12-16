@@ -2968,7 +2968,7 @@ if (!cluster.isPrimary) {
     var oldHostHeader = req.headers.host;
     if (typeof req.headers.host == "string") {
       req.headers.host = req.headers.host.toLowerCase();
-      if(!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/^\.$/g,"");
+      if(!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/\.$/g,"");
     }
     
     if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
