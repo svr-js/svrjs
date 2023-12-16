@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.12.1</title>
+    <title>SVR.JS 3.12.2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.12.1</h1>
+    <h1>Welcome to SVR.JS 3.12.2</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -134,8 +134,9 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added client errors, server errors, and malformed HTTP request counts to SVR.JS status page.</li>
-      <li>Fixed multiple XSS vulnerabilities.</li>
+      <li>SVR.JS now refuses to start with misconfigured SNI in order to prevent ReDoS vulnerabilities.</li>
+      <li>Add <i>Host</i> header pre-processing.</li>
+      <li>Changed SNI regular expression generation function.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>
