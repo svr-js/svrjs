@@ -5,8 +5,8 @@
 //                                     //
 /////////////////////////////////////////
 /////////////////////////////////////////
-//////      DorianTech SVR.JS      //////
-//////web server running on Node.JS//////
+/////            SVR.JS             /////
+/////a web server running on Node.JS/////
 /////////////////////////////////////////
 /////////////////////////////////////////
 
@@ -14,7 +14,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2023 DorianTech
+ * Copyright (c) 2018-2023 SVR.JS Authors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -4841,7 +4841,7 @@ function start(init) {
     if (init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
-      console.log("Welcome to DorianTech SVR.JS server.");
+      console.log("Welcome to SVR.JS - a web server running on Node.JS");
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
       if (svrmodpackUsed) serverconsole.locwarnmessage("The \"svrmodpack\" library is deprecated. Mods using svrmodpack format may not work in future SVR.JS versions.");
