@@ -1,15 +1,4 @@
-/////////////////////////////////////////
-//                                     //
-//             S V R . J S             //
-//        S O U R C E   C O D E        //
-//                                     //
-/////////////////////////////////////////
-/////////////////////////////////////////
-/////            SVR.JS             /////
-/////a web server running on Node.JS/////
-/////////////////////////////////////////
-/////////////////////////////////////////
-
+// SVR.JS - a web server running on Node.JS
 
 /*
  * MIT License
@@ -91,8 +80,8 @@ for (var i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("b
     console.log("SVR.JS usage:");
     console.log("node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]");
     console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans files, that SVR.JS created");
-    console.log("--reset               -- Resets SVR.JS to factory settings (WARNING: DANGEROUS)");
+    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)");
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
     console.log("--single-threaded     -- Run single-threaded");
@@ -123,8 +112,8 @@ for (var i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("b
     console.log("SVR.JS usage:");
     console.log("node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]");
     console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans files, that SVR.JS created");
-    console.log("--reset               -- Resets SVR.JS to factory settings (WARNING: DANGEROUS)");
+    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)");
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
     console.log("--single-threaded     -- Run single-threaded");
@@ -320,10 +309,10 @@ function generateETag(filePath, stat) {
 // Brute force-related
 var bruteForceDb = {};
 
-// PBKDF2 cache
+// PBKDF2/scrypt cache
 var pbkdf2Cache = [];
 var scryptCache = [];
-var pbkdf2CacheIntervalId = -1;
+var passwordHashCacheIntervalId = -1;
 
 // SVR.JS worker spawn-related
 var SVRJSInitialized = false;
@@ -3267,7 +3256,7 @@ if (!cluster.isPrimary) {
     try {
       decodedHref = decodeURIComponent(href);
     } catch (err) {
-      // Return 400 error
+      // Return an 400 error
       callServerError(400);
       serverconsole.errmessage("Bad request!");
       return;
@@ -3278,7 +3267,7 @@ if (!cluster.isPrimary) {
       return;
     }
 
-    // MOD EXCECUTION FUNCTION
+    // Mod execution function
     function modExecute(mods, ffinals) {
       // Prepare modFunction
       var modFunction = ffinals;
@@ -3296,7 +3285,7 @@ if (!cluster.isPrimary) {
         modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
       });
 
-      // Execute modfunction
+      // Execute modFunction
       modFunction();
     }
 
@@ -4857,6 +4846,7 @@ function start(init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
       console.log("Welcome to SVR.JS - a web server running on Node.JS");
+
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
@@ -4899,7 +4889,7 @@ function start(init) {
         if (SSJSError || modLoadingErrors.length > 0) console.log();
       }
 
-      // Print info
+      // Print server information
       serverconsole.locmessage("Server version: " + version);
       if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);
       else serverconsole.locmessage("Node.JS version: " + process.version);
@@ -4923,7 +4913,7 @@ function start(init) {
       if (sniReDos) throw new Error("Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.");
     }
 
-    // Information about starting the server
+    // Print server startup information
     if (!(secure && disableNonEncryptedServer)) serverconsole.locmessage("Starting HTTP server at " + (typeof port == "number" ? (listenAddress ? ((listenAddress.indexOf(":") > -1 ? "[" + listenAddress + "]" : listenAddress)) + ":" : "port ") : "") + port.toString() + "...");
     if (secure) serverconsole.locmessage("Starting HTTPS server at " + (typeof sport == "number" ? (sListenAddress ? ((sListenAddress.indexOf(":") > -1 ? "[" + sListenAddress + "]" : sListenAddress)) + ":" : "port ") : "") + sport.toString() + "...");
   }
@@ -5011,7 +5001,7 @@ function start(init) {
     },
     stop: function (retcode) {
       reallyExiting = true;
-      clearInterval(pbkdf2CacheIntervalId);
+      clearInterval(passwordHashCacheIntervalId);
       if ((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
         try {
           server.close(function () {
@@ -5169,7 +5159,7 @@ function start(init) {
       }, 300000);
     }
     if (!cluster.isPrimary) {
-      pbkdf2CacheIntervalId = setInterval(function () {
+      passwordHashCacheIntervalId = setInterval(function () {
         pbkdf2Cache = pbkdf2Cache.filter(function (entry) {
           return entry.addDate > (new Date() - 3600000);
         });
@@ -5732,9 +5722,3 @@ try {
     process.exit(err.errno ? err.errno : 1);
   }, 10);
 }
-
-//////////////////////////////////
-////         THE END!         ////
-////   WARNING: THE CODE HAS  ////
-////       5000+ LINES!       ////
-//////////////////////////////////
