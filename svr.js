@@ -4177,24 +4177,41 @@ if (!cluster.isPrimary) {
       }
 
       // Handle URL rewriting
-      function rewriteURL(address, map, callback) {
+      function rewriteURL(address, map, callback, _fileState, _mapBegIndex) {
           
         var rewrittenURL = address;
         if (!isProxy) {
-        map.every(function (mapEntry) {
-          if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address)) {
+            var doCallback = true;
+        for(var i=(_mapBegIndex ? _mapBegIndex : 0);i<map.length;i++) {
+          var mapEntry = map[i];
+          if(href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
+            fs.stat("." + decodeURIComponent(href), function(err, stats) {
+                var _fileState = 3;
+                if(err) {
+                    _fileState = 3;
+                } else if(stats.isDirectory()) {
+                    _fileState = 2;
+                } else if(stats.isFile()) {
+                    _fileState = 1;
+                } else {
+                    _fileState = 3;
+                }
+                rewriteURL(address, map, callback, _fileState, i);
+            });
+            doCallback = false;
+            break;
+          }
+          if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
             mapEntry.replacements.forEach(function (replacement) {
               rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
             });
             if (mapEntry.append) rewrittenURL += mapEntry.append;
-            return false;
-          } else {
-            return true;
+            break;
           }
-        });
+        }
         
         }
-         callback(rewrittenURL);
+         if(doCallback) callback(rewrittenURL);
       }
       
       // Trailing slash redirection
