@@ -805,8 +805,8 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (errorStack.some(function (errorStackLine) {
-      return (errorStackLine.indexOf(errorObject.name) == 0);
-    })) {
+    return (errorStackLine.indexOf(errorObject.name) == 0);
+  })) {
     return errorObject.stack;
   }
 
@@ -1506,7 +1506,7 @@ if (!disableMods) {
           });
         } else {
           // If it's not a ".tar.gz" file, throw an error about `svrmodpack` support being dropped
-          throw new Error("This version of SVR.JS no longer supports \"svrmodpack\" library for SVR.JS mods. Please consider using newer mods with .tar.gz format.")
+          throw new Error("This version of SVR.JS no longer supports \"svrmodpack\" library for SVR.JS mods. Please consider using newer mods with .tar.gz format.");
         }
 
         // Initialize variables for mod loading
@@ -2108,7 +2108,9 @@ if (!cluster.isPrimary) {
         var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
         if(!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/,"");
         server._contexts[server._contexts.length-1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
-      } catch(ex) {}
+      } catch(ex) {
+        // Can't replace regex, ignoring...
+      }
     });
   }
   server.on("request", reqhandler);
@@ -3494,23 +3496,23 @@ if (!cluster.isPrimary) {
                 var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
-                  "";
+                    fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
+                    "";
                 var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
-                  "";
+                    fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
+                    "";
 
                 // Check if custom header has HTML tag
                 var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
 
                 // Generate HTML head and footer based on configuration and custom content
                 var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
-                    (!headerHasHTMLTag ?
-                      "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
-                      customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
-                    head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+                  (!headerHasHTMLTag ?
+                    "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
+                    customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
+                  head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
                   (!headerHasHTMLTag ? customDirListingHeader : "") +
                   "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
 
@@ -4170,37 +4172,37 @@ if (!cluster.isPrimary) {
           
         var rewrittenURL = address;
         if (!isProxy) {
-            var doCallback = true;
-        for(var i=(_mapBegIndex ? _mapBegIndex : 0);i<map.length;i++) {
-          var mapEntry = map[i];
-          if(href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
-            fs.stat("." + decodeURIComponent(href), function(err, stats) {
+          var doCallback = true;
+          for(var i=(_mapBegIndex ? _mapBegIndex : 0);i<map.length;i++) {
+            var mapEntry = map[i];
+            if(href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
+              fs.stat("." + decodeURIComponent(href), function(err, stats) {
                 var _fileState = 3;
                 if(err) {
-                    _fileState = 3;
+                  _fileState = 3;
                 } else if(stats.isDirectory()) {
-                    _fileState = 2;
+                  _fileState = 2;
                 } else if(stats.isFile()) {
-                    _fileState = 1;
+                  _fileState = 1;
                 } else {
-                    _fileState = 3;
+                  _fileState = 3;
                 }
                 rewriteURL(address, map, callback, _fileState, i);
-            });
-            doCallback = false;
-            break;
+              });
+              doCallback = false;
+              break;
+            }
+            if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
+              mapEntry.replacements.forEach(function (replacement) {
+                rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
+              });
+              if (mapEntry.append) rewrittenURL += mapEntry.append;
+              break;
+            }
           }
-          if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
-            mapEntry.replacements.forEach(function (replacement) {
-              rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
-            });
-            if (mapEntry.append) rewrittenURL += mapEntry.append;
-            break;
-          }
-        }
         
         }
-         if(doCallback) callback(rewrittenURL);
+        if(doCallback) callback(rewrittenURL);
       }
       
       // Trailing slash redirection
@@ -4236,7 +4238,7 @@ if (!cluster.isPrimary) {
       
       // Rewrite URLs
       rewriteURL(req.url, rewriteMap, function(rewrittenURL) {
-          if (rewrittenURL != req.url) {
+        if (rewrittenURL != req.url) {
           serverconsole.resmessage("URL rewritten: " + req.url + " => " + rewrittenURL);
           req.url = rewrittenURL;
           uobject = parseURL(req.url);
@@ -4287,311 +4289,312 @@ if (!cluster.isPrimary) {
               serverconsole.errmessage("Bad request!");
               return;
             }
-            }
-          }
-      // Set response headers
-      if (!isProxy) {
-        var hkh = getCustomHeaders();
-        Object.keys(hkh).forEach(function (hkS) {
-          try {
-            res.setHeader(hkS, hkh[hkS]);
-          } catch (err) {
-            // Headers will not be set.
-          }
-        });
-      }
-
-      // Check if path is forbidden
-      if ((isForbiddenPath(decodedHref, "config") || isForbiddenPath(decodedHref, "certificates")) && !isProxy) {
-        callServerError(403);
-        serverconsole.errmessage("Access to configuration file/certificates is denied.");
-        return;
-      } else if (isIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
-        callServerError(403);
-        serverconsole.errmessage("Access to temporary folder is denied.");
-        return;
-      } else if (isIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
-        callServerError(403);
-        serverconsole.errmessage("Access to log files is denied.");
-        return;
-      } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
-        callServerError(403);
-        serverconsole.errmessage("Access to SVR.JS script is denied.");
-        return;
-      } else if ((isForbiddenPath(decodedHref, "svrjs") || isForbiddenPath(decodedHref, "serverSideScripts") || isIndexOfForbiddenPath(decodedHref, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
-        callServerError(403);
-        serverconsole.errmessage("Access to sources is denied.");
-        return;
-      } else {
-        var nonscodeIndex = -1;
-        var authIndex = -1;
-        var regexI = [];
-
-        // Scan for non-standard codes
-        if (!isProxy && nonStandardCodes != undefined) {
-          for (var i = 0; i < nonStandardCodes.length; i++) {
-            if (matchHostname(nonStandardCodes[i].host)) {
-              var isMatch = false;
-              if (nonStandardCodes[i].regex) {
-                // Regex match
-                var createdRegex = createRegex(nonStandardCodes[i].regex, true);
-                isMatch = req.url.match(createdRegex) || href.match(createdRegex);
-                regexI[i] = createdRegex;
-              } else {
-                // Non-regex match
-                isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
-              }
-              if (isMatch) {
-                if (nonStandardCodes[i].scode == 401) {
-                  // HTTP authentication
-                  if (authIndex == -1) {
-                    authIndex = i;
-                  }
-                } else {
-                  if (nonscodeIndex == -1) {
-                    if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
-                      if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
-                    } else {
-                      nonscodeIndex = i;
-                    }
-                  }
-                }
-              }
-            }
           }
         }
-
-        // Handle non-standard codes
-        if (nonscodeIndex > -1) {
-          var nonscode = nonStandardCodes[nonscodeIndex];
-          if (nonscode.scode == 301 || nonscode.scode == 302) {
-            var location = "";
-            if (regexI[nonscodeIndex]) {
-              location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
-            } else if (req.url.split("?")[1] == undefined || req.url.split("?")[1] == null || req.url.split("?")[1] == "" || req.url.split("?")[1] == " ") {
-              location = nonscode.location;
-            } else {
-              location = nonscode.location + "?" + req.url.split("?")[1];
-            }
-            redirect(location, nonscode.scode == 302);
-            return;
-          } else if (nonscode.scode == 403) {
-            callServerError(403);
-            serverconsole.errmessage("Content blocked.");
-            return;
-          } else if (nonscode.scode == 410) {
-            callServerError(410);
-            serverconsole.errmessage("Content is gone.");
-            return;
-          } else if (nonscode.scode == 418) {
-            callServerError(418);
-            serverconsole.errmessage("SVR.JS is always a teapot ;)");
-            return;
-          } else {
-            callServerError(nonscode.scode);
-            serverconsole.errmessage("Client fails receiving content.");
-            return;
-          }
-        }
-
-        // Handle HTTP authentication
-        if (authIndex > -1) {
-          var authcode = nonStandardCodes[authIndex];
-
-          // Function to check if passwords match
-          function checkIfPasswordMatches(list, password, callback, _i) {
-            if (!_i) _i = 0;
-            var cb = function (hash) {
-              var matches = (hash == list[_i].pass);
-              if (matches) {
-                callback(true);
-              } else if (_i >= list.length - 1) {
-                callback(false);
-              } else {
-                checkIfPasswordMatches(list, password, callback, _i + 1);
-              }
-            };
-            var hashedPassword = sha256(password + list[_i].salt);
-            if (list[_i].scrypt) {
-              if (!crypto.scrypt) {
-                callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
-                return;
-              } else {
-                var cacheEntry = scryptCache.find(function (entry) {
-                  return (entry.password == hashedPassword && entry.salt == list[_i].salt);
-                });
-                if (cacheEntry) {
-                  cb(cacheEntry.hash);
-                } else {
-                  crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
-                    if (err) {
-                      callServerError(500, undefined, err);
-                    } else {
-                      var key = derivedKey.toString("hex");
-                      scryptCache.push({
-                        hash: key,
-                        password: hashedPassword,
-                        salt: list[_i].salt,
-                        addDate: new Date()
-                      });
-                      cb(key);
-                    }
-                  });
-                }
-              }
-            } else if (list[_i].pbkdf2) {
-              if (crypto.__disabled__ !== undefined) {
-                callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
-                return;
-              } else {
-                var cacheEntry = pbkdf2Cache.find(function (entry) {
-                  return (entry.password == hashedPassword && entry.salt == list[_i].salt);
-                });
-                if (cacheEntry) {
-                  cb(cacheEntry.hash);
-                } else {
-                  crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
-                    if (err) {
-                      callServerError(500, undefined, err);
-                    } else {
-                      var key = derivedKey.toString("hex");
-                      pbkdf2Cache.push({
-                        hash: key,
-                        password: hashedPassword,
-                        salt: list[_i].salt,
-                        addDate: new Date()
-                      });
-                      cb(key);
-                    }
-                  });
-                }
-              }
-            } else {
-              cb(hashedPassword);
-            }
-          }
-
-          function authorizedCallback(bruteProtection) {
+        // Set response headers
+        if (!isProxy) {
+          var hkh = getCustomHeaders();
+          Object.keys(hkh).forEach(function (hkS) {
             try {
-              var ha = getCustomHeaders();
-              ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
-              var credentials = req.headers["authorization"];
-              if (!credentials) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Content needs authorization.");
-                return;
-              }
-              var credentialsMatch = credentials.match(/^Basic (.+)$/);
-              if (!credentialsMatch) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
-              var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
-              if (!decodedCredentialsMatch) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var username = decodedCredentialsMatch[1];
-              var password = decodedCredentialsMatch[2];
-              var usernameMatch = [];
-              if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
-                usernameMatch = users.filter(function (entry) {
-                  return entry.name == username;
-                });
-              }
-              if (usernameMatch.length == 0) {
-                usernameMatch.push({
-                  name: username,
-                  pass: "FAKEPASS",
-                  salt: "FAKESALT"
-                }); // Fake credentials
-              }
-              checkIfPasswordMatches(usernameMatch, password, function (authorized) {
-                try {
-                  if (!authorized) {
-                    if (bruteProtection) {
-                      if (process.send) {
-                        process.send("\x12AUTHW" + reqip);
-                      } else {
-                        if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                          invalidAttempts: 0
-                        };
-                        bruteForceDb[reqip].invalidAttempts++;
-                        if (bruteForceDb[reqip].invalidAttempts >= 10) {
-                          bruteForceDb[reqip].lastAttemptDate = new Date();
-                        }
-                      }
-                    }
-                    callServerError(401, undefined, undefined, ha);
-                    serverconsole.errmessage("User \"" + username + "\" failed to log in.");
-                  } else {
-                    if (bruteProtection) {
-                      if (process.send) {
-                        process.send("\x12AUTHR" + reqip);
-                      } else {
-                        if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                          invalidAttempts: 0
-                        };
-                      }
-                    }
-                    serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
-                    redirectTrailingSlashes(function () {
-                      modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
-                    });
-                  }
-                } catch (err) {
-                  callServerError(500, undefined, generateErrorStack(err));
-                  return;
-                }
-              });
+              res.setHeader(hkS, hkh[hkS]);
             } catch (err) {
-              callServerError(500, undefined, generateErrorStack(err));
+            // Headers will not be set.
+            }
+          });
+        }
+
+        // Check if path is forbidden
+        if ((isForbiddenPath(decodedHref, "config") || isForbiddenPath(decodedHref, "certificates")) && !isProxy) {
+          callServerError(403);
+          serverconsole.errmessage("Access to configuration file/certificates is denied.");
+          return;
+        } else if (isIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
+          callServerError(403);
+          serverconsole.errmessage("Access to temporary folder is denied.");
+          return;
+        } else if (isIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
+          callServerError(403);
+          serverconsole.errmessage("Access to log files is denied.");
+          return;
+        } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
+          callServerError(403);
+          serverconsole.errmessage("Access to SVR.JS script is denied.");
+          return;
+        } else if ((isForbiddenPath(decodedHref, "svrjs") || isForbiddenPath(decodedHref, "serverSideScripts") || isIndexOfForbiddenPath(decodedHref, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
+          callServerError(403);
+          serverconsole.errmessage("Access to sources is denied.");
+          return;
+        } else {
+          var nonscodeIndex = -1;
+          var authIndex = -1;
+          var regexI = [];
+
+          // Scan for non-standard codes
+          if (!isProxy && nonStandardCodes != undefined) {
+            for (var i = 0; i < nonStandardCodes.length; i++) {
+              if (matchHostname(nonStandardCodes[i].host)) {
+                var isMatch = false;
+                if (nonStandardCodes[i].regex) {
+                // Regex match
+                  var createdRegex = createRegex(nonStandardCodes[i].regex, true);
+                  isMatch = req.url.match(createdRegex) || href.match(createdRegex);
+                  regexI[i] = createdRegex;
+                } else {
+                // Non-regex match
+                  isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
+                }
+                if (isMatch) {
+                  if (nonStandardCodes[i].scode == 401) {
+                  // HTTP authentication
+                    if (authIndex == -1) {
+                      authIndex = i;
+                    }
+                  } else {
+                    if (nonscodeIndex == -1) {
+                      if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
+                        if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
+                      } else {
+                        nonscodeIndex = i;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // Handle non-standard codes
+          if (nonscodeIndex > -1) {
+            var nonscode = nonStandardCodes[nonscodeIndex];
+            if (nonscode.scode == 301 || nonscode.scode == 302) {
+              var location = "";
+              if (regexI[nonscodeIndex]) {
+                location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
+              } else if (req.url.split("?")[1] == undefined || req.url.split("?")[1] == null || req.url.split("?")[1] == "" || req.url.split("?")[1] == " ") {
+                location = nonscode.location;
+              } else {
+                location = nonscode.location + "?" + req.url.split("?")[1];
+              }
+              redirect(location, nonscode.scode == 302);
+              return;
+            } else if (nonscode.scode == 403) {
+              callServerError(403);
+              serverconsole.errmessage("Content blocked.");
+              return;
+            } else if (nonscode.scode == 410) {
+              callServerError(410);
+              serverconsole.errmessage("Content is gone.");
+              return;
+            } else if (nonscode.scode == 418) {
+              callServerError(418);
+              serverconsole.errmessage("SVR.JS is always a teapot ;)");
+              return;
+            } else {
+              callServerError(nonscode.scode);
+              serverconsole.errmessage("Client fails receiving content.");
               return;
             }
           }
-          if (authcode.disableBruteProtection) {
-            // Don't brute-force protect it, just do HTTP authentication
-            authorizedCallback(false);
-          } else if (!process.send) {
-            // Query data from JS object database
-            if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
-              if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
-                invalidAttempts: 5
-              };
-              authorizedCallback(true);
-            } else {
-              callServerError(429);
-              serverconsole.errmessage("Brute force limit reached!");
-            }
-          } else {
-            var listenerEmitted = false;
 
-            // Listen for brute-force protection response
-            function authMessageListener(message) {
-              if (listenerEmitted) return;
-              if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
-                process.removeListener("message", authMessageListener);
-                listenerEmitted = true;
+          // Handle HTTP authentication
+          if (authIndex > -1) {
+            var authcode = nonStandardCodes[authIndex];
+
+            // Function to check if passwords match
+            function checkIfPasswordMatches(list, password, callback, _i) {
+              if (!_i) _i = 0;
+              var cb = function (hash) {
+                var matches = (hash == list[_i].pass);
+                if (matches) {
+                  callback(true);
+                } else if (_i >= list.length - 1) {
+                  callback(false);
+                } else {
+                  checkIfPasswordMatches(list, password, callback, _i + 1);
+                }
+              };
+              var hashedPassword = sha256(password + list[_i].salt);
+              var cacheEntry = null;
+              if (list[_i].scrypt) {
+                if (!crypto.scrypt) {
+                  callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
+                  return;
+                } else {
+                  cacheEntry = scryptCache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if (cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
+                      if (err) {
+                        callServerError(500, undefined, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        scryptCache.push({
+                          hash: key,
+                          password: hashedPassword,
+                          salt: list[_i].salt,
+                          addDate: new Date()
+                        });
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else if (list[_i].pbkdf2) {
+                if (crypto.__disabled__ !== undefined) {
+                  callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
+                  return;
+                } else {
+                  cacheEntry = pbkdf2Cache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if (cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
+                      if (err) {
+                        callServerError(500, undefined, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        pbkdf2Cache.push({
+                          hash: key,
+                          password: hashedPassword,
+                          salt: list[_i].salt,
+                          addDate: new Date()
+                        });
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else {
+                cb(hashedPassword);
               }
-              if (message == "\x14AUTHD" + reqip) {
+            }
+
+            function authorizedCallback(bruteProtection) {
+              try {
+                var ha = getCustomHeaders();
+                ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
+                var credentials = req.headers["authorization"];
+                if (!credentials) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Content needs authorization.");
+                  return;
+                }
+                var credentialsMatch = credentials.match(/^Basic (.+)$/);
+                if (!credentialsMatch) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
+                var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
+                if (!decodedCredentialsMatch) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var username = decodedCredentialsMatch[1];
+                var password = decodedCredentialsMatch[2];
+                var usernameMatch = [];
+                if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
+                  usernameMatch = users.filter(function (entry) {
+                    return entry.name == username;
+                  });
+                }
+                if (usernameMatch.length == 0) {
+                  usernameMatch.push({
+                    name: username,
+                    pass: "FAKEPASS",
+                    salt: "FAKESALT"
+                  }); // Fake credentials
+                }
+                checkIfPasswordMatches(usernameMatch, password, function (authorized) {
+                  try {
+                    if (!authorized) {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHW" + reqip);
+                        } else {
+                          if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                          bruteForceDb[reqip].invalidAttempts++;
+                          if (bruteForceDb[reqip].invalidAttempts >= 10) {
+                            bruteForceDb[reqip].lastAttemptDate = new Date();
+                          }
+                        }
+                      }
+                      callServerError(401, undefined, undefined, ha);
+                      serverconsole.errmessage("User \"" + username + "\" failed to log in.");
+                    } else {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHR" + reqip);
+                        } else {
+                          if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                        }
+                      }
+                      serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
+                      redirectTrailingSlashes(function () {
+                        modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                      });
+                    }
+                  } catch (err) {
+                    callServerError(500, undefined, generateErrorStack(err));
+                    return;
+                  }
+                });
+              } catch (err) {
+                callServerError(500, undefined, generateErrorStack(err));
+                return;
+              }
+            }
+            if (authcode.disableBruteProtection) {
+            // Don't brute-force protect it, just do HTTP authentication
+              authorizedCallback(false);
+            } else if (!process.send) {
+            // Query data from JS object database
+              if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
+                if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
+                  invalidAttempts: 5
+                };
+                authorizedCallback(true);
+              } else {
                 callServerError(429);
                 serverconsole.errmessage("Brute force limit reached!");
-              } else if (message == "\x14AUTHA" + reqip) {
-                authorizedCallback(true);
               }
+            } else {
+              var listenerEmitted = false;
+
+              // Listen for brute-force protection response
+              function authMessageListener(message) {
+                if (listenerEmitted) return;
+                if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
+                  process.removeListener("message", authMessageListener);
+                  listenerEmitted = true;
+                }
+                if (message == "\x14AUTHD" + reqip) {
+                  callServerError(429);
+                  serverconsole.errmessage("Brute force limit reached!");
+                } else if (message == "\x14AUTHA" + reqip) {
+                  authorizedCallback(true);
+                }
+              }
+              process.on("message", authMessageListener);
+              process.send("\x12AUTHQ" + reqip);
             }
-            process.on("message", authMessageListener);
-            process.send("\x12AUTHQ" + reqip);
+          } else {
+            redirectTrailingSlashes(function () {
+              modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+            });
           }
-        } else {
-          redirectTrailingSlashes(function () {
-            modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
-          });
         }
-      }
 
       });
     } catch (err) {
@@ -4860,11 +4863,11 @@ function start(init) {
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
         if (users.some(function (entry) {
-            return entry.pbkdf2;
-          })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+          return entry.pbkdf2;
+        })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
         if (users.some(function (entry) {
-            return entry.scrypt;
-          })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
+          return entry.scrypt;
+        })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
