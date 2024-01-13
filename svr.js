@@ -400,14 +400,6 @@ try {
 } catch (err) {
   // Don't use hexstrbase64
 }
-var svrmodpack = undefined;
-try {
-  svrmodpack = require("svrmodpack");
-} catch (err) {
-  svrmodpack = {
-    _errored: err
-  };
-}
 var zlib = require("zlib");
 var tar = undefined;
 try {
@@ -1452,7 +1444,6 @@ process.exit = function (code) {
 
 var modLoadingErrors = [];
 var SSJSError = undefined;
-var svrmodpackUsed = false;
 
 // Load mods if the `disableMods` flag is not set
 if (!disableMods) {
@@ -1514,10 +1505,8 @@ if (!disableMods) {
             C: __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw
           });
         } else {
-          // If it's not a ".tar.gz" file, unpack it using `svrmodpack`
-          if (svrmodpack._errored) throw svrmodpack._errored;
-          svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
-          svrmodpackUsed = true;
+          // If it's not a ".tar.gz" file, throw an error about `svrmodpack` support being dropped
+          throw new Error("This version of SVR.JS no longer supports \"svrmodpack\" library for SVR.JS mods. Please consider using newer mods with .tar.gz format.")
         }
 
         // Initialize variables for mod loading
@@ -4867,7 +4856,6 @@ function start(init) {
       console.log("Welcome to SVR.JS - a web server running on Node.JS");
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
-      if (svrmodpackUsed) serverconsole.locwarnmessage("The \"svrmodpack\" library is deprecated. Mods using svrmodpack format may not work in future SVR.JS versions.");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
