@@ -3127,15 +3127,21 @@ if (!cluster.isPrimary) {
 
 
     // Function to perform HTTP redirection to a specified destination URL
-    function redirect(destination, isTemporary, customHeaders) {
+    function redirect(destination, isTemporary, keepMethod, customHeaders) {
+      // If keepMethod is a object, then save it to customHeaders
+      if (typeof keepMethod == "object") customHeaders = keepMethod;
+      
+      // If isTemporary is a object, then save it to customHeaders
+      if (typeof isTemporary == "object") customHeaders = isTemporary;
+      
       // If customHeaders are not provided, get the default custom headers
       if (customHeaders === undefined) customHeaders = getCustomHeaders();
 
       // Set the "Location" header to the destination URL
       customHeaders["Location"] = destination;
 
-      // Determine the status code for redirection based on the isTemporary flag
-      var statusCode = isTemporary ? 302 : 301;
+      // Determine the status code for redirection based on the isTemporary and keepMethod flags
+      var statusCode = keepMethod ? (isTemporary ? 307 : 308) : (isTemporary ? 302 : 301);
 
       // Write the response header with the appropriate status code and message
       res.writeHead(statusCode, http.STATUS_CODES[statusCode], customHeaders);
@@ -4355,7 +4361,7 @@ if (!cluster.isPrimary) {
           // Handle non-standard codes
           if (nonscodeIndex > -1) {
             var nonscode = nonStandardCodes[nonscodeIndex];
-            if (nonscode.scode == 301 || nonscode.scode == 302) {
+            if (nonscode.scode == 301 || nonscode.scode == 302 || nonscode.scode == 307 || nonscode.scode == 308) {
               var location = "";
               if (regexI[nonscodeIndex]) {
                 location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
@@ -4364,7 +4370,7 @@ if (!cluster.isPrimary) {
               } else {
                 location = nonscode.location + "?" + req.url.split("?")[1];
               }
-              redirect(location, nonscode.scode == 302);
+              redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonsceode.scode == 308);
               return;
             } else if (nonscode.scode == 403) {
               callServerError(403);
