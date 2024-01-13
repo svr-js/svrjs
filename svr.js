@@ -4370,7 +4370,7 @@ if (!cluster.isPrimary) {
               } else {
                 location = nonscode.location + "?" + req.url.split("?")[1];
               }
-              redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonsceode.scode == 308);
+              redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonscode.scode == 308);
               return;
             } else if (nonscode.scode == 403) {
               callServerError(403);
