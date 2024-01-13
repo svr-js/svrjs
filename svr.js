@@ -4177,25 +4177,60 @@ if (!cluster.isPrimary) {
       }
 
       // Handle URL rewriting
-      function rewriteURL(address, map) {
-        var rewrittenAddress = address;
+      function rewriteURL(address, map, callback) {
+          
+        var rewrittenURL = address;
+        if (!isProxy) {
         map.every(function (mapEntry) {
           if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address)) {
             mapEntry.replacements.forEach(function (replacement) {
-              rewrittenAddress = rewrittenAddress.replace(createRegex(replacement.regex), replacement.replacement);
+              rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
             });
-            if (mapEntry.append) rewrittenAddress += mapEntry.append;
+            if (mapEntry.append) rewrittenURL += mapEntry.append;
             return false;
           } else {
             return true;
           }
         });
-        return rewrittenAddress;
+        
+        }
+         callback(rewrittenURL);
       }
+      
+      // Trailing slash redirection
+      function redirectTrailingSlashes(callback) {
+        if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
+          fs.stat("." + decodeURIComponent(href), function (err, stats) {
+            if (err || !stats.isDirectory()) {
+              try {
+                callback();  
+              } catch (err) {
+                callServerError(500, undefined, err);
+              }
+            } else {
+              var destinationURL = uobject;
+              destinationURL.path = null;
+              destinationURL.href = null;
+              destinationURL.pathname = origHref + "/";
+              destinationURL.hostname = null;
+              destinationURL.host = null;
+              destinationURL.port = null;
+              destinationURL.protocol = null;
+              destinationURL.slashes = null;
+              destinationURL = url.format(destinationURL);
+              redirect(destinationURL);
+            }
+          });
+        } else {
+          callback();
+        }
+      }
+      
       var origHref = href;
-      if (!isProxy) {
-        var rewrittenURL = rewriteURL(req.url, rewriteMap);
-        if (rewrittenURL != req.url) {
+      
+      // Rewrite URLs
+      rewriteURL(req.url, rewriteMap, function(rewrittenURL) {
+          if (rewrittenURL != req.url) {
           serverconsole.resmessage("URL rewritten: " + req.url + " => " + rewrittenURL);
           req.url = rewrittenURL;
           uobject = parseURL(req.url);
@@ -4246,10 +4281,8 @@ if (!cluster.isPrimary) {
               serverconsole.errmessage("Bad request!");
               return;
             }
+            }
           }
-        }
-      }
-
       // Set response headers
       if (!isProxy) {
         var hkh = getCustomHeaders();
@@ -4352,35 +4385,6 @@ if (!cluster.isPrimary) {
             callServerError(nonscode.scode);
             serverconsole.errmessage("Client fails receiving content.");
             return;
-          }
-        }
-
-        // Trailing slash redirection
-        function redirectTrailingSlashes(callback) {
-          if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
-            fs.stat("." + decodeURIComponent(href), function (err, stats) {
-              if (err || !stats.isDirectory()) {
-                try {
-                  callback();  
-                } catch (err) {
-                  callServerError(500, undefined, err);
-                }
-              } else {
-                var destinationURL = uobject;
-                destinationURL.path = null;
-                destinationURL.href = null;
-                destinationURL.pathname = origHref + "/";
-                destinationURL.hostname = null;
-                destinationURL.host = null;
-                destinationURL.port = null;
-                destinationURL.protocol = null;
-                destinationURL.slashes = null;
-                destinationURL = url.format(destinationURL);
-                redirect(destinationURL);
-              }
-            });
-          } else {
-            callback();
           }
         }
 
@@ -4582,6 +4586,8 @@ if (!cluster.isPrimary) {
           });
         }
       }
+
+      });
     } catch (err) {
       callServerError(500, undefined, generateErrorStack(err));
     }
