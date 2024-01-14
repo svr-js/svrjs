@@ -2953,7 +2953,7 @@ if (!cluster.isPrimary) {
       req.headers.host = req.headers.host.toLowerCase();
       if(!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/\.$/g,"");
     }
-    
+
     if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
     else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + req.url);
     if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
@@ -3133,10 +3133,10 @@ if (!cluster.isPrimary) {
     function redirect(destination, isTemporary, keepMethod, customHeaders) {
       // If keepMethod is a object, then save it to customHeaders
       if (typeof keepMethod == "object") customHeaders = keepMethod;
-      
+
       // If isTemporary is a object, then save it to customHeaders
       if (typeof isTemporary == "object") customHeaders = isTemporary;
-      
+
       // If customHeaders are not provided, get the default custom headers
       if (customHeaders === undefined) customHeaders = getCustomHeaders();
 
@@ -3375,7 +3375,7 @@ if (!cluster.isPrimary) {
           }
           var statusBody = "";
           statusBody += "Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "<br/><hr/>";
-          
+
           //Those entries are just dates and numbers converted/formatted to strings, so no escaping is needed.
           statusBody += "Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>";
           statusBody += "OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>";
@@ -3388,7 +3388,7 @@ if (!cluster.isPrimary) {
           if(process.memoryUsage) statusBody += "<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B";
           if(process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
           statusBody += "<br/>Thread PID: " + process.pid + "<br/>";
-          
+
           var hdhds = getCustomHeaders();
           hdhds["Content-Type"] = "text/html; charset=utf-8";
           res.writeHead(200, "OK", hdhds);
@@ -4167,7 +4167,6 @@ if (!cluster.isPrimary) {
 
       // Handle URL rewriting
       function rewriteURL(address, map, callback, _fileState, _mapBegIndex) {
-          
         var rewrittenURL = address;
         if (!isProxy) {
           var doCallback = true;
@@ -4198,11 +4197,10 @@ if (!cluster.isPrimary) {
               break;
             }
           }
-        
         }
         if(doCallback) callback(rewrittenURL);
       }
-      
+
       // Trailing slash redirection
       function redirectTrailingSlashes(callback) {
         if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
@@ -4231,9 +4229,9 @@ if (!cluster.isPrimary) {
           callback();
         }
       }
-      
+
       var origHref = href;
-      
+
       // Rewrite URLs
       rewriteURL(req.url, rewriteMap, function(rewrittenURL) {
         if (rewrittenURL != req.url) {
