@@ -1302,6 +1302,9 @@ function LOG(s) {
             flags: "a",
             autoClose: false
           });
+          logFile.on("error", function(err) {
+            if (!s.match(/^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /) && !reallyExiting) serverconsole.locwarnmessage("There was a problem while saving logs! Logs will not be kept in log file. Reason: " + err.message);
+          });
         }
         if (logFile.writable) {
           logFile.write("[" + new Date().toISOString() + "] " + s + "\r\n");
