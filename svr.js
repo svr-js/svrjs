@@ -22,11 +22,11 @@ if (typeof require === "undefined") {
   } else {
     if (typeof alert !== "undefined" && typeof document !== "undefined") {
       // If it runs on web browser, display an alert.
-      alert("SVR.JS doesn't work on web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
+      alert("SVR.JS doesn't work on a web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     }
     // If it's not, throw an error.
     if (typeof document !== "undefined") {
-      throw new Error("SVR.JS doesn't work on web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
+      throw new Error("SVR.JS doesn't work on a web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     } else {
       throw new Error("SVR.JS doesn't work on Deno/QuickJS. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     }
@@ -4524,7 +4524,7 @@ if (!cluster.isPrimary) {
                         }
                       }
                       callServerError(401, undefined, undefined, ha);
-                      serverconsole.errmessage("User \"" + username + "\" failed to log in.");
+                      serverconsole.errmessage("User \"" + String(username).replace(/[\r\n]/g, "") + "\" failed to log in.");
                     } else {
                       if (bruteProtection) {
                         if (process.send) {
@@ -4535,7 +4535,7 @@ if (!cluster.isPrimary) {
                           };
                         }
                       }
-                      serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
+                      serverconsole.reqmessage("Client is logged in as \"" + String(username).replace(/[\r\n]/g, "") + "\".");
                       redirectTrailingSlashes(function () {
                         modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
                       });
