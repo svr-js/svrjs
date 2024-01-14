@@ -1,15 +1,4 @@
-/////////////////////////////////////////
-//                                     //
-//             S V R . J S             //
-//        S O U R C E   C O D E        //
-//                                     //
-/////////////////////////////////////////
-/////////////////////////////////////////
-/////            SVR.JS             /////
-/////a web server running on Node.JS/////
-/////////////////////////////////////////
-/////////////////////////////////////////
-
+// SVR.JS - a web server running on Node.JS
 
 /*
  * MIT License
@@ -33,11 +22,11 @@ if (typeof require === "undefined") {
   } else {
     if (typeof alert !== "undefined" && typeof document !== "undefined") {
       // If it runs on web browser, display an alert.
-      alert("SVR.JS doesn't work on web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
+      alert("SVR.JS doesn't work on a web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     }
     // If it's not, throw an error.
     if (typeof document !== "undefined") {
-      throw new Error("SVR.JS doesn't work on web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
+      throw new Error("SVR.JS doesn't work on a web browser. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     } else {
       throw new Error("SVR.JS doesn't work on Deno/QuickJS. SVR.JS requires use of Node.JS (or compatible JS runtime).");
     }
@@ -80,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.12.3";
+var version = "3.13.0";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -91,8 +80,8 @@ for (var i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("b
     console.log("SVR.JS usage:");
     console.log("node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]");
     console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans files, that SVR.JS created");
-    console.log("--reset               -- Resets SVR.JS to factory settings (WARNING: DANGEROUS)");
+    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)");
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
     console.log("--single-threaded     -- Run single-threaded");
@@ -123,8 +112,8 @@ for (var i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("b
     console.log("SVR.JS usage:");
     console.log("node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]");
     console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans files, that SVR.JS created");
-    console.log("--reset               -- Resets SVR.JS to factory settings (WARNING: DANGEROUS)");
+    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)");
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
     console.log("--single-threaded     -- Run single-threaded");
@@ -320,10 +309,10 @@ function generateETag(filePath, stat) {
 // Brute force-related
 var bruteForceDb = {};
 
-// PBKDF2 cache
+// PBKDF2/scrypt cache
 var pbkdf2Cache = [];
 var scryptCache = [];
-var pbkdf2CacheIntervalId = -1;
+var passwordHashCacheIntervalId = -1;
 
 // SVR.JS worker spawn-related
 var SVRJSInitialized = false;
@@ -399,14 +388,6 @@ try {
   hexstrbase64 = require("./hexstrbase64/index.js");
 } catch (err) {
   // Don't use hexstrbase64
-}
-var svrmodpack = undefined;
-try {
-  svrmodpack = require("svrmodpack");
-} catch (err) {
-  svrmodpack = {
-    _errored: err
-  };
 }
 var zlib = require("zlib");
 var tar = undefined;
@@ -813,8 +794,8 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (errorStack.some(function (errorStackLine) {
-      return (errorStackLine.indexOf(errorObject.name) == 0);
-    })) {
+    return (errorStackLine.indexOf(errorObject.name) == 0);
+  })) {
     return errorObject.stack;
   }
 
@@ -1321,6 +1302,9 @@ function LOG(s) {
             flags: "a",
             autoClose: false
           });
+          logFile.on("error", function(err) {
+            if (!s.match(/^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /) && !reallyExiting) serverconsole.locwarnmessage("There was a problem while saving logs! Logs will not be kept in log file. Reason: " + err.message);
+          });
         }
         if (logFile.writable) {
           logFile.write("[" + new Date().toISOString() + "] " + s + "\r\n");
@@ -1452,7 +1436,6 @@ process.exit = function (code) {
 
 var modLoadingErrors = [];
 var SSJSError = undefined;
-var svrmodpackUsed = false;
 
 // Load mods if the `disableMods` flag is not set
 if (!disableMods) {
@@ -1514,10 +1497,8 @@ if (!disableMods) {
             C: __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw
           });
         } else {
-          // If it's not a ".tar.gz" file, unpack it using `svrmodpack`
-          if (svrmodpack._errored) throw svrmodpack._errored;
-          svrmodpack.unpack(modFile, __dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
-          svrmodpackUsed = true;
+          // If it's not a ".tar.gz" file, throw an error about `svrmodpack` support being dropped
+          throw new Error("This version of SVR.JS no longer supports \"svrmodpack\" library for SVR.JS mods. Please consider using newer mods with .tar.gz format.");
         }
 
         // Initialize variables for mod loading
@@ -2119,7 +2100,9 @@ if (!cluster.isPrimary) {
         var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
         if(!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/,"");
         server._contexts[server._contexts.length-1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
-      } catch(ex) {}
+      } catch(ex) {
+        // Can't replace regex, ignoring...
+      }
     });
   }
   server.on("request", reqhandler);
@@ -2970,7 +2953,7 @@ if (!cluster.isPrimary) {
       req.headers.host = req.headers.host.toLowerCase();
       if(!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/\.$/g,"");
     }
-    
+
     if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
     else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + req.url);
     if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
@@ -3147,15 +3130,21 @@ if (!cluster.isPrimary) {
 
 
     // Function to perform HTTP redirection to a specified destination URL
-    function redirect(destination, isTemporary, customHeaders) {
+    function redirect(destination, isTemporary, keepMethod, customHeaders) {
+      // If keepMethod is a object, then save it to customHeaders
+      if (typeof keepMethod == "object") customHeaders = keepMethod;
+
+      // If isTemporary is a object, then save it to customHeaders
+      if (typeof isTemporary == "object") customHeaders = isTemporary;
+
       // If customHeaders are not provided, get the default custom headers
       if (customHeaders === undefined) customHeaders = getCustomHeaders();
 
       // Set the "Location" header to the destination URL
       customHeaders["Location"] = destination;
 
-      // Determine the status code for redirection based on the isTemporary flag
-      var statusCode = isTemporary ? 302 : 301;
+      // Determine the status code for redirection based on the isTemporary and keepMethod flags
+      var statusCode = keepMethod ? (isTemporary ? 307 : 308) : (isTemporary ? 302 : 301);
 
       // Write the response header with the appropriate status code and message
       res.writeHead(statusCode, http.STATUS_CODES[statusCode], customHeaders);
@@ -3276,7 +3265,7 @@ if (!cluster.isPrimary) {
     try {
       decodedHref = decodeURIComponent(href);
     } catch (err) {
-      // Return 400 error
+      // Return an 400 error
       callServerError(400);
       serverconsole.errmessage("Bad request!");
       return;
@@ -3287,7 +3276,7 @@ if (!cluster.isPrimary) {
       return;
     }
 
-    // MOD EXCECUTION FUNCTION
+    // Mod execution function
     function modExecute(mods, ffinals) {
       // Prepare modFunction
       var modFunction = ffinals;
@@ -3305,7 +3294,7 @@ if (!cluster.isPrimary) {
         modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData);
       });
 
-      // Execute modfunction
+      // Execute modFunction
       modFunction();
     }
 
@@ -3386,7 +3375,7 @@ if (!cluster.isPrimary) {
           }
           var statusBody = "";
           statusBody += "Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "<br/><hr/>";
-          
+
           //Those entries are just dates and numbers converted/formatted to strings, so no escaping is needed.
           statusBody += "Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>";
           statusBody += "OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>";
@@ -3399,7 +3388,7 @@ if (!cluster.isPrimary) {
           if(process.memoryUsage) statusBody += "<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B";
           if(process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
           statusBody += "<br/>Thread PID: " + process.pid + "<br/>";
-          
+
           var hdhds = getCustomHeaders();
           hdhds["Content-Type"] = "text/html; charset=utf-8";
           res.writeHead(200, "OK", hdhds);
@@ -3505,23 +3494,23 @@ if (!cluster.isPrimary) {
                 var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
-                  "";
+                    fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
+                    "";
                 var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
-                  "";
+                    fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
+                    "";
 
                 // Check if custom header has HTML tag
                 var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
 
                 // Generate HTML head and footer based on configuration and custom content
                 var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
-                    (!headerHasHTMLTag ?
-                      "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
-                      customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
-                    head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+                  (!headerHasHTMLTag ?
+                    "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
+                    customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
+                  head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
                   (!headerHasHTMLTag ? customDirListingHeader : "") +
                   "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
 
@@ -4177,24 +4166,74 @@ if (!cluster.isPrimary) {
       }
 
       // Handle URL rewriting
-      function rewriteURL(address, map) {
-        var rewrittenAddress = address;
-        map.every(function (mapEntry) {
-          if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address)) {
-            mapEntry.replacements.forEach(function (replacement) {
-              rewrittenAddress = rewrittenAddress.replace(createRegex(replacement.regex), replacement.replacement);
-            });
-            if (mapEntry.append) rewrittenAddress += mapEntry.append;
-            return false;
-          } else {
-            return true;
+      function rewriteURL(address, map, callback, _fileState, _mapBegIndex) {
+        var rewrittenURL = address;
+        if (!isProxy) {
+          var doCallback = true;
+          for(var i=(_mapBegIndex ? _mapBegIndex : 0);i<map.length;i++) {
+            var mapEntry = map[i];
+            if(href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
+              fs.stat("." + decodeURIComponent(href), function(err, stats) {
+                var _fileState = 3;
+                if(err) {
+                  _fileState = 3;
+                } else if(stats.isDirectory()) {
+                  _fileState = 2;
+                } else if(stats.isFile()) {
+                  _fileState = 1;
+                } else {
+                  _fileState = 3;
+                }
+                rewriteURL(address, map, callback, _fileState, i);
+              });
+              doCallback = false;
+              break;
+            }
+            if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
+              mapEntry.replacements.forEach(function (replacement) {
+                rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
+              });
+              if (mapEntry.append) rewrittenURL += mapEntry.append;
+              break;
+            }
           }
-        });
-        return rewrittenAddress;
+        }
+        if(doCallback) callback(rewrittenURL);
       }
+
+      // Trailing slash redirection
+      function redirectTrailingSlashes(callback) {
+        if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
+          fs.stat("." + decodeURIComponent(href), function (err, stats) {
+            if (err || !stats.isDirectory()) {
+              try {
+                callback();  
+              } catch (err) {
+                callServerError(500, undefined, err);
+              }
+            } else {
+              var destinationURL = uobject;
+              destinationURL.path = null;
+              destinationURL.href = null;
+              destinationURL.pathname = origHref + "/";
+              destinationURL.hostname = null;
+              destinationURL.host = null;
+              destinationURL.port = null;
+              destinationURL.protocol = null;
+              destinationURL.slashes = null;
+              destinationURL = url.format(destinationURL);
+              redirect(destinationURL);
+            }
+          });
+        } else {
+          callback();
+        }
+      }
+
       var origHref = href;
-      if (!isProxy) {
-        var rewrittenURL = rewriteURL(req.url, rewriteMap);
+
+      // Rewrite URLs
+      rewriteURL(req.url, rewriteMap, function(rewrittenURL) {
         if (rewrittenURL != req.url) {
           serverconsole.resmessage("URL rewritten: " + req.url + " => " + rewrittenURL);
           req.url = rewrittenURL;
@@ -4248,340 +4287,312 @@ if (!cluster.isPrimary) {
             }
           }
         }
-      }
-
-      // Set response headers
-      if (!isProxy) {
-        var hkh = getCustomHeaders();
-        Object.keys(hkh).forEach(function (hkS) {
-          try {
-            res.setHeader(hkS, hkh[hkS]);
-          } catch (err) {
-            // Headers will not be set.
-          }
-        });
-      }
-
-      // Check if path is forbidden
-      if ((isForbiddenPath(decodedHref, "config") || isForbiddenPath(decodedHref, "certificates")) && !isProxy) {
-        callServerError(403);
-        serverconsole.errmessage("Access to configuration file/certificates is denied.");
-        return;
-      } else if (isIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
-        callServerError(403);
-        serverconsole.errmessage("Access to temporary folder is denied.");
-        return;
-      } else if (isIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
-        callServerError(403);
-        serverconsole.errmessage("Access to log files is denied.");
-        return;
-      } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
-        callServerError(403);
-        serverconsole.errmessage("Access to SVR.JS script is denied.");
-        return;
-      } else if ((isForbiddenPath(decodedHref, "svrjs") || isForbiddenPath(decodedHref, "serverSideScripts") || isIndexOfForbiddenPath(decodedHref, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
-        callServerError(403);
-        serverconsole.errmessage("Access to sources is denied.");
-        return;
-      } else {
-        var nonscodeIndex = -1;
-        var authIndex = -1;
-        var regexI = [];
-
-        // Scan for non-standard codes
-        if (!isProxy && nonStandardCodes != undefined) {
-          for (var i = 0; i < nonStandardCodes.length; i++) {
-            if (matchHostname(nonStandardCodes[i].host)) {
-              var isMatch = false;
-              if (nonStandardCodes[i].regex) {
-                // Regex match
-                var createdRegex = createRegex(nonStandardCodes[i].regex, true);
-                isMatch = req.url.match(createdRegex) || href.match(createdRegex);
-                regexI[i] = createdRegex;
-              } else {
-                // Non-regex match
-                isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
-              }
-              if (isMatch) {
-                if (nonStandardCodes[i].scode == 401) {
-                  // HTTP authentication
-                  if (authIndex == -1) {
-                    authIndex = i;
-                  }
-                } else {
-                  if (nonscodeIndex == -1) {
-                    if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
-                      if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
-                    } else {
-                      nonscodeIndex = i;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        // Handle non-standard codes
-        if (nonscodeIndex > -1) {
-          var nonscode = nonStandardCodes[nonscodeIndex];
-          if (nonscode.scode == 301 || nonscode.scode == 302) {
-            var location = "";
-            if (regexI[nonscodeIndex]) {
-              location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
-            } else if (req.url.split("?")[1] == undefined || req.url.split("?")[1] == null || req.url.split("?")[1] == "" || req.url.split("?")[1] == " ") {
-              location = nonscode.location;
-            } else {
-              location = nonscode.location + "?" + req.url.split("?")[1];
-            }
-            redirect(location, nonscode.scode == 302);
-            return;
-          } else if (nonscode.scode == 403) {
-            callServerError(403);
-            serverconsole.errmessage("Content blocked.");
-            return;
-          } else if (nonscode.scode == 410) {
-            callServerError(410);
-            serverconsole.errmessage("Content is gone.");
-            return;
-          } else if (nonscode.scode == 418) {
-            callServerError(418);
-            serverconsole.errmessage("SVR.JS is always a teapot ;)");
-            return;
-          } else {
-            callServerError(nonscode.scode);
-            serverconsole.errmessage("Client fails receiving content.");
-            return;
-          }
-        }
-
-        // Trailing slash redirection
-        function redirectTrailingSlashes(callback) {
-          if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
-            fs.stat("." + decodeURIComponent(href), function (err, stats) {
-              if (err || !stats.isDirectory()) {
-                try {
-                  callback();  
-                } catch (err) {
-                  callServerError(500, undefined, err);
-                }
-              } else {
-                var destinationURL = uobject;
-                destinationURL.path = null;
-                destinationURL.href = null;
-                destinationURL.pathname = origHref + "/";
-                destinationURL.hostname = null;
-                destinationURL.host = null;
-                destinationURL.port = null;
-                destinationURL.protocol = null;
-                destinationURL.slashes = null;
-                destinationURL = url.format(destinationURL);
-                redirect(destinationURL);
-              }
-            });
-          } else {
-            callback();
-          }
-        }
-
-        // Handle HTTP authentication
-        if (authIndex > -1) {
-          var authcode = nonStandardCodes[authIndex];
-
-          // Function to check if passwords match
-          function checkIfPasswordMatches(list, password, callback, _i) {
-            if (!_i) _i = 0;
-            var cb = function (hash) {
-              var matches = (hash == list[_i].pass);
-              if (matches) {
-                callback(true);
-              } else if (_i >= list.length - 1) {
-                callback(false);
-              } else {
-                checkIfPasswordMatches(list, password, callback, _i + 1);
-              }
-            };
-            var hashedPassword = sha256(password + list[_i].salt);
-            if (list[_i].scrypt) {
-              if (!crypto.scrypt) {
-                callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
-                return;
-              } else {
-                var cacheEntry = scryptCache.find(function (entry) {
-                  return (entry.password == hashedPassword && entry.salt == list[_i].salt);
-                });
-                if (cacheEntry) {
-                  cb(cacheEntry.hash);
-                } else {
-                  crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
-                    if (err) {
-                      callServerError(500, undefined, err);
-                    } else {
-                      var key = derivedKey.toString("hex");
-                      scryptCache.push({
-                        hash: key,
-                        password: hashedPassword,
-                        salt: list[_i].salt,
-                        addDate: new Date()
-                      });
-                      cb(key);
-                    }
-                  });
-                }
-              }
-            } else if (list[_i].pbkdf2) {
-              if (crypto.__disabled__ !== undefined) {
-                callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
-                return;
-              } else {
-                var cacheEntry = pbkdf2Cache.find(function (entry) {
-                  return (entry.password == hashedPassword && entry.salt == list[_i].salt);
-                });
-                if (cacheEntry) {
-                  cb(cacheEntry.hash);
-                } else {
-                  crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
-                    if (err) {
-                      callServerError(500, undefined, err);
-                    } else {
-                      var key = derivedKey.toString("hex");
-                      pbkdf2Cache.push({
-                        hash: key,
-                        password: hashedPassword,
-                        salt: list[_i].salt,
-                        addDate: new Date()
-                      });
-                      cb(key);
-                    }
-                  });
-                }
-              }
-            } else {
-              cb(hashedPassword);
-            }
-          }
-
-          function authorizedCallback(bruteProtection) {
+        // Set response headers
+        if (!isProxy) {
+          var hkh = getCustomHeaders();
+          Object.keys(hkh).forEach(function (hkS) {
             try {
-              var ha = getCustomHeaders();
-              ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
-              var credentials = req.headers["authorization"];
-              if (!credentials) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Content needs authorization.");
-                return;
-              }
-              var credentialsMatch = credentials.match(/^Basic (.+)$/);
-              if (!credentialsMatch) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
-              var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
-              if (!decodedCredentialsMatch) {
-                callServerError(401, undefined, undefined, ha);
-                serverconsole.errmessage("Malformed credentials.");
-                return;
-              }
-              var username = decodedCredentialsMatch[1];
-              var password = decodedCredentialsMatch[2];
-              var usernameMatch = [];
-              if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
-                usernameMatch = users.filter(function (entry) {
-                  return entry.name == username;
-                });
-              }
-              if (usernameMatch.length == 0) {
-                usernameMatch.push({
-                  name: username,
-                  pass: "FAKEPASS",
-                  salt: "FAKESALT"
-                }); // Fake credentials
-              }
-              checkIfPasswordMatches(usernameMatch, password, function (authorized) {
-                try {
-                  if (!authorized) {
-                    if (bruteProtection) {
-                      if (process.send) {
-                        process.send("\x12AUTHW" + reqip);
-                      } else {
-                        if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                          invalidAttempts: 0
-                        };
-                        bruteForceDb[reqip].invalidAttempts++;
-                        if (bruteForceDb[reqip].invalidAttempts >= 10) {
-                          bruteForceDb[reqip].lastAttemptDate = new Date();
-                        }
-                      }
-                    }
-                    callServerError(401, undefined, undefined, ha);
-                    serverconsole.errmessage("User \"" + username + "\" failed to log in.");
-                  } else {
-                    if (bruteProtection) {
-                      if (process.send) {
-                        process.send("\x12AUTHR" + reqip);
-                      } else {
-                        if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                          invalidAttempts: 0
-                        };
-                      }
-                    }
-                    serverconsole.reqmessage("Client is logged in as \"" + username + "\"");
-                    redirectTrailingSlashes(function () {
-                      modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
-                    });
-                  }
-                } catch (err) {
-                  callServerError(500, undefined, generateErrorStack(err));
-                  return;
-                }
-              });
+              res.setHeader(hkS, hkh[hkS]);
             } catch (err) {
-              callServerError(500, undefined, generateErrorStack(err));
+            // Headers will not be set.
+            }
+          });
+        }
+
+        // Check if path is forbidden
+        if ((isForbiddenPath(decodedHref, "config") || isForbiddenPath(decodedHref, "certificates")) && !isProxy) {
+          callServerError(403);
+          serverconsole.errmessage("Access to configuration file/certificates is denied.");
+          return;
+        } else if (isIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
+          callServerError(403);
+          serverconsole.errmessage("Access to temporary folder is denied.");
+          return;
+        } else if (isIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
+          callServerError(403);
+          serverconsole.errmessage("Access to log files is denied.");
+          return;
+        } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
+          callServerError(403);
+          serverconsole.errmessage("Access to SVR.JS script is denied.");
+          return;
+        } else if ((isForbiddenPath(decodedHref, "svrjs") || isForbiddenPath(decodedHref, "serverSideScripts") || isIndexOfForbiddenPath(decodedHref, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
+          callServerError(403);
+          serverconsole.errmessage("Access to sources is denied.");
+          return;
+        } else {
+          var nonscodeIndex = -1;
+          var authIndex = -1;
+          var regexI = [];
+
+          // Scan for non-standard codes
+          if (!isProxy && nonStandardCodes != undefined) {
+            for (var i = 0; i < nonStandardCodes.length; i++) {
+              if (matchHostname(nonStandardCodes[i].host)) {
+                var isMatch = false;
+                if (nonStandardCodes[i].regex) {
+                // Regex match
+                  var createdRegex = createRegex(nonStandardCodes[i].regex, true);
+                  isMatch = req.url.match(createdRegex) || href.match(createdRegex);
+                  regexI[i] = createdRegex;
+                } else {
+                // Non-regex match
+                  isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
+                }
+                if (isMatch) {
+                  if (nonStandardCodes[i].scode == 401) {
+                  // HTTP authentication
+                    if (authIndex == -1) {
+                      authIndex = i;
+                    }
+                  } else {
+                    if (nonscodeIndex == -1) {
+                      if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
+                        if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
+                      } else {
+                        nonscodeIndex = i;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // Handle non-standard codes
+          if (nonscodeIndex > -1) {
+            var nonscode = nonStandardCodes[nonscodeIndex];
+            if (nonscode.scode == 301 || nonscode.scode == 302 || nonscode.scode == 307 || nonscode.scode == 308) {
+              var location = "";
+              if (regexI[nonscodeIndex]) {
+                location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
+              } else if (req.url.split("?")[1] == undefined || req.url.split("?")[1] == null || req.url.split("?")[1] == "" || req.url.split("?")[1] == " ") {
+                location = nonscode.location;
+              } else {
+                location = nonscode.location + "?" + req.url.split("?")[1];
+              }
+              redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonscode.scode == 308);
+              return;
+            } else if (nonscode.scode == 403) {
+              callServerError(403);
+              serverconsole.errmessage("Content blocked.");
+              return;
+            } else if (nonscode.scode == 410) {
+              callServerError(410);
+              serverconsole.errmessage("Content is gone.");
+              return;
+            } else if (nonscode.scode == 418) {
+              callServerError(418);
+              serverconsole.errmessage("SVR.JS is always a teapot ;)");
+              return;
+            } else {
+              callServerError(nonscode.scode);
+              serverconsole.errmessage("Client fails receiving content.");
               return;
             }
           }
-          if (authcode.disableBruteProtection) {
-            // Don't brute-force protect it, just do HTTP authentication
-            authorizedCallback(false);
-          } else if (!process.send) {
-            // Query data from JS object database
-            if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
-              if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
-                invalidAttempts: 5
-              };
-              authorizedCallback(true);
-            } else {
-              callServerError(429);
-              serverconsole.errmessage("Brute force limit reached!");
-            }
-          } else {
-            var listenerEmitted = false;
 
-            // Listen for brute-force protection response
-            function authMessageListener(message) {
-              if (listenerEmitted) return;
-              if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
-                process.removeListener("message", authMessageListener);
-                listenerEmitted = true;
+          // Handle HTTP authentication
+          if (authIndex > -1) {
+            var authcode = nonStandardCodes[authIndex];
+
+            // Function to check if passwords match
+            function checkIfPasswordMatches(list, password, callback, _i) {
+              if (!_i) _i = 0;
+              var cb = function (hash) {
+                var matches = (hash == list[_i].pass);
+                if (matches) {
+                  callback(true);
+                } else if (_i >= list.length - 1) {
+                  callback(false);
+                } else {
+                  checkIfPasswordMatches(list, password, callback, _i + 1);
+                }
+              };
+              var hashedPassword = sha256(password + list[_i].salt);
+              var cacheEntry = null;
+              if (list[_i].scrypt) {
+                if (!crypto.scrypt) {
+                  callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
+                  return;
+                } else {
+                  cacheEntry = scryptCache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if (cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
+                      if (err) {
+                        callServerError(500, undefined, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        scryptCache.push({
+                          hash: key,
+                          password: hashedPassword,
+                          salt: list[_i].salt,
+                          addDate: new Date()
+                        });
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else if (list[_i].pbkdf2) {
+                if (crypto.__disabled__ !== undefined) {
+                  callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
+                  return;
+                } else {
+                  cacheEntry = pbkdf2Cache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if (cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
+                      if (err) {
+                        callServerError(500, undefined, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        pbkdf2Cache.push({
+                          hash: key,
+                          password: hashedPassword,
+                          salt: list[_i].salt,
+                          addDate: new Date()
+                        });
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else {
+                cb(hashedPassword);
               }
-              if (message == "\x14AUTHD" + reqip) {
+            }
+
+            function authorizedCallback(bruteProtection) {
+              try {
+                var ha = getCustomHeaders();
+                ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
+                var credentials = req.headers["authorization"];
+                if (!credentials) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Content needs authorization.");
+                  return;
+                }
+                var credentialsMatch = credentials.match(/^Basic (.+)$/);
+                if (!credentialsMatch) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
+                var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
+                if (!decodedCredentialsMatch) {
+                  callServerError(401, undefined, undefined, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var username = decodedCredentialsMatch[1];
+                var password = decodedCredentialsMatch[2];
+                var usernameMatch = [];
+                if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
+                  usernameMatch = users.filter(function (entry) {
+                    return entry.name == username;
+                  });
+                }
+                if (usernameMatch.length == 0) {
+                  usernameMatch.push({
+                    name: username,
+                    pass: "FAKEPASS",
+                    salt: "FAKESALT"
+                  }); // Fake credentials
+                }
+                checkIfPasswordMatches(usernameMatch, password, function (authorized) {
+                  try {
+                    if (!authorized) {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHW" + reqip);
+                        } else {
+                          if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                          bruteForceDb[reqip].invalidAttempts++;
+                          if (bruteForceDb[reqip].invalidAttempts >= 10) {
+                            bruteForceDb[reqip].lastAttemptDate = new Date();
+                          }
+                        }
+                      }
+                      callServerError(401, undefined, undefined, ha);
+                      serverconsole.errmessage("User \"" + String(username).replace(/[\r\n]/g, "") + "\" failed to log in.");
+                    } else {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHR" + reqip);
+                        } else {
+                          if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                        }
+                      }
+                      serverconsole.reqmessage("Client is logged in as \"" + String(username).replace(/[\r\n]/g, "") + "\".");
+                      redirectTrailingSlashes(function () {
+                        modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+                      });
+                    }
+                  } catch (err) {
+                    callServerError(500, undefined, generateErrorStack(err));
+                    return;
+                  }
+                });
+              } catch (err) {
+                callServerError(500, undefined, generateErrorStack(err));
+                return;
+              }
+            }
+            if (authcode.disableBruteProtection) {
+            // Don't brute-force protect it, just do HTTP authentication
+              authorizedCallback(false);
+            } else if (!process.send) {
+            // Query data from JS object database
+              if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
+                if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
+                  invalidAttempts: 5
+                };
+                authorizedCallback(true);
+              } else {
                 callServerError(429);
                 serverconsole.errmessage("Brute force limit reached!");
-              } else if (message == "\x14AUTHA" + reqip) {
-                authorizedCallback(true);
               }
+            } else {
+              var listenerEmitted = false;
+
+              // Listen for brute-force protection response
+              function authMessageListener(message) {
+                if (listenerEmitted) return;
+                if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
+                  process.removeListener("message", authMessageListener);
+                  listenerEmitted = true;
+                }
+                if (message == "\x14AUTHD" + reqip) {
+                  callServerError(429);
+                  serverconsole.errmessage("Brute force limit reached!");
+                } else if (message == "\x14AUTHA" + reqip) {
+                  authorizedCallback(true);
+                }
+              }
+              process.on("message", authMessageListener);
+              process.send("\x12AUTHQ" + reqip);
             }
-            process.on("message", authMessageListener);
-            process.send("\x12AUTHQ" + reqip);
+          } else {
+            redirectTrailingSlashes(function () {
+              modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
+            });
           }
-        } else {
-          redirectTrailingSlashes(function () {
-            modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData));
-          });
         }
-      }
+
+      });
     } catch (err) {
       callServerError(500, undefined, generateErrorStack(err));
     }
@@ -4842,18 +4853,18 @@ function start(init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
       console.log("Welcome to SVR.JS - a web server running on Node.JS");
+
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
-      if (svrmodpackUsed) serverconsole.locwarnmessage("The \"svrmodpack\" library is deprecated. Mods using svrmodpack format may not work in future SVR.JS versions.");
       if (configJSON.enableHTTP2 && !secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
         if (users.some(function (entry) {
-            return entry.pbkdf2;
-          })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+          return entry.pbkdf2;
+        })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
         if (users.some(function (entry) {
-            return entry.scrypt;
-          })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
+          return entry.scrypt;
+        })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
@@ -4873,7 +4884,7 @@ function start(init) {
       // Display mod and server-side JavaScript errors
       if (process.isPrimary || process.isPrimary === undefined) {
         modLoadingErrors.forEach(function (modLoadingError) {
-          serverconsole.locwarnmessage("There was a problem while loading a \"" + modLoadingError.modName + "\" mod.");
+          serverconsole.locwarnmessage("There was a problem while loading a \"" + String(modLoadingError.modName).replace(/[\r\n]/g, "") + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(modLoadingError.error));
         });
@@ -4885,7 +4896,7 @@ function start(init) {
         if (SSJSError || modLoadingErrors.length > 0) console.log();
       }
 
-      // Print info
+      // Print server information
       serverconsole.locmessage("Server version: " + version);
       if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);
       else serverconsole.locmessage("Node.JS version: " + process.version);
@@ -4909,7 +4920,7 @@ function start(init) {
       if (sniReDos) throw new Error("Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.");
     }
 
-    // Information about starting the server
+    // Print server startup information
     if (!(secure && disableNonEncryptedServer)) serverconsole.locmessage("Starting HTTP server at " + (typeof port == "number" ? (listenAddress ? ((listenAddress.indexOf(":") > -1 ? "[" + listenAddress + "]" : listenAddress)) + ":" : "port ") : "") + port.toString() + "...");
     if (secure) serverconsole.locmessage("Starting HTTPS server at " + (typeof sport == "number" ? (sListenAddress ? ((sListenAddress.indexOf(":") > -1 ? "[" + sListenAddress + "]" : sListenAddress)) + ":" : "port ") : "") + sport.toString() + "...");
   }
@@ -4997,7 +5008,7 @@ function start(init) {
     },
     stop: function (retcode) {
       reallyExiting = true;
-      clearInterval(pbkdf2CacheIntervalId);
+      clearInterval(passwordHashCacheIntervalId);
       if ((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
         try {
           server.close(function () {
@@ -5155,7 +5166,7 @@ function start(init) {
       }, 300000);
     }
     if (!cluster.isPrimary) {
-      pbkdf2CacheIntervalId = setInterval(function () {
+      passwordHashCacheIntervalId = setInterval(function () {
         pbkdf2Cache = pbkdf2Cache.filter(function (entry) {
           return entry.addDate > (new Date() - 3600000);
         });
@@ -5718,9 +5729,3 @@ try {
     process.exit(err.errno ? err.errno : 1);
   }, 10);
 }
-
-//////////////////////////////////
-////         THE END!         ////
-////   WARNING: THE CODE HAS  ////
-////       5000+ LINES!       ////
-//////////////////////////////////
