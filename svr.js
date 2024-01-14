@@ -4886,7 +4886,7 @@ function start(init) {
       // Display mod and server-side JavaScript errors
       if (process.isPrimary || process.isPrimary === undefined) {
         modLoadingErrors.forEach(function (modLoadingError) {
-          serverconsole.locwarnmessage("There was a problem while loading a \"" + modLoadingError.modName + "\" mod.");
+          serverconsole.locwarnmessage("There was a problem while loading a \"" + String(modLoadingError.modName).replace(/[\r\n]/g, "") + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(modLoadingError.error));
         });
