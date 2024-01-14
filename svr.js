@@ -1,26 +1,17 @@
-//DorianTech HTTP Server
-//Uses Content-Type and Content-Length
-//Events calling:
-//|
-//+--request
-//|
-//+--connect
-//|
-//+--error
-//
-//APIs:
-// - https
-// - readline
-// - os
-// - http
-// - url
-// - fs
-// - path
-// - hexstrbase64
-// - crypto
-// - svrmodpack
-// - graceful-fs
-// - formidable
+// SVR.JS - a web server running on Node.JS
+
+/*
+ * MIT License
+ *
+ * Copyright (c) 2018-2024 SVR.JS
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 if (typeof require === "undefined") {
   if (typeof ActiveXObject !== "undefined" && typeof WScript !== "undefined") {
     var shell = new ActiveXObject("WScript.Shell");
@@ -71,7 +62,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.40";
+var version = "3.4.41";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -1134,6 +1125,9 @@ function LOG(s) {
             flags: "a",
             autoClose: false
           });
+          logFile.on("error", function(err) {
+            if (!s.match(/^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /) && !reallyExiting) serverconsole.locwarnmessage("There was a problem while saving logs! Logs will not be kept in log file. Reason: " + err.message);
+          });
         }
         if (logFile.writable) {
           logFile.write("[" + new Date().toISOString() + "] " + s + "\r\n");
@@ -1349,7 +1343,7 @@ if (!disableMods) {
         }
       } catch (ex) {
         if (cluster.isPrimary || cluster.isPrimary === undefined) {
-          serverconsole.locwarnmessage("There was a problem while loading a \"" + modFiles[i] + "\" mod.");
+          serverconsole.locwarnmessage("There was a problem while loading a \"" + String(modFiles[i]).replace(/[\r\n]/g, "") + "\" mod.");
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(ex));
         }
@@ -4143,7 +4137,7 @@ if (!cluster.isPrimary) {
                     }
                   }
                   callServerError(401, undefined, undefined, ha);
-                  serverconsole.errmessage("User " + username + " failed to log in.");
+                  serverconsole.errmessage("User " + String(username).replace(/[\r\n]/g, "") + " failed to log in.");
                 } else {
                   if (bruteProtection) {
                     if (process.send) {
@@ -4357,7 +4351,7 @@ function start(init) {
     if (init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); //Print logo
       console.log();
-      console.log("Welcome to DorianTech SVR.JS server.");
+      console.log("Welcome to SVR.JS - a web server running on Node.JS");
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
       if (vnum <= 57 && JSON.stringify(rewriteMap) != "[]") serverconsole.locwarnmessage("Some URL rewriting regexes will not work in Node.JS 8.x and earlier.");
       if (http2.__disabled__ !== undefined) serverconsole.locwarnmessage("HTTP/2 isn't supported by your Node.JS version!");
