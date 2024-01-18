@@ -4168,9 +4168,9 @@ if (!cluster.isPrimary) {
       // Handle URL rewriting
       function rewriteURL(address, map, callback, _fileState, _mapBegIndex) {
         var rewrittenURL = address;
+        var doCallback = true;
         if (!isProxy) {
-          var doCallback = true;
-          for(var i=(_mapBegIndex ? _mapBegIndex : 0);i<map.length;i++) {
+          for (var i = (_mapBegIndex ? _mapBegIndex : 0); i < map.length; i++) {
             var mapEntry = map[i];
             if(href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
               fs.stat("." + decodeURIComponent(href), function(err, stats) {
@@ -4190,15 +4190,20 @@ if (!cluster.isPrimary) {
               break;
             }
             if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
-              mapEntry.replacements.forEach(function (replacement) {
-                rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
-              });
-              if (mapEntry.append) rewrittenURL += mapEntry.append;
+              try {
+                mapEntry.replacements.forEach(function (replacement) {
+                  rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
+                });
+                if (mapEntry.append) rewrittenURL += mapEntry.append;
+              } catch (err) {
+                doCallback = false;
+                callback(err, address);
+              }
               break;
             }
           }
         }
-        if(doCallback) callback(rewrittenURL);
+        if(doCallback) callback(null, rewrittenURL);
       }
 
       // Trailing slash redirection
@@ -4207,7 +4212,7 @@ if (!cluster.isPrimary) {
           fs.stat("." + decodeURIComponent(href), function (err, stats) {
             if (err || !stats.isDirectory()) {
               try {
-                callback();  
+                callback();
               } catch (err) {
                 callServerError(500, undefined, err);
               }
@@ -4233,7 +4238,11 @@ if (!cluster.isPrimary) {
       var origHref = href;
 
       // Rewrite URLs
-      rewriteURL(req.url, rewriteMap, function(rewrittenURL) {
+      rewriteURL(req.url, rewriteMap, function(err, rewrittenURL) {
+        if (err) {
+          callServerError(500, undefined, err);
+          return;
+        }
         if (rewrittenURL != req.url) {
           serverconsole.resmessage("URL rewritten: " + req.url + " => " + rewrittenURL);
           req.url = rewrittenURL;
