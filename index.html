@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.13.0</title>
+    <title>SVR.JS 3.13.1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.13.0</h1>
+    <h1>Welcome to SVR.JS 3.13.1</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -134,12 +134,8 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added support for skipping URL rewriting, when the URL refers to a file or a directory.</li>
-      <li>Dropped support for svrmodpack.</li>
-      <li>Added support for 307 and 308 redirects (both in config.json and in redirect() SVR.JS API method).</li>
-      <li>Mitigated log file injection vulnerability for HTTP authentication.</li>
-      <li>Mitigated log file injection vulnerability for SVR.JS mod file names.</li>
-      <li>SVR.JS no longer crashes, when access to a log file is denied.</li>
+      <li>Fixed error handling for invalid URL rewrite regexes.</li>
+      <li>Fixed bug with non-working HTTP proxy handler (excluding CONNECT method).</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>
