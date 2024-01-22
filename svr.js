@@ -2065,12 +2065,21 @@ if (!cluster.isPrimary) {
         allowHTTP1: true,
         requireHostHeader: false,
         key: key,
-        cert: cert
+        cert: cert,
+        requestCert: configJSON.useClientCertificate,
+        rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
+        ciphers: configJSON.cipherSuite,
+        ecdhCurve: configJSON.ecdhCurve,
+        minVersion: configJSON.tlsMinVersion,
+        maxVersion: configJSON.tlsMaxVersion,
+        sigalgs: configJSON.signatureAlgorithms,
+        settings: configJSON.http2Settings
       });
     } else {
       server = http2.createServer({
         allowHTTP1: true,
-        requireHostHeader: false
+        requireHostHeader: false,
+        settings: configJSON.http2Settings
       });
     }
   } else {
@@ -2078,7 +2087,14 @@ if (!cluster.isPrimary) {
       server = https.createServer({
         key: key,
         cert: cert,
-        requireHostHeader: false
+        requireHostHeader: false,
+        requestCert: configJSON.useClientCertificate,
+        rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
+        ciphers: configJSON.cipherSuite,
+        ecdhCurve: configJSON.ecdhCurve,
+        minVersion: configJSON.tlsMinVersion,
+        maxVersion: configJSON.tlsMaxVersion,
+        sigalgs: configJSON.signatureAlgorithms
       });
     } else {
       try {
