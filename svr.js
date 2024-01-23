@@ -1086,6 +1086,7 @@ var useWebRootServerSideScript = true;
 var exposeModsInErrorPages = true;
 var disableTrailingSlashRedirects = false;
 var environmentVariables = {};
+var wwwrootPostfixesVHost = [];
 
 // Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1139,7 +1140,7 @@ if (configJSON.useWebRootServerSideScript != undefined) useWebRootServerSideScri
 if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = configJSON.exposeModsInErrorPages;
 if (configJSON.disableTrailingSlashRedirects != undefined) disableTrailingSlashRedirects = configJSON.disableTrailingSlashRedirects;
 if (configJSON.environmentVariables != undefined) environmentVariables = configJSON.environmentVariables;
-
+if (configJSON.wwwrootPostfixesVHost != undefined) wwwrootPostfixesVHost = configJSON.wwwrootPostfixesVHost;
 var wwwrootError = null;
 try {
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
@@ -4205,7 +4206,7 @@ if (!cluster.isPrimary) {
               doCallback = false;
               break;
             }
-            if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
+            if (matchHostname(mapEntry.host) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
               try {
                 mapEntry.replacements.forEach(function (replacement) {
                   rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
@@ -4253,6 +4254,72 @@ if (!cluster.isPrimary) {
 
       var origHref = href;
 
+      // Add web root postfixes
+      if(!isProxy) {
+        var urlWithPostfix = req.url;
+        wwwrootPostfixesVHost.every(function (postfixEntry) {
+          if (matchHostname(postfixEntry.host) && !(postfixEntry.skipRegex && req.url.match(createRegex(postfixEntry.skipRegex)))) {
+            urlWithPostfix = "/" + postfixEntry.postfix + req.url;
+            return false;
+          } else {
+            return true;
+          }
+        });
+        if (urlWithPostfix != req.url) {
+          serverconsole.resmessage("Added web root postfix: " + req.url + " => " + urlWithPostfix);
+          req.url = urlWithPostfix;
+          uobject = parseURL(req.url);
+          search = uobject.search;
+          href = uobject.pathname;
+          ext = path.extname(href).toLowerCase();
+          ext = ext.substr(1, ext.length);
+
+          try {
+            decodedHref = decodeURIComponent(href);
+          } catch (err) {
+            // Return 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
+
+          var sHref = sanitizeURL(href);
+          var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+
+          if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
+            callServerError(403);
+            serverconsole.errmessage("Content blocked.");
+            return;
+          } else if (sHref != href) {
+            var rewrittenAgainURL = uobject;
+            rewrittenAgainURL.path = null;
+            rewrittenAgainURL.href = null;
+            rewrittenAgainURL.pathname = sHref;
+            rewrittenAgainURL.hostname = null;
+            rewrittenAgainURL.host = null;
+            rewrittenAgainURL.port = null;
+            rewrittenAgainURL.protocol = null;
+            rewrittenAgainURL.slashes = null;
+            rewrittenAgainURL = url.format(rewrittenAgainURL);
+            serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
+            req.url = rewrittenAgainURL;
+            uobject = parseURL(req.url);
+            search = uobject.search;
+            href = uobject.pathname;
+            ext = path.extname(href).toLowerCase();
+            ext = ext.substr(1, ext.length);
+            try {
+              decodedHref = decodeURIComponent(href);
+            } catch (err) {
+              // Return 400 error
+              callServerError(400);
+              serverconsole.errmessage("Bad request!");
+              return;
+            }
+          }
+        }
+      }
+      
       // Rewrite URLs
       rewriteURL(req.url, rewriteMap, function(err, rewrittenURL) {
         if (err) {
