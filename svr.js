@@ -4264,8 +4264,9 @@ if (!cluster.isPrimary) {
         wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
           if (req.url.indexOf(currentPostfixPrefix) == 0) {
             if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/,"");
-            else postfixPrefix = currentPostfixPrefix;
-            urlWithPostfix = urlWithPostFix.substr(postfixPrefix.length);
+            else if (urlWithPostfix.length == currentPostfixPrefix.length || urlWithPostfix[currentPostfixPrefix.length] == "?" || urlWithPostfix[currentPostfixPrefix.length] == "/" || urlWithPostfix[currentPostfixPrefix.length] == "#") postfixPrefix = currentPostfixPrefix;
+            else return true;
+            urlWithPostfix = urlWithPostfix.substr(postfixPrefix.length);
             return false;
           } else {
             return true;
@@ -4273,7 +4274,7 @@ if (!cluster.isPrimary) {
         });
         wwwrootPostfixesVHost.every(function (postfixEntry) {
           if (matchHostname(postfixEntry.host) && !(postfixEntry.skipRegex && req.url.match(createRegex(postfixEntry.skipRegex)))) {
-            urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + req.url;
+            urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + urlWithPostfix;
             return false;
           } else {
             return true;
