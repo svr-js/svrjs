@@ -4263,7 +4263,7 @@ if (!cluster.isPrimary) {
         var postfixPrefix = "";
         wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
           if (req.url.indexOf(currentPostfixPrefix) == 0) {
-            if(currentPostfixPrefix.match(/\/+$/) postfixPrefix = currentPostfixPrefix.replace(/\/+$/,""));
+            if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/,"");
             else postfixPrefix = currentPostfixPrefix;
             urlWithPostfix = urlWithPostFix.substr(postfixPrefix.length);
             return false;
