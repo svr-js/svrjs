@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.13.1</title>
+    <title>SVR.JS 3.14.0</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.13.1</h1>
+    <h1>Welcome to SVR.JS 3.14.0</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -134,8 +134,9 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Fixed error handling for invalid URL rewrite regexes.</li>
-      <li>Fixed bug with non-working HTTP proxy handler (excluding CONNECT method).</li>
+      <li>Added new <i>config.json</i> properties: <i>useClientCertificate</i>, <i>rejectUnauthorizedClientCertificates</i>, <i>cipherSuite</i>, <i>ecdhCurve</i>, <i>tlsMinVersion</i>, <i>tlsMaxVersion</i>, <i>signatureAlgorithms</i> and <i>http2Settings</i>.</li>
+      <li>Added support for web root postfixes (along with postfix prefixes).</li>
+      <li>Custom head and foot inclusion is now returning 500 error in case of server error instead of crashing the server.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>

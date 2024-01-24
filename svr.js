@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.13.1";
+var version = "3.14.0";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -1086,6 +1086,8 @@ var useWebRootServerSideScript = true;
 var exposeModsInErrorPages = true;
 var disableTrailingSlashRedirects = false;
 var environmentVariables = {};
+var wwwrootPostfixesVHost = [];
+var wwwrootPostfixPrefixesVHost = [];
 
 // Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1139,6 +1141,8 @@ if (configJSON.useWebRootServerSideScript != undefined) useWebRootServerSideScri
 if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = configJSON.exposeModsInErrorPages;
 if (configJSON.disableTrailingSlashRedirects != undefined) disableTrailingSlashRedirects = configJSON.disableTrailingSlashRedirects;
 if (configJSON.environmentVariables != undefined) environmentVariables = configJSON.environmentVariables;
+if (configJSON.wwwrootPostfixesVHost != undefined) wwwrootPostfixesVHost = configJSON.wwwrootPostfixesVHost;
+if (configJSON.wwwrootPostfixPrefixesVHost != undefined) wwwrootPostfixPrefixesVHost = configJSON.wwwrootPostfixPrefixesVHost;
 
 var wwwrootError = null;
 try {
@@ -2065,12 +2069,21 @@ if (!cluster.isPrimary) {
         allowHTTP1: true,
         requireHostHeader: false,
         key: key,
-        cert: cert
+        cert: cert,
+        requestCert: configJSON.useClientCertificate,
+        rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
+        ciphers: configJSON.cipherSuite,
+        ecdhCurve: configJSON.ecdhCurve,
+        minVersion: configJSON.tlsMinVersion,
+        maxVersion: configJSON.tlsMaxVersion,
+        sigalgs: configJSON.signatureAlgorithms,
+        settings: configJSON.http2Settings
       });
     } else {
       server = http2.createServer({
         allowHTTP1: true,
-        requireHostHeader: false
+        requireHostHeader: false,
+        settings: configJSON.http2Settings
       });
     }
   } else {
@@ -2078,7 +2091,14 @@ if (!cluster.isPrimary) {
       server = https.createServer({
         key: key,
         cert: cert,
-        requireHostHeader: false
+        requireHostHeader: false,
+        requestCert: configJSON.useClientCertificate,
+        rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
+        ciphers: configJSON.cipherSuite,
+        ecdhCurve: configJSON.ecdhCurve,
+        minVersion: configJSON.tlsMinVersion,
+        maxVersion: configJSON.tlsMaxVersion,
+        sigalgs: configJSON.signatureAlgorithms
       });
     } else {
       try {
@@ -2315,11 +2335,12 @@ if (!cluster.isPrimary) {
     });
     socket.on("error", function () {});
 
-    var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-    var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    // Header and footer placeholders
+    var head = "";
+    var foot = "";
 
     function responseEnd(body) {
-      //If body is Buffer, then it is converted to String anyway.
+      // If body is Buffer, then it is converted to String anyway.
       res.write(head + body + foot);
       res.end();
     }
@@ -2464,6 +2485,9 @@ if (!cluster.isPrimary) {
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " sent invalid request.");
     try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+
       if ((err.code && (err.code.indexOf("ERR_SSL_") == 0 || err.code.indexOf("ERR_TLS_") == 0)) || (!err.code && err.message.indexOf("SSL routines") != -1)) {
         if (err.code == "ERR_SSL_HTTP_REQUEST" || err.message.indexOf("http request") != -1) {
           serverconsole.errmessage("Client sent HTTP request to HTTPS port.");
@@ -2962,11 +2986,12 @@ if (!cluster.isPrimary) {
     var acceptEncoding = req.headers["accept-encoding"];
     if (!acceptEncoding) acceptEncoding = "";
 
-    var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-    var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    // Header and footer placeholders
+    var head = "";
+    var foot = "";
 
     function responseEnd(body) {
-      //If body is Buffer, then it is converted to String anyway. 
+      // If body is Buffer, then it is converted to String anyway.
       res.write(head + body + foot);
       res.end();
     }
@@ -3128,6 +3153,12 @@ if (!cluster.isPrimary) {
       });
     }
 
+    try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    } catch (err) {
+      callServerError(500, undefined, generateErrorStack(err));
+    }
 
     // Function to perform HTTP redirection to a specified destination URL
     function redirect(destination, isTemporary, keepMethod, customHeaders) {
@@ -4189,7 +4220,7 @@ if (!cluster.isPrimary) {
               doCallback = false;
               break;
             }
-            if (matchHostname(mapEntry.host) && createRegex(mapEntry.definingRegex).test(address) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
+            if (matchHostname(mapEntry.host) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
               try {
                 mapEntry.replacements.forEach(function (replacement) {
                   rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
@@ -4237,6 +4268,84 @@ if (!cluster.isPrimary) {
 
       var origHref = href;
 
+      // Add web root postfixes
+      if(!isProxy) {
+        var urlWithPostfix = req.url;
+        var postfixPrefix = "";
+        wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
+          if (req.url.indexOf(currentPostfixPrefix) == 0) {
+            if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/,"");
+            else if (urlWithPostfix.length == currentPostfixPrefix.length || urlWithPostfix[currentPostfixPrefix.length] == "?" || urlWithPostfix[currentPostfixPrefix.length] == "/" || urlWithPostfix[currentPostfixPrefix.length] == "#") postfixPrefix = currentPostfixPrefix;
+            else return true;
+            urlWithPostfix = urlWithPostfix.substr(postfixPrefix.length);
+            return false;
+          } else {
+            return true;
+          }
+        });
+        wwwrootPostfixesVHost.every(function (postfixEntry) {
+          if (matchHostname(postfixEntry.host) && !(postfixEntry.skipRegex && req.url.match(createRegex(postfixEntry.skipRegex)))) {
+            urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + urlWithPostfix;
+            return false;
+          } else {
+            return true;
+          }
+        });
+        if (urlWithPostfix != req.url) {
+          serverconsole.resmessage("Added web root postfix: " + req.url + " => " + urlWithPostfix);
+          req.url = urlWithPostfix;
+          uobject = parseURL(req.url);
+          search = uobject.search;
+          href = uobject.pathname;
+          ext = path.extname(href).toLowerCase();
+          ext = ext.substr(1, ext.length);
+
+          try {
+            decodedHref = decodeURIComponent(href);
+          } catch (err) {
+            // Return 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
+
+          var sHref = sanitizeURL(href);
+          var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+
+          if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
+            callServerError(403);
+            serverconsole.errmessage("Content blocked.");
+            return;
+          } else if (sHref != href) {
+            var rewrittenAgainURL = uobject;
+            rewrittenAgainURL.path = null;
+            rewrittenAgainURL.href = null;
+            rewrittenAgainURL.pathname = sHref;
+            rewrittenAgainURL.hostname = null;
+            rewrittenAgainURL.host = null;
+            rewrittenAgainURL.port = null;
+            rewrittenAgainURL.protocol = null;
+            rewrittenAgainURL.slashes = null;
+            rewrittenAgainURL = url.format(rewrittenAgainURL);
+            serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
+            req.url = rewrittenAgainURL;
+            uobject = parseURL(req.url);
+            search = uobject.search;
+            href = uobject.pathname;
+            ext = path.extname(href).toLowerCase();
+            ext = ext.substr(1, ext.length);
+            try {
+              decodedHref = decodeURIComponent(href);
+            } catch (err) {
+              // Return 400 error
+              callServerError(400);
+              serverconsole.errmessage("Bad request!");
+              return;
+            }
+          }
+        }
+      }
+      
       // Rewrite URLs
       rewriteURL(req.url, rewriteMap, function(err, rewrittenURL) {
         if (err) {
