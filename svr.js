@@ -1087,6 +1087,7 @@ var exposeModsInErrorPages = true;
 var disableTrailingSlashRedirects = false;
 var environmentVariables = {};
 var wwwrootPostfixesVHost = [];
+var wwwrootPostfixPrefixesVHost = [];
 
 // Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1141,6 +1142,8 @@ if (configJSON.exposeModsInErrorPages != undefined) exposeModsInErrorPages = con
 if (configJSON.disableTrailingSlashRedirects != undefined) disableTrailingSlashRedirects = configJSON.disableTrailingSlashRedirects;
 if (configJSON.environmentVariables != undefined) environmentVariables = configJSON.environmentVariables;
 if (configJSON.wwwrootPostfixesVHost != undefined) wwwrootPostfixesVHost = configJSON.wwwrootPostfixesVHost;
+if (configJSON.wwwrootPostfixPrefixesVHost != undefined) wwwrootPostfixPrefixesVHost = configJSON.wwwrootPostfixPrefixesVHost;
+
 var wwwrootError = null;
 try {
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
@@ -4257,9 +4260,20 @@ if (!cluster.isPrimary) {
       // Add web root postfixes
       if(!isProxy) {
         var urlWithPostfix = req.url;
+        var postfixPrefix = "";
+        wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
+          if (req.url.indexOf(currentPostfixPrefix) == 0) {
+            if(currentPostfixPrefix.match(/\/+$/) postfixPrefix = currentPostfixPrefix.replace(/\/+$/,""));
+            else postfixPrefix = currentPostfixPrefix;
+            urlWithPostfix = urlWithPostFix.substr(postfixPrefix.length);
+            return false;
+          } else {
+            return true;
+          }
+        });
         wwwrootPostfixesVHost.every(function (postfixEntry) {
           if (matchHostname(postfixEntry.host) && !(postfixEntry.skipRegex && req.url.match(createRegex(postfixEntry.skipRegex)))) {
-            urlWithPostfix = "/" + postfixEntry.postfix + req.url;
+            urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + req.url;
             return false;
           } else {
             return true;
