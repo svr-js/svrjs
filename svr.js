@@ -2335,11 +2335,12 @@ if (!cluster.isPrimary) {
     });
     socket.on("error", function () {});
 
-    var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-    var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    // Header and footer placeholders
+    var head = "";
+    var foot = "";
 
     function responseEnd(body) {
-      //If body is Buffer, then it is converted to String anyway.
+      // If body is Buffer, then it is converted to String anyway.
       res.write(head + body + foot);
       res.end();
     }
@@ -2484,6 +2485,9 @@ if (!cluster.isPrimary) {
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " sent invalid request.");
     try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+
       if ((err.code && (err.code.indexOf("ERR_SSL_") == 0 || err.code.indexOf("ERR_TLS_") == 0)) || (!err.code && err.message.indexOf("SSL routines") != -1)) {
         if (err.code == "ERR_SSL_HTTP_REQUEST" || err.message.indexOf("http request") != -1) {
           serverconsole.errmessage("Client sent HTTP request to HTTPS port.");
@@ -2982,11 +2986,12 @@ if (!cluster.isPrimary) {
     var acceptEncoding = req.headers["accept-encoding"];
     if (!acceptEncoding) acceptEncoding = "";
 
-    var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-    var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    // Header and footer placeholders
+    var head = "";
+    var foot = "";
 
     function responseEnd(body) {
-      //If body is Buffer, then it is converted to String anyway. 
+      // If body is Buffer, then it is converted to String anyway.
       res.write(head + body + foot);
       res.end();
     }
@@ -3148,6 +3153,12 @@ if (!cluster.isPrimary) {
       });
     }
 
+    try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    } catch (err) {
+      callServerError(500, undefined, generateErrorStack(err));
+    }
 
     // Function to perform HTTP redirection to a specified destination URL
     function redirect(destination, isTemporary, keepMethod, customHeaders) {
