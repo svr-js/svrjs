@@ -62,7 +62,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.4.41";
+var version = "3.4.42";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; //Inject SVR.JS into process.versions
@@ -2007,8 +2007,9 @@ if (!cluster.isPrimary) {
     var isProxy = false;
     if (req.url.indexOf("/") != 0 && req.url != "*") isProxy = true;
 
-    var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-    var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    // Header and footer placeholders
+    var head = "";
+    var foot = "";
     var fd = "";
 
     function responseEnd(d) {
@@ -2127,6 +2128,9 @@ if (!cluster.isPrimary) {
     if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
 
     try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    
       if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
         serverconsole.errmessage("Expectation not satified!");
         callServerError(417);
@@ -2397,8 +2401,9 @@ if (!cluster.isPrimary) {
     });
     socket.on("error", function () {});
 
-    var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-    var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    // Header and footer placeholders
+    var head = "";
+    var foot = "";
 
     var fd = "";
 
@@ -2486,6 +2491,9 @@ if (!cluster.isPrimary) {
     serverconsole.locmessage("Somebody connected to port " + (secure && fromMain ? sport : port) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " sent invalid request.");
     try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    
       if ((err.code && (err.code.indexOf("ERR_SSL_") == 0 || err.code.indexOf("ERR_TLS_") == 0)) || (!err.code && err.message.indexOf("SSL routines") != -1)) {
         if (err.code == "ERR_SSL_HTTP_REQUEST" || err.message.indexOf("http request") != -1) {
           serverconsole.errmessage("Client sent HTTP request to HTTPS port.");
@@ -2962,9 +2970,9 @@ if (!cluster.isPrimary) {
       var acceptEncoding = request.headers["accept-encoding"];
       if (!acceptEncoding) acceptEncoding = "";
 
-      var head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-      var foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
-
+      // Header and footer placeholders
+      var head = "";
+      var foot = "";
       var fd = "";
 
       function responseEnd(d) {
@@ -3149,7 +3157,13 @@ if (!cluster.isPrimary) {
         }
       }
 
-
+      try {
+        head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+        foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer  
+      } catch (err) {
+        callServerError(500, undefined, generateErrorStack(err));
+      }
+      
       function redirect(dest, isTemporary, headers) {
         if (headers === undefined) headers = getCustomHeaders();
         headers["Location"] = dest;
@@ -4371,6 +4385,9 @@ function start(init) {
       if (secure && configJSON.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled");
       if (vnum < 64) serverconsole.locwarnmessage("SVR.JS 3.5.0 and newer are no longer supported on Node.JS 8.x and 9.x");
       if (disableMods) serverconsole.locwarnmessage("SVR.JS is running without mods and server-side JavaScript enabled.");
+      if (new Date() > new Date("2 February 2023")) {
+        serverconsole.locwarnmessage("SVR.JS 3.4.x LTS versions are no longer supported after 2nd February 2024. Please update SVR.JS to the supported version. If you're using Node.JS 8.x or 9.x, please update your Node.JS runtime.");
+      }
       console.log();
       serverconsole.locmessage("Server version: " + version);
       if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);

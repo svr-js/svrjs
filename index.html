@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.4.41</title>
+    <title>SVR.JS 3.4.42</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.4.41</h1>
+    <h1>Welcome to SVR.JS 3.4.42</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -119,10 +119,7 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Removed all remnants of "DorianTech".</li>
-      <li>Mitigated log file injection vulnerability for HTTP authentication.</li>
-      <li>Mitigated log file injection vulnerability for SVR.JS mod file names.</li>
-      <li>SVR.JS no longer crashes, when access to a log file is denied.</li>
+      <li>Custom head and foot inclusion is now returning 500 error in case of server error instead of crashing the server.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>
