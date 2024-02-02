@@ -872,8 +872,8 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (errorStack.some(function (errorStackLine) {
-    return (errorStackLine.indexOf(errorObject.name) == 0);
-  })) {
+      return (errorStackLine.indexOf(errorObject.name) == 0);
+    })) {
     return errorObject.stack;
   }
 
@@ -1355,7 +1355,7 @@ if (secure) {
     var sniNames = Object.keys(sni);
     var sniCredentials = [];
     sniNames.forEach(function (sniName) {
-      if(typeof sniName === "string" && sniName.match(/\*[^*.:]*\*[^*.:]*(?:\.|:|$)/)) {
+      if (typeof sniName === "string" && sniName.match(/\*[^*.:]*\*[^*.:]*(?:\.|:|$)/)) {
         sniReDos = true;
       }
       sniCredentials.push({
@@ -1384,7 +1384,7 @@ function LOG(s) {
             flags: "a",
             autoClose: false
           });
-          logFile.on("error", function(err) {
+          logFile.on("error", function (err) {
             if (!s.match(/^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /) && !reallyExiting) serverconsole.locwarnmessage("There was a problem while saving logs! Logs will not be kept in log file. Reason: " + err.message);
           });
         }
@@ -2196,9 +2196,9 @@ if (!cluster.isPrimary) {
       });
       try {
         var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
-        if(!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/,"");
-        server._contexts[server._contexts.length-1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
-      } catch(ex) {
+        if (!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
+        server._contexts[server._contexts.length - 1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
+      } catch (ex) {
         // Can't replace regex, ignoring...
       }
     });
@@ -2304,8 +2304,8 @@ if (!cluster.isPrimary) {
       });
     };
     res.writeHead = function (code, name, headers) {
-      if(code >= 400 && code <= 499) err4xxcounter++;
-      if(code >= 500 && code <= 599) err5xxcounter++;
+      if (code >= 400 && code <= 499) err4xxcounter++;
+      if (code >= 500 && code <= 599) err5xxcounter++;
       var head = ("HTTP/1.1 " + code.toString() + " " + name + "\r\n");
       var headers = JSON.parse(JSON.stringify(headers));
       headers["Date"] = (new Date()).toGMTString();
@@ -3053,7 +3053,7 @@ if (!cluster.isPrimary) {
     var oldHostHeader = req.headers.host;
     if (typeof req.headers.host == "string") {
       req.headers.host = req.headers.host.toLowerCase();
-      if(!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/\.$/g,"");
+      if (!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/\.$/g, "");
     }
 
     if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
@@ -3494,8 +3494,8 @@ if (!cluster.isPrimary) {
           statusBody += "Server errors (5xx): " + err5xxcounter + "<br/>";
           statusBody += "Average error rate: " + (Math.round(((err4xxcounter + err5xxcounter) / reqcounter) * 10000) / 100) + "%<br/>";
           statusBody += "Malformed HTTP requests: " + malformedcounter;
-          if(process.memoryUsage) statusBody += "<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B";
-          if(process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
+          if (process.memoryUsage) statusBody += "<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B";
+          if (process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
           statusBody += "<br/>Thread PID: " + process.pid + "<br/>";
 
           var hdhds = getCustomHeaders();
@@ -3603,23 +3603,23 @@ if (!cluster.isPrimary) {
                 var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                    fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
-                    "";
+                  fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
+                  "";
                 var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                    fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
-                    "";
+                  fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
+                  "";
 
                 // Check if custom header has HTML tag
                 var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
 
                 // Generate HTML head and footer based on configuration and custom content
                 var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
-                  (!headerHasHTMLTag ?
-                    "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
-                    customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
-                  head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+                    (!headerHasHTMLTag ?
+                      "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
+                      customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
+                    head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
                   (!headerHasHTMLTag ? customDirListingHeader : "") +
                   "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
 
@@ -4281,14 +4281,14 @@ if (!cluster.isPrimary) {
         if (!isProxy) {
           for (var i = (_mapBegIndex ? _mapBegIndex : 0); i < map.length; i++) {
             var mapEntry = map[i];
-            if(href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
-              fs.stat("." + decodeURIComponent(href), function(err, stats) {
+            if (href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
+              fs.stat("." + decodeURIComponent(href), function (err, stats) {
                 var _fileState = 3;
-                if(err) {
+                if (err) {
                   _fileState = 3;
-                } else if(stats.isDirectory()) {
+                } else if (stats.isDirectory()) {
                   _fileState = 2;
-                } else if(stats.isFile()) {
+                } else if (stats.isFile()) {
                   _fileState = 1;
                 } else {
                   _fileState = 3;
@@ -4312,7 +4312,7 @@ if (!cluster.isPrimary) {
             }
           }
         }
-        if(doCallback) callback(null, rewrittenURL);
+        if (doCallback) callback(null, rewrittenURL);
       }
 
       // Trailing slash redirection
@@ -4347,12 +4347,12 @@ if (!cluster.isPrimary) {
       var origHref = href;
 
       // Add web root postfixes
-      if(!isProxy) {
+      if (!isProxy) {
         var urlWithPostfix = req.url;
         var postfixPrefix = "";
         wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
           if (req.url.indexOf(currentPostfixPrefix) == 0) {
-            if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/,"");
+            if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/, "");
             else if (urlWithPostfix.length == currentPostfixPrefix.length || urlWithPostfix[currentPostfixPrefix.length] == "?" || urlWithPostfix[currentPostfixPrefix.length] == "/" || urlWithPostfix[currentPostfixPrefix.length] == "#") postfixPrefix = currentPostfixPrefix;
             else return true;
             urlWithPostfix = urlWithPostfix.substr(postfixPrefix.length);
@@ -4423,9 +4423,9 @@ if (!cluster.isPrimary) {
           }
         }
       }
-      
+
       // Rewrite URLs
-      rewriteURL(req.url, rewriteMap, function(err, rewrittenURL) {
+      rewriteURL(req.url, rewriteMap, function (err, rewrittenURL) {
         if (err) {
           callServerError(500, undefined, err);
           return;
@@ -4490,7 +4490,7 @@ if (!cluster.isPrimary) {
             try {
               res.setHeader(hkS, hkh[hkS]);
             } catch (err) {
-            // Headers will not be set.
+              // Headers will not be set.
             }
           });
         }
@@ -4527,17 +4527,17 @@ if (!cluster.isPrimary) {
               if (matchHostname(nonStandardCodes[i].host) && ipMatch(nonStandardCodes[i].ip, req.socket ? req.socket.localAddress : undefined)) {
                 var isMatch = false;
                 if (nonStandardCodes[i].regex) {
-                // Regex match
+                  // Regex match
                   var createdRegex = createRegex(nonStandardCodes[i].regex, true);
                   isMatch = req.url.match(createdRegex) || href.match(createdRegex);
                   regexI[i] = createdRegex;
                 } else {
-                // Non-regex match
+                  // Non-regex match
                   isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
                 }
                 if (isMatch) {
                   if (nonStandardCodes[i].scode == 401) {
-                  // HTTP authentication
+                    // HTTP authentication
                     if (authIndex == -1) {
                       authIndex = i;
                     }
@@ -4748,10 +4748,10 @@ if (!cluster.isPrimary) {
               }
             }
             if (authcode.disableBruteProtection) {
-            // Don't brute-force protect it, just do HTTP authentication
+              // Don't brute-force protect it, just do HTTP authentication
               authorizedCallback(false);
             } else if (!process.send) {
-            // Query data from JS object database
+              // Query data from JS object database
               if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
                 if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
                   invalidAttempts: 5
@@ -5056,11 +5056,11 @@ function start(init) {
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
         if (users.some(function (entry) {
-          return entry.pbkdf2;
-        })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+            return entry.pbkdf2;
+          })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
         if (users.some(function (entry) {
-          return entry.scrypt;
-        })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
+            return entry.scrypt;
+          })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
