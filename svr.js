@@ -306,7 +306,7 @@ function generateETag(filePath, stat) {
   return ETagDB[filePath + "-" + stat.size + "-" + stat.mtime];
 }
 
-// Brute force-related
+// Brute force protection-related
 var bruteForceDb = {};
 
 // PBKDF2/scrypt cache
@@ -321,6 +321,7 @@ var reallyExiting = false;
 var crashed = false;
 var threadLimitWarned = false;
 
+// SVR.JS worker forking function
 function SVRJSFork() {
   // Log
   if (SVRJSInitialized) serverconsole.locmessage("Starting next thread, because previous one hung up/crashed...");
@@ -932,6 +933,7 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
   }).join(".");
 }
 
+// IP and network inteface-related
 var ifaces = {};
 var ifaceEx = null;
 try {
@@ -942,11 +944,7 @@ try {
 var ips = [];
 var brdIPs = ["255.255.255.255", "127.255.255.255", "0.255.255.255"];
 var netIPs = ["127.0.0.0"];
-var attmts = 5;
-var attmtsRedir = 5;
-var errors = os.constants.errno;
-var timestamp = new Date().getTime();
-var wwwredirect = false;
+
 Object.keys(ifaces).forEach(function (ifname) {
   var alias = 0;
   ifaces[ifname].forEach(function (iface) {
@@ -963,6 +961,7 @@ Object.keys(ifaces).forEach(function (ifname) {
     alias++;
   });
 });
+
 if (ips.length == 0) {
   Object.keys(ifaces).forEach(function (ifname) {
     var alias = 0;
@@ -979,9 +978,20 @@ if (ips.length == 0) {
     });
   });
 }
+
+// Server startup attempt counter
+var attmts = 5;
+var attmtsRedir = 5;
+
+// Some variables...
+var errors = os.constants.errno;
+var timestamp = new Date().getTime();
+
+// Server IP address
 var host = ips[(ips.length) - 1];
 if (!host) host = "[offline]";
 
+// Public IP address-related
 var ipRequestCompleted = false;
 var ipRequestGotError = false;
 if (host != "[offline]" || ifaceEx) {
@@ -1138,11 +1148,11 @@ if (fs.existsSync(__dirname + "/config.json")) {
     }
   } catch (err) {
     configJSONRErr = err2;
-    // throw new Error("Cannot read JSON file.");
   }
 }
 
 // Default server configuration properties
+var wwwredirect = false;
 var rawBlackList = [];
 var users = [];
 var page404 = "404.html";
@@ -1277,6 +1287,7 @@ try {
 if (vnum === undefined) vnum = 0;
 if (process.isBun) vnum = 64;
 
+// SVR.JS path sanitizer function
 function sanitizeURL(resource) {
   if (resource == "*") return "*";
   if (resource == "") return "";
@@ -1309,6 +1320,7 @@ function sanitizeURL(resource) {
   else return sanitizedResource;
 }
 
+// Node.JS mojibake URL fixing function
 function fixNodeMojibakeURL(string) {
   var encoded = "";
 
@@ -1327,6 +1339,7 @@ function fixNodeMojibakeURL(string) {
   });
 }
 
+// SSL-related
 var key = "";
 var cert = "";
 
@@ -1481,7 +1494,7 @@ var serverconsole = {
   }
 };
 
-// Wrap around process.exit, so log contents can flush.
+// Wrap around process.exit, so that log contents can be flushed.
 process.unsafeExit = process.exit;
 process.exit = function (code) {
   if (logFile && logFile.writable && !logFile.pending) {
@@ -1516,6 +1529,7 @@ process.exit = function (code) {
   }
 };
 
+// SVR.JS mod loader
 var modLoadingErrors = [];
 var SSJSError = undefined;
 
@@ -1820,6 +1834,7 @@ function sha256(s) {
   }
 }
 
+// Function to get URL path for use in forbidden path adding.
 function getInitializePath(to) {
   var cwd = process.cwd();
   if (os.platform() == "win32") {
@@ -1836,6 +1851,7 @@ function getInitializePath(to) {
   }
 }
 
+// Function to check if URL path name is a forbidden path.
 function isForbiddenPath(decodedHref, match) {
   var forbiddenPath = forbiddenPaths[match];
   if (!forbiddenPath) return false;
@@ -1850,6 +1866,7 @@ function isForbiddenPath(decodedHref, match) {
   return false;
 }
 
+// Function to check if URL path name is index of one of defined forbidden paths.
 function isIndexOfForbiddenPath(decodedHref, match) {
   var forbiddenPath = forbiddenPaths[match];
   if (!forbiddenPath) return false;
@@ -1863,7 +1880,6 @@ function isIndexOfForbiddenPath(decodedHref, match) {
   }
   return false;
 }
-
 
 // Set up forbidden paths
 var forbiddenPaths = {};
@@ -1942,7 +1958,7 @@ var serverErrorDescs = {
   599: "The server couldn't connect in time while it was acting as a proxy."
 };
 
-// Create server
+// Create server instances
 if (!cluster.isPrimary) {
   var reqcounter = 0;
   var malformedcounter = 0;
@@ -3364,7 +3380,7 @@ if (!cluster.isPrimary) {
       }
     }
 
-
+    // URL-related objects.
     var uobject = parseURL(req.url);
     var search = uobject.search;
     var href = uobject.pathname;
@@ -3381,6 +3397,7 @@ if (!cluster.isPrimary) {
     }
 
     if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
+      // Expectations not met.
       callServerError(417);
       return;
     }
@@ -3504,11 +3521,6 @@ if (!cluster.isPrimary) {
           res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>" + statusBody + (foot == "" ? "</body></html>" : foot));
           return;
         }
-
-        /////////////////////////////////////////////
-        ////THERE IS NO MORE "THE BOOK OF ZSOIE"!////
-        //// But it's in easteregg.tar.gz mod... ////
-        /////////////////////////////////////////////
 
         var pth = decodeURIComponent(href).replace(/\/+/g, "/").substr(1);
         var readFrom = "./" + pth;
@@ -4263,7 +4275,7 @@ if (!cluster.isPrimary) {
         return;
       }
 
-      // Handle redirects to addresses with www.
+      // Handle redirects to addresses with "www." prefix
       if (wwwredirect) {
         var hostname = req.headers.host.split[":"];
         var hostport = null;
@@ -4872,12 +4884,14 @@ if (!cluster.isPrimary) {
 
 var closedMaster = true;
 
+// IPC listener for server listening signalization
 function listenConnListener(msg) {
   if (msg == "\x12LISTEN") {
     listeningMessage();
   }
 }
 
+// IPC listener for brue force protection
 function bruteForceListenerWrapper(worker) {
   return function bruteForceListener(message) {
     var ip = "";
@@ -4912,6 +4926,7 @@ function bruteForceListenerWrapper(worker) {
 var isWorkerHungUpBuff = true;
 var isWorkerHungUpBuff2 = true;
 
+// General IPC message listener
 function msgListener(msg) {
   for (var i = 0; i < Object.keys(cluster.workers).length; i++) {
     if (msg == "\x12END") {
@@ -5891,20 +5906,22 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     process.exit();
   });
 } else {
+  // Crash handler
   process.on("uncaughtException", function (err) {
-    // CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(generateErrorStack(err));
     process.exit(err.errno);
   });
+
   process.on("unhandledRejection", function (err) {
-    // CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
     process.exit(err.errno);
   });
+
+  // Warning handler
   process.on("warning", function (warning) {
     serverconsole.locwarnmessage(warning.message);
     if (warning.stack) {
