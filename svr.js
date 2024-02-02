@@ -531,7 +531,85 @@ function createRegex(regex, isPath) {
   return new RegExp(searchString, modifiers);
 }
 
-function checkForEnabledDirectoryListing(hostname) {
+// Function to check if IPs are equal
+function ipMatch(IP1, IP2) {
+
+  if (!IP1) return true;
+  if (!IP2) return false;
+
+  // Function to normalize IPv4 address (remove leading zeros)
+  function normalizeIPv4Address(address) {
+    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "");
+  }
+
+  // Function to expand IPv6 address to full format
+  function expandIPv6Address(address) {
+    var fullAddress = "";
+    var expandedAddress = "";
+    var validGroupCount = 8;
+    var validGroupSize = 4;
+
+    var ipv4 = "";
+    var extractIpv4 = /([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})/;
+    var validateIpv4 = /((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})/;
+
+    if (validateIpv4.test(address)) {
+      var oldGroups = address.match(extractIpv4);
+      for (var i = 1; i < oldGroups.length; i++) {
+        ipv4 += ("00" + (parseInt(oldGroups[i], 10).toString(16))).slice(-2) + (i == 2 ? ":" : "");
+      }
+      address = address.replace(extractIpv4, ipv4);
+    }
+
+    if (address.indexOf("::") == -1) {
+      fullAddress = address;
+    } else {
+      var sides = address.split("::");
+      var groupsPresent = 0;
+      sides.forEach(function (side) {
+        groupsPresent += side.split(":").length;
+      });
+      fullAddress += sides[0] + ":";
+      if (validGroupCount - groupsPresent > 1) {
+        fullAddress += "0000:".repeat(validGroupCount - groupsPresent);
+      }
+      fullAddress += sides[1];
+    }
+    var groups = fullAddress.split(":");
+    for (var i = 0; i < validGroupCount; i++) {
+      if (groups[i].length < validGroupSize) {
+        groups[i] = "0".repeat(validGroupSize - groups[i].length) + groups[i];
+      }
+      expandedAddress += (i != validGroupCount - 1) ? groups[i] + ":" : groups[i];
+    }
+    return expandedAddress;
+  }
+
+  // Normalize or expand IP addresses
+  IP1 = IP1.toLowerCase();
+  if (IP1 == "localhost") IP1 = "::1";
+  if (IP1.indexOf("::ffff:") == 0) IP1 = IP1.substr(7);
+  if (IP1.indexOf(":") > -1) {
+    IP1 = expandIPv6Address(IP1);
+  } else {
+    IP1 = normalizeIPv4Address(IP1);
+  }
+
+  IP2 = IP2.toLowerCase();
+  if (IP2 == "localhost") IP2 = "::1";
+  if (IP2.indexOf("::ffff:") == 0) IP2 = IP2.substr(7);
+  if (IP2.indexOf(":") > -1) {
+    IP2 = expandIPv6Address(IP2);
+  } else {
+    IP2 = normalizeIPv4Address(IP2);
+  }
+
+  // Check if processed IPs are equal
+  if (IP1 == IP2) return true;
+  else return false;
+}
+
+function checkForEnabledDirectoryListing(hostname, localAddress) {
   function matchHostname(hostnameM) {
     if (typeof hostnameM == "undefined" || hostnameM == "*") {
       return true;
@@ -550,7 +628,7 @@ function checkForEnabledDirectoryListing(hostname) {
   if (!configJSON.enableDirectoryListingVHost) return main;
   var vhostP = null;
   configJSON.enableDirectoryListingVHost.every(function (vhost) {
-    if (matchHostname(vhost.host)) {
+    if (matchHostname(vhost.host) && ipMatch(vhost.ip, localAddress)) {
       vhostP = vhost;
       return false;
     } else {
@@ -757,7 +835,7 @@ function ipBlockList(rawBlockList) {
 
     // Normalize or expand the IP address
     rawValue = rawValue.toLowerCase();
-    if (rawValue == "localhost") rawValue = "127.0.0.1";
+    if (rawValue == "localhost") rawValue = "::1";
     if (rawValue.indexOf("::ffff:") == 0) rawValue = rawValue.substr(7);
     if (rawValue.indexOf(":") > -1) {
       isIPv6 = true;
@@ -2799,7 +2877,7 @@ if (!cluster.isPrimary) {
       if (configJSON.customHeadersVHost) {
         var vhostP = null;
         configJSON.customHeadersVHost.every(function (vhost) {
-          if (matchHostname(vhost.host)) {
+          if (matchHostname(vhost.host) && ipMatch(vhost.ip, req.socket ? req.socket.localAddress : undefined)) {
             vhostP = vhost;
             return false;
           } else {
@@ -3067,7 +3145,7 @@ if (!cluster.isPrimary) {
           return;
         }
 
-        if (list[_i].scode != errorCode || !matchHostname(list[_i].host)) {
+        if (list[_i].scode != errorCode || !(matchHostname(list[_i].host) && ipMatch(list[_i].ip, req.socket ? req.socket.localAddress : undefined))) {
           getErrorFileName(list, callback, _i + 1);
           return;
         } else {
@@ -3516,7 +3594,7 @@ if (!cluster.isPrimary) {
           function properDirectoryListingAndStaticFileServe() {
             if (stats.isDirectory()) {
               // Check if directory listing is enabled in the configuration
-              if (checkForEnabledDirectoryListing(req.headers.host)) {
+              if (checkForEnabledDirectoryListing(req.headers.host, req.socket ? req.socket.localAddress : undefined)) {
                 var customHeaders = getCustomHeaders();
                 customHeaders["Content-Type"] = "text/html; charset=utf-8";
                 res.writeHead(200, http.STATUS_CODES[200], customHeaders);
@@ -4220,7 +4298,7 @@ if (!cluster.isPrimary) {
               doCallback = false;
               break;
             }
-            if (matchHostname(mapEntry.host) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
+            if (matchHostname(mapEntry.host) && ipMatch(mapEntry.ip, req.socket ? req.socket.localAddress : undefined) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
               try {
                 mapEntry.replacements.forEach(function (replacement) {
                   rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
@@ -4284,7 +4362,7 @@ if (!cluster.isPrimary) {
           }
         });
         wwwrootPostfixesVHost.every(function (postfixEntry) {
-          if (matchHostname(postfixEntry.host) && !(postfixEntry.skipRegex && req.url.match(createRegex(postfixEntry.skipRegex)))) {
+          if (matchHostname(postfixEntry.host) && ipMatch(postfixEntry.ip, req.socket ? req.socket.localAddress : undefined) && !(postfixEntry.skipRegex && req.url.match(createRegex(postfixEntry.skipRegex)))) {
             urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + urlWithPostfix;
             return false;
           } else {
@@ -4446,7 +4524,7 @@ if (!cluster.isPrimary) {
           // Scan for non-standard codes
           if (!isProxy && nonStandardCodes != undefined) {
             for (var i = 0; i < nonStandardCodes.length; i++) {
-              if (matchHostname(nonStandardCodes[i].host)) {
+              if (matchHostname(nonStandardCodes[i].host) && ipMatch(nonStandardCodes[i].ip, req.socket ? req.socket.localAddress : undefined)) {
                 var isMatch = false;
                 if (nonStandardCodes[i].regex) {
                 // Regex match
