@@ -54,59 +54,11 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/\\?/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/(?!invoke500.svr?)/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": ""<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/^\\/testdir_rewritten($|[\\/?#])/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/testdir$1"<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
