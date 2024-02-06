@@ -21,6 +21,7 @@
 //  origHref - Original request URL without query (before URL rewriting)
 //  redirect - Method to redirect.
 //  parsePostData - Method to parse POST data.
+//  authUser - Authenticated HTTP user.
 //Along with elements added by this implementation:
 //  disableEndElseCallbackExecute - Determines execution of elseCallback on end
 //  filterHeaders - Removes invalid HTTP/1.0 headers

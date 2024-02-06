@@ -28,59 +28,11 @@
       ]
     },
     {
-      "definingRegex": "/^\\/invoke500\\/\\?/",
+      "definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",
       "replacements": [
         {
-          "regex": "/\\/invoke500\\/\\?/",
-          "replacement": "/invoke500.svr?"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500\\/.+\\//",
-      "replacements": [
-        {
-          "regex": "/\\/\\?/",
-          "replacement": "&"
-        },
-        {
-          "regex": "/invoke500\\//",
-          "replacement": "invoke500.svr?"
-        },
-        {
-          "regex": "/\\/(?!invoke500.svr?)/",
-          "replacement": ""
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500\\/.+/",
-      "replacements": [
-        {
-          "regex": "/\\?/",
-          "replacement": "&"
-        },
-        {
-          "regex": "/invoke500\\//",
-          "replacement": "invoke500.svr?"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500\\//",
-      "replacements": [
-        {
-          "regex": "/\\/invoke500\\//",
-          "replacement": "/invoke500.svr"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500$/",
-      "replacements": [
-        {
-          "regex": "/\\/invoke500/",
-          "replacement": "/invoke500.svr"
+          "regex": "/^\\/testdir_rewritten($|[\\/?#])/",
+          "replacement": "/testdir$1"
         }
       ]
     }

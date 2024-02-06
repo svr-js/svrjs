@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.14.1</title>
+    <title>SVR.JS 3.14.2</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.14.1</h1>
+    <h1>Welcome to SVR.JS 3.14.2</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -50,59 +50,11 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/\\?/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/(?!invoke500.svr?)/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": ""<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/^\\/testdir_rewritten($|[\\/?#])/",<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/testdir$1"<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
@@ -134,8 +86,7 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added support for IP-based virtual hosts.</li>
-      <li>Fixed SVR.JS crashes with <i>X-SVR-JS-From-Main-Thread</i> header and unknown client IPs.</li>
+      <li>Added new SVR.JS mod and server-side JavaScript property: <i>authUser</i>.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>
