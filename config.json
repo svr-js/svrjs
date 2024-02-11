@@ -46,7 +46,7 @@
     "/.*\\.jpg$/",
     "/.*\\.webp$/"
   ],
-  "enableIPSpoofing": true,
+  "enableIPSpoofing": false,
   "secure": false,
   "sni": {},
   "disableNonEncryptedServer": false,

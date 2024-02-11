@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.14.2</title>
+    <title>SVR.JS 3.14.3</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.14.2</h1>
+    <h1>Welcome to SVR.JS 3.14.3</h1>
     <br/>
     <img src="/logo.png" style="width: 256px;" />
     <br/>
@@ -68,7 +68,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.jpg$/",<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.webp$/"<br/>
         &nbsp;&nbsp;],<br/>
-        &nbsp;&nbsp;"enableIPSpoofing": true,<br/>
+        &nbsp;&nbsp;"enableIPSpoofing": false,<br/>
         &nbsp;&nbsp;"secure": false,<br/>
         &nbsp;&nbsp;"sni": {},<br/>
         &nbsp;&nbsp;"disableNonEncryptedServer": false,<br/>
@@ -86,7 +86,7 @@
     </div>
     <p>Changes:</p>
     <ul>
-      <li>Added new SVR.JS mod and server-side JavaScript property: <i>authUser</i>.</li>
+      <li>Fixed bug with URLs beginning with multiple slashes being rewritten incorrectly.</li>
     </ul>
     <br/>
     <a href="/tests.html">Tests</a><br/>

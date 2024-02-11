@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.2";
+var version = "3.14.3";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -3332,7 +3332,7 @@ if (!cluster.isPrimary) {
       if (typeof URL !== "undefined" && url.Url) {
         try {
           // Create a new URL object using the provided URI and base URL
-          var uobject = new URL(uri, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+          var uobject = new URL(uri.replace(/^\/{2,}/,"/"), "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
 
           // Create a new URL object (similar to deprecated url.Url)
           var nuobject = new url.Url();
