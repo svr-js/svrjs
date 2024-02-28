@@ -1311,11 +1311,11 @@ function sanitizeURL(resource) {
   // Convert backslashes to slashes and remove duplicate slashes
   sanitizedResource = sanitizedResource.replace(/\\/g, "/").replace(/\/+/g, "/");
   // Handle relative navigation (e.g., "/./", "/../", "../", "./"), also remove trailing dots in paths
-  sanitizedResource = sanitizedResource.replace(/\/\.(?:\.{2,})?(?=($|\/))/g, "$1").replace(/([^.\/])\.+(?=($|\/))/g, "$1$2").replace(/\/+/g, "/");
-  while (sanitizedResource.match(/\/(?!\.\.\/)[^\/]+\/\.\.(?=(\/|$))/g)) {
-    sanitizedResource = sanitizedResource.replace(/\/(?!\.\.\/)[^\/]+\/\.\.(?=(\/|$))/g, "$1").replace(/\/+/g, "/");
+  sanitizedResource = sanitizedResource.replace(/\/\.(?:\.{2,})?(?=$|\/)/g, "").replace(/([^.\/])\.+(?=$|\/)/g, "$1");
+  while (sanitizedResource.match(/\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/g)) {
+    sanitizedResource = sanitizedResource.replace(/\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/g, "");
   }
-  sanitizedResource = sanitizedResource.replace(/\/\.\.(?=(\/|$))/g, "$1").replace(/\/+/g, "/");
+  sanitizedResource = sanitizedResource.replace(/\/\.\.(?=\/|$)/g, "");
   if (sanitizedResource.length == 0) return "/";
   else return sanitizedResource;
 }
