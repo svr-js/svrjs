@@ -4587,6 +4587,10 @@ if (!cluster.isPrimary) {
               var location = "";
               if (regexI[nonscodeIndex]) {
                 location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
+                if(location == req.url) {
+                  // Fallback replacement
+                  location = hrefWithoutDuplicateSlashes.replace(regexI[nonscodeIndex], nonscode.location);
+                }
               } else if (req.url.split("?")[1] == undefined || req.url.split("?")[1] == null || req.url.split("?")[1] == "" || req.url.split("?")[1] == " ") {
                 location = nonscode.location;
               } else {
