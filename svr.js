@@ -1176,6 +1176,7 @@ var disableTrailingSlashRedirects = false;
 var environmentVariables = {};
 var wwwrootPostfixesVHost = [];
 var wwwrootPostfixPrefixesVHost = [];
+var allowDoubleSlashes = false;
 var allowPostfixDoubleSlashes = false;
 
 // Get properties from config.json
@@ -1232,7 +1233,8 @@ if (configJSON.disableTrailingSlashRedirects != undefined) disableTrailingSlashR
 if (configJSON.environmentVariables != undefined) environmentVariables = configJSON.environmentVariables;
 if (configJSON.wwwrootPostfixesVHost != undefined) wwwrootPostfixesVHost = configJSON.wwwrootPostfixesVHost;
 if (configJSON.wwwrootPostfixPrefixesVHost != undefined) wwwrootPostfixPrefixesVHost = configJSON.wwwrootPostfixPrefixesVHost;
-if (configJSON.allowPostfixDoubleSlashes != undefined) allowPostfixDoubleSlashes = configJSON.allowPostfixDoubleSlashes
+if (configJSON.allowDoubleSlashes != undefined) allowDoubleSlashes = configJSON.allowDoubleSlashes;
+if (configJSON.allowPostfixDoubleSlashes != undefined) allowPostfixDoubleSlashes = configJSON.allowPostfixDoubleSlashes;
 
 var wwwrootError = null;
 try {
@@ -1290,7 +1292,7 @@ if (vnum === undefined) vnum = 0;
 if (process.isBun) vnum = 64;
 
 // SVR.JS path sanitizer function
-function sanitizeURL(resource) {
+function sanitizeURL(resource, allowDoubleSlashes) {
   if (resource == "*") return "*";
   if (resource == "") return "";
   // Remove null characters
@@ -1310,8 +1312,8 @@ function sanitizeURL(resource) {
   var sanitizedResource = resource;
   // Ensure the resource starts with a slash
   if (resource[0] != "/") sanitizedResource = "/" + sanitizedResource;
-  // Convert backslashes to slashes and remove duplicate slashes
-  sanitizedResource = sanitizedResource.replace(/\\/g, "/").replace(/\/+/g, "/");
+  // Convert backslashes to slashes and handle duplicate slashes
+  sanitizedResource = sanitizedResource.replace(/\\/g, "/").replace(allowDoubleSlashes ? /\/{3,}/g : /\/+/g, "/");
   // Handle relative navigation (e.g., "/./", "/../", "../", "./"), also remove trailing dots in paths
   sanitizedResource = sanitizedResource.replace(/\/\.(?:\.{2,})?(?=\/|$)/g, "").replace(/([^.\/])\.+(?=\/|$)/g, "$1");
   while (sanitizedResource.match(/\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/g)) {
@@ -4158,7 +4160,7 @@ if (!cluster.isPrimary) {
       }
 
       // Sanitize URL
-      var sanitizedHref = sanitizeURL(href);
+      var sanitizedHref = sanitizeURL(href, allowDoubleSlashes);
       var preparedReqUrl = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
 
       // Check if URL is "dirty"
@@ -4413,7 +4415,7 @@ if (!cluster.isPrimary) {
             return;
           }
 
-          var sHref = sanitizeURL(href);
+          var sHref = sanitizeURL(href, allowDoubleSlashes);
           var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
 
           if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
@@ -4474,7 +4476,7 @@ if (!cluster.isPrimary) {
             return;
           }
 
-          var sHref = sanitizeURL(href);
+          var sHref = sanitizeURL(href, allowDoubleSlashes);
           var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
 
           if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
@@ -5848,6 +5850,7 @@ function saveConfig() {
       if (configJSONobj.exposeModsInErrorPages === undefined) configJSONobj.exposeModsInErrorPages = true;
       if (configJSONobj.disableTrailingSlashRedirects === undefined) configJSONobj.disableTrailingSlashRedirects = false;
       if (configJSONobj.environmentVariables === undefined) configJSONobj.environmentVariables = {};
+      if (configJSONobj.allowDoubleSlashes === undefined) configJSONobj.allowDoubleSlashes = false;
 
       var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
       fs.writeFileSync(__dirname + "/config.json", configString);
