@@ -1176,6 +1176,7 @@ var disableTrailingSlashRedirects = false;
 var environmentVariables = {};
 var wwwrootPostfixesVHost = [];
 var wwwrootPostfixPrefixesVHost = [];
+var allowPostfixDoubleSlashes = false;
 
 // Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
@@ -1231,6 +1232,7 @@ if (configJSON.disableTrailingSlashRedirects != undefined) disableTrailingSlashR
 if (configJSON.environmentVariables != undefined) environmentVariables = configJSON.environmentVariables;
 if (configJSON.wwwrootPostfixesVHost != undefined) wwwrootPostfixesVHost = configJSON.wwwrootPostfixesVHost;
 if (configJSON.wwwrootPostfixPrefixesVHost != undefined) wwwrootPostfixPrefixesVHost = configJSON.wwwrootPostfixPrefixesVHost;
+if (configJSON.allowPostfixDoubleSlashes != undefined) allowPostfixDoubleSlashes = configJSON.allowPostfixDoubleSlashes
 
 var wwwrootError = null;
 try {
@@ -4369,7 +4371,7 @@ if (!cluster.isPrimary) {
 
       // Add web root postfixes
       if (!isProxy) {
-        var preparedReqUrl3 = (postFixEntry.allowDoubleSlashes ? (href.replace(/\/+/,"/") + (uobject.search ? uobject.search : "")) + (uobject.hash ? uobject.hash : "")) : req.url);
+        var preparedReqUrl3 = (allowPostfixDoubleSlashes ? (href.replace(/\/+/,"/") + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "")) : req.url);
         var urlWithPostfix = preparedReqUrl3;
         var postfixPrefix = "";
         wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
