@@ -4219,67 +4219,22 @@ if (!cluster.isPrimary) {
           return;
         }
 
-        var urlp = parseURL("http://" + hostx);
-        try {
-          if (urlp.path.indexOf("//") == 0) {
-            urlp = parseURL("http:" + url.path);
-          }
-        } catch (err) {
-          // URL parse error...
-        }
+        var isPublicServer = !(req.socket.realRemoteAddress ? req.socket.realRemoteAddress : req.socket.remoteAddress).match(/^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i);
 
-        if (urlp.host == "localhost" || urlp.host == "localhost:" + port.toString() || urlp.host == "127.0.0.1" || urlp.host == "127.0.0.1:" + port.toString() || urlp.host == "::1" || urlp.host == "::1:" + port.toString()) {
-          urlp.protocol = "https:";
-          if (sport == 443) {
-            urlp.host = urlp.hostname;
-          } else {
-            urlp.host = urlp.hostname + ":" + sport.toString();
-            urlp.port = sport.toString();
-          }
-        } else if (urlp.host == (listenAddress ? listenAddress : host) || urlp.host == (listenAddress ? listenAddress : host) + ":" + port.toString()) {
-          urlp.protocol = "https:";
-          if (sport == 443) {
-            urlp.host = urlp.hostname;
-          } else {
-            urlp.host = urlp.hostname + ":" + sport.toString();
-            urlp.port = sport.toString();
-          }
-        } else if (urlp.host == pubip || urlp.host == pubip + ":" + pubport.toString()) {
-          urlp.protocol = "https:";
-          if (spubport == 443) {
-            urlp.host = urlp.hostname;
-          } else {
-            urlp.host = urlp.hostname + ":" + spubport.toString();
-            urlp.port = spubport.toString();
-          }
-        } else if (urlp.hostname == domain || urlp.hostname.indexOf(domain) != -1) {
-          urlp.protocol = "https:";
-          if (spubport == 443) {
-            urlp.host = urlp.hostname;
-          } else {
-            urlp.host = urlp.hostname + ":" + spubport.toString();
-            urlp.port = spubport.toString();
-          }
+        var destinationPort = 0;
+
+        var parsedHostx = hostx.match(/(\[[^\]]*\]|[^:]*)(?::([0-9]+))?/);
+        var hostname = parsedHostx[1];
+        var hostPort = parsedHostx[2] ? parseInt(parsedHostx[2]) : 80;
+        if (isNaN(hostPort)) hostPort = 80;
+
+        if (hostPort == port || (port == pubport && !isPublicServer)) {
+          destinationPort = sport;
         } else {
-          urlp.protocol = "https:";
-        }
-        urlp.path = null;
-        urlp.pathname = null;
-        var lloc = url.format(urlp);
-        var requestURL = req.url;
-        try {
-          if (requestURL.split("/")[1].indexOf(".onion") != -1) {
-            requestURL = requestURL.split("/");
-            requestURL.shift();
-            requestURL.shift();
-            requestURL.unshift("");
-            requestURL = requestURL.join("/");
-          }
-        } catch (err) {
-          // Leave URL as it is...
+          destinationPort = spubport;
         }
 
-        redirect(lloc + requestURL);
+        redirect("https://" + hostname + (destinationPort == 443 ? "" : (":" + destinationPort)) + req.url);
         return;
       }
 
