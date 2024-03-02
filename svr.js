@@ -4315,7 +4315,10 @@ if (!cluster.isPrimary) {
               doCallback = false;
               break;
             }
-            if (!mapEntry.allowDoubleSlashes) address = address.replace(/\/+/g,"/");
+            if (!mapEntry.allowDoubleSlashes) {
+              address = address.replace(/\/+/g,"/");
+              rewrittenURL = address;
+            }
             if (matchHostname(mapEntry.host) && ipMatch(mapEntry.ip, req.socket ? req.socket.localAddress : undefined) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
               try {
                 mapEntry.replacements.forEach(function (replacement) {
