@@ -4369,10 +4369,11 @@ if (!cluster.isPrimary) {
 
       // Add web root postfixes
       if (!isProxy) {
-        var urlWithPostfix = req.url;
+        var preparedReqUrl3 = (postFixEntry.allowDoubleSlashes ? (href.replace(/\/+/,"/") + (uobject.search ? uobject.search : "")) + (uobject.hash ? uobject.hash : "")) : req.url);
+        var urlWithPostfix = preparedReqUrl3;
         var postfixPrefix = "";
         wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
-          if (req.url.indexOf(currentPostfixPrefix) == 0) {
+          if (preparedReqUrl3.indexOf(currentPostfixPrefix) == 0) {
             if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/, "");
             else if (urlWithPostfix.length == currentPostfixPrefix.length || urlWithPostfix[currentPostfixPrefix.length] == "?" || urlWithPostfix[currentPostfixPrefix.length] == "/" || urlWithPostfix[currentPostfixPrefix.length] == "#") postfixPrefix = currentPostfixPrefix;
             else return true;
@@ -4383,14 +4384,14 @@ if (!cluster.isPrimary) {
           }
         });
         wwwrootPostfixesVHost.every(function (postfixEntry) {
-          if (matchHostname(postfixEntry.host) && ipMatch(postfixEntry.ip, req.socket ? req.socket.localAddress : undefined) && !(postfixEntry.skipRegex && req.url.match(createRegex(postfixEntry.skipRegex)))) {
+          if (matchHostname(postfixEntry.host) && ipMatch(postfixEntry.ip, req.socket ? req.socket.localAddress : undefined) && !(postfixEntry.skipRegex && preparedReqUrl3.match(createRegex(postfixEntry.skipRegex)))) {
             urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + urlWithPostfix;
             return false;
           } else {
             return true;
           }
         });
-        if (urlWithPostfix != req.url) {
+        if (urlWithPostfix != preparedReqUrl3) {
           serverconsole.resmessage("Added web root postfix: " + req.url + " => " + urlWithPostfix);
           req.url = urlWithPostfix;
           uobject = parseURL(req.url);
