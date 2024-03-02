@@ -4317,11 +4317,13 @@ if (!cluster.isPrimary) {
               doCallback = false;
               break;
             }
+            var tempRewrittenURL = rewrittenURL;
             if (!mapEntry.allowDoubleSlashes) {
               address = address.replace(/\/+/g,"/");
-              rewrittenURL = address;
+              tempRewrittenURL = address;
             }
             if (matchHostname(mapEntry.host) && ipMatch(mapEntry.ip, req.socket ? req.socket.localAddress : undefined) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
+              rewrittenURL = tempRewrittenURL;
               try {
                 mapEntry.replacements.forEach(function (replacement) {
                   rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
@@ -4329,7 +4331,7 @@ if (!cluster.isPrimary) {
                 if (mapEntry.append) rewrittenURL += mapEntry.append;
               } catch (err) {
                 doCallback = false;
-                callback(err, address);
+                callback(err, null);
               }
               break;
             }
