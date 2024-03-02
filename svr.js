@@ -3328,17 +3328,19 @@ if (!cluster.isPrimary) {
 
     // Function to parse a URL string into a URL object
     function parseURL(uri) {
+      // Prepare the path (remove multiple slashes)
+      var preparedURI = uri.replace(/^\/{2,}/,"/");
       // Check if the URL API is available (Node.js version >= 10)
       if (typeof URL !== "undefined" && url.Url) {
         try {
           // Create a new URL object using the provided URI and base URL
-          var uobject = new URL(uri.replace(/^\/{2,}/,"/"), "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+          var uobject = new URL(preparedURI, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
 
           // Create a new URL object (similar to deprecated url.Url)
           var nuobject = new url.Url();
 
           // Set properties of the new URL object from the provided URL
-          if (uri.indexOf("/") != -1) nuobject.slashes = true;
+          if (preparedURI.indexOf("/") != -1) nuobject.slashes = true;
           if (uobject.protocol != "") nuobject.protocol = uobject.protocol;
           if (uobject.username != "" && uobject.password != "") nuobject.auth = uobject.username + ":" + uobject.password;
           if (uobject.host != "") nuobject.host = uobject.host;
@@ -3350,7 +3352,7 @@ if (!cluster.isPrimary) {
           if (uobject.href != "") nuobject.href = uobject.href;
 
           // Adjust the pathname and href properties if the URI doesn't start with "/"
-          if (uri.indexOf("/") != 0) {
+          if (preparedURI.indexOf("/") != 0) {
             if (nuobject.pathname) {
               nuobject.pathname = nuobject.pathname.substr(1);
               nuobject.href = nuobject.pathname + (nuobject.search ? nuobject.search : "");
@@ -3372,11 +3374,11 @@ if (!cluster.isPrimary) {
           return nuobject;
         } catch (err) {
           // If there was an error using the URL API, fall back to deprecated url.parse
-          return url.parse(uri, true);
+          return url.parse(preparedURI, true);
         }
       } else {
         // If the URL API is not available, fall back to deprecated url.parse
-        return url.parse(uri, true);
+        return url.parse(preparedURI, true);
       }
     }
 
@@ -4313,6 +4315,7 @@ if (!cluster.isPrimary) {
               doCallback = false;
               break;
             }
+            if (!mapEntry.allowDoubleSlashes) address = address.replace(/\/+/g,"/");
             if (matchHostname(mapEntry.host) && ipMatch(mapEntry.ip, req.socket ? req.socket.localAddress : undefined) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
               try {
                 mapEntry.replacements.forEach(function (replacement) {
@@ -4510,24 +4513,27 @@ if (!cluster.isPrimary) {
           });
         }
 
+        // Prepare the path (remove multiple slashes)
+        var decodedHrefWithoutDuplicateSlashes = decodedHref.replace(/\/+/g,"/");
+
         // Check if path is forbidden
-        if ((isForbiddenPath(decodedHref, "config") || isForbiddenPath(decodedHref, "certificates")) && !isProxy) {
+        if ((isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "config") || isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "certificates")) && !isProxy) {
           callServerError(403);
           serverconsole.errmessage("Access to configuration file/certificates is denied.");
           return;
-        } else if (isIndexOfForbiddenPath(decodedHref, "temp") && !isProxy) {
+        } else if (isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "temp") && !isProxy) {
           callServerError(403);
           serverconsole.errmessage("Access to temporary folder is denied.");
           return;
-        } else if (isIndexOfForbiddenPath(decodedHref, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
+        } else if (isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
           callServerError(403);
           serverconsole.errmessage("Access to log files is denied.");
           return;
-        } else if (isForbiddenPath(decodedHref, "svrjs") && !isProxy && !exposeServerVersion) {
+        } else if (isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") && !isProxy && !exposeServerVersion) {
           callServerError(403);
           serverconsole.errmessage("Access to SVR.JS script is denied.");
           return;
-        } else if ((isForbiddenPath(decodedHref, "svrjs") || isForbiddenPath(decodedHref, "serverSideScripts") || isIndexOfForbiddenPath(decodedHref, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
+        } else if ((isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") || isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "serverSideScripts") || isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
           callServerError(403);
           serverconsole.errmessage("Access to sources is denied.");
           return;
@@ -4541,14 +4547,15 @@ if (!cluster.isPrimary) {
             for (var i = 0; i < nonStandardCodes.length; i++) {
               if (matchHostname(nonStandardCodes[i].host) && ipMatch(nonStandardCodes[i].ip, req.socket ? req.socket.localAddress : undefined)) {
                 var isMatch = false;
+                var hrefWithoutDuplicateSlashes = href.replace(/\/+/g,"/");
                 if (nonStandardCodes[i].regex) {
                   // Regex match
                   var createdRegex = createRegex(nonStandardCodes[i].regex, true);
-                  isMatch = req.url.match(createdRegex) || href.match(createdRegex);
+                  isMatch = req.url.match(createdRegex) || hrefWithoutDuplicateSlashes.match(createdRegex);
                   regexI[i] = createdRegex;
                 } else {
                   // Non-regex match
-                  isMatch = nonStandardCodes[i].url == href || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == href.toLowerCase());
+                  isMatch = nonStandardCodes[i].url == hrefWithoutDuplicateSlashes || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == hrefWithoutDuplicateSlashes.toLowerCase());
                 }
                 if (isMatch) {
                   if (nonStandardCodes[i].scode == 401) {
