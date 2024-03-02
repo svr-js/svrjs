@@ -1293,12 +1293,11 @@ if (process.isBun) vnum = 64;
 
 // SVR.JS path sanitizer function
 function sanitizeURL(resource, allowDoubleSlashes) {
-  if (resource == "*") return "*";
-  if (resource == "") return "";
+  if (resource == "*" || resource == "") return resource;
   // Remove null characters
-  resource = resource.replace(/%00/ig, "").replace(/\0/g, "");
+  resource = resource.replace(/%00|\0/g, "");
   // Check if URL is malformed (e.g. %c0%af or %u002f or simply %as)
-  if (resource.match(/%(?:c[01]|f[ef]|(?![0-9a-f]{2}).{2}|.{0,1}$)/gi)) throw new URIError("URI malformed");
+  if (resource.match(/%(?:c[01]|f[ef]|(?![0-9a-f]{2}).{2}|.{0,1}$)/i)) throw new URIError("URI malformed");
   // Decode URL-encoded characters while preserving certain characters
   resource = resource.replace(/%([0-9a-f]{2})/gi, function (match, hex) {
     var decodedChar = String.fromCharCode(parseInt(hex, 16));
@@ -1316,7 +1315,7 @@ function sanitizeURL(resource, allowDoubleSlashes) {
   sanitizedResource = sanitizedResource.replace(/\\/g, "/").replace(allowDoubleSlashes ? /\/{3,}/g : /\/+/g, "/");
   // Handle relative navigation (e.g., "/./", "/../", "../", "./"), also remove trailing dots in paths
   sanitizedResource = sanitizedResource.replace(/\/\.(?:\.{2,})?(?=\/|$)/g, "").replace(/([^.\/])\.+(?=\/|$)/g, "$1");
-  while (sanitizedResource.match(/\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/g)) {
+  while (sanitizedResource.match(/\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/)) {
     sanitizedResource = sanitizedResource.replace(/\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/g, "");
   }
   sanitizedResource = sanitizedResource.replace(/\/\.\.(?=\/|$)/g, "");
@@ -3776,7 +3775,7 @@ if (!cluster.isPrimary) {
                               } else if (estats.isSocket()) {
                                 entry = entry.replace("[img]", "/.dirimages/socket.png").replace("[alt]", "[SCK]");
                               }
-                            } else if ((/README/ig).test(ename) || (/LICEN[SC]E/ig).test(ename)) {
+                            } else if (ename.match(/README|LICEN[SC]E/i)) {
                               entry = entry.replace("[img]", "/.dirimages/important.png").replace("[alt]", "[IMP]");
                             } else if (checkEXT(ename, ".html") || checkEXT(ename, ".htm") || checkEXT(ename, ".xml") || checkEXT(ename, ".xhtml") || checkEXT(ename, ".shtml")) {
                               entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (checkEXT(ename, ".xml") ? "[XML]" : "[HTM]"));
