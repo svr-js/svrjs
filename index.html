@@ -22,83 +22,80 @@
     <br/>
     <p>If you see this page that means that the server is working properly. You can further configure the server and replace <i>index.html</i> and <i>tests.html</i> pages with custom ones.</p>
     <p>Default <i>config.json</i> looks like this:</p>
-    <div style="background-color: #e0e0e0; padding: 5px; text-align: left; display: inline-block;">
-      <code>
-        {<br/>
-        &nbsp;&nbsp;"users": [],<br/>
-        &nbsp;&nbsp;"port": 80,<br/>
-        &nbsp;&nbsp;"pubport": 80,<br/>
-        &nbsp;&nbsp;"page404": "404.html",<br/>
-        &nbsp;&nbsp;"timestamp": 1701600932028,<br/>
-        &nbsp;&nbsp;"blacklist": [],<br/>
-        &nbsp;&nbsp;"nonStandardCodes": [],<br/>
-        &nbsp;&nbsp;"enableCompression": true,<br/>
-        &nbsp;&nbsp;"customHeaders": {},<br/>
-        &nbsp;&nbsp;"enableHTTP2": false,<br/>
-        &nbsp;&nbsp;"enableLogging": true,<br/>
-        &nbsp;&nbsp;"enableDirectoryListing": true,<br/>
-        &nbsp;&nbsp;"enableDirectoryListingWithDefaultHead": false,<br/>
-        &nbsp;&nbsp;"serverAdministratorEmail": "[no contact information]",<br/>
-        &nbsp;&nbsp;"stackHidden": false,<br/>
-        &nbsp;&nbsp;"enableRemoteLogBrowsing": false,<br/>
-        &nbsp;&nbsp;"exposeServerVersion": true,<br/>
-        &nbsp;&nbsp;"disableServerSideScriptExpose": true,<br/>
-        &nbsp;&nbsp;"rewriteMap": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/^\\/serverSideScript\\.js($|[#?])/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/NONEXISTENT_PAGE$1"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/^\\/testdir_rewritten($|[\\/?#])/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/testdir$1"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;],<br/>
-        &nbsp;&nbsp;"allowStatus": true,<br/>
-        &nbsp;&nbsp;"dontCompress": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.ipxe$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.img$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.iso$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.png$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.jpg$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;"/.*\\.webp$/"<br/>
-        &nbsp;&nbsp;],<br/>
-        &nbsp;&nbsp;"enableIPSpoofing": false,<br/>
-        &nbsp;&nbsp;"secure": false,<br/>
-        &nbsp;&nbsp;"sni": {},<br/>
-        &nbsp;&nbsp;"disableNonEncryptedServer": false,<br/>
-        &nbsp;&nbsp;"disableToHTTPSRedirect": false,<br/>
-        &nbsp;&nbsp;"enableETag": true,<br/>
-        &nbsp;&nbsp;"disableUnusedWorkerTermination": false,<br/>
-        &nbsp;&nbsp;"rewriteDirtyURLs": true,<br/>
-        &nbsp;&nbsp;"errorPages": [],<br/>
-        &nbsp;&nbsp;"useWebRootServerSideScript": true,<br/>
-        &nbsp;&nbsp;"exposeModsInErrorPages": true,<br/>
-        &nbsp;&nbsp;"disableTrailingSlashRedirects": false,<br/>
-        &nbsp;&nbsp;"environmentVariables": {}<br/>
+    <code style="background-color: #e0e0e0; padding: 5px; text-align: left; display: block; display: inline-block;">
+      <pre style="margin: 0.2em; white-space: pre-wrap;">{
+  "users": [],
+  "port": 80,
+  "pubport": 80,
+  "page404": "404.html",
+  "timestamp": 1701600932028,
+  "blacklist": [],
+  "nonStandardCodes": [],
+  "enableCompression": true,
+  "customHeaders": {},
+  "enableHTTP2": false,
+  "enableLogging": true,
+  "enableDirectoryListing": true,
+  "enableDirectoryListingWithDefaultHead": false,
+  "serverAdministratorEmail": "[no contact information]",
+  "stackHidden": false,
+  "enableRemoteLogBrowsing": false,
+  "exposeServerVersion": true,
+  "disableServerSideScriptExpose": true,
+  "rewriteMap": [
+    {
+      "definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",
+      "replacements": [
+        {
+          "regex": "/^\\/serverSideScript\\.js($|[#?])/",
+          "replacement": "/NONEXISTENT_PAGE$1"
         }
-      </code>
-    </div>
+      ]
+    },
+    {
+      "definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",
+      "replacements": [
+        {
+          "regex": "/^\\/testdir_rewritten($|[\\/?#])/",
+          "replacement": "/testdir$1"
+        }
+      ]
+    }
+  ],
+  "allowStatus": true,
+  "dontCompress": [
+    "/.*\\.ipxe$/",
+    "/.*\\.img$/",
+    "/.*\\.iso$/",
+    "/.*\\.png$/",
+    "/.*\\.jpg$/",
+    "/.*\\.webp$/"
+  ],
+  "enableIPSpoofing": false,
+  "secure": false,
+  "sni": {},
+  "disableNonEncryptedServer": false,
+  "disableToHTTPSRedirect": false,
+  "enableETag": true,
+  "disableUnusedWorkerTermination": false,
+  "rewriteDirtyURLs": true,
+  "errorPages": [],
+  "useWebRootServerSideScript": true,
+  "exposeModsInErrorPages": true,
+  "disableTrailingSlashRedirects": false,
+  "environmentVariables": {}
+}</pre>
+    </code>
     <p>Changes:</p>
-    <ul>
+    <ul style="display: inline-block; margin: 0; padding: 0;">
       <li><i>INSERT CHANGES THERE</i></li>
     </ul>
-    <br/>
-    <a href="/tests.html">Tests</a><br/>
-    <a href="/licenses">Licenses</a><br/>
-    <a href="/svrjsstatus.svr">SVR.JS status page</a><br/>
-    <a href="https://svrjs.org/docs">More Information</a>
-    <br/>
-    <br/>
+    <p>
+      <a href="/tests.html">Tests</a><br/>
+      <a href="/licenses/">Licenses</a><br/>
+      <a href="/svrjsstatus.svr">SVR.JS status page</a><br/>
+      <a href="https://svrjs.org/docs">SVR.JS documentation</a>
+    </p>
     <img src="/powered.png" />
   </body>
 </html>
