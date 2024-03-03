@@ -873,8 +873,8 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (errorStack.some(function (errorStackLine) {
-      return (errorStackLine.indexOf(errorObject.name) == 0);
-    })) {
+    return (errorStackLine.indexOf(errorObject.name) == 0);
+  })) {
     return errorObject.stack;
   }
 
@@ -3623,23 +3623,23 @@ if (!cluster.isPrimary) {
                 var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
-                  "";
+                    fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
+                    "";
                 var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")) ?
                   fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString() :
                   (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
-                  "";
+                    fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
+                    "";
 
                 // Check if custom header has HTML tag
                 var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
 
                 // Generate HTML head and footer based on configuration and custom content
                 var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
-                    (!headerHasHTMLTag ?
-                      "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
-                      customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
-                    head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+                  (!headerHasHTMLTag ?
+                    "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
+                    customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
+                  head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
                   (!headerHasHTMLTag ? customDirListingHeader : "") +
                   "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
 
@@ -5050,11 +5050,11 @@ function start(init) {
       if (process.isBun) {
         serverconsole.locwarnmessage("Bun support is experimental. Some features of SVR.JS, SVR.JS mods and SVR.JS server-side JavaScript may not work as expected.");
         if (users.some(function (entry) {
-            return entry.pbkdf2;
-          })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
+          return entry.pbkdf2;
+        })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
         if (users.some(function (entry) {
-            return entry.scrypt;
-          })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
+          return entry.scrypt;
+        })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
