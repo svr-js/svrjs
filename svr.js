@@ -2922,6 +2922,7 @@ if (!cluster.isPrimary) {
         // Set HTTP/1.x methods (to prevent process warnings)
         res.writeHeadNodeApi = res.writeHead;
         res.setHeaderNodeApi = res.setHeader;
+
         res.writeHead = function (a, b, c) {
           var table = c;
           if (typeof (b) == "object") table = b;
@@ -2940,9 +2941,9 @@ if (!cluster.isPrimary) {
             return res.writeHeadNodeApi(a, table);
           }
         };
-
-        res.setHeader = function (a, b) {
-          if (a != "transfer-encoding" && a != "connection" && a != "keep-alive" && a != "upgrade") return res.setHeaderNodeApi(a, b);
+        res.setHeader = function (headerName, headerValue) {
+          var al = headerName.toLowerCase();
+          if (al != "transfer-encoding" && al != "connection" && al != "keep-alive" && al != "upgrade") return res.setHeaderNodeApi(headerName, headerValue);
           return false;
         };
 
