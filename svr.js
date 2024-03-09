@@ -2946,8 +2946,9 @@ if (!cluster.isPrimary) {
 
       // Set HTTP/1.x headers
       if (!req.headers.host) req.headers.host = req.headers[":authority"];
-      (req.headers[":path"] == undefined ? (function () {})() : req.url = req.headers[":path"]);
-      req.protocol = req.headers[":scheme"];
+      if (!req.url) req.url = req.headers[":path"];
+      if (!req.protocol) req.protocol = req.headers[":scheme"];
+      if (!req.method) req.method = req.headers[":method"];
       if (req.headers[":path"] == undefined || req.headers[":method"] == undefined) {
         var cheaders = getCustomHeaders();
         cheaders["Content-Type"] = "text/html; charset=utf-8";
