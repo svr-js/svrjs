@@ -2930,7 +2930,7 @@ if (!cluster.isPrimary) {
         var tableKeysT = Object.keys(table);
         tableKeysT.forEach(function (key) {
           var al = key.toLowerCase();
-          if (al == "transfer-encoding" && al == "connection" && al == "keep-alive" && al == "upgrade") delete table[key];
+          if (al == "transfer-encoding" || al == "connection" || al == "keep-alive" || al == "upgrade") delete table[key];
         });
         if (res.stream && res.stream.destroyed) {
           return false;
