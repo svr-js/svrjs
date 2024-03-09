@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.4";
+var version = "3.14.5";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -1698,7 +1698,6 @@ function sha256(s) {
     hash.update(s);
     return hash.digest("hex");
   } else {
-
     var chrsz = 8;
     var hexcase = 0;
 
@@ -2918,57 +2917,40 @@ if (!cluster.isPrimary) {
 
     // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
     if (configJSON.enableHTTP2 == true && req.httpVersion == "2.0") {
-      try {
-        // Set HTTP/1.x methods (to prevent process warnings)
-        res.writeHeadNodeApi = res.writeHead;
-        res.setHeaderNodeApi = res.setHeader;
-        res.writeHead = function (a, b, c) {
-          var table = c;
-          if (typeof (b) == "object") table = b;
-          if (table == undefined) table = this.tHeaders;
-          table = JSON.parse(JSON.stringify(table));
-          if (table["content-type"] != undefined && table["Content-Type"] != undefined) {
-            delete table["content-type"];
-          }
-          delete table["transfer-encoding"];
-          delete table["connection"];
-          delete table["keep-alive"];
-          delete table["upgrade"];
-          if (res.stream && res.stream.destroyed) {
-            return false;
-          } else {
-            return res.writeHeadNodeApi(a, table);
-          }
-        };
+      // Set HTTP/1.x methods (to prevent process warnings)
+      res.writeHeadNodeApi = res.writeHead;
+      res.setHeaderNodeApi = res.setHeader;
 
-        res.setHeader = function (a, b) {
-          if (a != "transfer-encoding" && a != "connection" && a != "keep-alive" && a != "upgrade") return res.setHeaderNodeApi(a, b);
+      res.writeHead = function (a, b, c) {
+        var table = c;
+        if (typeof (b) == "object") table = b;
+        if (table == undefined) table = this.tHeaders;
+        table = JSON.parse(JSON.stringify(table));
+        Object.keys(table).forEach(function (key) {
+          var al = key.toLowerCase();
+          if (al == "transfer-encoding" || al == "connection" || al == "keep-alive" || al == "upgrade") delete table[key];
+        });
+        if (res.stream && res.stream.destroyed) {
           return false;
-        };
-
-        // Set HTTP/1.x headers
-        if (!req.headers.host) req.headers.host = req.headers[":authority"];
-        (req.headers[":path"] == undefined ? (function () {})() : req.url = req.headers[":path"]);
-        req.protocol = req.headers[":scheme"];
-        var headers = [":path", ":method"];
-        for (var i = 0; i < headers.length; i++) {
-          if (req.headers[headers[i]] == undefined) {
-            var cheaders = getCustomHeaders();
-            cheaders["Content-Type"] = "text/html; charset=utf-8";
-            res.writeHead(400, "Bad Request", cheaders);
-            res.write("<html><head><title>400 Bad Request</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>400 Bad Request</h1><p>The request you sent is invalid. <p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + (req.headers[":authority"] == undefined ? "" : " on " + req.headers[":authority"]) + "</i></p></body></html>");
-            res.end();
-            return;
-          }
+        } else {
+          return res.writeHeadNodeApi(a, table);
         }
-      } catch (err) {
-        var cheaders = getCustomHeaders();
-        cheaders["Content-Type"] = "text/html; charset=utf-8";
-        cheaders[":status"] = "500";
-        res.stream.respond(cheaders);
-        res.stream.write("<html><head><title>500 Internal Server Error</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>500 Internal Server Error</h1><p>The server had an unexpected error. Below, error stack is shown: </p><code>" + (stackHidden ? "[error stack hidden]" : generateErrorStack(err)).replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;") + "</code><p>Please contact with developer/administrator of the website.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + (req.headers[":authority"] == undefined ? "" : " on " + req.headers[":authority"]) + "</i></p></body></html>");
-        res.stream.end();
-        return;
+      };
+      res.setHeader = function (headerName, headerValue) {
+        var al = headerName.toLowerCase();
+        if (al != "transfer-encoding" && al != "connection" && al != "keep-alive" && al != "upgrade") return res.setHeaderNodeApi(headerName, headerValue);
+        return false;
+      };
+
+      // Set HTTP/1.x headers
+      if (!req.headers.host) req.headers.host = req.headers[":authority"];
+      if (!req.url) req.url = req.headers[":path"];
+      if (!req.protocol) req.protocol = req.headers[":scheme"];
+      if (!req.method) req.method = req.headers[":method"];
+      if (req.headers[":path"] == undefined || req.headers[":method"] == undefined) {
+        var err = new Error("Either \":path\" or \":method\" pseudoheader is missing.");
+        if(Buffer.alloc) err.rawPacket = Buffer.alloc(0);
+        reqerrhandler(err, req.socket, fromMain);
       }
     }
 
@@ -4240,12 +4222,13 @@ if (!cluster.isPrimary) {
 
       // Handle redirects to addresses with "www." prefix
       if (wwwredirect) {
-        var hostname = req.headers.host.split[":"];
+        var hostname = req.headers.host.split(":");
         var hostport = null;
         if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
         hostname = hostname.join(":");
         if (hostname == domain && hostname.indexOf("www.") != 0) {
           redirect((req.socket.encrypted ? "https" : "http") + "://www." + hostname + (hostport ? ":" + hostport : "") + req.url.replace(/\/+/g, "/"));
+          return;
         }
       }
 
