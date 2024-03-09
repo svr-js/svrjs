@@ -2927,13 +2927,11 @@ if (!cluster.isPrimary) {
         if (typeof (b) == "object") table = b;
         if (table == undefined) table = this.tHeaders;
         table = JSON.parse(JSON.stringify(table));
-        if (table["content-type"] != undefined && table["Content-Type"] != undefined) {
-          delete table["content-type"];
-        }
-        delete table["transfer-encoding"];
-        delete table["connection"];
-        delete table["keep-alive"];
-        delete table["upgrade"];
+        var tableKeysT = Object.keys(table);
+        tableKeysT.forEach(function (key) {
+          var al = key.toLowerCase();
+          if (al == "transfer-encoding" && al == "connection" && al == "keep-alive" && al == "upgrade") delete table[key];
+        });
         if (res.stream && res.stream.destroyed) {
           return false;
         } else {
