@@ -2927,8 +2927,7 @@ if (!cluster.isPrimary) {
         if (typeof (b) == "object") table = b;
         if (table == undefined) table = this.tHeaders;
         table = JSON.parse(JSON.stringify(table));
-        var tableKeysT = Object.keys(table);
-        tableKeysT.forEach(function (key) {
+        Object.keys(table).forEach(function (key) {
           var al = key.toLowerCase();
           if (al == "transfer-encoding" || al == "connection" || al == "keep-alive" || al == "upgrade") delete table[key];
         });
