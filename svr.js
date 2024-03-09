@@ -1698,7 +1698,6 @@ function sha256(s) {
     hash.update(s);
     return hash.digest("hex");
   } else {
-
     var chrsz = 8;
     var hexcase = 0;
 
@@ -4223,12 +4222,13 @@ if (!cluster.isPrimary) {
 
       // Handle redirects to addresses with "www." prefix
       if (wwwredirect) {
-        var hostname = req.headers.host.split[":"];
+        var hostname = req.headers.host.split(":");
         var hostport = null;
         if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
         hostname = hostname.join(":");
         if (hostname == domain && hostname.indexOf("www.") != 0) {
           redirect((req.socket.encrypted ? "https" : "http") + "://www." + hostname + (hostport ? ":" + hostport : "") + req.url.replace(/\/+/g, "/"));
+          return;
         }
       }
 
