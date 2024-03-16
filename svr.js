@@ -1153,7 +1153,7 @@ if (fs.existsSync(__dirname + "/config.json")) {
 
 // Default server configuration properties
 var wwwredirect = false;
-var rawBlackList = [];
+var rawBlockList = [];
 var users = [];
 var page404 = "404.html";
 var serverAdmin = "[no contact information]";
@@ -1180,7 +1180,7 @@ var allowDoubleSlashes = false;
 var allowPostfixDoubleSlashes = false;
 
 // Get properties from config.json
-if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
+if (configJSON.blacklist != undefined) rawBlockList = configJSON.blacklist;
 if (configJSON.wwwredirect != undefined) wwwredirect = configJSON.wwwredirect;
 if (configJSON.port != undefined) port = configJSON.port;
 if (configJSON.pubport != undefined) pubport = configJSON.pubport;
@@ -1255,7 +1255,7 @@ try {
 configJSON.version = version;
 configJSON.productName = "SVR.JS";
 
-var blacklist = ipBlockList(rawBlackList);
+var blocklist = ipBlockList(rawBlockList);
 
 var nonStandardCodes = [];
 nonStandardCodesRaw.forEach(function (nonStandardCodeRaw) {
@@ -4099,13 +4099,13 @@ if (!cluster.isPrimary) {
     }
 
     try {
-      // scan blacklist
-      if (blacklist.check(reqip) && href != "/favicon.ico") {
+      // Scan the block list
+      if (blocklist.check(reqip) && href != "/favicon.ico") {
         // Return client blocked message
         var bheaders = getCustomHeaders();
         bheaders["Content-Type"] = "text/html; charset=utf8";
         res.writeHead(403, "Client blocked", bheaders);
-        res.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the blacklist.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
+        res.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the block list.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
         serverconsole.errmessage("Client blocked");
         return;
       }
@@ -5244,8 +5244,8 @@ function start(init) {
           if (ip[i].indexOf(":") == -1) {
             ip[i] = "::ffff:" + ip[i];
           }
-          if (!blacklist.check(ip[i])) {
-            blacklist.add(ip[i]);
+          if (!blocklist.check(ip[i])) {
+            blocklist.add(ip[i]);
           }
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully blocked.");
@@ -5261,7 +5261,7 @@ function start(init) {
           if (ip[i].indexOf(":") == -1) {
             ip[i] = "::ffff:" + ip[i];
           }
-          blacklist.remove(ip[i]);
+          blocklist.remove(ip[i]);
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully unblocked.");
         else if (!cluster.isPrimary) process.send("IPs successfully unblocked.");
@@ -5760,7 +5760,7 @@ function saveConfig() {
       delete configJSONobj.domian;
       if (configJSONobj.page404 === undefined) configJSONobj.page404 = "404.html";
       configJSONobj.timestamp = timestamp;
-      configJSONobj.blacklist = blacklist.raw;
+      configJSONobj.blacklist = blocklist.raw;
       if (configJSONobj.nonStandardCodes === undefined) configJSONobj.nonStandardCodes = [];
       if (configJSONobj.enableCompression === undefined) configJSONobj.enableCompression = true;
       if (configJSONobj.customHeaders === undefined) configJSONobj.customHeaders = {};
