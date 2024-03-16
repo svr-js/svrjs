@@ -2956,7 +2956,7 @@ if (!cluster.isPrimary) {
 
     if (req.headers["x-svr-js-from-main-thread"] == "true" && req.socket && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
       var headers = getCustomHeaders();
-      res.writeHead(204, "No Content", headers);
+      res.writeHead(204, http.STATUS_CODES[204], headers);
       res.end();
       return;
     }
@@ -3464,7 +3464,7 @@ if (!cluster.isPrimary) {
         if (isProxy) {
           var eheaders = getCustomHeaders();
           eheaders["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(501, "Not Implemented", eheaders);
+          res.writeHead(501, http.STATUS_CODES[501], eheaders);
           res.write("<html><head><title>Proxy not implemented</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>Proxy not implemented</h1><p>SVR.JS doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use SVR.JS as a proxy.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</i></p></body></html>");
           res.end();
           serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
@@ -3474,7 +3474,7 @@ if (!cluster.isPrimary) {
         if (req.method == "OPTIONS") {
           var hdss = getCustomHeaders();
           hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-          res.writeHead(204, "No Content", hdss);
+          res.writeHead(204, http.STATUS_CODES[204], hdss);
           res.end();
           return;
         } else if (req.method != "GET" && req.method != "POST" && req.method != "HEAD") {
@@ -3507,7 +3507,7 @@ if (!cluster.isPrimary) {
 
           var hdhds = getCustomHeaders();
           hdhds["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(200, "OK", hdhds);
+          res.writeHead(200, http.STATUS_CODES[200], hdhds);
           res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>" + statusBody + (foot == "" ? "</body></html>" : foot));
           return;
         }
@@ -3881,7 +3881,7 @@ if (!cluster.isPrimary) {
                   if (clientETag === fileETag) {
                     var headers = getCustomHeaders();
                     headers.ETag = clientETag;
-                    res.writeHead(304, "Not Modified", headers);
+                    res.writeHead(304, http.STATUS_CODES[304], headers);
                     res.end();
                     return;
                   }
@@ -4113,7 +4113,7 @@ if (!cluster.isPrimary) {
           // Respond with list of methods
           var hdss = getCustomHeaders();
           hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-          res.writeHead(204, "No Content", hdss);
+          res.writeHead(204, http.STATUS_CODES[204], hdss);
           res.end();
           return;
         } else {
