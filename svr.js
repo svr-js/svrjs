@@ -3706,9 +3706,9 @@ if (!cluster.isPrimary) {
                             directoryListingRows.push(
                               "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
                               (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
-                              "\"><nocode>" +
+                              "\">" +
                               ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-                              "</nocode></a></td><td>-</td><td>" +
+                              "</a></td><td>-</td><td>" +
                               (estats ? estats.mtime.toDateString() : "-") +
                               "</td></tr>\r\n"
                             );
