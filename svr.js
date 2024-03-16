@@ -4103,7 +4103,7 @@ if (!cluster.isPrimary) {
       if (blocklist.check(reqip)) {
         // Invoke 403 Forbidden error
         callServerError(403);
-        serverconsole.errmessage("Client blocked");
+        serverconsole.errmessage("Client is in the block list.");
         return;
       }
 
