@@ -4100,12 +4100,9 @@ if (!cluster.isPrimary) {
 
     try {
       // Scan the block list
-      if (blocklist.check(reqip) && href != "/favicon.ico") {
-        // Return client blocked message
-        var bheaders = getCustomHeaders();
-        bheaders["Content-Type"] = "text/html; charset=utf8";
-        res.writeHead(403, "Client blocked", bheaders);
-        res.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the block list.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
+      if (blocklist.check(reqip)) {
+        // Invoke 403 Forbidden error
+        callServerError(403);
         serverconsole.errmessage("Client blocked");
         return;
       }
