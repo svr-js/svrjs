@@ -34,17 +34,19 @@ function viewLog(log) {
     if(log[log.length-1] == "") log.pop();
     if(log[0] == "") log.shift();
     for(var i=0;i<log.length;i++) {
-        if(log[i].indexOf("SERVER REQUEST MESSAGE") != -1) {
-    log[i] = log[i].replace("SERVER REQUEST MESSAGE","\x1b[34mSERVER REQUEST MESSAGE") + "\x1b[37m\x1b[0m";
-  } else if(log[i].indexOf("SERVER RESPONSE MESSAGE") != -1) {
-    log[i] = log[i].replace("SERVER RESPONSE MESSAGE","\x1b[32mSERVER RESPONSE MESSAGE") + "\x1b[37m\x1b[0m";
-  } else if(log[i].indexOf("SERVER RESPONSE ERROR MESSAGE") != -1) {
-    log[i] = log[i].replace("SERVER RESPONSE ERROR MESSAGE","\x1b[31mSERVER RESPONSE ERROR MESSAGE") + "\x1b[37m\x1b[0m";
-  } else if(log[i].indexOf("SERVER ERROR MESSAGE") != -1) {
-    log[i] = log[i].replace("SERVER ERROR MESSAGE","\x1b[41mSERVER ERROR MESSAGE") + "\x1b[40m\x1b[0m";
-  } else if(log[i].indexOf("SERVER WARNING MESSAGE") != -1) {
-    log[i] = log[i].replace("SERVER WARNING MESSAGE","\x1b[43mSERVER WARNING MESSAGE") + "\x1b[40m\x1b[0m";
-  }
-        console.log(log[i]);
+      if(log[i].indexOf("SERVER REQUEST MESSAGE") != -1) {
+        log[i] = log[i].replace("SERVER REQUEST MESSAGE","\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m") + "\x1b[37m\x1b[0m";
+      } else if(log[i].indexOf("SERVER RESPONSE MESSAGE") != -1) {
+        log[i] = log[i].replace("SERVER RESPONSE MESSAGE","\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m") + "\x1b[37m\x1b[0m";
+      } else if(log[i].indexOf("SERVER RESPONSE ERROR MESSAGE") != -1) {
+        log[i] = log[i].replace("SERVER RESPONSE ERROR MESSAGE","\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m") + "\x1b[37m\x1b[0m";
+      } else if(log[i].indexOf("SERVER ERROR MESSAGE") != -1) {
+        log[i] = log[i].replace("SERVER ERROR MESSAGE","\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m") + "\x1b[40m\x1b[0m";
+      } else if(log[i].indexOf("SERVER WARNING MESSAGE") != -1) {
+        log[i] = log[i].replace("SERVER WARNING MESSAGE","\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m") + "\x1b[40m\x1b[0m";
+      } else if(log[i].indexOf("SERVER MESSAGE") != -1) {
+        log[i] = log[i].replace("SERVER MESSAGE","\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m");
+      }
+      console.log(log[i]);
     }
 }
