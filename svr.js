@@ -4646,18 +4646,36 @@ if (!cluster.isPrimary) {
                 var username = decodedCredentialsMatch[1];
                 var password = decodedCredentialsMatch[2];
                 var usernameMatch = [];
+                var sha256Count = 0;
+                var pbkdf2Count = 0;
+                var scryptCount = 0;
                 if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
                   usernameMatch = users.filter(function (entry) {
+                    if(entry.pbkdf2) {
+                      pbkdf2Count++;
+                    } else if(entry.scrypt) {
+                      scryptCount++;
+                    } else {
+                      sha256Count++;
+                    }
                     return entry.name == username;
                   });
                 }
                 if (usernameMatch.length == 0) {
                   // Pushing false user match to prevent time-based user enumeration
-                  usernameMatch.push({
+                  var fakeCredentials = {
                     name: username,
                     pass: "SVRJSAWebServerRunningOnNodeJS",
                     salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0"
-                  }); // Fake credentials
+                  };
+                  if (!process.isBun) {
+                    if (pbkdf2Count > sha256Count && pbkdf2Count > scryptCount) {
+                      fakeCredentials.pbkdf2 = true;
+                    } else if (scryptCount > sha256Count) {
+                      fakeCredentials.scrypt = true;
+                    }
+                  }
+                  usernameMatch.push(fakeCredentials);
                 }
                 checkIfPasswordMatches(usernameMatch, password, function (authorized) {
                   try {
