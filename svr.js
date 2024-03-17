@@ -5025,7 +5025,7 @@ function start(init) {
     if (init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
-      console.log("Welcome to SVR.JS - a web server running on Node.JS");
+      console.log("Welcome to \x1b[1mSVR.JS - a web server running on Node.JS\x1b[0m");
 
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
