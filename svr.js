@@ -4651,10 +4651,10 @@ if (!cluster.isPrimary) {
                 var scryptCount = 0;
                 if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
                   usernameMatch = users.filter(function (entry) {
-                    if(entry.pbkdf2) {
-                      pbkdf2Count++;
-                    } else if(entry.scrypt) {
+                    if(entry.scrypt) {
                       scryptCount++;
+                    } else if(entry.pbkdf2) {
+                      pbkdf2Count++;
                     } else {
                       sha256Count++;
                     }
@@ -4669,10 +4669,10 @@ if (!cluster.isPrimary) {
                     salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0"
                   };
                   if (!process.isBun) {
-                    if (pbkdf2Count > sha256Count && pbkdf2Count > scryptCount) {
-                      fakeCredentials.pbkdf2 = true;
-                    } else if (scryptCount > sha256Count) {
+                    if (scryptCount > sha256Count && scryptCount > pbkdf2Count) {
                       fakeCredentials.scrypt = true;
+                    } else if (pbkdf2Count > sha256Count) {
+                      fakeCredentials.pbkdf2 = true;
                     }
                   }
                   usernameMatch.push(fakeCredentials);
