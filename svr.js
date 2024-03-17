@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.5";
+var version = "3.14.6";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -1153,7 +1153,7 @@ if (fs.existsSync(__dirname + "/config.json")) {
 
 // Default server configuration properties
 var wwwredirect = false;
-var rawBlackList = [];
+var rawBlockList = [];
 var users = [];
 var page404 = "404.html";
 var serverAdmin = "[no contact information]";
@@ -1180,7 +1180,7 @@ var allowDoubleSlashes = false;
 var allowPostfixDoubleSlashes = false;
 
 // Get properties from config.json
-if (configJSON.blacklist != undefined) rawBlackList = configJSON.blacklist;
+if (configJSON.blacklist != undefined) rawBlockList = configJSON.blacklist;
 if (configJSON.wwwredirect != undefined) wwwredirect = configJSON.wwwredirect;
 if (configJSON.port != undefined) port = configJSON.port;
 if (configJSON.pubport != undefined) pubport = configJSON.pubport;
@@ -1255,7 +1255,7 @@ try {
 configJSON.version = version;
 configJSON.productName = "SVR.JS";
 
-var blacklist = ipBlockList(rawBlackList);
+var blocklist = ipBlockList(rawBlockList);
 
 var nonStandardCodes = [];
 nonStandardCodesRaw.forEach(function (nonStandardCodeRaw) {
@@ -1425,7 +1425,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("SERVER CLI MESSAGE: " + msg);
+    console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m: " + msg);
     LOG("SERVER CLI MESSAGE: " + msg);
     return;
   },
@@ -1436,7 +1436,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[34mSERVER REQUEST MESSAGE: " + msg + "\x1b[37m\x1b[0m");
+    console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m: " + msg + "\x1b[37m\x1b[0m");
     LOG("SERVER REQUEST MESSAGE: " + msg);
     return;
   },
@@ -1447,7 +1447,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[32mSERVER RESPONSE MESSAGE: " + msg + "\x1b[37m\x1b[0m");
+    console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m: " + msg + "\x1b[37m\x1b[0m");
     LOG("SERVER RESPONSE MESSAGE: " + msg);
     return;
   },
@@ -1458,7 +1458,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE: " + msg + "\x1b[37m\x1b[0m");
+    console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m: " + msg + "\x1b[37m\x1b[0m");
     LOG("SERVER RESPONSE ERROR MESSAGE: " + msg);
     return;
   },
@@ -1469,7 +1469,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[41mSERVER ERROR MESSAGE: " + msg + "\x1b[40m\x1b[0m");
+    console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m: " + msg + "\x1b[40m\x1b[0m");
     LOG("SERVER ERROR MESSAGE: " + msg);
     return;
   },
@@ -1480,7 +1480,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[43mSERVER WARNING MESSAGE: " + msg + "\x1b[40m\x1b[0m");
+    console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m: " + msg + "\x1b[40m\x1b[0m");
     LOG("SERVER WARNING MESSAGE: " + msg);
     return;
   },
@@ -1491,7 +1491,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("SERVER MESSAGE: " + msg);
+    console.log("\x1b[1mSERVER MESSAGE\x1b[22m: " + msg);
     LOG("SERVER MESSAGE: " + msg);
     return;
   }
@@ -1995,7 +1995,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+          console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
           LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2006,7 +2006,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+          console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
           LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2017,7 +2017,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+          console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
           LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2028,7 +2028,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+          console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
           LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2039,7 +2039,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+          console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
           LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2050,7 +2050,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+          console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
           LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2061,7 +2061,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+          console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
           LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         }
@@ -2354,7 +2354,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2365,7 +2365,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2376,7 +2376,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2387,7 +2387,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2398,7 +2398,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2409,7 +2409,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2420,7 +2420,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       }
@@ -2685,7 +2685,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2696,7 +2696,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2707,7 +2707,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2718,7 +2718,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2729,7 +2729,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2740,7 +2740,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2751,7 +2751,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       }
@@ -2804,7 +2804,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2815,7 +2815,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2826,7 +2826,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2837,7 +2837,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2848,7 +2848,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2859,7 +2859,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2870,7 +2870,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       }
@@ -2956,7 +2956,7 @@ if (!cluster.isPrimary) {
 
     if (req.headers["x-svr-js-from-main-thread"] == "true" && req.socket && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
       var headers = getCustomHeaders();
-      res.writeHead(204, "No Content", headers);
+      res.writeHead(204, http.STATUS_CODES[204], headers);
       res.end();
       return;
     }
@@ -3057,8 +3057,7 @@ if (!cluster.isPrimary) {
       if (!req.headers.host.match(/^\.+$/)) req.headers.host = req.headers.host.replace(/\.$/g, "");
     }
 
-    if (!isProxy) serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + (req.headers.host == undefined ? "" : req.headers.host) + req.url);
-    else serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + req.url);
+    serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants " + (req.method == "GET" ? "content in " : (req.method == "POST" ? "to post content in " : (req.method == "PUT" ? "to add content in " : (req.method == "DELETE" ? "to delete content in " : (req.method == "PATCH" ? "to patch content in " : "to access content using " + req.method + " method in "))))) + ((req.headers.host == undefined || !isProxy) ? "" : req.headers.host) + req.url);
     if (req.headers["user-agent"] != undefined) serverconsole.reqmessage("Client uses " + req.headers["user-agent"]);
     if (oldHostHeader && oldHostHeader != req.headers.host) serverconsole.resmessage("Host name rewritten: " + oldHostHeader + " => " + req.headers.host);
 
@@ -3464,7 +3463,7 @@ if (!cluster.isPrimary) {
         if (isProxy) {
           var eheaders = getCustomHeaders();
           eheaders["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(501, "Not Implemented", eheaders);
+          res.writeHead(501, http.STATUS_CODES[501], eheaders);
           res.write("<html><head><title>Proxy not implemented</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>Proxy not implemented</h1><p>SVR.JS doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use SVR.JS as a proxy.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</i></p></body></html>");
           res.end();
           serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
@@ -3474,7 +3473,7 @@ if (!cluster.isPrimary) {
         if (req.method == "OPTIONS") {
           var hdss = getCustomHeaders();
           hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-          res.writeHead(204, "No Content", hdss);
+          res.writeHead(204, http.STATUS_CODES[204], hdss);
           res.end();
           return;
         } else if (req.method != "GET" && req.method != "POST" && req.method != "HEAD") {
@@ -3507,7 +3506,7 @@ if (!cluster.isPrimary) {
 
           var hdhds = getCustomHeaders();
           hdhds["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(200, "OK", hdhds);
+          res.writeHead(200, http.STATUS_CODES[200], hdhds);
           res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>" + statusBody + (foot == "" ? "</body></html>" : foot));
           return;
         }
@@ -3704,25 +3703,15 @@ if (!cluster.isPrimary) {
                           var estats = filelist[i].stats;
                           var ename = filelist[i].name;
                           if (filelist[i].errored) {
-                            if (estats) {
-                              directoryListingRows.push(
-                                "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-                                (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
-                                "\"><nocode>" +
-                                ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-                                "</nocode></a></td><td>-</td><td>" +
-                                estats.mtime.toDateString() +
-                                "</td></tr>\r\n"
-                              );
-                            } else {
-                              directoryListingRows.push(
-                                "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-                                (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
-                                "\"><nocode>" +
-                                ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-                                "</nocode></a></td><td>-</td><td>-</td></tr>\r\n"
-                              );
-                            }
+                            directoryListingRows.push(
+                              "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
+                              (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
+                              "\">" +
+                              ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                              "</a></td><td>-</td><td>" +
+                              (estats ? estats.mtime.toDateString() : "-") +
+                              "</td></tr>\r\n"
+                            );
                           } else {
                             var entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
                               (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
@@ -3881,7 +3870,7 @@ if (!cluster.isPrimary) {
                   if (clientETag === fileETag) {
                     var headers = getCustomHeaders();
                     headers.ETag = clientETag;
-                    res.writeHead(304, "Not Modified", headers);
+                    res.writeHead(304, http.STATUS_CODES[304], headers);
                     res.end();
                     return;
                   }
@@ -4099,14 +4088,11 @@ if (!cluster.isPrimary) {
     }
 
     try {
-      // scan blacklist
-      if (blacklist.check(reqip) && href != "/favicon.ico") {
-        // Return client blocked message
-        var bheaders = getCustomHeaders();
-        bheaders["Content-Type"] = "text/html; charset=utf8";
-        res.writeHead(403, "Client blocked", bheaders);
-        res.write("<!DOCTYPE html><html><head><title>Access denied - SVR.JS</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><br/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><div style=\"height: auto; width: 70%; border-style: solid; border-width: 5; border-color: red; text-align: center; margin: 0 auto;\"><h1>ACCESS DENIED</h1><p style=\"font-size:20px\">Request from " + reqip + " is denied. The client is now in the blacklist.</p><p style=\"font-style: italic; font-weight: normal;\">SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</p></div></body></html>");
-        serverconsole.errmessage("Client blocked");
+      // Scan the block list
+      if (blocklist.check(reqip)) {
+        // Invoke 403 Forbidden error
+        callServerError(403);
+        serverconsole.errmessage("Client is in the block list.");
         return;
       }
 
@@ -4116,7 +4102,7 @@ if (!cluster.isPrimary) {
           // Respond with list of methods
           var hdss = getCustomHeaders();
           hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-          res.writeHead(204, "No Content", hdss);
+          res.writeHead(204, http.STATUS_CODES[204], hdss);
           res.end();
           return;
         } else {
@@ -4542,21 +4528,17 @@ if (!cluster.isPrimary) {
               }
               redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonscode.scode == 308);
               return;
-            } else if (nonscode.scode == 403) {
-              callServerError(403);
-              serverconsole.errmessage("Content blocked.");
-              return;
-            } else if (nonscode.scode == 410) {
-              callServerError(410);
-              serverconsole.errmessage("Content is gone.");
-              return;
-            } else if (nonscode.scode == 418) {
-              callServerError(418);
-              serverconsole.errmessage("SVR.JS is always a teapot ;)");
-              return;
             } else {
               callServerError(nonscode.scode);
-              serverconsole.errmessage("Client fails receiving content.");
+              if (nonscode.scode == 403) {
+                serverconsole.errmessage("Content blocked.");
+              } else if (nonscode.scode == 410) {
+                serverconsole.errmessage("Content is gone.");
+              } else if (nonscode.scode == 418) {
+                serverconsole.errmessage("SVR.JS is always a teapot ;)");
+              } else {
+                serverconsole.errmessage("Client fails receiving content.");
+              }
               return;
             }
           }
@@ -4569,8 +4551,7 @@ if (!cluster.isPrimary) {
             function checkIfPasswordMatches(list, password, callback, _i) {
               if (!_i) _i = 0;
               var cb = function (hash) {
-                var matches = (hash == list[_i].pass);
-                if (matches) {
+                if (hash == list[_i].pass) {
                   callback(true);
                 } else if (_i >= list.length - 1) {
                   callback(false);
@@ -4665,17 +4646,36 @@ if (!cluster.isPrimary) {
                 var username = decodedCredentialsMatch[1];
                 var password = decodedCredentialsMatch[2];
                 var usernameMatch = [];
+                var sha256Count = 0;
+                var pbkdf2Count = 0;
+                var scryptCount = 0;
                 if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
                   usernameMatch = users.filter(function (entry) {
+                    if(entry.scrypt) {
+                      scryptCount++;
+                    } else if(entry.pbkdf2) {
+                      pbkdf2Count++;
+                    } else {
+                      sha256Count++;
+                    }
                     return entry.name == username;
                   });
                 }
                 if (usernameMatch.length == 0) {
-                  usernameMatch.push({
+                  // Pushing false user match to prevent time-based user enumeration
+                  var fakeCredentials = {
                     name: username,
-                    pass: "FAKEPASS",
-                    salt: "FAKESALT"
-                  }); // Fake credentials
+                    pass: "SVRJSAWebServerRunningOnNodeJS",
+                    salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0"
+                  };
+                  if (!process.isBun) {
+                    if (scryptCount > sha256Count && scryptCount > pbkdf2Count) {
+                      fakeCredentials.scrypt = true;
+                    } else if (pbkdf2Count > sha256Count) {
+                      fakeCredentials.pbkdf2 = true;
+                    }
+                  }
+                  usernameMatch.push(fakeCredentials);
                 }
                 checkIfPasswordMatches(usernameMatch, password, function (authorized) {
                   try {
@@ -5025,7 +5025,7 @@ function start(init) {
     if (init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
-      console.log("Welcome to SVR.JS - a web server running on Node.JS");
+      console.log("Welcome to \x1b[1mSVR.JS - a web server running on Node.JS\x1b[0m");
 
       // Print warnings
       if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
@@ -5042,6 +5042,7 @@ function start(init) {
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
       if (crypto.__disabled__ === undefined && !crypto.scrypt) serverconsole.locwarnmessage("Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work.");
+      if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
       if (secure && process.versions && process.versions.openssl && process.versions.openssl.substr(0, 2) == "1.") {
         if (new Date() > new Date("11 September 2023")) {
@@ -5240,11 +5241,11 @@ function start(init) {
         else if (!cluster.isPrimary) process.send("Cannot block non-existent IP.");
       } else {
         for (var i = 0; i < ip.length; i++) {
-          if (ip[i].indexOf(":") == -1) {
+          if (ip[i] != "localhost" && ip[i].indexOf(":") == -1) {
             ip[i] = "::ffff:" + ip[i];
           }
-          if (!blacklist.check(ip[i])) {
-            blacklist.add(ip[i]);
+          if (!blocklist.check(ip[i])) {
+            blocklist.add(ip[i]);
           }
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully blocked.");
@@ -5260,7 +5261,7 @@ function start(init) {
           if (ip[i].indexOf(":") == -1) {
             ip[i] = "::ffff:" + ip[i];
           }
-          blacklist.remove(ip[i]);
+          blocklist.remove(ip[i]);
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully unblocked.");
         else if (!cluster.isPrimary) process.send("IPs successfully unblocked.");
@@ -5437,7 +5438,7 @@ function start(init) {
               } catch (err) {
                 // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
               }
-              if (cpus < 1) cpus = 1; // If SVR.JS is run on Haiku or if useAvailableCores = 0
+              if (cpus < 1) cpus = 1; // If SVR.JS is running on Haiku or if useAvailableCores = 0
               for (var i = 0; i < cpus; i++) {
                 if (i == 0) {
                   SVRJSFork();
@@ -5759,7 +5760,7 @@ function saveConfig() {
       delete configJSONobj.domian;
       if (configJSONobj.page404 === undefined) configJSONobj.page404 = "404.html";
       configJSONobj.timestamp = timestamp;
-      configJSONobj.blacklist = blacklist.raw;
+      configJSONobj.blacklist = blocklist.raw;
       if (configJSONobj.nonStandardCodes === undefined) configJSONobj.nonStandardCodes = [];
       if (configJSONobj.enableCompression === undefined) configJSONobj.enableCompression = true;
       if (configJSONobj.customHeaders === undefined) configJSONobj.customHeaders = {};
