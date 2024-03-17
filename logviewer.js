@@ -76,7 +76,7 @@ function viewLog(log) {
       } else if(log[i].indexOf("SERVER WARNING MESSAGE") != -1) {
         log[i] = log[i].replace("SERVER WARNING MESSAGE","\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m") + "\x1b[40m\x1b[0m";
       } else if(log[i].indexOf("SERVER MESSAGE") != -1) {
-        log[i] = log[i].replace("SERVER MESSAGE","\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m");
+        log[i] = log[i].replace("SERVER MESSAGE","\x1b[1mSERVER MESSAGE\x1b[22m");
       }
       console.log(log[i]);
     }
