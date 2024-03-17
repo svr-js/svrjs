@@ -4551,8 +4551,7 @@ if (!cluster.isPrimary) {
             function checkIfPasswordMatches(list, password, callback, _i) {
               if (!_i) _i = 0;
               var cb = function (hash) {
-                var matches = (hash == list[_i].pass);
-                if (matches) {
+                if (hash == list[_i].pass) {
                   callback(true);
                 } else if (_i >= list.length - 1) {
                   callback(false);
@@ -4653,10 +4652,11 @@ if (!cluster.isPrimary) {
                   });
                 }
                 if (usernameMatch.length == 0) {
+                  // Pushing false user match to prevent time-based user enumeration
                   usernameMatch.push({
                     name: username,
-                    pass: "FAKEPASS",
-                    salt: "FAKESALT"
+                    pass: "SVRJSAWebServerRunningOnNodeJS",
+                    salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0"
                   }); // Fake credentials
                 }
                 checkIfPasswordMatches(usernameMatch, password, function (authorized) {
