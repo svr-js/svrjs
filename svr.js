@@ -5241,7 +5241,7 @@ function start(init) {
         else if (!cluster.isPrimary) process.send("Cannot block non-existent IP.");
       } else {
         for (var i = 0; i < ip.length; i++) {
-          if (ip[i].indexOf(":") == -1) {
+          if (ip[i] != "localhost" && ip[i].indexOf(":") == -1) {
             ip[i] = "::ffff:" + ip[i];
           }
           if (!blocklist.check(ip[i])) {
