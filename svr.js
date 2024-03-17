@@ -4528,21 +4528,17 @@ if (!cluster.isPrimary) {
               }
               redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonscode.scode == 308);
               return;
-            } else if (nonscode.scode == 403) {
-              callServerError(403);
-              serverconsole.errmessage("Content blocked.");
-              return;
-            } else if (nonscode.scode == 410) {
-              callServerError(410);
-              serverconsole.errmessage("Content is gone.");
-              return;
-            } else if (nonscode.scode == 418) {
-              callServerError(418);
-              serverconsole.errmessage("SVR.JS is always a teapot ;)");
-              return;
             } else {
               callServerError(nonscode.scode);
-              serverconsole.errmessage("Client fails receiving content.");
+              if (nonscode.scode == 403) {
+                serverconsole.errmessage("Content blocked.");
+              } else if (nonscode.scode == 410) {
+                serverconsole.errmessage("Content is gone.");
+              } else if (nonscode.scode == 418) {
+                serverconsole.errmessage("SVR.JS is always a teapot ;)");
+              } else {
+                serverconsole.errmessage("Client fails receiving content.");
+              }
               return;
             }
           }
