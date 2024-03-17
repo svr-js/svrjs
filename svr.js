@@ -5438,7 +5438,7 @@ function start(init) {
               } catch (err) {
                 // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
               }
-              if (cpus < 1) cpus = 1; // If SVR.JS is run on Haiku or if useAvailableCores = 0
+              if (cpus < 1) cpus = 1; // If SVR.JS is running on Haiku or if useAvailableCores = 0
               for (var i = 0; i < cpus; i++) {
                 if (i == 0) {
                   SVRJSFork();
