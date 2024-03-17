@@ -1425,7 +1425,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("SERVER CLI MESSAGE: " + msg);
+    console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m: " + msg);
     LOG("SERVER CLI MESSAGE: " + msg);
     return;
   },
@@ -1436,7 +1436,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[34mSERVER REQUEST MESSAGE: " + msg + "\x1b[37m\x1b[0m");
+    console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m: " + msg + "\x1b[37m\x1b[0m");
     LOG("SERVER REQUEST MESSAGE: " + msg);
     return;
   },
@@ -1447,7 +1447,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[32mSERVER RESPONSE MESSAGE: " + msg + "\x1b[37m\x1b[0m");
+    console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m: " + msg + "\x1b[37m\x1b[0m");
     LOG("SERVER RESPONSE MESSAGE: " + msg);
     return;
   },
@@ -1458,7 +1458,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE: " + msg + "\x1b[37m\x1b[0m");
+    console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m: " + msg + "\x1b[37m\x1b[0m");
     LOG("SERVER RESPONSE ERROR MESSAGE: " + msg);
     return;
   },
@@ -1469,7 +1469,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[41mSERVER ERROR MESSAGE: " + msg + "\x1b[40m\x1b[0m");
+    console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m: " + msg + "\x1b[40m\x1b[0m");
     LOG("SERVER ERROR MESSAGE: " + msg);
     return;
   },
@@ -1480,7 +1480,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("\x1b[43mSERVER WARNING MESSAGE: " + msg + "\x1b[40m\x1b[0m");
+    console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m: " + msg + "\x1b[40m\x1b[0m");
     LOG("SERVER WARNING MESSAGE: " + msg);
     return;
   },
@@ -1491,7 +1491,7 @@ var serverconsole = {
       });
       return;
     }
-    console.log("SERVER MESSAGE: " + msg);
+    console.log("\x1b[1mSERVER MESSAGE\x1b[22m: " + msg);
     LOG("SERVER MESSAGE: " + msg);
     return;
   }
@@ -1995,7 +1995,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+          console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
           LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2006,7 +2006,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+          console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
           LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2017,7 +2017,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+          console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
           LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2028,7 +2028,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+          console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
           LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2039,7 +2039,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+          console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
           LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2050,7 +2050,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+          console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
           LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         },
@@ -2061,7 +2061,7 @@ if (!cluster.isPrimary) {
             });
             return;
           }
-          console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+          console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
           LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
           return;
         }
@@ -2354,7 +2354,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2365,7 +2365,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2376,7 +2376,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2387,7 +2387,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2398,7 +2398,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2409,7 +2409,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2420,7 +2420,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       }
@@ -2685,7 +2685,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2696,7 +2696,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2707,7 +2707,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2718,7 +2718,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2729,7 +2729,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2740,7 +2740,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2751,7 +2751,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       }
@@ -2804,7 +2804,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER CLI MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER CLI MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2815,7 +2815,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[34mSERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER REQUEST MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2826,7 +2826,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[32mSERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2837,7 +2837,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[31mSERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
+        console.log("\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[37m\x1b[0m");
         LOG("SERVER RESPONSE ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2848,7 +2848,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[41mSERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER ERROR MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2859,7 +2859,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("\x1b[43mSERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
+        console.log("\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg + "\x1b[40m\x1b[0m");
         LOG("SERVER WARNING MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       },
@@ -2870,7 +2870,7 @@ if (!cluster.isPrimary) {
           });
           return;
         }
-        console.log("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
+        console.log("\x1b[1mSERVER MESSAGE\x1b[22m [Request Id: " + reqId + "]: " + msg);
         LOG("SERVER MESSAGE [Request Id: " + reqId + "]: " + msg);
         return;
       }
