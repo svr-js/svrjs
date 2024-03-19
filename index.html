@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.14.6</title>
+    <title>SVR.JS 3.14.7</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.14.6</h1>
+    <h1>Welcome to SVR.JS 3.14.7</h1>
     <br/>
     <img src="/logo.png" style="width: 256px; max-width: 100%;" />
     <br/>
@@ -85,13 +85,7 @@
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
-      <li>Added CVE-2024-22019 Node.JS vulnerability warning.</li>
-      <li>Improved protection against user enumeration in HTTP authentication.</li>
-      <li>Replaced block list message with generic 403 Forbidden error.</li>
-      <li>Replaced some instances of "blacklist" with "block list".</li>
-      <li>Some terminal output is now bold.</li>
-      <li>Updated SVR.JS log viewer (<i>logviewer.js</i>) and log highlighter (<i>loghighlight.js</i>)</li>
-      <li>When "block localhost" CLI command is executed, SVR.JS now adds "localhost" to the block list instead of "::ffff:localhost".</li>
+      <li>Fixed bug with request domain names not showing in server logs.</li>
     </ul>
     <p>
       <a href="/tests.html">Tests</a><br/>
