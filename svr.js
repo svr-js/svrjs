@@ -2925,6 +2925,7 @@ if (!cluster.isPrimary) {
         var table = c;
         if (typeof (b) == "object") table = b;
         if (table == undefined) table = this.tHeaders;
+        if (table == undefined) table = {};
         table = JSON.parse(JSON.stringify(table));
         Object.keys(table).forEach(function (key) {
           var al = key.toLowerCase();
