@@ -534,7 +534,6 @@ function createRegex(regex, isPath) {
 
 // Function to check if IPs are equal
 function ipMatch(IP1, IP2) {
-
   if (!IP1) return true;
   if (!IP2) return false;
 
@@ -1909,8 +1908,8 @@ forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.temp = getInitializePath("./temp");
 forbiddenPaths.log = getInitializePath("./log");
 
-// Error descriptions
-var serverErrorDescs = {
+// HTTP error descriptions
+var serverHTTPErrorDescs = {
   200: "The request succeeded! :)",
   201: "A new resource has been created.",
   202: "The request has been accepted for processing, but the processing has not been completed.",
@@ -1958,6 +1957,29 @@ var serverErrorDescs = {
   511: "You need to authenticate yourself in order to get network access.",
   598: "The server couldn't get a response in time while it was acting as a proxy.",
   599: "The server couldn't connect in time while it was acting as a proxy."
+};
+
+// Server error descriptions
+var serverErrorDescs = {
+  "EADDRINUSE": "Address is already in use by another process.",
+  "EADDRNOTAVAIL": "Address is not available on this machine.",
+  "EACCES": "Permission denied. You may not have sufficient privileges to access the requested address.",
+  "EAFNOSUPPORT": "Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.",
+  "EALREADY": "Operation already in progress. The server is already in the process of establishing a connection on the requested address.",
+  "ECONNABORTED": "Connection aborted. The connection to the server was terminated abruptly.",
+  "ECONNREFUSED": "Connection refused. The server refused the connection attempt.",
+  "ECONNRESET": "Connection reset by peer. The connection to the server was reset by the remote host.",
+  "EDESTADDRREQ": "Destination address required. The destination address must be specified.",
+  "ENETDOWN": "Network is down. The network interface used for the connection is not available.",
+  "ENETUNREACH": "Network is unreachable. The network destination is not reachable from this host.",
+  "ENOBUFS": "No buffer space available. Insufficient buffer space is available for the server to process the request.",
+  "ENOTSOCK": "Not a socket. The file descriptor provided is not a valid socket.",
+  "EPROTO": "Protocol error. An unspecified protocol error occurred.",
+  "EPROTONOSUPPORT": "Protocol not supported. The requested network protocol is not supported.",
+  "ETIMEDOUT": "Connection timed out. The server did not respond within the specified timeout period.",
+  "ENOTFOUND": "Domain name doesn't exist (invalid IP address?).",
+  "EINVAL": "Invalid argument (invalid IP address?).",
+  "UNKNOWN": "There was an unknown error with the server."
 };
 
 // Create server instances
@@ -2452,7 +2474,7 @@ if (!cluster.isPrimary) {
           serverconsole.errmessage(stack);
         }
         if (stackHidden) stack = "[error stack hidden]";
-        if (serverErrorDescs[errorCode] === undefined) {
+        if (serverHTTPErrorDescs[errorCode] === undefined) {
           callServerError(501, extName, stack);
         } else {
           var cheaders = getCustomHeaders();
@@ -2474,14 +2496,14 @@ if (!cluster.isPrimary) {
           if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
             // Disable custom error page for HTTP SSL error
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-            res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
+            res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
             res.end();
           } else {
             fs.readFile(errorFile, function (err, data) {
               try {
                 if (err) throw err;
                 res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-                responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
+                responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
               } catch (err) {
                 var additionalError = 500;
                 if (err.code == "ENOENT") {
@@ -2498,7 +2520,7 @@ if (!cluster.isPrimary) {
                   additionalError = 508;
                 }
                 res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
+                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
                 res.end();
               }
             });
@@ -3107,7 +3129,7 @@ if (!cluster.isPrimary) {
         if (stackHidden) stack = "[error stack hidden]";
 
         // Validate the error code and handle unknown codes
-        if (serverErrorDescs[errorCode] === undefined) {
+        if (serverHTTPErrorDescs[errorCode] === undefined) {
           callServerError(501, extName, stack);
         } else {
           var cheaders = getCustomHeaders();
@@ -3137,7 +3159,7 @@ if (!cluster.isPrimary) {
             try {
               if (err) throw err;
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]"))); // Replace placeholders in error response
+              responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]"))); // Replace placeholders in error response
             } catch (err) {
               var additionalError = 500;
               // Handle additional error cases
@@ -3156,7 +3178,7 @@ if (!cluster.isPrimary) {
               }
 
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
+              res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
               res.end();
             }
           });
@@ -4705,45 +4727,7 @@ if (!cluster.isPrimary) {
     if(isRedirect) attmtsRedir--;
     else attmts--;
     if (cluster.isPrimary === undefined && (isRedirect ? attmtsRedir : attmts)) {
-      if (err.code == "EADDRINUSE") {
-        serverconsole.locerrmessage("Address is already in use by another process.");
-      } else if (err.code == "EADDRNOTAVAIL") {
-        serverconsole.locerrmessage("Address is not available on this machine.");
-      } else if (err.code == "EACCES") {
-        serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-      } else if (err.code == "EAFNOSUPPORT") {
-        serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-      } else if (err.code == "EALREADY") {
-        serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-      } else if (err.code == "ECONNABORTED") {
-        serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-      } else if (err.code == "ECONNREFUSED") {
-        serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-      } else if (err.code == "ECONNRESET") {
-        serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-      } else if (err.code == "EDESTADDRREQ") {
-        serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-      } else if (err.code == "ENETDOWN") {
-        serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-      } else if (err.code == "ENETUNREACH") {
-        serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-      } else if (err.code == "ENOBUFS") {
-        serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-      } else if (err.code == "ENOTSOCK") {
-        serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-      } else if (err.code == "EPROTO") {
-        serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-      } else if (err.code == "EPROTONOSUPPORT") {
-        serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-      } else if (err.code == "ETIMEDOUT") {
-        serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-      } else if (err.code == "ENOTFOUND") {
-        serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
-      } else if (err.code == "EINVAL") {
-        serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
-      } else {
-        serverconsole.locerrmessage("There was an unknown error with the server.");
-      }
+      serverconsole.locerrmessage(serverErrorDescs[err.code] ? serverErrorDescs[err.code] : serverErrorDescs["UNKNOWN"]);
       serverconsole.locmessage((isRedirect ? attmtsRedir : attmts) + " attempts left.");
     } else {
       try {
@@ -4849,45 +4833,7 @@ function msgListener(msg) {
       if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
         var tries = parseInt(msg.substr(8, 1));
         var errCode = msg.substr(9);
-        if (errCode == "EADDRINUSE") {
-          serverconsole.locerrmessage("Address is already in use by another process.");
-        } else if (errCode == "EADDRNOTAVAIL") {
-          serverconsole.locerrmessage("Address is not available on this machine.");
-        } else if (errCode == "EACCES") {
-          serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-        } else if (errCode == "EAFNOSUPPORT") {
-          serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-        } else if (errCode == "EALREADY") {
-          serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-        } else if (errCode == "ECONNABORTED") {
-          serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-        } else if (errCode == "ECONNREFUSED") {
-          serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-        } else if (errCode == "ECONNRESET") {
-          serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-        } else if (errCode == "EDESTADDRREQ") {
-          serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-        } else if (errCode == "ENETDOWN") {
-          serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-        } else if (errCode == "ENETUNREACH") {
-          serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-        } else if (errCode == "ENOBUFS") {
-          serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-        } else if (errCode == "ENOTSOCK") {
-          serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-        } else if (errCode == "EPROTO") {
-          serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-        } else if (errCode == "EPROTONOSUPPORT") {
-          serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-        } else if (errCode == "ETIMEDOUT") {
-          serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-        } else if (errCode == "ENOTFOUND") {
-          serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
-        } else if (errCode == "EINVAL") {
-          serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
-        } else {
-          serverconsole.locerrmessage("There was an unknown error with the server.");
-        }
+        serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
         serverconsole.locmessage(tries + " attempts left.");
       }
       if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
@@ -5459,45 +5405,7 @@ function start(init) {
           if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
             var tries = parseInt(msg.substr(8, 1));
             var errCode = msg.substr(9);
-            if (errCode == "EADDRINUSE") {
-              serverconsole.locerrmessage("Address is already in use by another process.");
-            } else if (errCode == "EADDRNOTAVAIL") {
-              serverconsole.locerrmessage("Address is not available on this machine.");
-            } else if (errCode == "EACCES") {
-              serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-            } else if (errCode == "EAFNOSUPPORT") {
-              serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-            } else if (errCode == "EALREADY") {
-              serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-            } else if (errCode == "ECONNABORTED") {
-              serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-            } else if (errCode == "ECONNREFUSED") {
-              serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-            } else if (errCode == "ECONNRESET") {
-              serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-            } else if (errCode == "EDESTADDRREQ") {
-              serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-            } else if (errCode == "ENETDOWN") {
-              serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-            } else if (errCode == "ENETUNREACH") {
-              serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-            } else if (errCode == "ENOBUFS") {
-              serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-            } else if (errCode == "ENOTSOCK") {
-              serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-            } else if (errCode == "EPROTO") {
-              serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-            } else if (errCode == "EPROTONOSUPPORT") {
-              serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-            } else if (errCode == "ETIMEDOUT") {
-              serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-            } else if (errCode == "ENOTFOUND") {
-              serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
-            } else if (errCode == "EINVAL") {
-              serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
-            } else {
-              serverconsole.locerrmessage("There was an unknown error with the server.");
-            }
+            serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
             serverconsole.locmessage(tries + " attempts left.");
           }
           if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
