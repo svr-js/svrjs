@@ -448,19 +448,21 @@ try {
   crypto = require("crypto");
   https = require("https");
 } catch (err) {
-  crypto = {};
-  https = {};
-  crypto.__disabled__ = null;
-  https.createServer = function () {
-    throw new Error("Crypto support is not present");
+  crypto = {
+    __disabled__: null
+  };
+  https = {
+    createServer: function () {
+      throw new Error("Crypto support is not present");
+    },
+    connect: function () {
+      throw new Error("Crypto support is not present");
+    },
+    get: function () {
+      throw new Error("Crypto support is not present");
+    }
   };
   http2.createSecureServer = function () {
-    throw new Error("Crypto support is not present");
-  };
-  https.connect = function () {
-    throw new Error("Crypto support is not present");
-  };
-  https.get = function () {
     throw new Error("Crypto support is not present");
   };
 }
