@@ -1972,15 +1972,15 @@ var serverErrorDescs = {
   "ECONNREFUSED": "Connection refused. The server refused the connection attempt.",
   "ECONNRESET": "Connection reset by peer. The connection to the server was reset by the remote host.",
   "EDESTADDRREQ": "Destination address required. The destination address must be specified.",
+  "EINVAL": "Invalid argument (invalid IP address?).",
   "ENETDOWN": "Network is down. The network interface used for the connection is not available.",
   "ENETUNREACH": "Network is unreachable. The network destination is not reachable from this host.",
   "ENOBUFS": "No buffer space available. Insufficient buffer space is available for the server to process the request.",
+  "ENOTFOUND": "Domain name doesn't exist (invalid IP address?).",
   "ENOTSOCK": "Not a socket. The file descriptor provided is not a valid socket.",
   "EPROTO": "Protocol error. An unspecified protocol error occurred.",
   "EPROTONOSUPPORT": "Protocol not supported. The requested network protocol is not supported.",
   "ETIMEDOUT": "Connection timed out. The server did not respond within the specified timeout period.",
-  "ENOTFOUND": "Domain name doesn't exist (invalid IP address?).",
-  "EINVAL": "Invalid argument (invalid IP address?).",
   "UNKNOWN": "There was an unknown error with the server."
 };
 
