@@ -4840,11 +4840,7 @@ function msgListener(msg) {
       }
       if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
         var errno = errors[msg.substr(9)];
-        if (errno) {
-          process.exit(errno);
-        } else {
-          process.exit(1);
-        }
+        process.exit(errno ? errno : 1);
       }
     });
   } else {
@@ -5412,11 +5408,7 @@ function start(init) {
           }
           if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
             var errno = errors[msg.substr(9)];
-            if (errno) {
-              process.exit(errno);
-            } else {
-              process.exit(1);
-            }
+            process.exit(errno ? errno : 1);
           }
         });
 
