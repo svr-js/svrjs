@@ -2399,6 +2399,27 @@ if (!cluster.isPrimary) {
 
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
+      if (typeof errorCode !== "number") {
+        throw new TypeError("HTTP error code parameter needs to be an integer.");
+      }
+
+      // Handle optional parameters
+      if (extName && typeof extName === "object") {
+        ch = stack;
+        stack = extName;
+        extName = undefined;
+      } else if (typeof extName !== "string" && extName !== null && extName !== undefined) {
+        throw new TypeError("Extension name parameter needs to be a string.");
+      }
+
+      if (stack && typeof stack === "object" && Object.prototype.toString.call(stack) !== "[object Error]") {
+        ch = stack;
+        stack = undefined;
+      } else if (typeof stack !== "object" && typeof stack !== "string" && stack) {
+        throw new TypeError("Error stack parameter needs to be either a string or an instance of Error object.");
+      }
+
+      // Determine error file
       function getErrorFileName(list, callback, _i) {
         if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
           // Disable custom error page for HTTP SSL error
@@ -2420,14 +2441,14 @@ if (!cluster.isPrimary) {
                         callback("." + errorCode.toString());
                       }
                     } catch (err2) {
-                      callServerError(500, undefined, generateErrorStack(err2));
+                      callServerError(500, err2);
                     }
                   });
                 } else {
                   try {
                     callback(page404);
                   } catch (err2) {
-                    callServerError(500, undefined, generateErrorStack(err2));
+                    callServerError(500, err2);
                   }
                 }
               });
@@ -2440,7 +2461,7 @@ if (!cluster.isPrimary) {
                     callback("." + errorCode.toString());
                   }
                 } catch (err2) {
-                  callServerError(500, undefined, generateErrorStack(err2));
+                  callServerError(500, err2);
                 }
               });
             }
@@ -3069,14 +3090,14 @@ if (!cluster.isPrimary) {
                         callback("." + errorCode.toString());
                       }
                     } catch (err2) {
-                      callServerError(500, undefined, generateErrorStack(err2));
+                      callServerError(500, err2);
                     }
                   });
                 } else {
                   try {
                     callback(page404);
                   } catch (err2) {
-                    callServerError(500, undefined, generateErrorStack(err2));
+                    callServerError(500, err2);
                   }
                 }
               });
@@ -3089,7 +3110,7 @@ if (!cluster.isPrimary) {
                     callback("." + errorCode.toString());
                   }
                 } catch (err2) {
-                  callServerError(500, undefined, generateErrorStack(err2));
+                  callServerError(500, err2);
                 }
               });
             }
@@ -3192,7 +3213,7 @@ if (!cluster.isPrimary) {
       head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
       foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
     } catch (err) {
-      callServerError(500, undefined, generateErrorStack(err));
+      callServerError(500, err);
     }
 
     // Function to perform HTTP redirection to a specified destination URL
@@ -3234,7 +3255,7 @@ if (!cluster.isPrimary) {
         customHeaders["Allow"] = "POST";
 
         // Call the server error function with 405 status code and custom headers
-        callServerError(405, undefined, undefined, customHeaders);
+        callServerError(405, customHeaders);
         return;
       }
 
@@ -3248,7 +3269,7 @@ if (!cluster.isPrimary) {
       }
 
       // If the formidable module had an error, call the server error function with 500 status code and error stack
-      if (formidable._errored) callServerError(500, undefined, generateErrorStack(formidable._errored));
+      if (formidable._errored) callServerError(500, formidable._errored);
 
       // Create a new formidable form
       var form = formidable(formidableOptions);
@@ -3507,7 +3528,7 @@ if (!cluster.isPrimary) {
               serverconsole.errmessage("Symbolic link loop detected.");
               return;
             } else {
-              callServerError(500, undefined, generateErrorStack(err));
+              callServerError(500, err);
               return;
             }
           }
@@ -3765,7 +3786,7 @@ if (!cluster.isPrimary) {
                       callServerError(508); // The symbolic link loop is detected during file system operations.
                       serverconsole.errmessage("Symbolic link loop detected.");
                     } else {
-                      callServerError(500, undefined, generateErrorStack(err));
+                      callServerError(500, err);
                     }
                   }
                 });
@@ -3800,7 +3821,7 @@ if (!cluster.isPrimary) {
                     callServerError(508); // The symbolic link loop is detected during file system operations.
                     serverconsole.errmessage("Symbolic link loop detected.");
                   } else {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                   }
                   return;
                 }
@@ -3837,7 +3858,7 @@ if (!cluster.isPrimary) {
                   if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
                     var headers = getCustomHeaders();
                     headers.ETag = clientETag;
-                    callServerError(412, undefined, undefined, headers);
+                    callServerError(412, headers);
                     return;
                   }
                 }
@@ -3858,7 +3879,7 @@ if (!cluster.isPrimary) {
                 try {
                   isCompressable = canCompress(href, dontCompress);
                 } catch (err) {
-                  callServerError(500, undefined, generateErrorStack(err));
+                  callServerError(500, err);
                   return;
                 }
 
@@ -3879,7 +3900,7 @@ if (!cluster.isPrimary) {
                     rhd["Content-Range"] = "bytes */" + filelen;
                     var regexmatch = req.headers["range"].match(/bytes=([0-9]*)-([0-9]*)/);
                     if (!regexmatch) {
-                      callServerError(416, undefined, undefined, rhd);
+                      callServerError(416, rhd);
                     } else {
                       // Process the partial content request
                       var beginOrig = regexmatch[1];
@@ -3887,7 +3908,7 @@ if (!cluster.isPrimary) {
                       var begin = 0;
                       var end = filelen - 1;
                       if (beginOrig == "" && endOrig == "") {
-                        callServerError(416, undefined, undefined, rhd);
+                        callServerError(416, rhd);
                         return;
                       } else if (beginOrig == "") {
                         begin = end - parseInt(endOrig) + 1;
@@ -3896,7 +3917,7 @@ if (!cluster.isPrimary) {
                         if (endOrig != "") end = parseInt(endOrig);
                       }
                       if (begin > end || begin < 0 || begin > filelen - 1) {
-                        callServerError(416, undefined, undefined, rhd);
+                        callServerError(416, rhd);
                         return;
                       }
                       if (end > filelen - 1) end = filelen - 1;
@@ -3928,7 +3949,7 @@ if (!cluster.isPrimary) {
                             callServerError(508); // The symbolic link loop is detected during file system operations.
                             serverconsole.errmessage("Symbolic link loop detected.");
                           } else {
-                            callServerError(500, undefined, generateErrorStack(err));
+                            callServerError(500, err);
                           }
                         }).on("open", function () {
                           try {
@@ -3936,7 +3957,7 @@ if (!cluster.isPrimary) {
                             readStream.pipe(res);
                             serverconsole.resmessage("Client successfully received content.");
                           } catch (err) {
-                            callServerError(500, undefined, generateErrorStack(err));
+                            callServerError(500, err);
                           }
                         });
                       } else {
@@ -3945,7 +3966,7 @@ if (!cluster.isPrimary) {
                       }
                     }
                   } catch (err) {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                   }
                 } else {
                   try {
@@ -3988,7 +4009,7 @@ if (!cluster.isPrimary) {
                           callServerError(508); // The symbolic link loop is detected during file system operations.
                           serverconsole.errmessage("Symbolic link loop detected.");
                         } else {
-                          callServerError(500, undefined, generateErrorStack(err));
+                          callServerError(500, err);
                         }
                       }).on("open", function () {
                         try {
@@ -4025,7 +4046,7 @@ if (!cluster.isPrimary) {
                           }
                           serverconsole.resmessage("Client successfully received content.");
                         } catch (err) {
-                          callServerError(500, undefined, generateErrorStack(err));
+                          callServerError(500, err);
                         }
                       });
                     } else {
@@ -4034,7 +4055,7 @@ if (!cluster.isPrimary) {
                       serverconsole.resmessage("Client successfully received content.");
                     }
                   } catch (err) {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                   }
                 }
               });
@@ -4230,7 +4251,7 @@ if (!cluster.isPrimary) {
               try {
                 callback();
               } catch (err) {
-                callServerError(500, undefined, err);
+                callServerError(500, err);
               }
             } else {
               var destinationURL = uobject;
@@ -4335,7 +4356,7 @@ if (!cluster.isPrimary) {
       // Rewrite URLs
       rewriteURL(req.url, rewriteMap, function (err, rewrittenURL) {
         if (err) {
-          callServerError(500, undefined, err);
+          callServerError(500, err);
           return;
         }
         if (rewrittenURL != req.url) {
@@ -4520,7 +4541,7 @@ if (!cluster.isPrimary) {
               var cacheEntry = null;
               if (list[_i].scrypt) {
                 if (!crypto.scrypt) {
-                  callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
+                  callServerError(500, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
                   return;
                 } else {
                   cacheEntry = scryptCache.find(function (entry) {
@@ -4531,7 +4552,7 @@ if (!cluster.isPrimary) {
                   } else {
                     crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
                       if (err) {
-                        callServerError(500, undefined, err);
+                        callServerError(500, err);
                       } else {
                         var key = derivedKey.toString("hex");
                         scryptCache.push({
@@ -4547,7 +4568,7 @@ if (!cluster.isPrimary) {
                 }
               } else if (list[_i].pbkdf2) {
                 if (crypto.__disabled__ !== undefined) {
-                  callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
+                  callServerError(500, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
                   return;
                 } else {
                   cacheEntry = pbkdf2Cache.find(function (entry) {
@@ -4558,7 +4579,7 @@ if (!cluster.isPrimary) {
                   } else {
                     crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
                       if (err) {
-                        callServerError(500, undefined, err);
+                        callServerError(500, err);
                       } else {
                         var key = derivedKey.toString("hex");
                         pbkdf2Cache.push({
@@ -4583,20 +4604,20 @@ if (!cluster.isPrimary) {
                 ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
                 var credentials = req.headers["authorization"];
                 if (!credentials) {
-                  callServerError(401, undefined, undefined, ha);
+                  callServerError(401, ha);
                   serverconsole.errmessage("Content needs authorization.");
                   return;
                 }
                 var credentialsMatch = credentials.match(/^Basic (.+)$/);
                 if (!credentialsMatch) {
-                  callServerError(401, undefined, undefined, ha);
+                  callServerError(401, ha);
                   serverconsole.errmessage("Malformed credentials.");
                   return;
                 }
                 var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
                 var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
                 if (!decodedCredentialsMatch) {
-                  callServerError(401, undefined, undefined, ha);
+                  callServerError(401, ha);
                   serverconsole.errmessage("Malformed credentials.");
                   return;
                 }
@@ -4650,7 +4671,7 @@ if (!cluster.isPrimary) {
                           }
                         }
                       }
-                      callServerError(401, undefined, undefined, ha);
+                      callServerError(401, ha);
                       serverconsole.errmessage("User \"" + String(username).replace(/[\r\n]/g, "") + "\" failed to log in.");
                     } else {
                       if (bruteProtection) {
@@ -4669,12 +4690,12 @@ if (!cluster.isPrimary) {
                       });
                     }
                   } catch (err) {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                     return;
                   }
                 });
               } catch (err) {
-                callServerError(500, undefined, generateErrorStack(err));
+                callServerError(500, err);
                 return;
               }
             }
@@ -4721,7 +4742,7 @@ if (!cluster.isPrimary) {
 
       });
     } catch (err) {
-      callServerError(500, undefined, generateErrorStack(err));
+      callServerError(500, err);
     }
   }
 
