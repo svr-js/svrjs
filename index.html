@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS Nightly-GitMain</title>
+    <title>SVR.JS SimpleServe Nightly-20230401</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,91 +12,25 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS Nightly-GitMain</h1>
+    <h1>Welcome to SVR.JS SimpleServe Nightly-20230401</h1>
     <div style="background-color: #ffff00; border-color: #ff7f00; border-width: 5px; border-style: solid; padding: 5px; display: inline-block;">
     <b style="font-size: 26px">WARNING!</b><br/>
     This version is only for test purposes and may be unstable.
     </div>
     <br/>
-    <img src="/logo.png" style="width: 256px; max-width: 100%;" />
+    <img src="/logo.png" style="width: 640px; max-width: 100%;" />
     <br/>
-    <p>If you see this page that means that the server is working properly. You can further configure the server and replace <i>index.html</i> and <i>tests.html</i> pages with custom ones.</p>
+    <p>If you see this page that means that the server is working properly. You can further configure the server and replace <i>index.html</i> page with custom one.</p>
     <p>Default <i>config.json</i> looks like this:</p>
     <code style="background-color: #e0e0e0; padding: 5px; text-align: left; display: block; display: inline-block;">
       <pre style="margin: 0.2em; white-space: pre-wrap; overflow-wrap: break-word; word-wrap: break-word; word-break: break-all; word-break: break-word">{
-  "users": [],
   "port": 80,
-  "pubport": 80,
-  "page404": "404.html",
-  "timestamp": 1709477722479,
-  "blacklist": [],
-  "nonStandardCodes": [],
-  "enableCompression": true,
-  "customHeaders": {},
-  "enableHTTP2": false,
-  "enableLogging": true,
-  "enableDirectoryListing": true,
-  "enableDirectoryListingWithDefaultHead": false,
-  "serverAdministratorEmail": "[no contact information]",
-  "stackHidden": false,
-  "enableRemoteLogBrowsing": false,
   "exposeServerVersion": true,
-  "disableServerSideScriptExpose": true,
-  "rewriteMap": [
-    {
-      "definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",
-      "replacements": [
-        {
-          "regex": "/^\\/serverSideScript\\.js($|[#?])/",
-          "replacement": "/NONEXISTENT_PAGE$1"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",
-      "replacements": [
-        {
-          "regex": "/^\\/testdir_rewritten($|[\\/?#])/",
-          "replacement": "/testdir$1"
-        }
-      ]
-    }
-  ],
-  "allowStatus": true,
-  "dontCompress": [
-    "/.*\\.ipxe$/",
-    "/.*\\.img$/",
-    "/.*\\.iso$/",
-    "/.*\\.png$/",
-    "/.*\\.jpg$/",
-    "/.*\\.webp$/"
-  ],
-  "enableIPSpoofing": false,
-  "secure": false,
-  "sni": {},
-  "disableNonEncryptedServer": false,
-  "disableToHTTPSRedirect": false,
-  "enableETag": true,
-  "disableUnusedWorkerTermination": false,
-  "rewriteDirtyURLs": true,
-  "errorPages": [],
-  "useWebRootServerSideScript": true,
-  "exposeModsInErrorPages": true,
-  "disableTrailingSlashRedirects": false,
-  "environmentVariables": {},
-  "allowDoubleSlashes": false
 }</pre>
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
       <li><i>INSERT CHANGES THERE</i></li>
     </ul>
-    <p>
-      <a href="/tests.html">Tests</a><br/>
-      <a href="/licenses/">Licenses</a><br/>
-      <a href="/svrjsstatus.svr">SVR.JS status page</a><br/>
-      <a href="https://svrjs.org/docs">SVR.JS documentation</a>
-    </p>
-    <img src="/powered.png" />
   </body>
 </html>
