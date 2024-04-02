@@ -1162,7 +1162,7 @@ var stackHidden = false;
 var exposeServerVersion = true;
 var rewriteMap = [];
 var allowStatus = true;
-var dontCompress = ["/.*\\.ipxe$/", "/.*\\.flp$/", "/.*\\.img$/", "/.*\\.iso$/", "/.*\\.png$/", "/.*\\.jpg$/", "/.*\\.webp$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
+var dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
 var enableIPSpoofing = false;
 var sni = {};
 var disableNonEncryptedServer = false;
@@ -3862,7 +3862,7 @@ if (!cluster.isPrimary) {
                 function canCompress(path, list) {
                   var canCompress = true;
                   for (var i = 0; i < list.length; i++) {
-                    if (createRegex(list[i]).test(path)) {
+                    if (createRegex(list[i], true).test(path)) {
                       canCompress = false;
                       break;
                     }
@@ -3879,9 +3879,9 @@ if (!cluster.isPrimary) {
                 }
 
                 // Check for browser quirks and adjust compression accordingly
-                if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
+                if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
                   isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
-                } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
+                } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
                   isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
                 } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
                   isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
@@ -5623,7 +5623,7 @@ function saveConfig() {
       if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = true;
       if (configJSONobj.allowStatus === undefined) configJSONobj.allowStatus = true;
       if (configJSONobj.rewriteMap === undefined) configJSONobj.rewriteMap = [];
-      if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = ["/.*\\.ipxe$/", "/.*\\.flp$/", "/.*\\.img$/", "/.*\\.iso$/", "/.*\\.png$/", "/.*\\.jpg$/", "/.*\\.webp$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
+      if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
       if (configJSONobj.enableIPSpoofing === undefined) configJSONobj.enableIPSpoofing = false;
       if (configJSONobj.secure === undefined) configJSONobj.secure = false;
       if (configJSONobj.disableNonEncryptedServer === undefined) configJSONobj.disableNonEncryptedServer = false;
