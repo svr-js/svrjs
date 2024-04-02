@@ -3670,16 +3670,13 @@ if (!cluster.isPrimary) {
 
                     // Get stats for all files in the directory and generate the listing
                     getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
-                      // Function to check file extension
-                      function checkEXT(filename, ext) {
-                        return filename.match(new RegExp("\\." + ext.replace(/^\./, "").replace(/([.+*?^$()\[\]{}|\\])/, "\\$1") + "$", "i"));
-                      }
-
                       var directoryListingRows = [];
                       for (var i = 0; i < filelist.length; i++) {
                         if (filelist[i].name[0] !== ".") {
                           var estats = filelist[i].stats;
                           var ename = filelist[i].name;
+                          var eext = ename.match(/\.([^.]+)$/)[1];
+                          var emime = eext ? mime.contentType(eext) : false;
                           if (filelist[i].errored) {
                             directoryListingRows.push(
                               "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
@@ -3726,29 +3723,27 @@ if (!cluster.isPrimary) {
                               }
                             } else if (ename.match(/README|LICEN[SC]E/i)) {
                               entry = entry.replace("[img]", "/.dirimages/important.png").replace("[alt]", "[IMP]");
-                            } else if (checkEXT(ename, ".html") || checkEXT(ename, ".htm") || checkEXT(ename, ".xml") || checkEXT(ename, ".xhtml") || checkEXT(ename, ".shtml")) {
-                              entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (checkEXT(ename, ".xml") ? "[XML]" : "[HTM]"));
-                            } else if (checkEXT(ename, ".js")) {
+                            } else if (eext.match(/^(?:[xs]?html?|xml)$/i)) {
+                              entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (eext == "xml" ? "[XML]" : "[HTM]"));
+                            } else if (eext == "js") {
                               entry = entry.replace("[img]", "/.dirimages/javascript.png").replace("[alt]", "[JS ]");
-                            } else if (checkEXT(ename, ".php")) {
+                            } else if (eext == "php") {
                               entry = entry.replace("[img]", "/.dirimages/php.png").replace("[alt]", "[PHP]");
-                            } else if (checkEXT(ename, ".css")) {
+                            } else if (eext == "css") {
                               entry = entry.replace("[img]", "/.dirimages/css.png").replace("[alt]", "[CSS]");
-                            } else if (checkEXT(ename, ".png") || checkEXT(ename, ".jpg") || checkEXT(ename, ".gif") || checkEXT(ename, ".bmp") || checkEXT(ename, ".webm") || checkEXT(ename, ".jpeg") || checkEXT(ename, ".svg") || checkEXT(ename, ".jfif") || checkEXT(ename, ".webp")) {
-                              entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", "[IMG]");
-                            } else if (checkEXT(ename, ".ico") || checkEXT(ename, ".icn")) {
-                              entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", "[ICO]");
-                            } else if (checkEXT(ename, ".ttf") || checkEXT(ename, ".otf") || checkEXT(ename, ".fon")) {
+                            } else if (emime && emime.split("/")[0] == "image") {
+                              entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", (eext == "ico" ? "[ICO]" : "[IMG]"));
+                            } else if (emime && emime.split("/")[0] == "font") {
                               entry = entry.replace("[img]", "/.dirimages/font.png").replace("[alt]", "[FON]");
-                            } else if (checkEXT(ename, ".mp3") || checkEXT(ename, ".ogg") || checkEXT(ename, ".aac") || checkEXT(ename, ".wav") || checkEXT(ename, ".mid") || checkEXT(ename, ".midi") || checkEXT(ename, ".mka")) {
+                            } else if (emime && emime.split("/")[0] == "audio") {
                               entry = entry.replace("[img]", "/.dirimages/audio.png").replace("[alt]", "[AUD]");
-                            } else if (checkEXT(ename, ".txt") || checkEXT(ename, ".log") || checkEXT(ename, ".json")) {
-                              entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (checkEXT(ename, ".json") ? "[JSO]" : "[TXT]"));
-                            } else if (checkEXT(ename, ".mp5") || checkEXT(ename, ".avi") || checkEXT(ename, ".mkv") || checkEXT(ename, ".mov") || checkEXT(ename, ".mp2") || checkEXT(ename, ".mp4") || checkEXT(ename, ".ogv")) {
+                            } else if ((emime && emime.split("/")[0] == "text") || eext == "json") {
+                              entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (eext == "json" ? "[JSO]" : "[TXT]"));
+                            } else if (emime && emime.split("/")[0] == "video") {
                               entry = entry.replace("[img]", "/.dirimages/video.png").replace("[alt]", "[VID]");
-                            } else if (checkEXT(ename, ".zip") || checkEXT(ename, ".rar") || checkEXT(ename, ".bz2") || checkEXT(ename, ".gz") || checkEXT(ename, ".bz") || checkEXT(ename, ".7z") || checkEXT(ename, ".xz") || checkEXT(ename, ".lzma") || checkEXT(ename, ".tar")) {
+                            } else if (eext.match(/^(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/i)) {
                               entry = entry.replace("[img]", "/.dirimages/archive.png").replace("[alt]", "[ARC]");
-                            } else if (checkEXT(ename, ".img") || checkEXT(ename, ".dmg") || checkEXT(ename, ".iso") || checkEXT(ename, ".flp")) {
+                            } else if (eext.match(/^(?:[id]mg|iso|flp)$/i)) {
                               entry = entry.replace("[img]", "/.dirimages/diskimage.png").replace("[alt]", "[DSK]");
                             } else {
                               entry = entry.replace("[img]", "/.dirimages/other.png").replace("[alt]", "[OTH]");
