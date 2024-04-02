@@ -46,7 +46,7 @@
     "/.*\\.png$/",
     "/.*\\.jpg$/",
     "/.*\\.webp$/",
-    "/.*\\.(?:mp[34]|avi|webm|og[gv]|mk[va])$/",
+    "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/",
   ],
   "enableIPSpoofing": false,
   "secure": false,
