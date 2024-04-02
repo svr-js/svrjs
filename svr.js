@@ -4242,7 +4242,7 @@ if (!cluster.isPrimary) {
 
       // Trailing slash redirection
       function redirectTrailingSlashes(callback) {
-        if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
+        if (!isProxy && !disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
           fs.stat("." + decodeURIComponent(href), function (err, stats) {
             if (err || !stats.isDirectory()) {
               try {
