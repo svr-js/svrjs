@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.8";
+var version = "3.14.9";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -448,19 +448,21 @@ try {
   crypto = require("crypto");
   https = require("https");
 } catch (err) {
-  crypto = {};
-  https = {};
-  crypto.__disabled__ = null;
-  https.createServer = function () {
-    throw new Error("Crypto support is not present");
+  crypto = {
+    __disabled__: null
+  };
+  https = {
+    createServer: function () {
+      throw new Error("Crypto support is not present");
+    },
+    connect: function () {
+      throw new Error("Crypto support is not present");
+    },
+    get: function () {
+      throw new Error("Crypto support is not present");
+    }
   };
   http2.createSecureServer = function () {
-    throw new Error("Crypto support is not present");
-  };
-  https.connect = function () {
-    throw new Error("Crypto support is not present");
-  };
-  https.get = function () {
     throw new Error("Crypto support is not present");
   };
 }
@@ -534,7 +536,6 @@ function createRegex(regex, isPath) {
 
 // Function to check if IPs are equal
 function ipMatch(IP1, IP2) {
-
   if (!IP1) return true;
   if (!IP2) return false;
 
@@ -1161,7 +1162,7 @@ var stackHidden = false;
 var exposeServerVersion = true;
 var rewriteMap = [];
 var allowStatus = true;
-var dontCompress = [];
+var dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
 var enableIPSpoofing = false;
 var sni = {};
 var disableNonEncryptedServer = false;
@@ -1909,8 +1910,8 @@ forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.temp = getInitializePath("./temp");
 forbiddenPaths.log = getInitializePath("./log");
 
-// Error descriptions
-var serverErrorDescs = {
+// HTTP error descriptions
+var serverHTTPErrorDescs = {
   200: "The request succeeded! :)",
   201: "A new resource has been created.",
   202: "The request has been accepted for processing, but the processing has not been completed.",
@@ -1958,6 +1959,29 @@ var serverErrorDescs = {
   511: "You need to authenticate yourself in order to get network access.",
   598: "The server couldn't get a response in time while it was acting as a proxy.",
   599: "The server couldn't connect in time while it was acting as a proxy."
+};
+
+// Server error descriptions
+var serverErrorDescs = {
+  "EADDRINUSE": "Address is already in use by another process.",
+  "EADDRNOTAVAIL": "Address is not available on this machine.",
+  "EACCES": "Permission denied. You may not have sufficient privileges to access the requested address.",
+  "EAFNOSUPPORT": "Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.",
+  "EALREADY": "Operation already in progress. The server is already in the process of establishing a connection on the requested address.",
+  "ECONNABORTED": "Connection aborted. The connection to the server was terminated abruptly.",
+  "ECONNREFUSED": "Connection refused. The server refused the connection attempt.",
+  "ECONNRESET": "Connection reset by peer. The connection to the server was reset by the remote host.",
+  "EDESTADDRREQ": "Destination address required. The destination address must be specified.",
+  "EINVAL": "Invalid argument (invalid IP address?).",
+  "ENETDOWN": "Network is down. The network interface used for the connection is not available.",
+  "ENETUNREACH": "Network is unreachable. The network destination is not reachable from this host.",
+  "ENOBUFS": "No buffer space available. Insufficient buffer space is available for the server to process the request.",
+  "ENOTFOUND": "Domain name doesn't exist (invalid IP address?).",
+  "ENOTSOCK": "Not a socket. The file descriptor provided is not a valid socket.",
+  "EPROTO": "Protocol error. An unspecified protocol error occurred.",
+  "EPROTONOSUPPORT": "Protocol not supported. The requested network protocol is not supported.",
+  "ETIMEDOUT": "Connection timed out. The server did not respond within the specified timeout period.",
+  "UNKNOWN": "There was an unknown error with the server."
 };
 
 // Create server instances
@@ -2083,77 +2107,9 @@ if (!cluster.isPrimary) {
   } else {
     server2.on("connect", connhandler);
   }
-
   server2.on("error", function (err) {
-    attmtsRedir--;
-    if (cluster.isPrimary === undefined && attmtsRedir >= 0) {
-      if (err.code == "EADDRINUSE") {
-        serverconsole.locerrmessage("Address is already in use by another process.");
-      } else if (err.code == "EADDRNOTAVAIL") {
-        serverconsole.locerrmessage("Address is not available on this machine.");
-      } else if (err.code == "EACCES") {
-        serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-      } else if (err.code == "EAFNOSUPPORT") {
-        serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-      } else if (err.code == "EALREADY") {
-        serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-      } else if (err.code == "ECONNABORTED") {
-        serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-      } else if (err.code == "ECONNREFUSED") {
-        serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-      } else if (err.code == "ECONNRESET") {
-        serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-      } else if (err.code == "EDESTADDRREQ") {
-        serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-      } else if (err.code == "ENETDOWN") {
-        serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-      } else if (err.code == "ENETUNREACH") {
-        serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-      } else if (err.code == "ENOBUFS") {
-        serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-      } else if (err.code == "ENOTSOCK") {
-        serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-      } else if (err.code == "EPROTO") {
-        serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-      } else if (err.code == "EPROTONOSUPPORT") {
-        serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-      } else if (err.code == "ETIMEDOUT") {
-        serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-      } else if (err.code == "ENOTFOUND") {
-        serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
-      } else if (err.code == "EINVAL") {
-        serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
-      } else {
-        serverconsole.locerrmessage("There was an unknown error with the server.");
-      }
-      serverconsole.locmessage(attmtsRedir + " attempts left.");
-    } else {
-      try {
-        process.send("\x12ERRLIST" + attmtsRedir + err.code);
-      } catch (err) {
-        // Probably main process exited
-      }
-    }
-    if (attmtsRedir > 0) {
-      server2.close();
-      setTimeout(start, 900);
-    } else {
-      try {
-        if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
-      } catch (err) {
-        // Probably main process exited
-      }
-      setTimeout(function () {
-        var errno = errors[err.code];
-        if (errno) {
-          process.exit(errno);
-        } else {
-          process.exit(1);
-        }
-      }, 50);
-    }
+    serverErrorHandler(err, true);
   });
-
   server2.on("listening", function () {
     attmtsRedir = 5;
     listeningMessage();
@@ -2443,6 +2399,27 @@ if (!cluster.isPrimary) {
 
     // Server error calling method
     function callServerError(errorCode, extName, stack, ch) {
+      if (typeof errorCode !== "number") {
+        throw new TypeError("HTTP error code parameter needs to be an integer.");
+      }
+
+      // Handle optional parameters
+      if (extName && typeof extName === "object") {
+        ch = stack;
+        stack = extName;
+        extName = undefined;
+      } else if (typeof extName !== "string" && extName !== null && extName !== undefined) {
+        throw new TypeError("Extension name parameter needs to be a string.");
+      }
+
+      if (stack && typeof stack === "object" && Object.prototype.toString.call(stack) !== "[object Error]") {
+        ch = stack;
+        stack = undefined;
+      } else if (typeof stack !== "object" && typeof stack !== "string" && stack) {
+        throw new TypeError("Error stack parameter needs to be either a string or an instance of Error object.");
+      }
+
+      // Determine error file
       function getErrorFileName(list, callback, _i) {
         if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
           // Disable custom error page for HTTP SSL error
@@ -2464,14 +2441,14 @@ if (!cluster.isPrimary) {
                         callback("." + errorCode.toString());
                       }
                     } catch (err2) {
-                      callServerError(500, undefined, generateErrorStack(err2));
+                      callServerError(500, err2);
                     }
                   });
                 } else {
                   try {
                     callback(page404);
                   } catch (err2) {
-                    callServerError(500, undefined, generateErrorStack(err2));
+                    callServerError(500, err2);
                   }
                 }
               });
@@ -2484,7 +2461,7 @@ if (!cluster.isPrimary) {
                     callback("." + errorCode.toString());
                   }
                 } catch (err2) {
-                  callServerError(500, undefined, generateErrorStack(err2));
+                  callServerError(500, err2);
                 }
               });
             }
@@ -2520,7 +2497,7 @@ if (!cluster.isPrimary) {
           serverconsole.errmessage(stack);
         }
         if (stackHidden) stack = "[error stack hidden]";
-        if (serverErrorDescs[errorCode] === undefined) {
+        if (serverHTTPErrorDescs[errorCode] === undefined) {
           callServerError(501, extName, stack);
         } else {
           var cheaders = getCustomHeaders();
@@ -2542,14 +2519,14 @@ if (!cluster.isPrimary) {
           if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
             // Disable custom error page for HTTP SSL error
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-            res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
+            res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
             res.end();
           } else {
             fs.readFile(errorFile, function (err, data) {
               try {
                 if (err) throw err;
                 res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-                responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
+                responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
               } catch (err) {
                 var additionalError = 500;
                 if (err.code == "ENOENT") {
@@ -2566,7 +2543,7 @@ if (!cluster.isPrimary) {
                   additionalError = 508;
                 }
                 res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
+                res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString()));
                 res.end();
               }
             });
@@ -3113,14 +3090,14 @@ if (!cluster.isPrimary) {
                         callback("." + errorCode.toString());
                       }
                     } catch (err2) {
-                      callServerError(500, undefined, generateErrorStack(err2));
+                      callServerError(500, err2);
                     }
                   });
                 } else {
                   try {
                     callback(page404);
                   } catch (err2) {
-                    callServerError(500, undefined, generateErrorStack(err2));
+                    callServerError(500, err2);
                   }
                 }
               });
@@ -3133,7 +3110,7 @@ if (!cluster.isPrimary) {
                     callback("." + errorCode.toString());
                   }
                 } catch (err2) {
-                  callServerError(500, undefined, generateErrorStack(err2));
+                  callServerError(500, err2);
                 }
               });
             }
@@ -3175,7 +3152,7 @@ if (!cluster.isPrimary) {
         if (stackHidden) stack = "[error stack hidden]";
 
         // Validate the error code and handle unknown codes
-        if (serverErrorDescs[errorCode] === undefined) {
+        if (serverHTTPErrorDescs[errorCode] === undefined) {
           callServerError(501, extName, stack);
         } else {
           var cheaders = getCustomHeaders();
@@ -3205,7 +3182,7 @@ if (!cluster.isPrimary) {
             try {
               if (err) throw err;
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]"))); // Replace placeholders in error response
+              responseEnd(data.toString().replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]"))); // Replace placeholders in error response
             } catch (err) {
               var additionalError = 500;
               // Handle additional error cases
@@ -3224,7 +3201,7 @@ if (!cluster.isPrimary) {
               }
 
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-              res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
+              res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>" + ((additionalError == 404) ? "" : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>") + "<p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{path}/g, req.url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + ((req.headers.host == undefined || isProxy) ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")).replace(/{additionalError}/g, additionalError.toString())); // Replace placeholders in error response
               res.end();
             }
           });
@@ -3236,7 +3213,7 @@ if (!cluster.isPrimary) {
       head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
       foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
     } catch (err) {
-      callServerError(500, undefined, generateErrorStack(err));
+      callServerError(500, err);
     }
 
     // Function to perform HTTP redirection to a specified destination URL
@@ -3278,7 +3255,7 @@ if (!cluster.isPrimary) {
         customHeaders["Allow"] = "POST";
 
         // Call the server error function with 405 status code and custom headers
-        callServerError(405, undefined, undefined, customHeaders);
+        callServerError(405, customHeaders);
         return;
       }
 
@@ -3292,7 +3269,7 @@ if (!cluster.isPrimary) {
       }
 
       // If the formidable module had an error, call the server error function with 500 status code and error stack
-      if (formidable._errored) callServerError(500, undefined, generateErrorStack(formidable._errored));
+      if (formidable._errored) callServerError(500, formidable._errored);
 
       // Create a new formidable form
       var form = formidable(formidableOptions);
@@ -3551,7 +3528,7 @@ if (!cluster.isPrimary) {
               serverconsole.errmessage("Symbolic link loop detected.");
               return;
             } else {
-              callServerError(500, undefined, generateErrorStack(err));
+              callServerError(500, err);
               return;
             }
           }
@@ -3693,16 +3670,15 @@ if (!cluster.isPrimary) {
 
                     // Get stats for all files in the directory and generate the listing
                     getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
-                      // Function to check file extension
-                      function checkEXT(filename, ext) {
-                        return filename.match(new RegExp("\\." + ext.replace(/^\./, "").replace(/([.+*?^$()\[\]{}|\\])/, "\\$1") + "$", "i"));
-                      }
-
                       var directoryListingRows = [];
                       for (var i = 0; i < filelist.length; i++) {
                         if (filelist[i].name[0] !== ".") {
                           var estats = filelist[i].stats;
                           var ename = filelist[i].name;
+                          var eext = ename.match(/\.([^.]+)$/);
+                          if (eext) eext = eext[1];
+                          else eext = "";
+                          var emime = eext ? mime.contentType(eext) : false;
                           if (filelist[i].errored) {
                             directoryListingRows.push(
                               "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
@@ -3749,29 +3725,27 @@ if (!cluster.isPrimary) {
                               }
                             } else if (ename.match(/README|LICEN[SC]E/i)) {
                               entry = entry.replace("[img]", "/.dirimages/important.png").replace("[alt]", "[IMP]");
-                            } else if (checkEXT(ename, ".html") || checkEXT(ename, ".htm") || checkEXT(ename, ".xml") || checkEXT(ename, ".xhtml") || checkEXT(ename, ".shtml")) {
-                              entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (checkEXT(ename, ".xml") ? "[XML]" : "[HTM]"));
-                            } else if (checkEXT(ename, ".js")) {
+                            } else if (eext.match(/^(?:[xs]?html?|xml)$/i)) {
+                              entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (eext == "xml" ? "[XML]" : "[HTM]"));
+                            } else if (eext == "js") {
                               entry = entry.replace("[img]", "/.dirimages/javascript.png").replace("[alt]", "[JS ]");
-                            } else if (checkEXT(ename, ".php")) {
+                            } else if (eext == "php") {
                               entry = entry.replace("[img]", "/.dirimages/php.png").replace("[alt]", "[PHP]");
-                            } else if (checkEXT(ename, ".css")) {
+                            } else if (eext == "css") {
                               entry = entry.replace("[img]", "/.dirimages/css.png").replace("[alt]", "[CSS]");
-                            } else if (checkEXT(ename, ".png") || checkEXT(ename, ".jpg") || checkEXT(ename, ".gif") || checkEXT(ename, ".bmp") || checkEXT(ename, ".webm") || checkEXT(ename, ".jpeg") || checkEXT(ename, ".svg") || checkEXT(ename, ".jfif") || checkEXT(ename, ".webp")) {
-                              entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", "[IMG]");
-                            } else if (checkEXT(ename, ".ico") || checkEXT(ename, ".icn")) {
-                              entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", "[ICO]");
-                            } else if (checkEXT(ename, ".ttf") || checkEXT(ename, ".otf") || checkEXT(ename, ".fon")) {
+                            } else if (emime && emime.split("/")[0] == "image") {
+                              entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", (eext == "ico" ? "[ICO]" : "[IMG]"));
+                            } else if (emime && emime.split("/")[0] == "font") {
                               entry = entry.replace("[img]", "/.dirimages/font.png").replace("[alt]", "[FON]");
-                            } else if (checkEXT(ename, ".mp3") || checkEXT(ename, ".ogg") || checkEXT(ename, ".aac") || checkEXT(ename, ".wav") || checkEXT(ename, ".mid") || checkEXT(ename, ".midi") || checkEXT(ename, ".mka")) {
+                            } else if (emime && emime.split("/")[0] == "audio") {
                               entry = entry.replace("[img]", "/.dirimages/audio.png").replace("[alt]", "[AUD]");
-                            } else if (checkEXT(ename, ".txt") || checkEXT(ename, ".log") || checkEXT(ename, ".json")) {
-                              entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (checkEXT(ename, ".json") ? "[JSO]" : "[TXT]"));
-                            } else if (checkEXT(ename, ".mp5") || checkEXT(ename, ".avi") || checkEXT(ename, ".mkv") || checkEXT(ename, ".mov") || checkEXT(ename, ".mp2") || checkEXT(ename, ".mp4") || checkEXT(ename, ".ogv")) {
+                            } else if ((emime && emime.split("/")[0] == "text") || eext == "json") {
+                              entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (eext == "json" ? "[JSO]" : "[TXT]"));
+                            } else if (emime && emime.split("/")[0] == "video") {
                               entry = entry.replace("[img]", "/.dirimages/video.png").replace("[alt]", "[VID]");
-                            } else if (checkEXT(ename, ".zip") || checkEXT(ename, ".rar") || checkEXT(ename, ".bz2") || checkEXT(ename, ".gz") || checkEXT(ename, ".bz") || checkEXT(ename, ".7z") || checkEXT(ename, ".xz") || checkEXT(ename, ".lzma") || checkEXT(ename, ".tar")) {
+                            } else if (eext.match(/^(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/i)) {
                               entry = entry.replace("[img]", "/.dirimages/archive.png").replace("[alt]", "[ARC]");
-                            } else if (checkEXT(ename, ".img") || checkEXT(ename, ".dmg") || checkEXT(ename, ".iso") || checkEXT(ename, ".flp")) {
+                            } else if (eext.match(/^(?:[id]mg|iso|flp)$/i)) {
                               entry = entry.replace("[img]", "/.dirimages/diskimage.png").replace("[alt]", "[DSK]");
                             } else {
                               entry = entry.replace("[img]", "/.dirimages/other.png").replace("[alt]", "[OTH]");
@@ -3809,7 +3783,7 @@ if (!cluster.isPrimary) {
                       callServerError(508); // The symbolic link loop is detected during file system operations.
                       serverconsole.errmessage("Symbolic link loop detected.");
                     } else {
-                      callServerError(500, undefined, generateErrorStack(err));
+                      callServerError(500, err);
                     }
                   }
                 });
@@ -3844,7 +3818,7 @@ if (!cluster.isPrimary) {
                     callServerError(508); // The symbolic link loop is detected during file system operations.
                     serverconsole.errmessage("Symbolic link loop detected.");
                   } else {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                   }
                   return;
                 }
@@ -3881,7 +3855,7 @@ if (!cluster.isPrimary) {
                   if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
                     var headers = getCustomHeaders();
                     headers.ETag = clientETag;
-                    callServerError(412, undefined, undefined, headers);
+                    callServerError(412, headers);
                     return;
                   }
                 }
@@ -3890,7 +3864,7 @@ if (!cluster.isPrimary) {
                 function canCompress(path, list) {
                   var canCompress = true;
                   for (var i = 0; i < list.length; i++) {
-                    if (createRegex(list[i]).test(path)) {
+                    if (createRegex(list[i], true).test(path)) {
                       canCompress = false;
                       break;
                     }
@@ -3902,14 +3876,14 @@ if (!cluster.isPrimary) {
                 try {
                   isCompressable = canCompress(href, dontCompress);
                 } catch (err) {
-                  callServerError(500, undefined, generateErrorStack(err));
+                  callServerError(500, err);
                   return;
                 }
 
                 // Check for browser quirks and adjust compression accordingly
-                if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
+                if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
                   isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
-                } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSI[E]/.test(req.headers["user-agent"]))) {
+                } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
                   isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
                 } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
                   isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
@@ -3923,7 +3897,7 @@ if (!cluster.isPrimary) {
                     rhd["Content-Range"] = "bytes */" + filelen;
                     var regexmatch = req.headers["range"].match(/bytes=([0-9]*)-([0-9]*)/);
                     if (!regexmatch) {
-                      callServerError(416, undefined, undefined, rhd);
+                      callServerError(416, rhd);
                     } else {
                       // Process the partial content request
                       var beginOrig = regexmatch[1];
@@ -3931,7 +3905,7 @@ if (!cluster.isPrimary) {
                       var begin = 0;
                       var end = filelen - 1;
                       if (beginOrig == "" && endOrig == "") {
-                        callServerError(416, undefined, undefined, rhd);
+                        callServerError(416, rhd);
                         return;
                       } else if (beginOrig == "") {
                         begin = end - parseInt(endOrig) + 1;
@@ -3940,7 +3914,7 @@ if (!cluster.isPrimary) {
                         if (endOrig != "") end = parseInt(endOrig);
                       }
                       if (begin > end || begin < 0 || begin > filelen - 1) {
-                        callServerError(416, undefined, undefined, rhd);
+                        callServerError(416, rhd);
                         return;
                       }
                       if (end > filelen - 1) end = filelen - 1;
@@ -3972,7 +3946,7 @@ if (!cluster.isPrimary) {
                             callServerError(508); // The symbolic link loop is detected during file system operations.
                             serverconsole.errmessage("Symbolic link loop detected.");
                           } else {
-                            callServerError(500, undefined, generateErrorStack(err));
+                            callServerError(500, err);
                           }
                         }).on("open", function () {
                           try {
@@ -3980,7 +3954,7 @@ if (!cluster.isPrimary) {
                             readStream.pipe(res);
                             serverconsole.resmessage("Client successfully received content.");
                           } catch (err) {
-                            callServerError(500, undefined, generateErrorStack(err));
+                            callServerError(500, err);
                           }
                         });
                       } else {
@@ -3989,7 +3963,7 @@ if (!cluster.isPrimary) {
                       }
                     }
                   } catch (err) {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                   }
                 } else {
                   try {
@@ -4032,7 +4006,7 @@ if (!cluster.isPrimary) {
                           callServerError(508); // The symbolic link loop is detected during file system operations.
                           serverconsole.errmessage("Symbolic link loop detected.");
                         } else {
-                          callServerError(500, undefined, generateErrorStack(err));
+                          callServerError(500, err);
                         }
                       }).on("open", function () {
                         try {
@@ -4069,7 +4043,7 @@ if (!cluster.isPrimary) {
                           }
                           serverconsole.resmessage("Client successfully received content.");
                         } catch (err) {
-                          callServerError(500, undefined, generateErrorStack(err));
+                          callServerError(500, err);
                         }
                       });
                     } else {
@@ -4078,7 +4052,7 @@ if (!cluster.isPrimary) {
                       serverconsole.resmessage("Client successfully received content.");
                     }
                   } catch (err) {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                   }
                 }
               });
@@ -4274,7 +4248,7 @@ if (!cluster.isPrimary) {
               try {
                 callback();
               } catch (err) {
-                callServerError(500, undefined, err);
+                callServerError(500, err);
               }
             } else {
               var destinationURL = uobject;
@@ -4379,7 +4353,7 @@ if (!cluster.isPrimary) {
       // Rewrite URLs
       rewriteURL(req.url, rewriteMap, function (err, rewrittenURL) {
         if (err) {
-          callServerError(500, undefined, err);
+          callServerError(500, err);
           return;
         }
         if (rewrittenURL != req.url) {
@@ -4564,7 +4538,7 @@ if (!cluster.isPrimary) {
               var cacheEntry = null;
               if (list[_i].scrypt) {
                 if (!crypto.scrypt) {
-                  callServerError(500, undefined, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
+                  callServerError(500, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
                   return;
                 } else {
                   cacheEntry = scryptCache.find(function (entry) {
@@ -4575,7 +4549,7 @@ if (!cluster.isPrimary) {
                   } else {
                     crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
                       if (err) {
-                        callServerError(500, undefined, err);
+                        callServerError(500, err);
                       } else {
                         var key = derivedKey.toString("hex");
                         scryptCache.push({
@@ -4591,7 +4565,7 @@ if (!cluster.isPrimary) {
                 }
               } else if (list[_i].pbkdf2) {
                 if (crypto.__disabled__ !== undefined) {
-                  callServerError(500, undefined, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
+                  callServerError(500, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
                   return;
                 } else {
                   cacheEntry = pbkdf2Cache.find(function (entry) {
@@ -4602,7 +4576,7 @@ if (!cluster.isPrimary) {
                   } else {
                     crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
                       if (err) {
-                        callServerError(500, undefined, err);
+                        callServerError(500, err);
                       } else {
                         var key = derivedKey.toString("hex");
                         pbkdf2Cache.push({
@@ -4627,20 +4601,20 @@ if (!cluster.isPrimary) {
                 ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
                 var credentials = req.headers["authorization"];
                 if (!credentials) {
-                  callServerError(401, undefined, undefined, ha);
+                  callServerError(401, ha);
                   serverconsole.errmessage("Content needs authorization.");
                   return;
                 }
                 var credentialsMatch = credentials.match(/^Basic (.+)$/);
                 if (!credentialsMatch) {
-                  callServerError(401, undefined, undefined, ha);
+                  callServerError(401, ha);
                   serverconsole.errmessage("Malformed credentials.");
                   return;
                 }
                 var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
                 var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
                 if (!decodedCredentialsMatch) {
-                  callServerError(401, undefined, undefined, ha);
+                  callServerError(401, ha);
                   serverconsole.errmessage("Malformed credentials.");
                   return;
                 }
@@ -4694,7 +4668,7 @@ if (!cluster.isPrimary) {
                           }
                         }
                       }
-                      callServerError(401, undefined, undefined, ha);
+                      callServerError(401, ha);
                       serverconsole.errmessage("User \"" + String(username).replace(/[\r\n]/g, "") + "\" failed to log in.");
                     } else {
                       if (bruteProtection) {
@@ -4713,12 +4687,12 @@ if (!cluster.isPrimary) {
                       });
                     }
                   } catch (err) {
-                    callServerError(500, undefined, generateErrorStack(err));
+                    callServerError(500, err);
                     return;
                   }
                 });
               } catch (err) {
-                callServerError(500, undefined, generateErrorStack(err));
+                callServerError(500, err);
                 return;
               }
             }
@@ -4765,62 +4739,25 @@ if (!cluster.isPrimary) {
 
       });
     } catch (err) {
-      callServerError(500, undefined, generateErrorStack(err));
+      callServerError(500, err);
     }
   }
 
-  server.on("error", function (err) {
-    attmts--;
-    if (cluster.isPrimary === undefined && attmts >= 0) {
-      if (err.code == "EADDRINUSE") {
-        serverconsole.locerrmessage("Address is already in use by another process.");
-      } else if (err.code == "EADDRNOTAVAIL") {
-        serverconsole.locerrmessage("Address is not available on this machine.");
-      } else if (err.code == "EACCES") {
-        serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-      } else if (err.code == "EAFNOSUPPORT") {
-        serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-      } else if (err.code == "EALREADY") {
-        serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-      } else if (err.code == "ECONNABORTED") {
-        serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-      } else if (err.code == "ECONNREFUSED") {
-        serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-      } else if (err.code == "ECONNRESET") {
-        serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-      } else if (err.code == "EDESTADDRREQ") {
-        serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-      } else if (err.code == "ENETDOWN") {
-        serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-      } else if (err.code == "ENETUNREACH") {
-        serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-      } else if (err.code == "ENOBUFS") {
-        serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-      } else if (err.code == "ENOTSOCK") {
-        serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-      } else if (err.code == "EPROTO") {
-        serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-      } else if (err.code == "EPROTONOSUPPORT") {
-        serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-      } else if (err.code == "ETIMEDOUT") {
-        serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-      } else if (err.code == "ENOTFOUND") {
-        serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
-      } else if (err.code == "EINVAL") {
-        serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
-      } else {
-        serverconsole.locerrmessage("There was an unknown error with the server.");
-      }
-      serverconsole.locmessage(attmts + " attempts left.");
+  function serverErrorHandler(err, isRedirect) {
+    if(isRedirect) attmtsRedir--;
+    else attmts--;
+    if (cluster.isPrimary === undefined && (isRedirect ? attmtsRedir : attmts)) {
+      serverconsole.locerrmessage(serverErrorDescs[err.code] ? serverErrorDescs[err.code] : serverErrorDescs["UNKNOWN"]);
+      serverconsole.locmessage((isRedirect ? attmtsRedir : attmts) + " attempts left.");
     } else {
       try {
-        process.send("\x12ERRLIST" + attmts + err.code);
+        process.send("\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code);
       } catch (err) {
         // Probably main process exited
       }
     }
-    if (attmts > 0) {
-      server2.close();
+    if ((isRedirect ? attmtsRedir : attmts) > 0) {
+      (isRedirect ? server2 : server).close();
       setTimeout(start, 900);
     } else {
       try {
@@ -4830,15 +4767,14 @@ if (!cluster.isPrimary) {
       }
       setTimeout(function () {
         var errno = errors[err.code];
-        if (errno) {
-          process.exit(errno);
-        } else {
-          process.exit(1);
-        }
+        process.exit(errno ? errno : 1);
       }, 50);
     }
-  });
+  }
 
+  server.on("error", function (err) {
+    serverErrorHandler(err, false);
+  });
   server.on("listening", function () {
     attmts = 5;
     listeningMessage();
@@ -4917,54 +4853,12 @@ function msgListener(msg) {
       if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
         var tries = parseInt(msg.substr(8, 1));
         var errCode = msg.substr(9);
-        if (errCode == "EADDRINUSE") {
-          serverconsole.locerrmessage("Address is already in use by another process.");
-        } else if (errCode == "EADDRNOTAVAIL") {
-          serverconsole.locerrmessage("Address is not available on this machine.");
-        } else if (errCode == "EACCES") {
-          serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-        } else if (errCode == "EAFNOSUPPORT") {
-          serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-        } else if (errCode == "EALREADY") {
-          serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-        } else if (errCode == "ECONNABORTED") {
-          serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-        } else if (errCode == "ECONNREFUSED") {
-          serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-        } else if (errCode == "ECONNRESET") {
-          serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-        } else if (errCode == "EDESTADDRREQ") {
-          serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-        } else if (errCode == "ENETDOWN") {
-          serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-        } else if (errCode == "ENETUNREACH") {
-          serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-        } else if (errCode == "ENOBUFS") {
-          serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-        } else if (errCode == "ENOTSOCK") {
-          serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-        } else if (errCode == "EPROTO") {
-          serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-        } else if (errCode == "EPROTONOSUPPORT") {
-          serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-        } else if (errCode == "ETIMEDOUT") {
-          serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-        } else if (errCode == "ENOTFOUND") {
-          serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
-        } else if (errCode == "EINVAL") {
-          serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
-        } else {
-          serverconsole.locerrmessage("There was an unknown error with the server.");
-        }
+        serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
         serverconsole.locmessage(tries + " attempts left.");
       }
       if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
         var errno = errors[msg.substr(9)];
-        if (errno) {
-          process.exit(errno);
-        } else {
-          process.exit(1);
-        }
+        process.exit(errno ? errno : 1);
       }
     });
   } else {
@@ -5036,9 +4930,6 @@ function start(init) {
         if (users.some(function (entry) {
           return entry.pbkdf2;
         })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun blocks the event loop, which may result in denial of service.");
-        if (users.some(function (entry) {
-          return entry.scrypt;
-        })) serverconsole.locwarnmessage("scrypt password hashing function in Bun blocks the event loop, which may result in denial of service.");
       }
       if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running SVR.JS on single thread. Reliability may suffer, as the server is stopped after crash.");
       if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
@@ -5527,54 +5418,12 @@ function start(init) {
           if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
             var tries = parseInt(msg.substr(8, 1));
             var errCode = msg.substr(9);
-            if (errCode == "EADDRINUSE") {
-              serverconsole.locerrmessage("Address is already in use by another process.");
-            } else if (errCode == "EADDRNOTAVAIL") {
-              serverconsole.locerrmessage("Address is not available on this machine.");
-            } else if (errCode == "EACCES") {
-              serverconsole.locerrmessage("Permission denied. You may not have sufficient privileges to access the requested address.");
-            } else if (errCode == "EAFNOSUPPORT") {
-              serverconsole.locerrmessage("Address family not supported. The address family (IPv4 or IPv6) of the requested address is not supported.");
-            } else if (errCode == "EALREADY") {
-              serverconsole.locerrmessage("Operation already in progress. The server is already in the process of establishing a connection on the requested address.");
-            } else if (errCode == "ECONNABORTED") {
-              serverconsole.locerrmessage("Connection aborted. The connection to the server was terminated abruptly.");
-            } else if (errCode == "ECONNREFUSED") {
-              serverconsole.locerrmessage("Connection refused. The server refused the connection attempt.");
-            } else if (errCode == "ECONNRESET") {
-              serverconsole.locerrmessage("Connection reset by peer. The connection to the server was reset by the remote host.");
-            } else if (errCode == "EDESTADDRREQ") {
-              serverconsole.locerrmessage("Destination address required. The destination address must be specified.");
-            } else if (errCode == "ENETDOWN") {
-              serverconsole.locerrmessage("Network is down. The network interface used for the connection is not available.");
-            } else if (errCode == "ENETUNREACH") {
-              serverconsole.locerrmessage("Network is unreachable. The network destination is not reachable from this host.");
-            } else if (errCode == "ENOBUFS") {
-              serverconsole.locerrmessage("No buffer space available. Insufficient buffer space is available for the server to process the request.");
-            } else if (errCode == "ENOTSOCK") {
-              serverconsole.locerrmessage("Not a socket. The file descriptor provided is not a valid socket.");
-            } else if (errCode == "EPROTO") {
-              serverconsole.locerrmessage("Protocol error. An unspecified protocol error occurred.");
-            } else if (errCode == "EPROTONOSUPPORT") {
-              serverconsole.locerrmessage("Protocol not supported. The requested network protocol is not supported.");
-            } else if (errCode == "ETIMEDOUT") {
-              serverconsole.locerrmessage("Connection timed out. The server did not respond within the specified timeout period.");
-            } else if (errCode == "ENOTFOUND") {
-              serverconsole.locerrmessage("Domain name doesn't exist (invalid IP address?).");
-            } else if (errCode == "EINVAL") {
-              serverconsole.locerrmessage("Invalid argument (invalid IP address?).");
-            } else {
-              serverconsole.locerrmessage("There was an unknown error with the server.");
-            }
+            serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
             serverconsole.locmessage(tries + " attempts left.");
           }
           if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
             var errno = errors[msg.substr(9)];
-            if (errno) {
-              process.exit(errno);
-            } else {
-              process.exit(1);
-            }
+            process.exit(errno ? errno : 1);
           }
         });
 
@@ -5776,7 +5625,7 @@ function saveConfig() {
       if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = true;
       if (configJSONobj.allowStatus === undefined) configJSONobj.allowStatus = true;
       if (configJSONobj.rewriteMap === undefined) configJSONobj.rewriteMap = [];
-      if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = [];
+      if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
       if (configJSONobj.enableIPSpoofing === undefined) configJSONobj.enableIPSpoofing = false;
       if (configJSONobj.secure === undefined) configJSONobj.secure = false;
       if (configJSONobj.disableNonEncryptedServer === undefined) configJSONobj.disableNonEncryptedServer = false;
@@ -5872,19 +5721,15 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
 } else {
   // Crash handler
-  process.on("uncaughtException", function (err) {
-    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
-    serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(generateErrorStack(err));
-    process.exit(err.errno);
-  });
-
-  process.on("unhandledRejection", function (err) {
+  function crashHandler(err) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
     process.exit(err.errno);
-  });
+  }
+
+  process.on("uncaughtException", crashHandler);
+  process.on("unhandledRejection", crashHandler);
 
   // Warning handler
   process.on("warning", function (warning) {

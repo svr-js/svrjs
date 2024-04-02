@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.14.8</title>
+    <title>SVR.JS 3.14.9</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.14.8</h1>
+    <h1>Welcome to SVR.JS 3.14.9</h1>
     <br/>
     <img src="/logo.png" style="width: 256px; max-width: 100%;" />
     <br/>
@@ -61,11 +61,10 @@
   "allowStatus": true,
   "dontCompress": [
     "/.*\\.ipxe$/",
-    "/.*\\.img$/",
-    "/.*\\.iso$/",
-    "/.*\\.png$/",
-    "/.*\\.jpg$/",
-    "/.*\\.webp$/"
+    "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
+    "/.*\\.(?:[id]mg|iso|flp)$/",
+    "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
+    "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"
   ],
   "enableIPSpoofing": false,
   "secure": false,
@@ -85,7 +84,10 @@
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
-      <li>Fixed bug with <i>res.writeHead</i> method.</li>
+      <li>Changed default file extensions compression exclude list.</li>
+      <li>Lifted <i>scrypt</i> restrictions on Bun.</li>
+      <li>Optimized server script size (268 KiB => 256 KiB).</li>
+      <li>The compression exclude list is now in SVR.JS itself.</li>
     </ul>
     <p>
       <a href="/tests.html">Tests</a><br/>

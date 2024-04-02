@@ -338,7 +338,6 @@ function promptAlgorithms(callback, bypass, pbkdf2, scrypt) {
     pbkdf2: "PBKDF2 (PBKDF2-HMAC-SHA512, 36250 iterations) - more secure and uses less memory, but slower",
     scrypt: "scrypt (N=2^14, r=8, p=1) - faster and more secure, but uses more memory"
   }
-  if (!crypto.scrypt || process.isBun) delete algorithms.scrypt;
   if (!crypto.pbkdf2 || process.isBun) delete algorithms.pbkdf2;
   var algorithmNames = Object.keys(algorithms);
   if (algorithmNames.length < 2) callback(algorithmNames[0]);
