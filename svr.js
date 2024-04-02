@@ -3675,7 +3675,9 @@ if (!cluster.isPrimary) {
                         if (filelist[i].name[0] !== ".") {
                           var estats = filelist[i].stats;
                           var ename = filelist[i].name;
-                          var eext = ename.match(/\.([^.]+)$/)[1];
+                          var eext = ename.match(/\.([^.]+)$/);
+                          if (eext) eext = eext[1];
+                          else eext = "";
                           var emime = eext ? mime.contentType(eext) : false;
                           if (filelist[i].errored) {
                             directoryListingRows.push(
@@ -5719,19 +5721,15 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
 } else {
   // Crash handler
-  process.on("uncaughtException", function (err) {
-    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
-    serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(generateErrorStack(err));
-    process.exit(err.errno);
-  });
-
-  process.on("unhandledRejection", function (err) {
+  function crashHandler(err) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
     process.exit(err.errno);
-  });
+  }
+
+  process.on("uncaughtException", crashHandler);
+  process.on("unhandledRejection", crashHandler);
 
   // Warning handler
   process.on("warning", function (warning) {
