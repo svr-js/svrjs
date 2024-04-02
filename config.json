@@ -40,11 +40,20 @@
   "allowStatus": true,
   "dontCompress": [
     "/.*\\.ipxe$/",
+    "/.*\\.flp$/",
     "/.*\\.img$/",
     "/.*\\.iso$/",
     "/.*\\.png$/",
     "/.*\\.jpg$/",
-    "/.*\\.webp$/"
+    "/.*\\.webp$/",
+    "/.*\\.mp3$/",
+    "/.*\\.mp4$/",
+    "/.*\\.mov$/",
+    "/.*\\.avi$/",
+    "/.*\\.webp$/",
+    "/.*\\.webm$/",
+    "/.*\\.ogg$/",
+    "/.*\\.ogv$/"
   ],
   "enableIPSpoofing": false,
   "secure": false,
