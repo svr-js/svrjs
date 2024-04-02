@@ -1162,7 +1162,7 @@ var stackHidden = false;
 var exposeServerVersion = true;
 var rewriteMap = [];
 var allowStatus = true;
-var dontCompress = [];
+var dontCompress = ["/.*\\.ipxe$/", "/.*\\.flp$/", "/.*\\.img$/", "/.*\\.iso$/", "/.*\\.png$/", "/.*\\.jpg$/", "/.*\\.webp$/", "/.*\\.(?:mp[34]|avi|webm|og[gv]|mk[va])$/"];
 var enableIPSpoofing = false;
 var sni = {};
 var disableNonEncryptedServer = false;
@@ -5628,7 +5628,7 @@ function saveConfig() {
       if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = true;
       if (configJSONobj.allowStatus === undefined) configJSONobj.allowStatus = true;
       if (configJSONobj.rewriteMap === undefined) configJSONobj.rewriteMap = [];
-      if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = [];
+      if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = ["/.*\\.ipxe$/", "/.*\\.flp$/", "/.*\\.img$/", "/.*\\.iso$/", "/.*\\.png$/", "/.*\\.jpg$/", "/.*\\.webp$/", "/.*\\.(?:mp[34]|avi|webm|og[gv]|mk[va])$/"];
       if (configJSONobj.enableIPSpoofing === undefined) configJSONobj.enableIPSpoofing = false;
       if (configJSONobj.secure === undefined) configJSONobj.secure = false;
       if (configJSONobj.disableNonEncryptedServer === undefined) configJSONobj.disableNonEncryptedServer = false;
