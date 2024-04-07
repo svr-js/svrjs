@@ -3846,19 +3846,23 @@ if (!cluster.isPrimary) {
 
               var isCompressable = true;
               try {
-                isCompressable = canCompress(href, dontCompress);
+                // Check for files not to compressed and compression enabling setting. Also check for browser quirks and adjust compression accordingly
+                if(configJSON.enableCompression !== true || !canCompress(href, dontCompress)) {
+                  isCompressable = false; // Compression is disabled
+                } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml") {
+                  if (/^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                    isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
+                  } else if (/^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
+                    isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
+                  }
+                } else {
+                  if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                    isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
+                  }
+                }
               } catch (err) {
                 callServerError(500, err);
                 return;
-              }
-
-              // Check for browser quirks and adjust compression accordingly
-              if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
-              } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
-              } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
-                isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
               }
 
               // Handle partial content request
@@ -3984,13 +3988,13 @@ if (!cluster.isPrimary) {
                       try {
                         res.writeHead(200, http.STATUS_CODES[200], hdhds);
                         var resStream = {};
-                        if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
+                        if (ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
                           resStream = zlib.createBrotliCompress();
                           resStream.pipe(res);
-                        } else if (configJSON.enableCompression === true && ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
+                        } else if (ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
                           resStream = zlib.createDeflateRaw();
                           resStream.pipe(res);
-                        } else if (configJSON.enableCompression === true && ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
+                        } else if (ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
                           resStream = zlib.createGzip();
                           resStream.pipe(res);
                         } else {
