@@ -3799,195 +3799,107 @@ if (!cluster.isPrimary) {
               if (!acceptEncoding) acceptEncoding = "";
 
               // Check if the requested file exists and handle errors
-              fs.stat(readFrom, function (err, stats) {
-                if (err) {
-                  if (err.code == "ENOENT") {
-                    callServerError(404);
-                    serverconsole.errmessage("Resource not found.");
-                  } else if (err.code == "ENOTDIR") {
-                    callServerError(404); // Assume that file doesn't exist.
-                    serverconsole.errmessage("Resource not found.");
-                  } else if (err.code == "EACCES") {
-                    callServerError(403);
-                    serverconsole.errmessage("Access denied.");
-                  } else if (err.code == "ENAMETOOLONG") {
-                    callServerError(414);
-                  } else if (err.code == "EMFILE") {
-                    callServerError(503);
-                  } else if (err.code == "ELOOP") {
-                    callServerError(508); // The symbolic link loop is detected during file system operations.
-                    serverconsole.errmessage("Symbolic link loop detected.");
-                  } else {
-                    callServerError(500, err);
-                  }
+              // Check if the requested resource is a file
+              if (!stats.isFile()) {
+                callServerError(501);
+                serverconsole.errmessage("SVR.JS doesn't support block devices, character devices, FIFOs nor sockets.");
+                return;
+              }
+
+              var filelen = stats.size;
+
+              // ETag code
+              var fileETag = undefined;
+              if (configJSON.enableETag == undefined || configJSON.enableETag) {
+                fileETag = generateETag(href, stats);
+                // Check if the client's request matches the ETag value (If-None-Match)
+                var clientETag = req.headers["if-none-match"];
+                if (clientETag === fileETag) {
+                  var headers = getCustomHeaders();
+                  headers.ETag = clientETag;
+                  res.writeHead(304, http.STATUS_CODES[304], headers);
+                  res.end();
                   return;
                 }
 
-                // Check if the requested resource is a file
-                if (stats.isDirectory()) {
-                  callServerError(501);
-                  serverconsole.errmessage("SVR.JS expected file but got directory instead.");
-                  return;
-                } else if (!stats.isFile()) {
-                  callServerError(501);
-                  serverconsole.errmessage("SVR.JS doesn't support block devices, character devices, FIFOs nor sockets.");
+                // Check if the client's request doesn't match the ETag value (If-Match)
+                var ifMatchETag = req.headers["if-match"];
+                if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
+                  var headers = getCustomHeaders();
+                  headers.ETag = clientETag;
+                  callServerError(412, headers);
                   return;
                 }
+              }
 
-                var filelen = stats.size;
-
-                // ETag code
-                var fileETag = undefined;
-                if (configJSON.enableETag == undefined || configJSON.enableETag) {
-                  fileETag = generateETag(href, stats);
-                  // Check if the client's request matches the ETag value (If-None-Match)
-                  var clientETag = req.headers["if-none-match"];
-                  if (clientETag === fileETag) {
-                    var headers = getCustomHeaders();
-                    headers.ETag = clientETag;
-                    res.writeHead(304, http.STATUS_CODES[304], headers);
-                    res.end();
-                    return;
-                  }
-
-                  // Check if the client's request doesn't match the ETag value (If-Match)
-                  var ifMatchETag = req.headers["if-match"];
-                  if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
-                    var headers = getCustomHeaders();
-                    headers.ETag = clientETag;
-                    callServerError(412, headers);
-                    return;
+              // Helper function to check if compression is allowed for the file
+              function canCompress(path, list) {
+                var canCompress = true;
+                for (var i = 0; i < list.length; i++) {
+                  if (createRegex(list[i], true).test(path)) {
+                    canCompress = false;
+                    break;
                   }
                 }
+                return canCompress;
+              }
 
-                // Helper function to check if compression is allowed for the file
-                function canCompress(path, list) {
-                  var canCompress = true;
-                  for (var i = 0; i < list.length; i++) {
-                    if (createRegex(list[i], true).test(path)) {
-                      canCompress = false;
-                      break;
-                    }
-                  }
-                  return canCompress;
-                }
+              var isCompressable = true;
+              try {
+                isCompressable = canCompress(href, dontCompress);
+              } catch (err) {
+                callServerError(500, err);
+                return;
+              }
 
-                var isCompressable = true;
+              // Check for browser quirks and adjust compression accordingly
+              if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
+              } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
+              } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
+                isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
+              }
+
+              // Handle partial content request
+              if (ext != "html" && req.headers["range"]) {
                 try {
-                  isCompressable = canCompress(href, dontCompress);
-                } catch (err) {
-                  callServerError(500, err);
-                  return;
-                }
-
-                // Check for browser quirks and adjust compression accordingly
-                if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                  isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
-                } else if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                  isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
-                } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml" && /^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
-                  isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
-                }
-
-                // Handle partial content request
-                if (ext != "html" && req.headers["range"]) {
-                  try {
-                    var rhd = getCustomHeaders();
-                    rhd["Accept-Ranges"] = "bytes";
-                    rhd["Content-Range"] = "bytes */" + filelen;
-                    var regexmatch = req.headers["range"].match(/bytes=([0-9]*)-([0-9]*)/);
-                    if (!regexmatch) {
+                  var rhd = getCustomHeaders();
+                  rhd["Accept-Ranges"] = "bytes";
+                  rhd["Content-Range"] = "bytes */" + filelen;
+                  var regexmatch = req.headers["range"].match(/bytes=([0-9]*)-([0-9]*)/);
+                  if (!regexmatch) {
+                    callServerError(416, rhd);
+                  } else {
+                    // Process the partial content request
+                    var beginOrig = regexmatch[1];
+                    var endOrig = regexmatch[2];
+                    var begin = 0;
+                    var end = filelen - 1;
+                    if (beginOrig == "" && endOrig == "") {
                       callServerError(416, rhd);
+                      return;
+                    } else if (beginOrig == "") {
+                      begin = end - parseInt(endOrig) + 1;
                     } else {
-                      // Process the partial content request
-                      var beginOrig = regexmatch[1];
-                      var endOrig = regexmatch[2];
-                      var begin = 0;
-                      var end = filelen - 1;
-                      if (beginOrig == "" && endOrig == "") {
-                        callServerError(416, rhd);
-                        return;
-                      } else if (beginOrig == "") {
-                        begin = end - parseInt(endOrig) + 1;
-                      } else {
-                        begin = parseInt(beginOrig);
-                        if (endOrig != "") end = parseInt(endOrig);
-                      }
-                      if (begin > end || begin < 0 || begin > filelen - 1) {
-                        callServerError(416, rhd);
-                        return;
-                      }
-                      if (end > filelen - 1) end = filelen - 1;
-                      rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
-                      rhd["Content-Length"] = end - begin + 1;
-                      if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
-                      if (fileETag) rhd["ETag"] = fileETag;
-
-                      if (req.method != "HEAD") {
-                        var readStream = fs.createReadStream(readFrom, {
-                          start: begin,
-                          end: end
-                        });
-                        readStream.on("error", function (err) {
-                          if (err.code == "ENOENT") {
-                            callServerError(404);
-                            serverconsole.errmessage("Resource not found.");
-                          } else if (err.code == "ENOTDIR") {
-                            callServerError(404); // Assume that file doesn't exist.
-                            serverconsole.errmessage("Resource not found.");
-                          } else if (err.code == "EACCES") {
-                            callServerError(403);
-                            serverconsole.errmessage("Access denied.");
-                          } else if (err.code == "ENAMETOOLONG") {
-                            callServerError(414);
-                          } else if (err.code == "EMFILE") {
-                            callServerError(503);
-                          } else if (err.code == "ELOOP") {
-                            callServerError(508); // The symbolic link loop is detected during file system operations.
-                            serverconsole.errmessage("Symbolic link loop detected.");
-                          } else {
-                            callServerError(500, err);
-                          }
-                        }).on("open", function () {
-                          try {
-                            res.writeHead(206, http.STATUS_CODES[206], rhd);
-                            readStream.pipe(res);
-                            serverconsole.resmessage("Client successfully received content.");
-                          } catch (err) {
-                            callServerError(500, err);
-                          }
-                        });
-                      } else {
-                        res.writeHead(206, http.STATUS_CODES[206], rhd);
-                        res.end();
-                      }
+                      begin = parseInt(beginOrig);
+                      if (endOrig != "") end = parseInt(endOrig);
                     }
-                  } catch (err) {
-                    callServerError(500, err);
-                  }
-                } else {
-                  try {
-                    var hdhds = getCustomHeaders();
-                    if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
-                      hdhds["Content-Encoding"] = "br";
-                    } else if (configJSON.enableCompression === true && ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
-                      hdhds["Content-Encoding"] = "deflate";
-                    } else if (configJSON.enableCompression === true && ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
-                      hdhds["Content-Encoding"] = "gzip";
-                    } else {
-                      if (ext == "html") {
-                        hdhds["Content-Length"] = head.length + filelen + foot.length;
-                      } else {
-                        hdhds["Content-Length"] = filelen;
-                      }
+                    if (begin > end || begin < 0 || begin > filelen - 1) {
+                      callServerError(416, rhd);
+                      return;
                     }
-                    if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
-                    delete hdhds["Content-Type"];
-                    if (!(mime.contentType(ext) == false) && ext != "") hdhds["Content-Type"] = mime.contentType(ext);
-                    if (fileETag) hdhds["ETag"] = fileETag;
+                    if (end > filelen - 1) end = filelen - 1;
+                    rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
+                    rhd["Content-Length"] = end - begin + 1;
+                    if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
+                    if (fileETag) rhd["ETag"] = fileETag;
 
                     if (req.method != "HEAD") {
-                      var readStream = fs.createReadStream(readFrom);
+                      var readStream = fs.createReadStream(readFrom, {
+                        start: begin,
+                        end: end
+                      });
                       readStream.on("error", function (err) {
                         if (err.code == "ENOENT") {
                           callServerError(404);
@@ -4010,52 +3922,111 @@ if (!cluster.isPrimary) {
                         }
                       }).on("open", function () {
                         try {
-                          res.writeHead(200, http.STATUS_CODES[200], hdhds);
-                          var resStream = {};
-                          if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
-                            resStream = zlib.createBrotliCompress();
-                            resStream.pipe(res);
-                          } else if (configJSON.enableCompression === true && ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
-                            resStream = zlib.createDeflateRaw();
-                            resStream.pipe(res);
-                          } else if (configJSON.enableCompression === true && ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
-                            resStream = zlib.createGzip();
-                            resStream.pipe(res);
-                          } else {
-                            resStream = res;
-                          }
-                          if (ext == "html") {
-                            function afterWriteCallback() {
-                              readStream.on("end", function () {
-                                resStream.end(foot);
-                              });
-                              readStream.pipe(resStream, {
-                                end: false
-                              });
-                            }
-                            if (!resStream.write(head)) {
-                              resStream.on("drain", afterWriteCallback);
-                            } else {
-                              process.nextTick(afterWriteCallback);
-                            }
-                          } else {
-                            readStream.pipe(resStream);
-                          }
+                          res.writeHead(206, http.STATUS_CODES[206], rhd);
+                          readStream.pipe(res);
                           serverconsole.resmessage("Client successfully received content.");
                         } catch (err) {
                           callServerError(500, err);
                         }
                       });
                     } else {
-                      res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                      res.writeHead(206, http.STATUS_CODES[206], rhd);
                       res.end();
-                      serverconsole.resmessage("Client successfully received content.");
                     }
-                  } catch (err) {
-                    callServerError(500, err);
                   }
+                } catch (err) {
+                  callServerError(500, err);
                 }
-              });
+              } else {
+                try {
+                  var hdhds = getCustomHeaders();
+                  if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
+                    hdhds["Content-Encoding"] = "br";
+                  } else if (configJSON.enableCompression === true && ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
+                    hdhds["Content-Encoding"] = "deflate";
+                  } else if (configJSON.enableCompression === true && ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
+                    hdhds["Content-Encoding"] = "gzip";
+                  } else {
+                    if (ext == "html") {
+                      hdhds["Content-Length"] = head.length + filelen + foot.length;
+                    } else {
+                      hdhds["Content-Length"] = filelen;
+                    }
+                  }
+                  if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
+                  delete hdhds["Content-Type"];
+                  if (!(mime.contentType(ext) == false) && ext != "") hdhds["Content-Type"] = mime.contentType(ext);
+                  if (fileETag) hdhds["ETag"] = fileETag;
+
+                  if (req.method != "HEAD") {
+                    var readStream = fs.createReadStream(readFrom);
+                    readStream.on("error", function (err) {
+                      if (err.code == "ENOENT") {
+                        callServerError(404);
+                        serverconsole.errmessage("Resource not found.");
+                      } else if (err.code == "ENOTDIR") {
+                        callServerError(404); // Assume that file doesn't exist.
+                        serverconsole.errmessage("Resource not found.");
+                      } else if (err.code == "EACCES") {
+                        callServerError(403);
+                        serverconsole.errmessage("Access denied.");
+                      } else if (err.code == "ENAMETOOLONG") {
+                        callServerError(414);
+                      } else if (err.code == "EMFILE") {
+                        callServerError(503);
+                      } else if (err.code == "ELOOP") {
+                        callServerError(508); // The symbolic link loop is detected during file system operations.
+                        serverconsole.errmessage("Symbolic link loop detected.");
+                      } else {
+                        callServerError(500, err);
+                      }
+                    }).on("open", function () {
+                      try {
+                        res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                        var resStream = {};
+                        if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
+                          resStream = zlib.createBrotliCompress();
+                          resStream.pipe(res);
+                        } else if (configJSON.enableCompression === true && ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
+                          resStream = zlib.createDeflateRaw();
+                          resStream.pipe(res);
+                        } else if (configJSON.enableCompression === true && ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
+                          resStream = zlib.createGzip();
+                          resStream.pipe(res);
+                        } else {
+                          resStream = res;
+                        }
+                        if (ext == "html") {
+                          function afterWriteCallback() {
+                            readStream.on("end", function () {
+                              resStream.end(foot);
+                            });
+                            readStream.pipe(resStream, {
+                              end: false
+                            });
+                          }
+                          if (!resStream.write(head)) {
+                            resStream.on("drain", afterWriteCallback);
+                          } else {
+                            process.nextTick(afterWriteCallback);
+                          }
+                        } else {
+                          readStream.pipe(resStream);
+                        }
+                        serverconsole.resmessage("Client successfully received content.");
+                      } catch (err) {
+                        callServerError(500, err);
+                      }
+                    });
+                  } else {
+                    res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                    res.end();
+                    serverconsole.resmessage("Client successfully received content.");
+                  }
+                } catch (err) {
+                  callServerError(500, err);
+                }
+              }
             }
           }
         });
