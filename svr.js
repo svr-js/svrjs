@@ -3713,7 +3713,16 @@ if (!cluster.isPrimary) {
               } else {
                 try {
                   var hdhds = getCustomHeaders();
-                  if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
+                  var brNotImplementedBun = false;
+                  // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
+                  if (process.isBun && enableCompression) {
+                    try {
+                      zlib.createBrotliCompress();
+                    } catch (err) {
+                      brNotImplementedBun = true;
+                    }
+                  }
+                  if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && !brNotImplementedBun && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
                     hdhds["Content-Encoding"] = "br";
                   } else if (configJSON.enableCompression === true && ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
                     hdhds["Content-Encoding"] = "deflate";
@@ -3755,9 +3764,8 @@ if (!cluster.isPrimary) {
                       }
                     }).on("open", function () {
                       try {
-                        res.writeHead(200, http.STATUS_CODES[200], hdhds);
                         var resStream = {};
-                        if (ext != "br" && filelen > 256 && isCompressable && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
+                        if (ext != "br" && filelen > 256 && isCompressable && !brNotImplementedBun && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
                           resStream = zlib.createBrotliCompress();
                           resStream.pipe(res);
                         } else if (ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
@@ -3778,12 +3786,14 @@ if (!cluster.isPrimary) {
                               end: false
                             });
                           }
+                          res.writeHead(200, http.STATUS_CODES[200], hdhds);
                           if (!resStream.write(head)) {
                             resStream.on("drain", afterWriteCallback);
                           } else {
                             process.nextTick(afterWriteCallback);
                           }
                         } else {
+                          res.writeHead(200, http.STATUS_CODES[200], hdhds);
                           readStream.pipe(resStream);
                         }
                         serverconsole.resmessage("Client successfully received content.");
