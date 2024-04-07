@@ -3715,7 +3715,7 @@ if (!cluster.isPrimary) {
                   var hdhds = getCustomHeaders();
                   var brNotImplementedBun = false;
                   // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
-                  if (process.isBun && enableCompression) {
+                  if (process.isBun && configJSON.enableCompression) {
                     try {
                       zlib.createBrotliCompress();
                     } catch (err) {
