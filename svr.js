@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.9";
+var version = "3.14.10";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -4242,7 +4242,7 @@ if (!cluster.isPrimary) {
 
       // Trailing slash redirection
       function redirectTrailingSlashes(callback) {
-        if (!disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
+        if (!isProxy && !disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
           fs.stat("." + decodeURIComponent(href), function (err, stats) {
             if (err || !stats.isDirectory()) {
               try {
