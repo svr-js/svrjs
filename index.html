@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.14.10</title>
+    <title>SVR.JS 3.14.11</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.14.10</h1>
+    <h1>Welcome to SVR.JS 3.14.11</h1>
     <br/>
     <img src="/logo.png" style="width: 256px; max-width: 100%;" />
     <br/>
@@ -84,7 +84,9 @@
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
-      <li>Disabled trailing slash removal for proxy requests.</li>
+      <li>Added CVE-2024-27982 Node.JS vulnerability warning.</li>
+      <li>Fixed bug with Brotli compression not working, when SVR.JS is running on Bun.</li>
+      <li>Improved the performance of the server.</li>
     </ul>
     <p>
       <a href="/tests.html">Tests</a><br/>
