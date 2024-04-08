@@ -15,5 +15,5 @@ jobs:
       - uses: spyoungtech/mirror-action@v0.5.1
         with:
           REMOTE: "https://git.svrjs.org/svrjs.git"
-          GIT_USERNAME: svrjs
+          GIT_USERNAME: github
           GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
