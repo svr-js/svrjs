@@ -1,0 +1,19 @@
+# Sync repo to the Codeberg mirror
+name: Repo sync GitHub -> SVR.JS Git server
+on:
+  push:
+    branches:
+    - '**'
+
+jobs:
+  svrjsgit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: spyoungtech/mirror-action@v0.5.1
+        with:
+          REMOTE: "https://git.svrjs.org/svrjs/sync-test.git"
+          GIT_USERNAME: svrjs
+          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
