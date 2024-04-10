@@ -590,7 +590,7 @@ function ipMatch(IP1, IP2) {
   // Normalize or expand IP addresses
   IP1 = IP1.toLowerCase();
   if (IP1 == "localhost") IP1 = "::1";
-  if (IP1.indexOf("::ffff:") == 0) IP1 = IP1.substr(7);
+  if (IP1.indexOf("::ffff:") == 0) IP1 = IP1.substring(7);
   if (IP1.indexOf(":") > -1) {
     IP1 = expandIPv6Address(IP1);
   } else {
@@ -599,7 +599,7 @@ function ipMatch(IP1, IP2) {
 
   IP2 = IP2.toLowerCase();
   if (IP2 == "localhost") IP2 = "::1";
-  if (IP2.indexOf("::ffff:") == 0) IP2 = IP2.substr(7);
+  if (IP2.indexOf("::ffff:") == 0) IP2 = IP2.substring(7);
   if (IP2.indexOf(":") > -1) {
     IP2 = expandIPv6Address(IP2);
   } else {
@@ -616,7 +616,7 @@ function checkForEnabledDirectoryListing(hostname, localAddress) {
     if (typeof hostnameM == "undefined" || hostnameM == "*") {
       return true;
     } else if (hostname && hostnameM.indexOf("*.") == 0 && hostnameM != "*.") {
-      var hostnamesRoot = hostnameM.substr(2);
+      var hostnamesRoot = hostnameM.substring(2);
       if (hostname == hostnamesRoot || (hostname.length > hostnamesRoot.length && hostname.indexOf("." + hostnamesRoot) == hostname.length - hostnamesRoot.length - 1)) {
         return true;
       }
@@ -783,7 +783,7 @@ function ipBlockList(rawBlockList) {
 
     // Normalize the IP address or expand the IPv6 address
     rawValue = rawValue.toLowerCase();
-    if (rawValue.indexOf("::ffff:") == 0) rawValue = rawValue.substr(7);
+    if (rawValue.indexOf("::ffff:") == 0) rawValue = rawValue.substring(7);
     if (rawValue.indexOf(":") > -1) {
       isIPv6 = true;
       rawValue = expandIPv6Address(rawValue);
@@ -838,7 +838,7 @@ function ipBlockList(rawBlockList) {
     // Normalize or expand the IP address
     rawValue = rawValue.toLowerCase();
     if (rawValue == "localhost") rawValue = "::1";
-    if (rawValue.indexOf("::ffff:") == 0) rawValue = rawValue.substr(7);
+    if (rawValue.indexOf("::ffff:") == 0) rawValue = rawValue.substring(7);
     if (rawValue.indexOf(":") > -1) {
       isIPv6 = true;
       rawValue = expandIPv6Address(rawValue);
@@ -1659,7 +1659,7 @@ if (!disableMods) {
   if (fs.existsSync(SSJSPath) && fs.statSync(SSJSPath).isFile()) {
     try {
       // Prepend necessary modules and variables to the custom server side script
-      var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&(\"object\"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||\"*\"==e)return!0;if(req.headers.host&&0==e.indexOf(\"*.\")&&\"*.\"!=e){var r=e.substr(2);if(req.headers.host==r||req.headers.host.indexOf(\".\"+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||\"win32\"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n";
+      var modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&(\"object\"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||\"*\"==e)return!0;if(req.headers.host&&0==e.indexOf(\"*.\")&&\"*.\"!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf(\".\"+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||\"win32\"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n";
       var modfoot = "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
       fs.writeFileSync(__dirname + "/temp/" + tempServerSideScriptName, modhead + fs.readFileSync(SSJSPath) + modfoot);
@@ -2421,7 +2421,7 @@ if (!cluster.isPrimary) {
 
       // Determine error file
       function getErrorFileName(list, callback, _i) {
-        if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
+        if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substring(1)) >= 16) {
           // Disable custom error page for HTTP SSL error
           callback(errorCode.toString() + ".html");
           return;
@@ -2516,7 +2516,7 @@ if (!cluster.isPrimary) {
           }
           cheaders["Content-Type"] = "text/html; charset=utf-8";
           if (errorCode == 405 && !cheaders["Allow"]) cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
-          if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substr(1)) >= 16) {
+          if (err.code == "ERR_SSL_HTTP_REQUEST" && process.version && parseInt(process.version.split(".")[0].substring(1)) >= 16) {
             // Disable custom error page for HTTP SSL error
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
             res.write(("<html><head><title>{errorMessage}</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>").replace(/{errorMessage}/g, errorCode.toString() + " " + http.STATUS_CODES[errorCode].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode]).replace(/{stack}/g, stack.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r\n/g, "<br/>").replace(/\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/ {2}/g, "&nbsp;&nbsp;")).replace(/{server}/g, "" + ((exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS") + ((!exposeModsInErrorPages || extName == undefined) ? "" : " " + extName)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")).replace(/{contact}/g, serverAdmin.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\./g, "[dot]").replace(/@/g, "[at]")));
@@ -2857,7 +2857,7 @@ if (!cluster.isPrimary) {
       if (typeof hostname == "undefined" || hostname == "*") {
         return true;
       } else if (req.headers.host && hostname.indexOf("*.") == 0 && hostname != "*.") {
-        var hostnamesRoot = hostname.substr(2);
+        var hostnamesRoot = hostname.substring(2);
         if (req.headers.host == hostnamesRoot || (req.headers.host.length > hostnamesRoot.length && req.headers.host.indexOf("." + hostnamesRoot) == req.headers.host.length - hostnamesRoot.length - 1)) {
           return true;
         }
@@ -3316,7 +3316,7 @@ if (!cluster.isPrimary) {
           // Adjust the pathname and href properties if the URI doesn't start with "/"
           if (preparedURI.indexOf("/") != 0) {
             if (nuobject.pathname) {
-              nuobject.pathname = nuobject.pathname.substr(1);
+              nuobject.pathname = nuobject.pathname.substring(1);
               nuobject.href = nuobject.pathname + (nuobject.search ? nuobject.search : "");
             }
           }
@@ -3352,7 +3352,7 @@ if (!cluster.isPrimary) {
     var search = uobject.search;
     var href = uobject.pathname;
     var ext = path.extname(href).toLowerCase();
-    ext = ext.substr(1, ext.length);
+    ext = ext.substring(1, ext.length + 1);
     var decodedHref = "";
     try {
       decodedHref = decodeURIComponent(href);
@@ -3489,7 +3489,7 @@ if (!cluster.isPrimary) {
           return;
         }
 
-        var pth = decodeURIComponent(href).replace(/\/+/g, "/").substr(1);
+        var pth = decodeURIComponent(href).replace(/\/+/g, "/").substring(1);
         var readFrom = "./" + pth;
         fs.stat(readFrom, function (err, stats) {
           if (err) {
@@ -4103,7 +4103,7 @@ if (!cluster.isPrimary) {
           search = uobject.search;
           href = uobject.pathname;
           ext = path.extname(href).toLowerCase();
-          ext = ext.substr(1, ext.length);
+          ext = ext.substring(1, ext.length + 1);
           try {
             decodedHref = decodeURIComponent(href);
           } catch (err) {
@@ -4260,7 +4260,7 @@ if (!cluster.isPrimary) {
             if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/, "");
             else if (urlWithPostfix.length == currentPostfixPrefix.length || urlWithPostfix[currentPostfixPrefix.length] == "?" || urlWithPostfix[currentPostfixPrefix.length] == "/" || urlWithPostfix[currentPostfixPrefix.length] == "#") postfixPrefix = currentPostfixPrefix;
             else return true;
-            urlWithPostfix = urlWithPostfix.substr(postfixPrefix.length);
+            urlWithPostfix = urlWithPostfix.substring(postfixPrefix.length);
             return false;
           } else {
             return true;
@@ -4281,7 +4281,7 @@ if (!cluster.isPrimary) {
           search = uobject.search;
           href = uobject.pathname;
           ext = path.extname(href).toLowerCase();
-          ext = ext.substr(1, ext.length);
+          ext = ext.substring(1, ext.length + 1);
 
           try {
             decodedHref = decodeURIComponent(href);
@@ -4316,7 +4316,7 @@ if (!cluster.isPrimary) {
             search = uobject.search;
             href = uobject.pathname;
             ext = path.extname(href).toLowerCase();
-            ext = ext.substr(1, ext.length);
+            ext = ext.substring(1, ext.length + 1);
             try {
               decodedHref = decodeURIComponent(href);
             } catch (err) {
@@ -4342,7 +4342,7 @@ if (!cluster.isPrimary) {
           search = uobject.search;
           href = uobject.pathname;
           ext = path.extname(href).toLowerCase();
-          ext = ext.substr(1, ext.length);
+          ext = ext.substring(1, ext.length + 1);
 
           try {
             decodedHref = decodeURIComponent(href);
@@ -4377,7 +4377,7 @@ if (!cluster.isPrimary) {
             search = uobject.search;
             href = uobject.pathname;
             ext = path.extname(href).toLowerCase();
-            ext = ext.substr(1, ext.length);
+            ext = ext.substring(1, ext.length + 1);
             try {
               decodedHref = decodeURIComponent(href);
             } catch (err) {
@@ -4773,8 +4773,8 @@ function listenConnListener(msg) {
 function bruteForceListenerWrapper(worker) {
   return function bruteForceListener(message) {
     var ip = "";
-    if (message.substr(0, 6) == "\x12AUTHQ") {
-      ip = message.substr(6);
+    if (message.substring(0, 6) == "\x12AUTHQ") {
+      ip = message.substring(6);
       if (!bruteForceDb[ip] || !bruteForceDb[ip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[ip].lastAttemptDate)) {
         if (bruteForceDb[ip] && bruteForceDb[ip].invalidAttempts >= 10) bruteForceDb[ip] = {
           invalidAttempts: 5
@@ -4783,13 +4783,13 @@ function bruteForceListenerWrapper(worker) {
       } else {
         worker.send("\x14AUTHD" + ip);
       }
-    } else if (message.substr(0, 6) == "\x12AUTHR") {
-      ip = message.substr(6);
+    } else if (message.substring(0, 6) == "\x12AUTHR") {
+      ip = message.substring(6);
       if (bruteForceDb[ip]) bruteForceDb[ip] = {
         invalidAttempts: 0
       };
-    } else if (message.substr(0, 6) == "\x12AUTHW") {
-      ip = message.substr(6);
+    } else if (message.substring(0, 6) == "\x12AUTHW") {
+      ip = message.substring(6);
       if (!bruteForceDb[ip]) bruteForceDb[ip] = {
         invalidAttempts: 0
       };
@@ -4815,7 +4815,7 @@ function msgListener(msg) {
   }
   if (msg == "\x12CLOSE") {
     closedMaster = true;
-  } else if (msg == "\x12LISTEN" || msg.substr(0, 4) == "\x12AUTH") {
+  } else if (msg == "\x12LISTEN" || msg.substring(0, 4) == "\x12AUTH") {
     // Do nothing!
   } else if (msg == "\x12KILLOK") {
     if (typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
@@ -4826,17 +4826,17 @@ function msgListener(msg) {
   } else if (msg == "\x12SAVEGOOD") {
     serverconsole.locmessage("Configuration saved.");
   } else if (msg.indexOf("\x12SAVEERR") == 0) {
-    serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + msg.substr(8));
+    serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + msg.substring(8));
   } else if (msg == "\x12END") {
     cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
       if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
-        var tries = parseInt(msg.substr(8, 1));
-        var errCode = msg.substr(9);
+        var tries = parseInt(msg.substring(8, 9));
+        var errCode = msg.substring(9);
         serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
         serverconsole.locmessage(tries + " attempts left.");
       }
       if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
-        var errno = errors[msg.substr(9)];
+        var errno = errors[msg.substring(9)];
         process.exit(errno ? errno : 1);
       }
     });
@@ -4916,7 +4916,7 @@ function start(init) {
       if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).");
       if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982).");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
-      if (secure && process.versions && process.versions.openssl && process.versions.openssl.substr(0, 2) == "1.") {
+      if (secure && process.versions && process.versions.openssl && process.versions.openssl.substring(0, 2) == "1.") {
         if (new Date() > new Date("11 September 2023")) {
           serverconsole.locwarnmessage("OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
         } else {
@@ -5396,13 +5396,13 @@ function start(init) {
         }
         cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
           if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
-            var tries = parseInt(msg.substr(8, 1));
-            var errCode = msg.substr(9);
+            var tries = parseInt(msg.substring(8, 9));
+            var errCode = msg.substring(9);
             serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
             serverconsole.locmessage(tries + " attempts left.");
           }
           if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
-            var errno = errors[msg.substr(9)];
+            var errno = errors[msg.substring(9)];
             process.exit(errno ? errno : 1);
           }
         });
