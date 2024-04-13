@@ -3491,18 +3491,12 @@ if (!cluster.isPrimary) {
 
         var pth = decodeURIComponent(href).replace(/\/+/g, "/").substr(1);
         var readFrom = "./" + pth;
+        var dirImagesMissing = false;
         fs.stat(readFrom, function (err, stats) {
           if (err) {
             if (err.code == "ENOENT") {
               if (__dirname != process.cwd() && pth.match(/^\.dirimages\/(?:(?!\.png$).)+\.png$/)) {
-                stats = {
-                  isDirectory: function isDirectory() {
-                    return false;
-                  },
-                  isFile: function isFile() {
-                    return true;
-                  }
-                };
+                dirImagesMissing = true;
                 readFrom = __dirname + "/" + pth;
               } else {
                 callServerError(404);
@@ -3563,6 +3557,15 @@ if (!cluster.isPrimary) {
                 pth = (pth + "/index.html").replace(/\/+/g, "/");
                 ext = "html";
                 readFrom = "./" + pth;
+                properDirectoryListingAndStaticFileServe();
+              }
+            });
+          } else if (dirImagesMissing) {
+            fs.stat(readFrom, function (e, s) {
+              if (e || !s.isFile()) {
+                properDirectoryListingAndStaticFileServe();
+              } else {
+                stats = s;
                 properDirectoryListingAndStaticFileServe();
               }
             });
