@@ -3528,7 +3528,7 @@ if (!cluster.isPrimary) {
           }
 
           // Check if index file exists
-          if (req.url == "/" || stats.isDirectory()) {
+          if (!dirImagesMissing && (req.url == "/" || stats.isDirectory())) {
             fs.stat((readFrom + "/index.html").replace(/\/+/g, "/"), function (e, s) {
               if (e || !s.isFile()) {
                 fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
