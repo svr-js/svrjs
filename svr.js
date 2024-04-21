@@ -3404,11 +3404,6 @@ if (!cluster.isPrimary) {
           vresCalled = true;
         }
 
-        if (req.socket == null) {
-          serverconsole.errmessage("Client socket is null!!!");
-          return;
-        }
-
         // Function to check the level of a path relative to the web root
         function checkPathLevel(path) {
           // Split the path into an array of components based on "/"
