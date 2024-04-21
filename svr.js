@@ -5300,7 +5300,7 @@ function start(init) {
               if (stopError) serverconsole.climessage("Some SVR.JS workers might not be stopped.");
               SVRJSInitialized = false;
               closedMaster = true;
-              var cpus = os.cpus().length;
+              var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
               if (cpus > 16) cpus = 16;
               try {
                 var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
@@ -5371,7 +5371,7 @@ function start(init) {
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
       // Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
-        var cpus = os.cpus().length;
+        var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
         if (cpus > 16) cpus = 16;
         try {
           var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
