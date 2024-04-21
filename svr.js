@@ -2984,7 +2984,7 @@ if (!cluster.isPrimary) {
       }
     });
     var isProxy = false;
-    if (req.url.indexOf("/") != 0 && req.url != "*") isProxy = true;
+    if (req.url[0] != "/" && req.url != "*") isProxy = true;
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
 
     if (req.socket == null) {
@@ -3314,7 +3314,7 @@ if (!cluster.isPrimary) {
           if (uobject.href != "") nuobject.href = uobject.href;
 
           // Adjust the pathname and href properties if the URI doesn't start with "/"
-          if (preparedURI.indexOf("/") != 0) {
+          if (preparedURI[0] != "/") {
             if (nuobject.pathname) {
               nuobject.pathname = nuobject.pathname.substring(1);
               nuobject.href = nuobject.pathname + (nuobject.search ? nuobject.search : "");
