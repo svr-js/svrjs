@@ -3860,28 +3860,15 @@ if (!cluster.isPrimary) {
                       fs.stat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
                         if (err) {
                           fs.lstat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
-                            if (err) {
-                              pushArray.push({
-                                name: fileList[index],
-                                stats: null,
-                                errored: true
-                              });
-                              if (index < fileList.length - 1) {
-                                getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
-                              } else {
-                                callback(pushArray);
-                              }
+                            pushArray.push({
+                              name: fileList[index],
+                              stats: err ? null : stats,
+                              errored: true
+                            });
+                            if (index < fileList.length - 1) {
+                              getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
                             } else {
-                              pushArray.push({
-                                name: fileList[index],
-                                stats: stats,
-                                errored: true
-                              });
-                              if (index < fileList.length - 1) {
-                                getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
-                              } else {
-                                callback(pushArray);
-                              }
+                              callback(pushArray);
                             }
                           });
                         } else {
@@ -3913,8 +3900,7 @@ if (!cluster.isPrimary) {
                           var estats = filelist[i].stats;
                           var ename = filelist[i].name;
                           var eext = ename.match(/\.([^.]+)$/);
-                          if (eext) eext = eext[1];
-                          else eext = "";
+                          eext = eext ? eext[1] : "";
                           var emime = eext ? mime.contentType(eext) : false;
                           if (filelist[i].errored) {
                             directoryListingRows.push(
