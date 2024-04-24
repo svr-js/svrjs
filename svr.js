@@ -4914,7 +4914,7 @@ function start(init) {
       if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).");
       if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982).");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
-      if (secure && process.versions && process.versions.openssl && process.versions.openssl.substring(0, 2) == "1.") {
+      if (!process.isBun && secure && process.versions && process.versions.openssl && process.versions.openssl.substring(0, 2) == "1.") {
         if (new Date() > new Date("11 September 2023")) {
           serverconsole.locwarnmessage("OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
         } else {
