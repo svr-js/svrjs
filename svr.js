@@ -2954,9 +2954,9 @@ if (!cluster.isPrimary) {
         } else {
           headWritten = true;
         }
-        if (code >= 400 && code <= 499) err4xxcounter++;
-        if (code >= 500 && code <= 599) err5xxcounter++;
         if (code >= 400 && code <= 599) {
+          if (code >= 400 && code <= 499) err4xxcounter++;
+          else if (code >= 500 && code <= 599) err5xxcounter++;
           serverconsole.errmessage("Server responded with " + code.toString() + " code.");
         } else {
           serverconsole.resmessage("Server responded with " + code.toString() + " code.");
