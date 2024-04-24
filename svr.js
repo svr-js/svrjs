@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.12";
+var version = "3.14.13";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -2954,9 +2954,9 @@ if (!cluster.isPrimary) {
         } else {
           headWritten = true;
         }
-        if (code >= 400 && code <= 499) err4xxcounter++;
-        if (code >= 500 && code <= 599) err5xxcounter++;
         if (code >= 400 && code <= 599) {
+          if (code >= 400 && code <= 499) err4xxcounter++;
+          else if (code >= 500 && code <= 599) err5xxcounter++;
           serverconsole.errmessage("Server responded with " + code.toString() + " code.");
         } else {
           serverconsole.resmessage("Server responded with " + code.toString() + " code.");
@@ -2984,7 +2984,7 @@ if (!cluster.isPrimary) {
       }
     });
     var isProxy = false;
-    if (req.url.indexOf("/") != 0 && req.url != "*") isProxy = true;
+    if (req.url[0] != "/" && req.url != "*") isProxy = true;
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
 
     if (req.socket == null) {
@@ -3314,7 +3314,7 @@ if (!cluster.isPrimary) {
           if (uobject.href != "") nuobject.href = uobject.href;
 
           // Adjust the pathname and href properties if the URI doesn't start with "/"
-          if (preparedURI.indexOf("/") != 0) {
+          if (preparedURI[0] != "/") {
             if (nuobject.pathname) {
               nuobject.pathname = nuobject.pathname.substring(1);
               nuobject.href = nuobject.pathname + (nuobject.search ? nuobject.search : "");
@@ -3402,11 +3402,6 @@ if (!cluster.isPrimary) {
           return;
         } else {
           vresCalled = true;
-        }
-
-        if (req.socket == null) {
-          serverconsole.errmessage("Client socket is null!!!");
-          return;
         }
 
         // Function to check the level of a path relative to the web root
@@ -3865,28 +3860,15 @@ if (!cluster.isPrimary) {
                       fs.stat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
                         if (err) {
                           fs.lstat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
-                            if (err) {
-                              pushArray.push({
-                                name: fileList[index],
-                                stats: null,
-                                errored: true
-                              });
-                              if (index < fileList.length - 1) {
-                                getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
-                              } else {
-                                callback(pushArray);
-                              }
+                            pushArray.push({
+                              name: fileList[index],
+                              stats: err ? null : stats,
+                              errored: true
+                            });
+                            if (index < fileList.length - 1) {
+                              getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
                             } else {
-                              pushArray.push({
-                                name: fileList[index],
-                                stats: stats,
-                                errored: true
-                              });
-                              if (index < fileList.length - 1) {
-                                getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
-                              } else {
-                                callback(pushArray);
-                              }
+                              callback(pushArray);
                             }
                           });
                         } else {
@@ -3918,8 +3900,7 @@ if (!cluster.isPrimary) {
                           var estats = filelist[i].stats;
                           var ename = filelist[i].name;
                           var eext = ename.match(/\.([^.]+)$/);
-                          if (eext) eext = eext[1];
-                          else eext = "";
+                          eext = eext ? eext[1] : "";
                           var emime = eext ? mime.contentType(eext) : false;
                           if (filelist[i].errored) {
                             directoryListingRows.push(
@@ -4919,7 +4900,7 @@ function start(init) {
       if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).");
       if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982).");
       if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running SVR.JS as root. It's recommended to run SVR.JS as an non-root user. Running SVR.JS as root may increase the risks of OS command execution vulnerabilities.");
-      if (secure && process.versions && process.versions.openssl && process.versions.openssl.substring(0, 2) == "1.") {
+      if (!process.isBun && secure && process.versions && process.versions.openssl && process.versions.openssl.substring(0, 2) == "1.") {
         if (new Date() > new Date("11 September 2023")) {
           serverconsole.locwarnmessage("OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
         } else {
@@ -5305,7 +5286,7 @@ function start(init) {
               if (stopError) serverconsole.climessage("Some SVR.JS workers might not be stopped.");
               SVRJSInitialized = false;
               closedMaster = true;
-              var cpus = os.cpus().length;
+              var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
               if (cpus > 16) cpus = 16;
               try {
                 var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
@@ -5376,7 +5357,7 @@ function start(init) {
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
       // Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
-        var cpus = os.cpus().length;
+        var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
         if (cpus > 16) cpus = 16;
         try {
           var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
