@@ -940,7 +940,16 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
   }).join(".");
 }
 
-if (!process.stdout.isTTY && (!inspector || !inspector.url())) {
+var inspectorURL = undefined;
+try {
+  if (inspector) {
+    inspectorURL = inspector.url();
+  }
+} catch (err) {
+  // Failed to get inspector URL
+}
+
+if (!process.stdout.isTTY && !inspectorURL) {
   // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
   console.log = function () {};
   process.stdout.write = function () {};
