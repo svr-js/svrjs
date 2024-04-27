@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.13";
+var version = "3.14.14";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -389,6 +389,12 @@ try {
   hexstrbase64 = require("./hexstrbase64/index.js");
 } catch (err) {
   // Don't use hexstrbase64
+}
+var inspector = undefined;
+try {
+ inspector = require("inspector");
+} catch (err) {
+  // Don't use inspector
 }
 var zlib = require("zlib");
 var tar = undefined;
@@ -932,6 +938,23 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
     var power = Math.max(Math.min(mask - (index * 8), 8), 0);
     return ((parseInt(num) & ((Math.pow(2, power) - 1) << (8 - power)))).toString();
   }).join(".");
+}
+
+var inspectorURL = undefined;
+try {
+  if (inspector) {
+    inspectorURL = inspector.url();
+  }
+} catch (err) {
+  // Failed to get inspector URL
+}
+
+if (!process.stdout.isTTY && !inspectorURL) {
+  // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
+  console.log = function () {};
+  process.stdout.write = function () {};
+  process.stdout._write = function () {};
+  process.stdout._writev = function () {};
 }
 
 // IP and network inteface-related
@@ -2163,19 +2186,23 @@ if (!cluster.isPrimary) {
     }
   }
   if (secure) {
-    sniCredentials.forEach(function (sniCredentialsSingle) {
-      server.addContext(sniCredentialsSingle.name, {
-        cert: sniCredentialsSingle.cert,
-        key: sniCredentialsSingle.key
+    try {
+      sniCredentials.forEach(function (sniCredentialsSingle) {
+        server.addContext(sniCredentialsSingle.name, {
+          cert: sniCredentialsSingle.cert,
+          key: sniCredentialsSingle.key
+        });
+        try {
+          var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
+          if (!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
+          server._contexts[server._contexts.length - 1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
+        } catch (ex) {
+          // Can't replace regex, ignoring...
+        }
       });
-      try {
-        var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
-        if (!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
-        server._contexts[server._contexts.length - 1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
-      } catch (ex) {
-        // Can't replace regex, ignoring...
-      }
-    });
+    } catch (err) {
+      // SNI error
+    }
   }
   server.on("request", reqhandler);
   server.on("checkExpectation", reqhandler);
