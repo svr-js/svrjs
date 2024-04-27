@@ -390,6 +390,12 @@ try {
 } catch (err) {
   // Don't use hexstrbase64
 }
+var inspector = undefined;
+try {
+ inspector = require("inspector");
+} catch (err) {
+  // Don't use inspector
+}
 var zlib = require("zlib");
 var tar = undefined;
 try {
@@ -934,8 +940,8 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
   }).join(".");
 }
 
-if (!process.stdout.isTTY) {
-  // When stdout is not a terminal, disable it to improve performance of SVR.JS
+if (!process.stdout.isTTY && (!inspector || !inspector.url())) {
+  // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
   console.log = function () {};
   process.stdout.write = function () {};
   process.stdout._write = function () {};
