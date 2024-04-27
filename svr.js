@@ -934,6 +934,14 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
   }).join(".");
 }
 
+if (!process.stdout.isTTY) {
+  // When stdout is not a terminal, disable it to improve performance of SVR.JS
+  console.log = function () {};
+  process.stdout.write = function () {};
+  process.stdout._write = function () {};
+  process.stdout._writev = function () {};
+}
+
 // IP and network inteface-related
 var ifaces = {};
 var ifaceEx = null;
