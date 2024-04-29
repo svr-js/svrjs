@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.14.14</title>
+    <title>SVR.JS 3.14.15</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,7 +12,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.14.14</h1>
+    <h1>Welcome to SVR.JS 3.14.15</h1>
     <br/>
     <img src="/logo.png" style="width: 256px; max-width: 100%;" />
     <br/>
@@ -84,8 +84,8 @@
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
-      <li><i>console.log</i> and <i>stdout</i> are now disabled, when <i>stdout</i> is not a TTY (for example in situation when SVR.JS is running as a daemon), in order to improve performance.</li>
-      <li>Errors that occurred, while adding SNI context to a server are now ignored.</li>
+      <li>Fixed crashes related to the request ID generation.</li>
+      <li>Optimized HTTP compression functionality.</li>
     </ul>
     <p>
       <a href="/tests.html">Tests</a><br/>
