@@ -2032,7 +2032,8 @@ if (!cluster.isPrimary) {
   });
   if (!disableToHTTPSRedirect) {
     server2.on("connect", function (request, socket) {
-      var reqIdInt = Math.round(Math.random() * 16777216);
+      var reqIdInt = Math.floor(Math.random() * 16777216);
+      if (reqIdInt == 16777216) reqIdInt = 0;
       var reqId = "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
       var serverconsole = {
         climessage: function (msg) {
@@ -2327,7 +2328,8 @@ if (!cluster.isPrimary) {
       res.write(head);
     };
 
-    var reqIdInt = Math.round(Math.random() * 16777216);
+    var reqIdInt = Math.floor(Math.random() * 16777216);
+    if (reqIdInt == 16777216) reqIdInt = 0;
     var reqId = "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
     var serverconsole = {
       climessage: function (msg) {
@@ -2679,7 +2681,8 @@ if (!cluster.isPrimary) {
   }
 
   function connhandler(request, socket, head) {
-    var reqIdInt = Math.round(Math.random() * 16777216);
+    var reqIdInt = Math.floor(Math.random() * 16777216);
+    if (reqIdInt == 16777216) reqIdInt = 0;
     var reqId = "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
     var serverconsole = {
       climessage: function (msg) {
@@ -2798,7 +2801,8 @@ if (!cluster.isPrimary) {
 
   function reqhandler(req, res, fromMain) {
     if (fromMain === undefined) fromMain = true;
-    var reqIdInt = Math.round(Math.random() * 16777216);
+    var reqIdInt = Math.floor(Math.random() * 16777216);
+    if (reqIdInt == 16777216) reqIdInt = 0;
     var reqId = "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
     var serverconsole = {
       climessage: function (msg) {
