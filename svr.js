@@ -3720,8 +3720,8 @@ if (!cluster.isPrimary) {
                 }
 
                 var useBrotli = (ext != "br" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/));
-                var useDeflate = (ext != "zip" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bdeflate\b/));
-                var useGzip = (ext != "gz" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bgzip\b/));
+                var useDeflate = (ext != "zip" && filelen > 256 && acceptEncoding.match(/\bdeflate\b/));
+                var useGzip = (ext != "gz" && filelen > 256 && acceptEncoding.match(/\bgzip\b/));
 
                 var isCompressable = true;
                 try {
