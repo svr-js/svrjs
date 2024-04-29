@@ -3630,39 +3630,6 @@ if (!cluster.isPrimary) {
                 }
               }
 
-              // Helper function to check if compression is allowed for the file
-              function canCompress(path, list) {
-                var canCompress = true;
-                for (var i = 0; i < list.length; i++) {
-                  if (createRegex(list[i], true).test(path)) {
-                    canCompress = false;
-                    break;
-                  }
-                }
-                return canCompress;
-              }
-
-              var isCompressable = true;
-              try {
-                // Check for files not to compressed and compression enabling setting. Also check for browser quirks and adjust compression accordingly
-                if(configJSON.enableCompression !== true || !canCompress(href, dontCompress)) {
-                  isCompressable = false; // Compression is disabled
-                } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml") {
-                  if (/^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                    isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
-                  } else if (/^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
-                    isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
-                  }
-                } else {
-                  if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                    isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
-                  }
-                }
-              } catch (err) {
-                callServerError(500, err);
-                return;
-              }
-
               // Handle partial content request
               if (ext != "html" && req.headers["range"]) {
                 try {
@@ -3740,22 +3707,59 @@ if (!cluster.isPrimary) {
                   callServerError(500, err);
                 }
               } else {
-                try {
-                  var hdhds = getCustomHeaders();
-                  var brNotImplementedBun = false;
-                  // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
-                  if (process.isBun && configJSON.enableCompression === true) {
-                    try {
-                      zlib.createBrotliCompress();
-                    } catch (err) {
-                      brNotImplementedBun = true;
+                // Helper function to check if compression is allowed for the file
+                function canCompress(path, list) {
+                  var canCompress = true;
+                  for (var i = 0; i < list.length; i++) {
+                    if (createRegex(list[i], true).test(path)) {
+                      canCompress = false;
+                      break;
                     }
                   }
-                  if (configJSON.enableCompression === true && ext != "br" && filelen > 256 && isCompressable && !brNotImplementedBun && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
+                  return canCompress;
+                }
+
+                var useBrotli = (ext != "br" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/));
+                var useDeflate = (ext != "zip" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bdeflate\b/));
+                var useGzip = (ext != "gz" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bgzip\b/));
+
+                var isCompressable = true;
+                try {
+                  // Check for files not to compressed and compression enabling setting. Also check for browser quirks and adjust compression accordingly
+                  if((!useBrotli && !useDeflate && !useGzip) || configJSON.enableCompression !== true || !canCompress(href, dontCompress)) {
+                    isCompressable = false; // Compression is disabled
+                  } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml") {
+                    if (/^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                      isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
+                    } else if (/^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
+                      isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
+                    }
+                  } else {
+                    if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                      isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
+                    }
+                  }
+                } catch (err) {
+                  callServerError(500, err);
+                  return;
+                }
+
+                // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
+                if (process.isBun && useBrotli && isCompressable) {
+                  try {
+                    zlib.createBrotliCompress();
+                  } catch (err) {
+                    useBrotli = false;
+                  }
+                }
+
+                try {
+                  var hdhds = getCustomHeaders();
+                  if (useBrotli && isCompressable) {
                     hdhds["Content-Encoding"] = "br";
-                  } else if (configJSON.enableCompression === true && ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
+                  } else if (useDeflate && isCompressable) {
                     hdhds["Content-Encoding"] = "deflate";
-                  } else if (configJSON.enableCompression === true && ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
+                  } else if (useGzip && isCompressable) {
                     hdhds["Content-Encoding"] = "gzip";
                   } else {
                     if (ext == "html") {
@@ -3794,13 +3798,13 @@ if (!cluster.isPrimary) {
                     }).on("open", function () {
                       try {
                         var resStream = {};
-                        if (ext != "br" && filelen > 256 && isCompressable && !brNotImplementedBun && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/)) {
+                        if (useBrotli && isCompressable) {
                           resStream = zlib.createBrotliCompress();
                           resStream.pipe(res);
-                        } else if (ext != "zip" && filelen > 256 && isCompressable && acceptEncoding.match(/\bdeflate\b/)) {
+                        } else if (useDeflate && isCompressable) {
                           resStream = zlib.createDeflateRaw();
                           resStream.pipe(res);
-                        } else if (ext != "gz" && filelen > 256 && isCompressable && acceptEncoding.match(/\bgzip\b/)) {
+                        } else if (useGzip && isCompressable) {
                           resStream = zlib.createGzip();
                           resStream.pipe(res);
                         } else {
