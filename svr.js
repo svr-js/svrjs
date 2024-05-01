@@ -3850,200 +3850,256 @@ if (!cluster.isPrimary) {
                 customHeaders["Content-Type"] = "text/html; charset=utf-8";
                 res.writeHead(200, http.STATUS_CODES[200], customHeaders);
 
-                // Read custom header and footer content (if available)
-                var customDirListingHeader = fs.existsSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/")).toString() :
-                  (fs.existsSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                    fs.readFileSync(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/")).toString() :
-                    "";
-                var customDirListingFooter = fs.existsSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")) ?
-                  fs.readFileSync(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/")).toString() :
-                  (fs.existsSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")) && (os.platform != "win32" || href != "/")) ?
-                    fs.readFileSync(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/")).toString() :
-                    "";
+                var customDirListingHeader = "";
+                var customDirListingFooter = "";
 
-                // Check if custom header has HTML tag
-                var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
-
-                // Generate HTML head and footer based on configuration and custom content
-                var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
-                  (!headerHasHTMLTag ?
-                    "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
-                    customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
-                  head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
-                  (!headerHasHTMLTag ? customDirListingHeader : "") +
-                  "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
-
-                var htmlFoot = "</table><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p>" + customDirListingFooter + (!configJSON.enableDirectoryListingWithDefaultHead || foot == "" ? "</body></html>" : foot);
-
-                if (fs.existsSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/"))) {
-                  htmlFoot = "</table><hr/>" + fs.readFileSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/")) + htmlFoot;
-                }
-
-                fs.readdir("." + decodeURIComponent(href), function (err, list) {
-                  try {
-                    if (err) throw err;
-                    list = list.sort();
-
-                    // Function to get stats for all files in the directory
-                    function getStatsForAllFilesI(fileList, callback, prefix, pushArray, index) {
-                      if (fileList.length == 0) {
-                        callback(pushArray);
-                        return;
-                      }
-
-                      fs.stat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
-                        if (err) {
-                          fs.lstat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
-                            pushArray.push({
-                              name: fileList[index],
-                              stats: err ? null : stats,
-                              errored: true
-                            });
-                            if (index < fileList.length - 1) {
-                              getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
+                function getCustomDirListingHeader(callback) {
+                  fs.readFile(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/"), function (err, data) {
+                    if (err) {
+                      if (err.code == "ENOENT" || err.code == "EISDIR") {
+                        if (os.platform != "win32" || href != "/") {
+                          fs.readFile(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/"), function (err, data) {
+                            if (err) {
+                              if (err.code == "ENOENT" || err.code == "EISDIR") {
+                                callback();
+                              } else {
+                                callServerError(500, err);
+                              }
                             } else {
-                              callback(pushArray);
+                              customDirListingHeader = data.toString();
+                              callback();
                             }
                           });
                         } else {
-                          pushArray.push({
-                            name: fileList[index],
-                            stats: stats,
-                            errored: false
-                          });
-                          if (index < fileList.length - 1) {
-                            getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
-                          } else {
-                            callback(pushArray);
-                          }
+                          callback();
                         }
-                      });
-                    }
-
-                    // Wrapper function to get stats for all files
-                    function getStatsForAllFiles(fileList, prefix, callback) {
-                      if (!prefix) prefix = "";
-                      getStatsForAllFilesI(fileList, callback, prefix, [], 0);
-                    }
-
-                    // Get stats for all files in the directory and generate the listing
-                    getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
-                      var directoryListingRows = [];
-                      for (var i = 0; i < filelist.length; i++) {
-                        if (filelist[i].name[0] !== ".") {
-                          var estats = filelist[i].stats;
-                          var ename = filelist[i].name;
-                          var eext = ename.match(/\.([^.]+)$/);
-                          eext = eext ? eext[1] : "";
-                          var emime = eext ? mime.contentType(eext) : false;
-                          if (filelist[i].errored) {
-                            directoryListingRows.push(
-                              "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-                              (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
-                              "\">" +
-                              ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-                              "</a></td><td>-</td><td>" +
-                              (estats ? estats.mtime.toDateString() : "-") +
-                              "</td></tr>\r\n"
-                            );
-                          } else {
-                            var entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-                              (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
-                              (estats.isDirectory() ? "/" : "") +
-                              "\">" +
-                              ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-                              "</a></td><td>" +
-                              (estats.isDirectory() ? "-" : sizify(estats.size.toString())) +
-                              "</td><td>" +
-                              estats.mtime.toDateString() +
-                              "</td></tr>\r\n";
-
-                            // Determine the file type and set the appropriate image and alt text
-                            if (estats.isDirectory()) {
-                              entry = entry.replace("[img]", "/.dirimages/directory.png").replace("[alt]", "[DIR]");
-                            } else if (!estats.isFile()) {
-                              entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
-                                (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
-                                "\">" +
-                                ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
-                                "</a></td><td>-</td><td>" +
-                                estats.mtime.toDateString() +
-                                "</td></tr>\r\n";
-
-                              // Determine the special file types (block device, character device, etc.)
-                              if (estats.isBlockDevice()) {
-                                entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[BLK]");
-                              } else if (estats.isCharacterDevice()) {
-                                entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[CHR]");
-                              } else if (estats.isFIFO()) {
-                                entry = entry.replace("[img]", "/.dirimages/fifo.png").replace("[alt]", "[FIF]");
-                              } else if (estats.isSocket()) {
-                                entry = entry.replace("[img]", "/.dirimages/socket.png").replace("[alt]", "[SCK]");
-                              }
-                            } else if (ename.match(/README|LICEN[SC]E/i)) {
-                              entry = entry.replace("[img]", "/.dirimages/important.png").replace("[alt]", "[IMP]");
-                            } else if (eext.match(/^(?:[xs]?html?|xml)$/i)) {
-                              entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (eext == "xml" ? "[XML]" : "[HTM]"));
-                            } else if (eext == "js") {
-                              entry = entry.replace("[img]", "/.dirimages/javascript.png").replace("[alt]", "[JS ]");
-                            } else if (eext == "php") {
-                              entry = entry.replace("[img]", "/.dirimages/php.png").replace("[alt]", "[PHP]");
-                            } else if (eext == "css") {
-                              entry = entry.replace("[img]", "/.dirimages/css.png").replace("[alt]", "[CSS]");
-                            } else if (emime && emime.split("/")[0] == "image") {
-                              entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", (eext == "ico" ? "[ICO]" : "[IMG]"));
-                            } else if (emime && emime.split("/")[0] == "font") {
-                              entry = entry.replace("[img]", "/.dirimages/font.png").replace("[alt]", "[FON]");
-                            } else if (emime && emime.split("/")[0] == "audio") {
-                              entry = entry.replace("[img]", "/.dirimages/audio.png").replace("[alt]", "[AUD]");
-                            } else if ((emime && emime.split("/")[0] == "text") || eext == "json") {
-                              entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (eext == "json" ? "[JSO]" : "[TXT]"));
-                            } else if (emime && emime.split("/")[0] == "video") {
-                              entry = entry.replace("[img]", "/.dirimages/video.png").replace("[alt]", "[VID]");
-                            } else if (eext.match(/^(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/i)) {
-                              entry = entry.replace("[img]", "/.dirimages/archive.png").replace("[alt]", "[ARC]");
-                            } else if (eext.match(/^(?:[id]mg|iso|flp)$/i)) {
-                              entry = entry.replace("[img]", "/.dirimages/diskimage.png").replace("[alt]", "[DSK]");
-                            } else {
-                              entry = entry.replace("[img]", "/.dirimages/other.png").replace("[alt]", "[OTH]");
-                            }
-                            directoryListingRows.push(entry);
-                          }
-                        }
+                      } else {
+                        callServerError(500, err);
                       }
-
-                      // Push the information about empty directory
-                      if (directoryListingRows.length == 0) {
-                        directoryListingRows.push("<tr><td></td><td>No files found</td><td></td><td></td></tr>");
-                      }
-
-                      // Send the directory listing response
-                      res.end(htmlHead + directoryListingRows.join("") + htmlFoot);
-                      serverconsole.resmessage("Client successfully received content.");
-                    });
-
-                  } catch (err) {
-                    if (err.code == "ENOENT") {
-                      callServerError(404);
-                      serverconsole.errmessage("Resource not found.");
-                    } else if (err.code == "ENOTDIR") {
-                      callServerError(404); // Assume that file doesn't exist.
-                      serverconsole.errmessage("Resource not found.");
-                    } else if (err.code == "EACCES") {
-                      callServerError(403);
-                      serverconsole.errmessage("Access denied.");
-                    } else if (err.code == "ENAMETOOLONG") {
-                      callServerError(414);
-                    } else if (err.code == "EMFILE") {
-                      callServerError(503);
-                    } else if (err.code == "ELOOP") {
-                      callServerError(508); // The symbolic link loop is detected during file system operations.
-                      serverconsole.errmessage("Symbolic link loop detected.");
                     } else {
-                      callServerError(500, err);
+                      customDirListingHeader = data.toString();
+                      callback();
                     }
-                  }
+                  });
+                }
+
+                function getCustomDirListingFooter(callback) {
+                  fs.readFile(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/"), function (err, data) {
+                    if (err) {
+                      if (err.code == "ENOENT" || err.code == "EISDIR") {
+                        if (os.platform != "win32" || href != "/") {
+                          fs.readFile(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/"), function (err, data) {
+                            if (err) {
+                              if (err.code == "ENOENT" || err.code == "EISDIR") {
+                                callback();
+                              } else {
+                                callServerError(500, err);
+                              }
+                            } else {
+                              customDirListingFooter = data.toString();
+                              callback();
+                            }
+                          });
+                        } else {
+                          callback();
+                        }
+                      } else {
+                        callServerError(500, err);
+                      }
+                    } else {
+                      customDirListingFooter = data.toString();
+                      callback();
+                    }
+                  });
+                }
+
+                // Read custom header and footer content (if available)
+                getCustomDirListingHeader(function () {
+                  getCustomDirListingFooter(function () {
+                    // Check if custom header has HTML tag
+                    var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
+
+                    // Generate HTML head and footer based on configuration and custom content
+                    var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
+                      (!headerHasHTMLTag ?
+                        "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
+                        customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
+                      head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+                      (!headerHasHTMLTag ? customDirListingHeader : "") +
+                      "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
+
+                    var htmlFoot = "</table><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p>" + customDirListingFooter + (!configJSON.enableDirectoryListingWithDefaultHead || foot == "" ? "</body></html>" : foot);
+
+                    if (fs.existsSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/"))) {
+                      htmlFoot = "</table><hr/>" + fs.readFileSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/")) + htmlFoot;
+                    }
+
+                    fs.readdir("." + decodeURIComponent(href), function (err, list) {
+                      try {
+                        if (err) throw err;
+                        list = list.sort();
+
+                        // Function to get stats for all files in the directory
+                        function getStatsForAllFilesI(fileList, callback, prefix, pushArray, index) {
+                          if (fileList.length == 0) {
+                            callback(pushArray);
+                            return;
+                          }
+
+                          fs.stat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
+                            if (err) {
+                              fs.lstat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
+                                pushArray.push({
+                                  name: fileList[index],
+                                  stats: err ? null : stats,
+                                  errored: true
+                                });
+                                if (index < fileList.length - 1) {
+                                  getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
+                                } else {
+                                  callback(pushArray);
+                                }
+                              });
+                            } else {
+                              pushArray.push({
+                                name: fileList[index],
+                                stats: stats,
+                                errored: false
+                              });
+                              if (index < fileList.length - 1) {
+                                getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
+                              } else {
+                                callback(pushArray);
+                              }
+                            }
+                          });
+                        }
+
+                        // Wrapper function to get stats for all files
+                        function getStatsForAllFiles(fileList, prefix, callback) {
+                          if (!prefix) prefix = "";
+                          getStatsForAllFilesI(fileList, callback, prefix, [], 0);
+                        }
+
+                        // Get stats for all files in the directory and generate the listing
+                        getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
+                          var directoryListingRows = [];
+                          for (var i = 0; i < filelist.length; i++) {
+                            if (filelist[i].name[0] !== ".") {
+                              var estats = filelist[i].stats;
+                              var ename = filelist[i].name;
+                              var eext = ename.match(/\.([^.]+)$/);
+                              eext = eext ? eext[1] : "";
+                              var emime = eext ? mime.contentType(eext) : false;
+                              if (filelist[i].errored) {
+                                directoryListingRows.push(
+                                  "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
+                                  (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
+                                  "\">" +
+                                  ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                                  "</a></td><td>-</td><td>" +
+                                  (estats ? estats.mtime.toDateString() : "-") +
+                                  "</td></tr>\r\n"
+                                );
+                              } else {
+                                var entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
+                                  (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
+                                  (estats.isDirectory() ? "/" : "") +
+                                  "\">" +
+                                  ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                                  "</a></td><td>" +
+                                  (estats.isDirectory() ? "-" : sizify(estats.size.toString())) +
+                                  "</td><td>" +
+                                  estats.mtime.toDateString() +
+                                  "</td></tr>\r\n";
+
+                                // Determine the file type and set the appropriate image and alt text
+                                if (estats.isDirectory()) {
+                                  entry = entry.replace("[img]", "/.dirimages/directory.png").replace("[alt]", "[DIR]");
+                                } else if (!estats.isFile()) {
+                                  entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
+                                    (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
+                                    "\">" +
+                                    ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+                                    "</a></td><td>-</td><td>" +
+                                    estats.mtime.toDateString() +
+                                    "</td></tr>\r\n";
+
+                                  // Determine the special file types (block device, character device, etc.)
+                                  if (estats.isBlockDevice()) {
+                                    entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[BLK]");
+                                  } else if (estats.isCharacterDevice()) {
+                                    entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[CHR]");
+                                  } else if (estats.isFIFO()) {
+                                    entry = entry.replace("[img]", "/.dirimages/fifo.png").replace("[alt]", "[FIF]");
+                                  } else if (estats.isSocket()) {
+                                    entry = entry.replace("[img]", "/.dirimages/socket.png").replace("[alt]", "[SCK]");
+                                  }
+                                } else if (ename.match(/README|LICEN[SC]E/i)) {
+                                  entry = entry.replace("[img]", "/.dirimages/important.png").replace("[alt]", "[IMP]");
+                                } else if (eext.match(/^(?:[xs]?html?|xml)$/i)) {
+                                  entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (eext == "xml" ? "[XML]" : "[HTM]"));
+                                } else if (eext == "js") {
+                                  entry = entry.replace("[img]", "/.dirimages/javascript.png").replace("[alt]", "[JS ]");
+                                } else if (eext == "php") {
+                                  entry = entry.replace("[img]", "/.dirimages/php.png").replace("[alt]", "[PHP]");
+                                } else if (eext == "css") {
+                                  entry = entry.replace("[img]", "/.dirimages/css.png").replace("[alt]", "[CSS]");
+                                } else if (emime && emime.split("/")[0] == "image") {
+                                  entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", (eext == "ico" ? "[ICO]" : "[IMG]"));
+                                } else if (emime && emime.split("/")[0] == "font") {
+                                  entry = entry.replace("[img]", "/.dirimages/font.png").replace("[alt]", "[FON]");
+                                } else if (emime && emime.split("/")[0] == "audio") {
+                                  entry = entry.replace("[img]", "/.dirimages/audio.png").replace("[alt]", "[AUD]");
+                                } else if ((emime && emime.split("/")[0] == "text") || eext == "json") {
+                                  entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (eext == "json" ? "[JSO]" : "[TXT]"));
+                                } else if (emime && emime.split("/")[0] == "video") {
+                                  entry = entry.replace("[img]", "/.dirimages/video.png").replace("[alt]", "[VID]");
+                                } else if (eext.match(/^(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/i)) {
+                                  entry = entry.replace("[img]", "/.dirimages/archive.png").replace("[alt]", "[ARC]");
+                                } else if (eext.match(/^(?:[id]mg|iso|flp)$/i)) {
+                                  entry = entry.replace("[img]", "/.dirimages/diskimage.png").replace("[alt]", "[DSK]");
+                                } else {
+                                  entry = entry.replace("[img]", "/.dirimages/other.png").replace("[alt]", "[OTH]");
+                                }
+                                directoryListingRows.push(entry);
+                              }
+                            }
+                          }
+
+                          // Push the information about empty directory
+                          if (directoryListingRows.length == 0) {
+                            directoryListingRows.push("<tr><td></td><td>No files found</td><td></td><td></td></tr>");
+                          }
+
+                          // Send the directory listing response
+                          res.end(htmlHead + directoryListingRows.join("") + htmlFoot);
+                          serverconsole.resmessage("Client successfully received content.");
+                        });
+
+                      } catch (err) {
+                        if (err.code == "ENOENT") {
+                          callServerError(404);
+                          serverconsole.errmessage("Resource not found.");
+                        } else if (err.code == "ENOTDIR") {
+                          callServerError(404); // Assume that file doesn't exist.
+                          serverconsole.errmessage("Resource not found.");
+                        } else if (err.code == "EACCES") {
+                          callServerError(403);
+                          serverconsole.errmessage("Access denied.");
+                        } else if (err.code == "ENAMETOOLONG") {
+                          callServerError(414);
+                        } else if (err.code == "EMFILE") {
+                          callServerError(503);
+                        } else if (err.code == "ELOOP") {
+                          callServerError(508); // The symbolic link loop is detected during file system operations.
+                          serverconsole.errmessage("Symbolic link loop detected.");
+                        } else {
+                          callServerError(500, err);
+                        }
+                      }
+                    });
+                  });
                 });
               } else {
                 // Directory listing is disabled, call 403 Forbidden error
