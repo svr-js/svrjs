@@ -3241,11 +3241,12 @@ if (!cluster.isPrimary) {
     }
 
     try {
-      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+      //head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      //foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
     } catch (err) {
       callServerError(500, err);
     }
+
 
     // Function to perform HTTP redirection to a specified destination URL
     function redirect(destination, isTemporary, keepMethod, customHeaders) {
@@ -3382,8 +3383,9 @@ if (!cluster.isPrimary) {
     var uobject = parseURL(req.url);
     var search = uobject.search;
     var href = uobject.pathname;
-    var ext = path.extname(href).toLowerCase();
-    ext = ext.substring(1, ext.length + 1);
+    var ext = href.match(/[^\/]\.([^.]+)$/);
+    if(!ext) ext = "";
+    else ext = ext[1].toLowerCase();
     var decodedHref = "";
     try {
       decodedHref = decodeURIComponent(href);
@@ -3393,6 +3395,7 @@ if (!cluster.isPrimary) {
       serverconsole.errmessage("Bad request!");
       return;
     }
+
 
     if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
       // Expectations not met.
@@ -3515,15 +3518,15 @@ if (!cluster.isPrimary) {
           return;
         }
 
-        var pth = decodeURIComponent(href).replace(/\/+/g, "/").substring(1);
-        var readFrom = "./" + pth;
+        var dHref = decodeURIComponent(href);
+        var readFrom = "." + dHref;
         var dirImagesMissing = false;
         fs.stat(readFrom, function (err, stats) {
           if (err) {
             if (err.code == "ENOENT") {
-              if (__dirname != process.cwd() && pth.match(/^\.dirimages\/(?:(?!\.png$).)+\.png$/)) {
+              if (__dirname != process.cwd() && dHref.match(/^\/\.dirimages\/(?:(?!\.png$).)+\.png$/)) {
                 dirImagesMissing = true;
-                readFrom = __dirname + "/" + pth;
+                readFrom = __dirname + dHref;
               } else {
                 callServerError(404);
                 serverconsole.errmessage("Resource not found.");
@@ -3564,25 +3567,22 @@ if (!cluster.isPrimary) {
                         properDirectoryListingAndStaticFileServe();
                       } else {
                         stats = s;
-                        pth = (pth + "/index.xhtml").replace(/\/+/g, "/");
                         ext = "xhtml";
-                        readFrom = "./" + pth;
+                        readFrom = (readFrom + "/index.xhtml").replace(/\/+/g, "/");
                         properDirectoryListingAndStaticFileServe();
                       }
                     });
                   } else {
                     stats = s;
-                    pth = (pth + "/index.htm").replace(/\/+/g, "/");
                     ext = "htm";
-                    readFrom = "./" + pth;
+                    readFrom = (readFrom + "/index.htm").replace(/\/+/g, "/");
                     properDirectoryListingAndStaticFileServe();
                   }
                 });
               } else {
                 stats = s;
-                pth = (pth + "/index.html").replace(/\/+/g, "/");
                 ext = "html";
-                readFrom = "./" + pth;
+                readFrom = (readFrom + "/index.html").replace(/\/+/g, "/");
                 properDirectoryListingAndStaticFileServe();
               }
             });
@@ -3854,11 +3854,11 @@ if (!cluster.isPrimary) {
                 var customDirListingFooter = "";
 
                 function getCustomDirListingHeader(callback) {
-                  fs.readFile(("." + decodeURIComponent(href) + "/.dirhead").replace(/\/+/g, "/"), function (err, data) {
+                  fs.readFile(("." + dHref + "/.dirhead").replace(/\/+/g, "/"), function (err, data) {
                     if (err) {
                       if (err.code == "ENOENT" || err.code == "EISDIR") {
                         if (os.platform != "win32" || href != "/") {
-                          fs.readFile(("." + decodeURIComponent(href) + "/HEAD.html").replace(/\/+/g, "/"), function (err, data) {
+                          fs.readFile(("." + dHref + "/HEAD.html").replace(/\/+/g, "/"), function (err, data) {
                             if (err) {
                               if (err.code == "ENOENT" || err.code == "EISDIR") {
                                 callback();
@@ -3884,11 +3884,11 @@ if (!cluster.isPrimary) {
                 }
 
                 function getCustomDirListingFooter(callback) {
-                  fs.readFile(("." + decodeURIComponent(href) + "/.dirfoot").replace(/\/+/g, "/"), function (err, data) {
+                  fs.readFile(("." + dHref + "/.dirfoot").replace(/\/+/g, "/"), function (err, data) {
                     if (err) {
                       if (err.code == "ENOENT" || err.code == "EISDIR") {
                         if (os.platform != "win32" || href != "/") {
-                          fs.readFile(("." + decodeURIComponent(href) + "/FOOT.html").replace(/\/+/g, "/"), function (err, data) {
+                          fs.readFile(("." + dHref + "/FOOT.html").replace(/\/+/g, "/"), function (err, data) {
                             if (err) {
                               if (err.code == "ENOENT" || err.code == "EISDIR") {
                                 callback();
@@ -3934,7 +3934,7 @@ if (!cluster.isPrimary) {
                       htmlFoot = "</table><hr/>" + fs.readFileSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/")) + htmlFoot;
                     }
 
-                    fs.readdir("." + decodeURIComponent(href), function (err, list) {
+                    fs.readdir(readFrom, function (err, list) {
                       try {
                         if (err) throw err;
                         list = list.sort();
@@ -3982,7 +3982,7 @@ if (!cluster.isPrimary) {
                         }
 
                         // Get stats for all files in the directory and generate the listing
-                        getStatsForAllFiles(list, "." + decodeURIComponent(href), function (filelist) {
+                        getStatsForAllFiles(list, readFrom, function (filelist) {
                           var directoryListingRows = [];
                           for (var i = 0; i < filelist.length; i++) {
                             if (filelist[i].name[0] !== ".") {
@@ -4177,8 +4177,9 @@ if (!cluster.isPrimary) {
           uobject = parseURL(req.url);
           search = uobject.search;
           href = uobject.pathname;
-          ext = path.extname(href).toLowerCase();
-          ext = ext.substring(1, ext.length + 1);
+          ext = href.match(/[^\/]\.([^.]+)$/);
+          if(!ext) ext = "";
+          else ext = ext[1].toLowerCase();
           try {
             decodedHref = decodeURIComponent(href);
           } catch (err) {
@@ -4355,8 +4356,9 @@ if (!cluster.isPrimary) {
           uobject = parseURL(req.url);
           search = uobject.search;
           href = uobject.pathname;
-          ext = path.extname(href).toLowerCase();
-          ext = ext.substring(1, ext.length + 1);
+          ext = href.match(/[^\/]\.([^.]+)$/);
+          if(!ext) ext = "";
+          else ext = ext[1].toLowerCase();
 
           try {
             decodedHref = decodeURIComponent(href);
@@ -4390,8 +4392,9 @@ if (!cluster.isPrimary) {
             uobject = parseURL(req.url);
             search = uobject.search;
             href = uobject.pathname;
-            ext = path.extname(href).toLowerCase();
-            ext = ext.substring(1, ext.length + 1);
+            ext = href.match(/[^\/]\.([^.]+)$/);
+            if(!ext) ext = "";
+            else ext = ext[1].toLowerCase();
             try {
               decodedHref = decodeURIComponent(href);
             } catch (err) {
@@ -4416,9 +4419,9 @@ if (!cluster.isPrimary) {
           uobject = parseURL(req.url);
           search = uobject.search;
           href = uobject.pathname;
-          ext = path.extname(href).toLowerCase();
-          ext = ext.substring(1, ext.length + 1);
-
+          ext = href.match(/[^\/]\.([^.]+)$/);
+          if(!ext) ext = "";
+          else ext = ext[1].toLowerCase();
           try {
             decodedHref = decodeURIComponent(href);
           } catch (err) {
@@ -4451,8 +4454,9 @@ if (!cluster.isPrimary) {
             uobject = parseURL(req.url);
             search = uobject.search;
             href = uobject.pathname;
-            ext = path.extname(href).toLowerCase();
-            ext = ext.substring(1, ext.length + 1);
+            ext = href.match(/[^\/]\.([^.]+)$/);
+            if(!ext) ext = "";
+            else ext = ext[1].toLowerCase();
             try {
               decodedHref = decodeURIComponent(href);
             } catch (err) {
