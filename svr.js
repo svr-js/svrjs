@@ -2790,13 +2790,14 @@ if (!cluster.isPrimary) {
       modFunction();
     }
 
+    modExecute(mods, vres(req, socket, head, serverconsole));
+
     function vres(req, socket, head, serverconsole) {
       return function () {
         serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
         if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
       };
     }
-    modExecute(mods, vres(req, socket, head, serverconsole));
   }
 
   function reqhandler(req, res, fromMain) {
@@ -3077,6 +3078,749 @@ if (!cluster.isPrimary) {
     var head = "";
     var foot = "";
 
+    try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    } catch (err) {
+      callServerError(500, err);
+    }
+
+    // Authenticated user variable
+    var authUser = null;
+
+    // URL-related objects.
+    var uobject = parseURL(req.url);
+    var search = uobject.search;
+    var href = uobject.pathname;
+    var ext = href.match(/[^\/]\.([^.]+)$/);
+    if(!ext) ext = "";
+    else ext = ext[1].toLowerCase();
+    var decodedHref = "";
+    try {
+      decodedHref = decodeURIComponent(href);
+    } catch (err) {
+      // Return an 400 error
+      callServerError(400);
+      serverconsole.errmessage("Bad request!");
+      return;
+    }
+
+
+    if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
+      // Expectations not met.
+      callServerError(417);
+      return;
+    }
+
+    // Mod execution function
+    function modExecute(mods, ffinals) {
+      // Prepare modFunction
+      var modFunction = ffinals;
+      var useMods = mods.slice();
+
+      if (isProxy) {
+        // Get list of forward proxy mods
+        useMods = [];
+        mods.forEach(function (mod) {
+          if (mod.proxyCallback !== undefined) useMods.push(mod);
+        });
+      }
+
+      useMods.reverse().forEach(function (modO) {
+        modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser);
+      });
+
+      // Execute modFunction
+      modFunction();
+    }
+
+    var vresCalled = false;
+
+    try {
+      // Scan the block list
+      if (blocklist.check(reqip)) {
+        // Invoke 403 Forbidden error
+        callServerError(403);
+        serverconsole.errmessage("Client is in the block list.");
+        return;
+      }
+
+      if (req.url == "*") {
+        // Handle "*" URL
+        if (req.method == "OPTIONS") {
+          // Respond with list of methods
+          var hdss = getCustomHeaders();
+          hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
+          res.writeHead(204, http.STATUS_CODES[204], hdss);
+          res.end();
+          return;
+        } else {
+          // SVR.JS doesn't understand that request, so throw an 400 error
+          callServerError(400);
+          return;
+        }
+      }
+
+      if (req.method == "CONNECT") {
+        // CONNECT requests should be handled in "connect" event.
+        callServerError(501);
+        serverconsole.errmessage("CONNECT requests aren't supported. Your JS runtime probably doesn't support 'connect' handler for HTTP library.");
+        return;
+      }
+
+      // Check for invalid X-Forwarded-For header
+      if (!isForwardedValid) {
+        serverconsole.errmessage("X-Forwarded-For header is invalid.");
+        callServerError(400);
+        return;
+      }
+
+      // Sanitize URL
+      var sanitizedHref = sanitizeURL(href, allowDoubleSlashes);
+      var preparedReqUrl = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+
+      // Check if URL is "dirty"
+      if (href != sanitizedHref && !isProxy) {
+        var sanitizedURL = uobject;
+        sanitizedURL.path = null;
+        sanitizedURL.href = null;
+        sanitizedURL.pathname = sanitizedHref;
+        sanitizedURL.hostname = null;
+        sanitizedURL.host = null;
+        sanitizedURL.port = null;
+        sanitizedURL.protocol = null;
+        sanitizedURL.slashes = null;
+        sanitizedURL = url.format(sanitizedURL);
+        serverconsole.resmessage("URL sanitized: " + req.url + " => " + sanitizedURL);
+        if (rewriteDirtyURLs) {
+          req.url = sanitizedURL;
+          uobject = parseURL(req.url);
+          search = uobject.search;
+          href = uobject.pathname;
+          ext = href.match(/[^\/]\.([^.]+)$/);
+          if(!ext) ext = "";
+          else ext = ext[1].toLowerCase();
+          try {
+            decodedHref = decodeURIComponent(href);
+          } catch (err) {
+            // Return 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
+        } else {
+          redirect(sanitizedURL, false);
+          return;
+        }
+      } else if (req.url != preparedReqUrl && !isProxy) {
+        serverconsole.resmessage("URL sanitized: " + req.url + " => " + preparedReqUrl);
+        if (rewriteDirtyURLs) {
+          req.url = preparedReqUrl;
+        } else {
+          redirect(preparedReqUrl, false);
+          return;
+        }
+      }
+
+      // Handle redirects to HTTPS
+      if (secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
+        var hostx = req.headers.host;
+        if (hostx === undefined) {
+          serverconsole.errmessage("Host header is missing.");
+          callServerError(400);
+          return;
+        }
+
+        if (isProxy) {
+          callServerError(501);
+          serverconsole.errmessage("This server will never be a proxy.");
+          return;
+        }
+
+        var isPublicServer = !(req.socket.realRemoteAddress ? req.socket.realRemoteAddress : req.socket.remoteAddress).match(/^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i);
+
+        var destinationPort = 0;
+
+        var parsedHostx = hostx.match(/(\[[^\]]*\]|[^:]*)(?::([0-9]+))?/);
+        var hostname = parsedHostx[1];
+        var hostPort = parsedHostx[2] ? parseInt(parsedHostx[2]) : 80;
+        if (isNaN(hostPort)) hostPort = 80;
+
+        if (hostPort == port || (port == pubport && !isPublicServer)) {
+          destinationPort = sport;
+        } else {
+          destinationPort = spubport;
+        }
+
+        redirect("https://" + hostname + (destinationPort == 443 ? "" : (":" + destinationPort)) + req.url);
+        return;
+      }
+
+      // Handle redirects to addresses with "www." prefix
+      if (wwwredirect) {
+        var hostname = req.headers.host.split(":");
+        var hostport = null;
+        if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
+        hostname = hostname.join(":");
+        if (hostname == domain && hostname.indexOf("www.") != 0) {
+          redirect((req.socket.encrypted ? "https" : "http") + "://www." + hostname + (hostport ? ":" + hostport : "") + req.url.replace(/\/+/g, "/"));
+          return;
+        }
+      }
+
+      // Handle URL rewriting
+      function rewriteURL(address, map, callback, _fileState, _mapBegIndex) {
+        var rewrittenURL = address;
+        var doCallback = true;
+        if (!isProxy) {
+          for (var i = (_mapBegIndex ? _mapBegIndex : 0); i < map.length; i++) {
+            var mapEntry = map[i];
+            if (href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
+              fs.stat("." + decodeURIComponent(href), function (err, stats) {
+                var _fileState = 3;
+                if (err) {
+                  _fileState = 3;
+                } else if (stats.isDirectory()) {
+                  _fileState = 2;
+                } else if (stats.isFile()) {
+                  _fileState = 1;
+                } else {
+                  _fileState = 3;
+                }
+                rewriteURL(address, map, callback, _fileState, i);
+              });
+              doCallback = false;
+              break;
+            }
+            var tempRewrittenURL = rewrittenURL;
+            if (!mapEntry.allowDoubleSlashes) {
+              address = address.replace(/\/+/g,"/");
+              tempRewrittenURL = address;
+            }
+            if (matchHostname(mapEntry.host) && ipMatch(mapEntry.ip, req.socket ? req.socket.localAddress : undefined) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
+              rewrittenURL = tempRewrittenURL;
+              try {
+                mapEntry.replacements.forEach(function (replacement) {
+                  rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
+                });
+                if (mapEntry.append) rewrittenURL += mapEntry.append;
+              } catch (err) {
+                doCallback = false;
+                callback(err, null);
+              }
+              break;
+            }
+          }
+        }
+        if (doCallback) callback(null, rewrittenURL);
+      }
+
+      // Trailing slash redirection
+      function redirectTrailingSlashes(callback) {
+        if (!isProxy && !disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
+          fs.stat("." + decodeURIComponent(href), function (err, stats) {
+            if (err || !stats.isDirectory()) {
+              try {
+                callback();
+              } catch (err) {
+                callServerError(500, err);
+              }
+            } else {
+              var destinationURL = uobject;
+              destinationURL.path = null;
+              destinationURL.href = null;
+              destinationURL.pathname = origHref + "/";
+              destinationURL.hostname = null;
+              destinationURL.host = null;
+              destinationURL.port = null;
+              destinationURL.protocol = null;
+              destinationURL.slashes = null;
+              destinationURL = url.format(destinationURL);
+              redirect(destinationURL);
+            }
+          });
+        } else {
+          callback();
+        }
+      }
+
+      var origHref = href;
+
+      // Add web root postfixes
+      if (!isProxy) {
+        var preparedReqUrl3 = (allowPostfixDoubleSlashes ? (href.replace(/\/+/,"/") + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "")) : req.url);
+        var urlWithPostfix = preparedReqUrl3;
+        var postfixPrefix = "";
+        wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
+          if (preparedReqUrl3.indexOf(currentPostfixPrefix) == 0) {
+            if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/, "");
+            else if (urlWithPostfix.length == currentPostfixPrefix.length || urlWithPostfix[currentPostfixPrefix.length] == "?" || urlWithPostfix[currentPostfixPrefix.length] == "/" || urlWithPostfix[currentPostfixPrefix.length] == "#") postfixPrefix = currentPostfixPrefix;
+            else return true;
+            urlWithPostfix = urlWithPostfix.substring(postfixPrefix.length);
+            return false;
+          } else {
+            return true;
+          }
+        });
+        wwwrootPostfixesVHost.every(function (postfixEntry) {
+          if (matchHostname(postfixEntry.host) && ipMatch(postfixEntry.ip, req.socket ? req.socket.localAddress : undefined) && !(postfixEntry.skipRegex && preparedReqUrl3.match(createRegex(postfixEntry.skipRegex)))) {
+            urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + urlWithPostfix;
+            return false;
+          } else {
+            return true;
+          }
+        });
+        if (urlWithPostfix != preparedReqUrl3) {
+          serverconsole.resmessage("Added web root postfix: " + req.url + " => " + urlWithPostfix);
+          req.url = urlWithPostfix;
+          uobject = parseURL(req.url);
+          search = uobject.search;
+          href = uobject.pathname;
+          ext = href.match(/[^\/]\.([^.]+)$/);
+          if(!ext) ext = "";
+          else ext = ext[1].toLowerCase();
+
+          try {
+            decodedHref = decodeURIComponent(href);
+          } catch (err) {
+            // Return 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
+
+          var sHref = sanitizeURL(href, allowDoubleSlashes);
+          var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+
+          if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
+            callServerError(403);
+            serverconsole.errmessage("Content blocked.");
+            return;
+          } else if (sHref != href) {
+            var rewrittenAgainURL = uobject;
+            rewrittenAgainURL.path = null;
+            rewrittenAgainURL.href = null;
+            rewrittenAgainURL.pathname = sHref;
+            rewrittenAgainURL.hostname = null;
+            rewrittenAgainURL.host = null;
+            rewrittenAgainURL.port = null;
+            rewrittenAgainURL.protocol = null;
+            rewrittenAgainURL.slashes = null;
+            rewrittenAgainURL = url.format(rewrittenAgainURL);
+            serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
+            req.url = rewrittenAgainURL;
+            uobject = parseURL(req.url);
+            search = uobject.search;
+            href = uobject.pathname;
+            ext = href.match(/[^\/]\.([^.]+)$/);
+            if(!ext) ext = "";
+            else ext = ext[1].toLowerCase();
+            try {
+              decodedHref = decodeURIComponent(href);
+            } catch (err) {
+              // Return 400 error
+              callServerError(400);
+              serverconsole.errmessage("Bad request!");
+              return;
+            }
+          }
+        }
+      }
+
+      // Rewrite URLs
+      rewriteURL(req.url, rewriteMap, function (err, rewrittenURL) {
+        if (err) {
+          callServerError(500, err);
+          return;
+        }
+        if (rewrittenURL != req.url) {
+          serverconsole.resmessage("URL rewritten: " + req.url + " => " + rewrittenURL);
+          req.url = rewrittenURL;
+          uobject = parseURL(req.url);
+          search = uobject.search;
+          href = uobject.pathname;
+          ext = href.match(/[^\/]\.([^.]+)$/);
+          if(!ext) ext = "";
+          else ext = ext[1].toLowerCase();
+          try {
+            decodedHref = decodeURIComponent(href);
+          } catch (err) {
+            // Return 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
+
+          var sHref = sanitizeURL(href, allowDoubleSlashes);
+          var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
+
+          if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
+            callServerError(403);
+            serverconsole.errmessage("Content blocked.");
+            return;
+          } else if (sHref != href) {
+            var rewrittenAgainURL = uobject;
+            rewrittenAgainURL.path = null;
+            rewrittenAgainURL.href = null;
+            rewrittenAgainURL.pathname = sHref;
+            rewrittenAgainURL.hostname = null;
+            rewrittenAgainURL.host = null;
+            rewrittenAgainURL.port = null;
+            rewrittenAgainURL.protocol = null;
+            rewrittenAgainURL.slashes = null;
+            rewrittenAgainURL = url.format(rewrittenAgainURL);
+            serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
+            req.url = rewrittenAgainURL;
+            uobject = parseURL(req.url);
+            search = uobject.search;
+            href = uobject.pathname;
+            ext = href.match(/[^\/]\.([^.]+)$/);
+            if(!ext) ext = "";
+            else ext = ext[1].toLowerCase();
+            try {
+              decodedHref = decodeURIComponent(href);
+            } catch (err) {
+              // Return 400 error
+              callServerError(400);
+              serverconsole.errmessage("Bad request!");
+              return;
+            }
+          }
+        }
+        // Set response headers
+        if (!isProxy) {
+          var hkh = getCustomHeaders();
+          Object.keys(hkh).forEach(function (hkS) {
+            try {
+              res.setHeader(hkS, hkh[hkS]);
+            } catch (err) {
+              // Headers will not be set.
+            }
+          });
+        }
+
+        // Prepare the path (remove multiple slashes)
+        var decodedHrefWithoutDuplicateSlashes = decodedHref.replace(/\/+/g,"/");
+
+        // Check if path is forbidden
+        if ((isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "config") || isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "certificates")) && !isProxy) {
+          callServerError(403);
+          serverconsole.errmessage("Access to configuration file/certificates is denied.");
+          return;
+        } else if (isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "temp") && !isProxy) {
+          callServerError(403);
+          serverconsole.errmessage("Access to temporary folder is denied.");
+          return;
+        } else if (isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
+          callServerError(403);
+          serverconsole.errmessage("Access to log files is denied.");
+          return;
+        } else if (isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") && !isProxy && !exposeServerVersion) {
+          callServerError(403);
+          serverconsole.errmessage("Access to SVR.JS script is denied.");
+          return;
+        } else if ((isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") || isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "serverSideScripts") || isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
+          callServerError(403);
+          serverconsole.errmessage("Access to sources is denied.");
+          return;
+        } else {
+          var nonscodeIndex = -1;
+          var authIndex = -1;
+          var regexI = [];
+
+          // Scan for non-standard codes
+          if (!isProxy && nonStandardCodes != undefined) {
+            for (var i = 0; i < nonStandardCodes.length; i++) {
+              if (matchHostname(nonStandardCodes[i].host) && ipMatch(nonStandardCodes[i].ip, req.socket ? req.socket.localAddress : undefined)) {
+                var isMatch = false;
+                var hrefWithoutDuplicateSlashes = href.replace(/\/+/g,"/");
+                if (nonStandardCodes[i].regex) {
+                  // Regex match
+                  var createdRegex = createRegex(nonStandardCodes[i].regex, true);
+                  isMatch = req.url.match(createdRegex) || hrefWithoutDuplicateSlashes.match(createdRegex);
+                  regexI[i] = createdRegex;
+                } else {
+                  // Non-regex match
+                  isMatch = nonStandardCodes[i].url == hrefWithoutDuplicateSlashes || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == hrefWithoutDuplicateSlashes.toLowerCase());
+                }
+                if (isMatch) {
+                  if (nonStandardCodes[i].scode == 401) {
+                    // HTTP authentication
+                    if (authIndex == -1) {
+                      authIndex = i;
+                    }
+                  } else {
+                    if (nonscodeIndex == -1) {
+                      if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
+                        if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
+                      } else {
+                        nonscodeIndex = i;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          // Handle non-standard codes
+          if (nonscodeIndex > -1) {
+            var nonscode = nonStandardCodes[nonscodeIndex];
+            if (nonscode.scode == 301 || nonscode.scode == 302 || nonscode.scode == 307 || nonscode.scode == 308) {
+              var location = "";
+              if (regexI[nonscodeIndex]) {
+                location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
+                if(location == req.url) {
+                  // Fallback replacement
+                  location = hrefWithoutDuplicateSlashes.replace(regexI[nonscodeIndex], nonscode.location);
+                }
+              } else if (req.url.split("?")[1] == undefined || req.url.split("?")[1] == null || req.url.split("?")[1] == "" || req.url.split("?")[1] == " ") {
+                location = nonscode.location;
+              } else {
+                location = nonscode.location + "?" + req.url.split("?")[1];
+              }
+              redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonscode.scode == 308);
+              return;
+            } else {
+              callServerError(nonscode.scode);
+              if (nonscode.scode == 403) {
+                serverconsole.errmessage("Content blocked.");
+              } else if (nonscode.scode == 410) {
+                serverconsole.errmessage("Content is gone.");
+              } else if (nonscode.scode == 418) {
+                serverconsole.errmessage("SVR.JS is always a teapot ;)");
+              } else {
+                serverconsole.errmessage("Client fails receiving content.");
+              }
+              return;
+            }
+          }
+
+          // Handle HTTP authentication
+          if (authIndex > -1) {
+            var authcode = nonStandardCodes[authIndex];
+
+            // Function to check if passwords match
+            function checkIfPasswordMatches(list, password, callback, _i) {
+              if (!_i) _i = 0;
+              var cb = function (hash) {
+                if (hash == list[_i].pass) {
+                  callback(true);
+                } else if (_i >= list.length - 1) {
+                  callback(false);
+                } else {
+                  checkIfPasswordMatches(list, password, callback, _i + 1);
+                }
+              };
+              var hashedPassword = sha256(password + list[_i].salt);
+              var cacheEntry = null;
+              if (list[_i].scrypt) {
+                if (!crypto.scrypt) {
+                  callServerError(500, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
+                  return;
+                } else {
+                  cacheEntry = scryptCache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if (cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
+                      if (err) {
+                        callServerError(500, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        scryptCache.push({
+                          hash: key,
+                          password: hashedPassword,
+                          salt: list[_i].salt,
+                          addDate: new Date()
+                        });
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else if (list[_i].pbkdf2) {
+                if (crypto.__disabled__ !== undefined) {
+                  callServerError(500, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
+                  return;
+                } else {
+                  cacheEntry = pbkdf2Cache.find(function (entry) {
+                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
+                  });
+                  if (cacheEntry) {
+                    cb(cacheEntry.hash);
+                  } else {
+                    crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
+                      if (err) {
+                        callServerError(500, err);
+                      } else {
+                        var key = derivedKey.toString("hex");
+                        pbkdf2Cache.push({
+                          hash: key,
+                          password: hashedPassword,
+                          salt: list[_i].salt,
+                          addDate: new Date()
+                        });
+                        cb(key);
+                      }
+                    });
+                  }
+                }
+              } else {
+                cb(hashedPassword);
+              }
+            }
+
+            function authorizedCallback(bruteProtection) {
+              try {
+                var ha = getCustomHeaders();
+                ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
+                var credentials = req.headers["authorization"];
+                if (!credentials) {
+                  callServerError(401, ha);
+                  serverconsole.errmessage("Content needs authorization.");
+                  return;
+                }
+                var credentialsMatch = credentials.match(/^Basic (.+)$/);
+                if (!credentialsMatch) {
+                  callServerError(401, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
+                var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
+                if (!decodedCredentialsMatch) {
+                  callServerError(401, ha);
+                  serverconsole.errmessage("Malformed credentials.");
+                  return;
+                }
+                var username = decodedCredentialsMatch[1];
+                var password = decodedCredentialsMatch[2];
+                var usernameMatch = [];
+                var sha256Count = 0;
+                var pbkdf2Count = 0;
+                var scryptCount = 0;
+                if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
+                  usernameMatch = users.filter(function (entry) {
+                    if(entry.scrypt) {
+                      scryptCount++;
+                    } else if(entry.pbkdf2) {
+                      pbkdf2Count++;
+                    } else {
+                      sha256Count++;
+                    }
+                    return entry.name == username;
+                  });
+                }
+                if (usernameMatch.length == 0) {
+                  // Pushing false user match to prevent time-based user enumeration
+                  var fakeCredentials = {
+                    name: username,
+                    pass: "SVRJSAWebServerRunningOnNodeJS",
+                    salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0"
+                  };
+                  if (!process.isBun) {
+                    if (scryptCount > sha256Count && scryptCount > pbkdf2Count) {
+                      fakeCredentials.scrypt = true;
+                    } else if (pbkdf2Count > sha256Count) {
+                      fakeCredentials.pbkdf2 = true;
+                    }
+                  }
+                  usernameMatch.push(fakeCredentials);
+                }
+                checkIfPasswordMatches(usernameMatch, password, function (authorized) {
+                  try {
+                    if (!authorized) {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHW" + reqip);
+                        } else {
+                          if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                          bruteForceDb[reqip].invalidAttempts++;
+                          if (bruteForceDb[reqip].invalidAttempts >= 10) {
+                            bruteForceDb[reqip].lastAttemptDate = new Date();
+                          }
+                        }
+                      }
+                      callServerError(401, ha);
+                      serverconsole.errmessage("User \"" + String(username).replace(/[\r\n]/g, "") + "\" failed to log in.");
+                    } else {
+                      if (bruteProtection) {
+                        if (process.send) {
+                          process.send("\x12AUTHR" + reqip);
+                        } else {
+                          if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
+                            invalidAttempts: 0
+                          };
+                        }
+                      }
+                      serverconsole.reqmessage("Client is logged in as \"" + String(username).replace(/[\r\n]/g, "") + "\".");
+                      authUser = username;
+                      redirectTrailingSlashes(function () {
+                        modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser));
+                      });
+                    }
+                  } catch (err) {
+                    callServerError(500, err);
+                    return;
+                  }
+                });
+              } catch (err) {
+                callServerError(500, err);
+                return;
+              }
+            }
+            if (authcode.disableBruteProtection) {
+              // Don't brute-force protect it, just do HTTP authentication
+              authorizedCallback(false);
+            } else if (!process.send) {
+              // Query data from JS object database
+              if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
+                if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
+                  invalidAttempts: 5
+                };
+                authorizedCallback(true);
+              } else {
+                callServerError(429);
+                serverconsole.errmessage("Brute force limit reached!");
+              }
+            } else {
+              var listenerEmitted = false;
+
+              // Listen for brute-force protection response
+              function authMessageListener(message) {
+                if (listenerEmitted) return;
+                if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
+                  process.removeListener("message", authMessageListener);
+                  listenerEmitted = true;
+                }
+                if (message == "\x14AUTHD" + reqip) {
+                  callServerError(429);
+                  serverconsole.errmessage("Brute force limit reached!");
+                } else if (message == "\x14AUTHA" + reqip) {
+                  authorizedCallback(true);
+                }
+              }
+              process.on("message", authMessageListener);
+              process.send("\x12AUTHQ" + reqip);
+            }
+          } else {
+            redirectTrailingSlashes(function () {
+              modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser));
+            });
+          }
+        }
+
+      });
+    } catch (err) {
+      callServerError(500, err);
+    }
+
+
     function responseEnd(body) {
       // If body is Buffer, then it is converted to String anyway.
       res.write(head + body + foot);
@@ -3240,14 +3984,6 @@ if (!cluster.isPrimary) {
       });
     }
 
-    try {
-      //head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-      //foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
-    } catch (err) {
-      callServerError(500, err);
-    }
-
-
     // Function to perform HTTP redirection to a specified destination URL
     function redirect(destination, isTemporary, keepMethod, customHeaders) {
       // If keepMethod is a object, then save it to customHeaders
@@ -3375,57 +4111,6 @@ if (!cluster.isPrimary) {
         return url.parse(preparedURI, true);
       }
     }
-
-    // Authenticated user variable
-    var authUser = null;
-
-    // URL-related objects.
-    var uobject = parseURL(req.url);
-    var search = uobject.search;
-    var href = uobject.pathname;
-    var ext = href.match(/[^\/]\.([^.]+)$/);
-    if(!ext) ext = "";
-    else ext = ext[1].toLowerCase();
-    var decodedHref = "";
-    try {
-      decodedHref = decodeURIComponent(href);
-    } catch (err) {
-      // Return an 400 error
-      callServerError(400);
-      serverconsole.errmessage("Bad request!");
-      return;
-    }
-
-
-    if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
-      // Expectations not met.
-      callServerError(417);
-      return;
-    }
-
-    // Mod execution function
-    function modExecute(mods, ffinals) {
-      // Prepare modFunction
-      var modFunction = ffinals;
-      var useMods = mods.slice();
-
-      if (isProxy) {
-        // Get list of forward proxy mods
-        useMods = [];
-        mods.forEach(function (mod) {
-          if (mod.proxyCallback !== undefined) useMods.push(mod);
-        });
-      }
-
-      useMods.reverse().forEach(function (modO) {
-        modFunction = modO.callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", modFunction, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser);
-      });
-
-      // Execute modFunction
-      modFunction();
-    }
-
-    var vresCalled = false;
 
     function vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {
       return function () {
@@ -4114,690 +4799,6 @@ if (!cluster.isPrimary) {
           }
         });
       };
-    }
-
-    try {
-      // Scan the block list
-      if (blocklist.check(reqip)) {
-        // Invoke 403 Forbidden error
-        callServerError(403);
-        serverconsole.errmessage("Client is in the block list.");
-        return;
-      }
-
-      if (req.url == "*") {
-        // Handle "*" URL
-        if (req.method == "OPTIONS") {
-          // Respond with list of methods
-          var hdss = getCustomHeaders();
-          hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-          res.writeHead(204, http.STATUS_CODES[204], hdss);
-          res.end();
-          return;
-        } else {
-          // SVR.JS doesn't understand that request, so throw an 400 error
-          callServerError(400);
-          return;
-        }
-      }
-
-      if (req.method == "CONNECT") {
-        // CONNECT requests should be handled in "connect" event.
-        callServerError(501);
-        serverconsole.errmessage("CONNECT requests aren't supported. Your JS runtime probably doesn't support 'connect' handler for HTTP library.");
-        return;
-      }
-
-      // Check for invalid X-Forwarded-For header
-      if (!isForwardedValid) {
-        serverconsole.errmessage("X-Forwarded-For header is invalid.");
-        callServerError(400);
-        return;
-      }
-
-      // Sanitize URL
-      var sanitizedHref = sanitizeURL(href, allowDoubleSlashes);
-      var preparedReqUrl = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
-
-      // Check if URL is "dirty"
-      if (href != sanitizedHref && !isProxy) {
-        var sanitizedURL = uobject;
-        sanitizedURL.path = null;
-        sanitizedURL.href = null;
-        sanitizedURL.pathname = sanitizedHref;
-        sanitizedURL.hostname = null;
-        sanitizedURL.host = null;
-        sanitizedURL.port = null;
-        sanitizedURL.protocol = null;
-        sanitizedURL.slashes = null;
-        sanitizedURL = url.format(sanitizedURL);
-        serverconsole.resmessage("URL sanitized: " + req.url + " => " + sanitizedURL);
-        if (rewriteDirtyURLs) {
-          req.url = sanitizedURL;
-          uobject = parseURL(req.url);
-          search = uobject.search;
-          href = uobject.pathname;
-          ext = href.match(/[^\/]\.([^.]+)$/);
-          if(!ext) ext = "";
-          else ext = ext[1].toLowerCase();
-          try {
-            decodedHref = decodeURIComponent(href);
-          } catch (err) {
-            // Return 400 error
-            callServerError(400);
-            serverconsole.errmessage("Bad request!");
-            return;
-          }
-        } else {
-          redirect(sanitizedURL, false);
-          return;
-        }
-      } else if (req.url != preparedReqUrl && !isProxy) {
-        serverconsole.resmessage("URL sanitized: " + req.url + " => " + preparedReqUrl);
-        if (rewriteDirtyURLs) {
-          req.url = preparedReqUrl;
-        } else {
-          redirect(preparedReqUrl, false);
-          return;
-        }
-      }
-
-      // Handle redirects to HTTPS
-      if (secure && !fromMain && !disableNonEncryptedServer && !disableToHTTPSRedirect) {
-        var hostx = req.headers.host;
-        if (hostx === undefined) {
-          serverconsole.errmessage("Host header is missing.");
-          callServerError(400);
-          return;
-        }
-
-        if (isProxy) {
-          callServerError(501);
-          serverconsole.errmessage("This server will never be a proxy.");
-          return;
-        }
-
-        var isPublicServer = !(req.socket.realRemoteAddress ? req.socket.realRemoteAddress : req.socket.remoteAddress).match(/^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i);
-
-        var destinationPort = 0;
-
-        var parsedHostx = hostx.match(/(\[[^\]]*\]|[^:]*)(?::([0-9]+))?/);
-        var hostname = parsedHostx[1];
-        var hostPort = parsedHostx[2] ? parseInt(parsedHostx[2]) : 80;
-        if (isNaN(hostPort)) hostPort = 80;
-
-        if (hostPort == port || (port == pubport && !isPublicServer)) {
-          destinationPort = sport;
-        } else {
-          destinationPort = spubport;
-        }
-
-        redirect("https://" + hostname + (destinationPort == 443 ? "" : (":" + destinationPort)) + req.url);
-        return;
-      }
-
-      // Handle redirects to addresses with "www." prefix
-      if (wwwredirect) {
-        var hostname = req.headers.host.split(":");
-        var hostport = null;
-        if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
-        hostname = hostname.join(":");
-        if (hostname == domain && hostname.indexOf("www.") != 0) {
-          redirect((req.socket.encrypted ? "https" : "http") + "://www." + hostname + (hostport ? ":" + hostport : "") + req.url.replace(/\/+/g, "/"));
-          return;
-        }
-      }
-
-      // Handle URL rewriting
-      function rewriteURL(address, map, callback, _fileState, _mapBegIndex) {
-        var rewrittenURL = address;
-        var doCallback = true;
-        if (!isProxy) {
-          for (var i = (_mapBegIndex ? _mapBegIndex : 0); i < map.length; i++) {
-            var mapEntry = map[i];
-            if (href != "/" && (mapEntry.isNotDirectory || mapEntry.isNotFile) && !_fileState) {
-              fs.stat("." + decodeURIComponent(href), function (err, stats) {
-                var _fileState = 3;
-                if (err) {
-                  _fileState = 3;
-                } else if (stats.isDirectory()) {
-                  _fileState = 2;
-                } else if (stats.isFile()) {
-                  _fileState = 1;
-                } else {
-                  _fileState = 3;
-                }
-                rewriteURL(address, map, callback, _fileState, i);
-              });
-              doCallback = false;
-              break;
-            }
-            var tempRewrittenURL = rewrittenURL;
-            if (!mapEntry.allowDoubleSlashes) {
-              address = address.replace(/\/+/g,"/");
-              tempRewrittenURL = address;
-            }
-            if (matchHostname(mapEntry.host) && ipMatch(mapEntry.ip, req.socket ? req.socket.localAddress : undefined) && address.match(createRegex(mapEntry.definingRegex)) && !(mapEntry.isNotDirectory && _fileState == 2) && !(mapEntry.isNotFile && _fileState == 1)) {
-              rewrittenURL = tempRewrittenURL;
-              try {
-                mapEntry.replacements.forEach(function (replacement) {
-                  rewrittenURL = rewrittenURL.replace(createRegex(replacement.regex), replacement.replacement);
-                });
-                if (mapEntry.append) rewrittenURL += mapEntry.append;
-              } catch (err) {
-                doCallback = false;
-                callback(err, null);
-              }
-              break;
-            }
-          }
-        }
-        if (doCallback) callback(null, rewrittenURL);
-      }
-
-      // Trailing slash redirection
-      function redirectTrailingSlashes(callback) {
-        if (!isProxy && !disableTrailingSlashRedirects && href[href.length - 1] != "/" && origHref[origHref.length - 1] != "/") {
-          fs.stat("." + decodeURIComponent(href), function (err, stats) {
-            if (err || !stats.isDirectory()) {
-              try {
-                callback();
-              } catch (err) {
-                callServerError(500, err);
-              }
-            } else {
-              var destinationURL = uobject;
-              destinationURL.path = null;
-              destinationURL.href = null;
-              destinationURL.pathname = origHref + "/";
-              destinationURL.hostname = null;
-              destinationURL.host = null;
-              destinationURL.port = null;
-              destinationURL.protocol = null;
-              destinationURL.slashes = null;
-              destinationURL = url.format(destinationURL);
-              redirect(destinationURL);
-            }
-          });
-        } else {
-          callback();
-        }
-      }
-
-      var origHref = href;
-
-      // Add web root postfixes
-      if (!isProxy) {
-        var preparedReqUrl3 = (allowPostfixDoubleSlashes ? (href.replace(/\/+/,"/") + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "")) : req.url);
-        var urlWithPostfix = preparedReqUrl3;
-        var postfixPrefix = "";
-        wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
-          if (preparedReqUrl3.indexOf(currentPostfixPrefix) == 0) {
-            if (currentPostfixPrefix.match(/\/+$/)) postfixPrefix = currentPostfixPrefix.replace(/\/+$/, "");
-            else if (urlWithPostfix.length == currentPostfixPrefix.length || urlWithPostfix[currentPostfixPrefix.length] == "?" || urlWithPostfix[currentPostfixPrefix.length] == "/" || urlWithPostfix[currentPostfixPrefix.length] == "#") postfixPrefix = currentPostfixPrefix;
-            else return true;
-            urlWithPostfix = urlWithPostfix.substring(postfixPrefix.length);
-            return false;
-          } else {
-            return true;
-          }
-        });
-        wwwrootPostfixesVHost.every(function (postfixEntry) {
-          if (matchHostname(postfixEntry.host) && ipMatch(postfixEntry.ip, req.socket ? req.socket.localAddress : undefined) && !(postfixEntry.skipRegex && preparedReqUrl3.match(createRegex(postfixEntry.skipRegex)))) {
-            urlWithPostfix = postfixPrefix + "/" + postfixEntry.postfix + urlWithPostfix;
-            return false;
-          } else {
-            return true;
-          }
-        });
-        if (urlWithPostfix != preparedReqUrl3) {
-          serverconsole.resmessage("Added web root postfix: " + req.url + " => " + urlWithPostfix);
-          req.url = urlWithPostfix;
-          uobject = parseURL(req.url);
-          search = uobject.search;
-          href = uobject.pathname;
-          ext = href.match(/[^\/]\.([^.]+)$/);
-          if(!ext) ext = "";
-          else ext = ext[1].toLowerCase();
-
-          try {
-            decodedHref = decodeURIComponent(href);
-          } catch (err) {
-            // Return 400 error
-            callServerError(400);
-            serverconsole.errmessage("Bad request!");
-            return;
-          }
-
-          var sHref = sanitizeURL(href, allowDoubleSlashes);
-          var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
-
-          if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
-            callServerError(403);
-            serverconsole.errmessage("Content blocked.");
-            return;
-          } else if (sHref != href) {
-            var rewrittenAgainURL = uobject;
-            rewrittenAgainURL.path = null;
-            rewrittenAgainURL.href = null;
-            rewrittenAgainURL.pathname = sHref;
-            rewrittenAgainURL.hostname = null;
-            rewrittenAgainURL.host = null;
-            rewrittenAgainURL.port = null;
-            rewrittenAgainURL.protocol = null;
-            rewrittenAgainURL.slashes = null;
-            rewrittenAgainURL = url.format(rewrittenAgainURL);
-            serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
-            req.url = rewrittenAgainURL;
-            uobject = parseURL(req.url);
-            search = uobject.search;
-            href = uobject.pathname;
-            ext = href.match(/[^\/]\.([^.]+)$/);
-            if(!ext) ext = "";
-            else ext = ext[1].toLowerCase();
-            try {
-              decodedHref = decodeURIComponent(href);
-            } catch (err) {
-              // Return 400 error
-              callServerError(400);
-              serverconsole.errmessage("Bad request!");
-              return;
-            }
-          }
-        }
-      }
-
-      // Rewrite URLs
-      rewriteURL(req.url, rewriteMap, function (err, rewrittenURL) {
-        if (err) {
-          callServerError(500, err);
-          return;
-        }
-        if (rewrittenURL != req.url) {
-          serverconsole.resmessage("URL rewritten: " + req.url + " => " + rewrittenURL);
-          req.url = rewrittenURL;
-          uobject = parseURL(req.url);
-          search = uobject.search;
-          href = uobject.pathname;
-          ext = href.match(/[^\/]\.([^.]+)$/);
-          if(!ext) ext = "";
-          else ext = ext[1].toLowerCase();
-          try {
-            decodedHref = decodeURIComponent(href);
-          } catch (err) {
-            // Return 400 error
-            callServerError(400);
-            serverconsole.errmessage("Bad request!");
-            return;
-          }
-
-          var sHref = sanitizeURL(href, allowDoubleSlashes);
-          var preparedReqUrl2 = uobject.pathname + (uobject.search ? uobject.search : "") + (uobject.hash ? uobject.hash : "");
-
-          if (req.url != preparedReqUrl2 || sHref != href.replace(/\/\.(?=\/|$)/g, "/").replace(/\/+/g, "/")) {
-            callServerError(403);
-            serverconsole.errmessage("Content blocked.");
-            return;
-          } else if (sHref != href) {
-            var rewrittenAgainURL = uobject;
-            rewrittenAgainURL.path = null;
-            rewrittenAgainURL.href = null;
-            rewrittenAgainURL.pathname = sHref;
-            rewrittenAgainURL.hostname = null;
-            rewrittenAgainURL.host = null;
-            rewrittenAgainURL.port = null;
-            rewrittenAgainURL.protocol = null;
-            rewrittenAgainURL.slashes = null;
-            rewrittenAgainURL = url.format(rewrittenAgainURL);
-            serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
-            req.url = rewrittenAgainURL;
-            uobject = parseURL(req.url);
-            search = uobject.search;
-            href = uobject.pathname;
-            ext = href.match(/[^\/]\.([^.]+)$/);
-            if(!ext) ext = "";
-            else ext = ext[1].toLowerCase();
-            try {
-              decodedHref = decodeURIComponent(href);
-            } catch (err) {
-              // Return 400 error
-              callServerError(400);
-              serverconsole.errmessage("Bad request!");
-              return;
-            }
-          }
-        }
-        // Set response headers
-        if (!isProxy) {
-          var hkh = getCustomHeaders();
-          Object.keys(hkh).forEach(function (hkS) {
-            try {
-              res.setHeader(hkS, hkh[hkS]);
-            } catch (err) {
-              // Headers will not be set.
-            }
-          });
-        }
-
-        // Prepare the path (remove multiple slashes)
-        var decodedHrefWithoutDuplicateSlashes = decodedHref.replace(/\/+/g,"/");
-
-        // Check if path is forbidden
-        if ((isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "config") || isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "certificates")) && !isProxy) {
-          callServerError(403);
-          serverconsole.errmessage("Access to configuration file/certificates is denied.");
-          return;
-        } else if (isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "temp") && !isProxy) {
-          callServerError(403);
-          serverconsole.errmessage("Access to temporary folder is denied.");
-          return;
-        } else if (isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "log") && !isProxy && (configJSON.enableLogging || configJSON.enableLogging == undefined) && !configJSON.enableRemoteLogBrowsing) {
-          callServerError(403);
-          serverconsole.errmessage("Access to log files is denied.");
-          return;
-        } else if (isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") && !isProxy && !exposeServerVersion) {
-          callServerError(403);
-          serverconsole.errmessage("Access to SVR.JS script is denied.");
-          return;
-        } else if ((isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") || isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "serverSideScripts") || isIndexOfForbiddenPath(decodedHrefWithoutDuplicateSlashes, "serverSideScriptDirectories")) && !isProxy && (configJSON.disableServerSideScriptExpose || configJSON.disableServerSideScriptExpose === undefined)) {
-          callServerError(403);
-          serverconsole.errmessage("Access to sources is denied.");
-          return;
-        } else {
-          var nonscodeIndex = -1;
-          var authIndex = -1;
-          var regexI = [];
-
-          // Scan for non-standard codes
-          if (!isProxy && nonStandardCodes != undefined) {
-            for (var i = 0; i < nonStandardCodes.length; i++) {
-              if (matchHostname(nonStandardCodes[i].host) && ipMatch(nonStandardCodes[i].ip, req.socket ? req.socket.localAddress : undefined)) {
-                var isMatch = false;
-                var hrefWithoutDuplicateSlashes = href.replace(/\/+/g,"/");
-                if (nonStandardCodes[i].regex) {
-                  // Regex match
-                  var createdRegex = createRegex(nonStandardCodes[i].regex, true);
-                  isMatch = req.url.match(createdRegex) || hrefWithoutDuplicateSlashes.match(createdRegex);
-                  regexI[i] = createdRegex;
-                } else {
-                  // Non-regex match
-                  isMatch = nonStandardCodes[i].url == hrefWithoutDuplicateSlashes || (os.platform() == "win32" && nonStandardCodes[i].url.toLowerCase() == hrefWithoutDuplicateSlashes.toLowerCase());
-                }
-                if (isMatch) {
-                  if (nonStandardCodes[i].scode == 401) {
-                    // HTTP authentication
-                    if (authIndex == -1) {
-                      authIndex = i;
-                    }
-                  } else {
-                    if (nonscodeIndex == -1) {
-                      if ((nonStandardCodes[i].scode == 403 || nonStandardCodes[i].scode == 451) && nonStandardCodes[i].users !== undefined) {
-                        if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
-                      } else {
-                        nonscodeIndex = i;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          // Handle non-standard codes
-          if (nonscodeIndex > -1) {
-            var nonscode = nonStandardCodes[nonscodeIndex];
-            if (nonscode.scode == 301 || nonscode.scode == 302 || nonscode.scode == 307 || nonscode.scode == 308) {
-              var location = "";
-              if (regexI[nonscodeIndex]) {
-                location = req.url.replace(regexI[nonscodeIndex], nonscode.location);
-                if(location == req.url) {
-                  // Fallback replacement
-                  location = hrefWithoutDuplicateSlashes.replace(regexI[nonscodeIndex], nonscode.location);
-                }
-              } else if (req.url.split("?")[1] == undefined || req.url.split("?")[1] == null || req.url.split("?")[1] == "" || req.url.split("?")[1] == " ") {
-                location = nonscode.location;
-              } else {
-                location = nonscode.location + "?" + req.url.split("?")[1];
-              }
-              redirect(location, nonscode.scode == 302 || nonscode.scode == 307, nonscode.scode == 307 || nonscode.scode == 308);
-              return;
-            } else {
-              callServerError(nonscode.scode);
-              if (nonscode.scode == 403) {
-                serverconsole.errmessage("Content blocked.");
-              } else if (nonscode.scode == 410) {
-                serverconsole.errmessage("Content is gone.");
-              } else if (nonscode.scode == 418) {
-                serverconsole.errmessage("SVR.JS is always a teapot ;)");
-              } else {
-                serverconsole.errmessage("Client fails receiving content.");
-              }
-              return;
-            }
-          }
-
-          // Handle HTTP authentication
-          if (authIndex > -1) {
-            var authcode = nonStandardCodes[authIndex];
-
-            // Function to check if passwords match
-            function checkIfPasswordMatches(list, password, callback, _i) {
-              if (!_i) _i = 0;
-              var cb = function (hash) {
-                if (hash == list[_i].pass) {
-                  callback(true);
-                } else if (_i >= list.length - 1) {
-                  callback(false);
-                } else {
-                  checkIfPasswordMatches(list, password, callback, _i + 1);
-                }
-              };
-              var hashedPassword = sha256(password + list[_i].salt);
-              var cacheEntry = null;
-              if (list[_i].scrypt) {
-                if (!crypto.scrypt) {
-                  callServerError(500, new Error("SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support."));
-                  return;
-                } else {
-                  cacheEntry = scryptCache.find(function (entry) {
-                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
-                  });
-                  if (cacheEntry) {
-                    cb(cacheEntry.hash);
-                  } else {
-                    crypto.scrypt(password, list[_i].salt, 64, function (err, derivedKey) {
-                      if (err) {
-                        callServerError(500, err);
-                      } else {
-                        var key = derivedKey.toString("hex");
-                        scryptCache.push({
-                          hash: key,
-                          password: hashedPassword,
-                          salt: list[_i].salt,
-                          addDate: new Date()
-                        });
-                        cb(key);
-                      }
-                    });
-                  }
-                }
-              } else if (list[_i].pbkdf2) {
-                if (crypto.__disabled__ !== undefined) {
-                  callServerError(500, new Error("SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support."));
-                  return;
-                } else {
-                  cacheEntry = pbkdf2Cache.find(function (entry) {
-                    return (entry.password == hashedPassword && entry.salt == list[_i].salt);
-                  });
-                  if (cacheEntry) {
-                    cb(cacheEntry.hash);
-                  } else {
-                    crypto.pbkdf2(password, list[_i].salt, 36250, 64, "sha512", function (err, derivedKey) {
-                      if (err) {
-                        callServerError(500, err);
-                      } else {
-                        var key = derivedKey.toString("hex");
-                        pbkdf2Cache.push({
-                          hash: key,
-                          password: hashedPassword,
-                          salt: list[_i].salt,
-                          addDate: new Date()
-                        });
-                        cb(key);
-                      }
-                    });
-                  }
-                }
-              } else {
-                cb(hashedPassword);
-              }
-            }
-
-            function authorizedCallback(bruteProtection) {
-              try {
-                var ha = getCustomHeaders();
-                ha["WWW-Authenticate"] = "Basic realm=\"" + (authcode.realm ? authcode.realm.replace(/(\\|")/g, "\\$1") : "SVR.JS HTTP Basic Authorization") + "\", charset=\"UTF-8\"";
-                var credentials = req.headers["authorization"];
-                if (!credentials) {
-                  callServerError(401, ha);
-                  serverconsole.errmessage("Content needs authorization.");
-                  return;
-                }
-                var credentialsMatch = credentials.match(/^Basic (.+)$/);
-                if (!credentialsMatch) {
-                  callServerError(401, ha);
-                  serverconsole.errmessage("Malformed credentials.");
-                  return;
-                }
-                var decodedCredentials = Buffer.from(credentialsMatch[1], "base64").toString("utf8");
-                var decodedCredentialsMatch = decodedCredentials.match(/^([^:]*):(.*)$/);
-                if (!decodedCredentialsMatch) {
-                  callServerError(401, ha);
-                  serverconsole.errmessage("Malformed credentials.");
-                  return;
-                }
-                var username = decodedCredentialsMatch[1];
-                var password = decodedCredentialsMatch[2];
-                var usernameMatch = [];
-                var sha256Count = 0;
-                var pbkdf2Count = 0;
-                var scryptCount = 0;
-                if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
-                  usernameMatch = users.filter(function (entry) {
-                    if(entry.scrypt) {
-                      scryptCount++;
-                    } else if(entry.pbkdf2) {
-                      pbkdf2Count++;
-                    } else {
-                      sha256Count++;
-                    }
-                    return entry.name == username;
-                  });
-                }
-                if (usernameMatch.length == 0) {
-                  // Pushing false user match to prevent time-based user enumeration
-                  var fakeCredentials = {
-                    name: username,
-                    pass: "SVRJSAWebServerRunningOnNodeJS",
-                    salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0"
-                  };
-                  if (!process.isBun) {
-                    if (scryptCount > sha256Count && scryptCount > pbkdf2Count) {
-                      fakeCredentials.scrypt = true;
-                    } else if (pbkdf2Count > sha256Count) {
-                      fakeCredentials.pbkdf2 = true;
-                    }
-                  }
-                  usernameMatch.push(fakeCredentials);
-                }
-                checkIfPasswordMatches(usernameMatch, password, function (authorized) {
-                  try {
-                    if (!authorized) {
-                      if (bruteProtection) {
-                        if (process.send) {
-                          process.send("\x12AUTHW" + reqip);
-                        } else {
-                          if (!bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                            invalidAttempts: 0
-                          };
-                          bruteForceDb[reqip].invalidAttempts++;
-                          if (bruteForceDb[reqip].invalidAttempts >= 10) {
-                            bruteForceDb[reqip].lastAttemptDate = new Date();
-                          }
-                        }
-                      }
-                      callServerError(401, ha);
-                      serverconsole.errmessage("User \"" + String(username).replace(/[\r\n]/g, "") + "\" failed to log in.");
-                    } else {
-                      if (bruteProtection) {
-                        if (process.send) {
-                          process.send("\x12AUTHR" + reqip);
-                        } else {
-                          if (bruteForceDb[reqip]) bruteForceDb[reqip] = {
-                            invalidAttempts: 0
-                          };
-                        }
-                      }
-                      serverconsole.reqmessage("Client is logged in as \"" + String(username).replace(/[\r\n]/g, "") + "\".");
-                      authUser = username;
-                      redirectTrailingSlashes(function () {
-                        modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser));
-                      });
-                    }
-                  } catch (err) {
-                    callServerError(500, err);
-                    return;
-                  }
-                });
-              } catch (err) {
-                callServerError(500, err);
-                return;
-              }
-            }
-            if (authcode.disableBruteProtection) {
-              // Don't brute-force protect it, just do HTTP authentication
-              authorizedCallback(false);
-            } else if (!process.send) {
-              // Query data from JS object database
-              if (!bruteForceDb[reqip] || !bruteForceDb[reqip].lastAttemptDate || (new Date() - 300000 >= bruteForceDb[reqip].lastAttemptDate)) {
-                if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10) bruteForceDb[reqip] = {
-                  invalidAttempts: 5
-                };
-                authorizedCallback(true);
-              } else {
-                callServerError(429);
-                serverconsole.errmessage("Brute force limit reached!");
-              }
-            } else {
-              var listenerEmitted = false;
-
-              // Listen for brute-force protection response
-              function authMessageListener(message) {
-                if (listenerEmitted) return;
-                if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
-                  process.removeListener("message", authMessageListener);
-                  listenerEmitted = true;
-                }
-                if (message == "\x14AUTHD" + reqip) {
-                  callServerError(429);
-                  serverconsole.errmessage("Brute force limit reached!");
-                } else if (message == "\x14AUTHA" + reqip) {
-                  authorizedCallback(true);
-                }
-              }
-              process.on("message", authMessageListener);
-              process.send("\x12AUTHQ" + reqip);
-            }
-          } else {
-            redirectTrailingSlashes(function () {
-              modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser));
-            });
-          }
-        }
-
-      });
-    } catch (err) {
-      callServerError(500, err);
     }
   }
 
