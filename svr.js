@@ -3624,7 +3624,7 @@ if (!cluster.isPrimary) {
                 var ifMatchETag = req.headers["if-match"];
                 if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
                   callServerError(412, {
-                    "ETag": clientETag;
+                    "ETag": clientETag
                   });
                   return;
                 }
