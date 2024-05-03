@@ -3511,9 +3511,9 @@ if (!cluster.isPrimary) {
           if (process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
           statusBody += "<br/>Thread PID: " + process.pid + "<br/>";
 
-          var hdhds = getCustomHeaders();
-          hdhds["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(200, http.STATUS_CODES[200], hdhds);
+          res.writeHead(200, http.STATUS_CODES[200], {
+            "Content-Type": "text/html; charset=utf-8"
+          });
           res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>" + statusBody + (foot == "" ? "</body></html>" : foot));
           return;
         }
@@ -3613,9 +3613,9 @@ if (!cluster.isPrimary) {
                 // Check if the client's request matches the ETag value (If-None-Match)
                 var clientETag = req.headers["if-none-match"];
                 if (clientETag === fileETag) {
-                  var headers = getCustomHeaders();
-                  headers.ETag = clientETag;
-                  res.writeHead(304, http.STATUS_CODES[304], headers);
+                  res.writeHead(304, http.STATUS_CODES[304], {
+                    "ETag": clientETag
+                  });
                   res.end();
                   return;
                 }
@@ -3623,9 +3623,9 @@ if (!cluster.isPrimary) {
                 // Check if the client's request doesn't match the ETag value (If-Match)
                 var ifMatchETag = req.headers["if-match"];
                 if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
-                  var headers = getCustomHeaders();
-                  headers.ETag = clientETag;
-                  callServerError(412, headers);
+                  callServerError(412, {
+                    "ETag": clientETag;
+                  });
                   return;
                 }
               }
@@ -3754,7 +3754,7 @@ if (!cluster.isPrimary) {
                 }
 
                 try {
-                  var hdhds = getCustomHeaders();
+                  var hdhds = {};
                   if (useBrotli && isCompressable) {
                     hdhds["Content-Encoding"] = "br";
                   } else if (useDeflate && isCompressable) {
@@ -3846,10 +3846,6 @@ if (!cluster.isPrimary) {
             } else if (stats.isDirectory()) {
               // Check if directory listing is enabled in the configuration
               if (checkForEnabledDirectoryListing(req.headers.host, req.socket ? req.socket.localAddress : undefined)) {
-                var customHeaders = getCustomHeaders();
-                customHeaders["Content-Type"] = "text/html; charset=utf-8";
-                res.writeHead(200, http.STATUS_CODES[200], customHeaders);
-
                 var customDirListingHeader = "";
                 var customDirListingFooter = "";
 
@@ -4073,6 +4069,9 @@ if (!cluster.isPrimary) {
                           }
 
                           // Send the directory listing response
+                          res.writeHead(200, http.STATUS_CODES[200], {
+                            "Content-Type": "text/html; charset=utf-8"
+                          });
                           res.end(htmlHead + directoryListingRows.join("") + htmlFoot);
                           serverconsole.resmessage("Client successfully received content.");
                         });
