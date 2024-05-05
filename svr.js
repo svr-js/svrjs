@@ -392,7 +392,7 @@ try {
 }
 var inspector = undefined;
 try {
- inspector = require("inspector");
+  inspector = require("inspector");
 } catch (err) {
   // Don't use inspector
 }
@@ -2866,8 +2866,8 @@ if (!cluster.isPrimary) {
     }
 
     function vres() {
-        serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
-        if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
+      serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
+      if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
     }
     modExecute(mods, vres);
   }
@@ -3451,353 +3451,247 @@ if (!cluster.isPrimary) {
 
     var vresCalled = false;
 
-      function vres() {
-        if (vresCalled) {
-          process.emitWarning("elseCallback() invoked multiple times.", {
-            code: "WARN_SVRJS_MULTIPLE_ELSECALLBACK"
-          });
-          return;
-        } else {
-          vresCalled = true;
-        }
+    function vres() {
+      if (vresCalled) {
+        process.emitWarning("elseCallback() invoked multiple times.", {
+          code: "WARN_SVRJS_MULTIPLE_ELSECALLBACK"
+        });
+        return;
+      } else {
+        vresCalled = true;
+      }
 
-        // Function to check the level of a path relative to the web root
-        function checkPathLevel(path) {
-          // Split the path into an array of components based on "/"
-          var pathComponents = path.split("/");
+      // Function to check the level of a path relative to the web root
+      function checkPathLevel(path) {
+        // Split the path into an array of components based on "/"
+        var pathComponents = path.split("/");
 
-          // Initialize counters for level up (..) and level down (.)
-          var levelUpCount = 0;
-          var levelDownCount = 0;
+        // Initialize counters for level up (..) and level down (.)
+        var levelUpCount = 0;
+        var levelDownCount = 0;
 
-          // Loop through the path components
-          for (var i = 0; i < pathComponents.length; i++) {
-            // If the component is "..", decrement the levelUpCount
-            if (".." === pathComponents[i]) {
-              levelUpCount--;
-            }
-            // If the component is not "." or an empty string, increment the levelDownCount
-            else if ("." !== pathComponents[i] && "" !== pathComponents[i]) {
-              levelDownCount++;
-            }
+        // Loop through the path components
+        for (var i = 0; i < pathComponents.length; i++) {
+          // If the component is "..", decrement the levelUpCount
+          if (".." === pathComponents[i]) {
+            levelUpCount--;
           }
-
-          // Calculate the overall level by subtracting levelUpCount from levelDownCount
-          var overallLevel = levelDownCount - levelUpCount;
-
-          // Return the overall level
-          return overallLevel;
-        }
-
-
-        if (isProxy) {
-          var eheaders = getCustomHeaders();
-          eheaders["Content-Type"] = "text/html; charset=utf-8";
-          res.writeHead(501, http.STATUS_CODES[501], eheaders);
-          res.write("<html><head><title>Proxy not implemented</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>Proxy not implemented</h1><p>SVR.JS doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use SVR.JS as a proxy.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</i></p></body></html>");
-          res.end();
-          serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
-          return;
-        }
-
-        if (req.method == "OPTIONS") {
-          var hdss = getCustomHeaders();
-          hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-          res.writeHead(204, http.STATUS_CODES[204], hdss);
-          res.end();
-          return;
-        } else if (req.method != "GET" && req.method != "POST" && req.method != "HEAD") {
-          callServerError(405);
-          serverconsole.errmessage("Invaild method: " + req.method);
-          return;
-        }
-
-        if (allowStatus && (href == "/svrjsstatus.svr" || (os.platform() == "win32" && href.toLowerCase() == "/svrjsstatus.svr"))) {
-          function formatRelativeTime(relativeTime) {
-            var days = Math.floor(relativeTime / 60 / (60 * 24));
-            var dateDiff = new Date(relativeTime * 1000);
-            return days + " days, " + dateDiff.getUTCHours() + " hours, " + dateDiff.getUTCMinutes() + " minutes, " + dateDiff.getUTCSeconds() + " seconds";
+          // If the component is not "." or an empty string, increment the levelDownCount
+          else if ("." !== pathComponents[i] && "" !== pathComponents[i]) {
+            levelDownCount++;
           }
-          var statusBody = "";
-          statusBody += "Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "<br/><hr/>";
-
-          //Those entries are just dates and numbers converted/formatted to strings, so no escaping is needed.
-          statusBody += "Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>";
-          statusBody += "OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>";
-          statusBody += "Total request count: " + reqcounter + "<br/>";
-          statusBody += "Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s<br/>";
-          statusBody += "Client errors (4xx): " + err4xxcounter + "<br/>";
-          statusBody += "Server errors (5xx): " + err5xxcounter + "<br/>";
-          statusBody += "Average error rate: " + (Math.round(((err4xxcounter + err5xxcounter) / reqcounter) * 10000) / 100) + "%<br/>";
-          statusBody += "Malformed HTTP requests: " + malformedcounter;
-          if (process.memoryUsage) statusBody += "<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B";
-          if (process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
-          statusBody += "<br/>Thread PID: " + process.pid + "<br/>";
-
-          res.writeHead(200, http.STATUS_CODES[200], {
-            "Content-Type": "text/html; charset=utf-8"
-          });
-          res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>" + statusBody + (foot == "" ? "</body></html>" : foot));
-          return;
         }
 
-        var dHref = decodeURIComponent(href);
-        var readFrom = "." + dHref;
-        var dirImagesMissing = false;
-        fs.stat(readFrom, function (err, stats) {
-          if (err) {
-            if (err.code == "ENOENT") {
-              if (__dirname != process.cwd() && dHref.match(/^\/\.dirimages\/(?:(?!\.png$).)+\.png$/)) {
-                dirImagesMissing = true;
-                readFrom = __dirname + dHref;
-              } else {
-                callServerError(404);
-                serverconsole.errmessage("Resource not found.");
-                return;
-              }
-            } else if (err.code == "ENOTDIR") {
-              callServerError(404); // Assume that file doesn't exist.
+        // Calculate the overall level by subtracting levelUpCount from levelDownCount
+        var overallLevel = levelDownCount - levelUpCount;
+
+        // Return the overall level
+        return overallLevel;
+      }
+
+
+      if (isProxy) {
+        var eheaders = getCustomHeaders();
+        eheaders["Content-Type"] = "text/html; charset=utf-8";
+        res.writeHead(501, http.STATUS_CODES[501], eheaders);
+        res.write("<html><head><title>Proxy not implemented</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body><h1>Proxy not implemented</h1><p>SVR.JS doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use SVR.JS as a proxy.</p><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</i></p></body></html>");
+        res.end();
+        serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
+        return;
+      }
+
+      if (req.method == "OPTIONS") {
+        var hdss = getCustomHeaders();
+        hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
+        res.writeHead(204, http.STATUS_CODES[204], hdss);
+        res.end();
+        return;
+      } else if (req.method != "GET" && req.method != "POST" && req.method != "HEAD") {
+        callServerError(405);
+        serverconsole.errmessage("Invaild method: " + req.method);
+        return;
+      }
+
+      if (allowStatus && (href == "/svrjsstatus.svr" || (os.platform() == "win32" && href.toLowerCase() == "/svrjsstatus.svr"))) {
+        function formatRelativeTime(relativeTime) {
+          var days = Math.floor(relativeTime / 60 / (60 * 24));
+          var dateDiff = new Date(relativeTime * 1000);
+          return days + " days, " + dateDiff.getUTCHours() + " hours, " + dateDiff.getUTCMinutes() + " minutes, " + dateDiff.getUTCSeconds() + " seconds";
+        }
+        var statusBody = "";
+        statusBody += "Server version: " + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "<br/><hr/>";
+
+        //Those entries are just dates and numbers converted/formatted to strings, so no escaping is needed.
+        statusBody += "Current time: " + new Date().toString() + "<br/>Thread start time: " + new Date(new Date() - (process.uptime() * 1000)).toString() + "<br/>Thread uptime: " + formatRelativeTime(Math.floor(process.uptime())) + "<br/>";
+        statusBody += "OS uptime: " + formatRelativeTime(os.uptime()) + "<br/>";
+        statusBody += "Total request count: " + reqcounter + "<br/>";
+        statusBody += "Average request rate: " + (Math.round((reqcounter / process.uptime()) * 100) / 100) + " requests/s<br/>";
+        statusBody += "Client errors (4xx): " + err4xxcounter + "<br/>";
+        statusBody += "Server errors (5xx): " + err5xxcounter + "<br/>";
+        statusBody += "Average error rate: " + (Math.round(((err4xxcounter + err5xxcounter) / reqcounter) * 10000) / 100) + "%<br/>";
+        statusBody += "Malformed HTTP requests: " + malformedcounter;
+        if (process.memoryUsage) statusBody += "<br/>Memory usage of thread: " + sizify(process.memoryUsage().rss, true) + "B";
+        if (process.cpuUsage) statusBody += "<br/>Total CPU usage by thread: u" + (process.cpuUsage().user / 1000) + "ms s" + (process.cpuUsage().system / 1000) + "ms - " + (Math.round((((process.cpuUsage().user + process.cpuUsage().system) / 1000000) / process.uptime()) * 1000) / 1000) + "%";
+        statusBody += "<br/>Thread PID: " + process.pid + "<br/>";
+
+        res.writeHead(200, http.STATUS_CODES[200], {
+          "Content-Type": "text/html; charset=utf-8"
+        });
+        res.end((head == "" ? "<html><head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" : head.replace(/<head>/i, "<head><title>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</title>")) + "<h1>SVR.JS status" + (req.headers.host == undefined ? "" : " for " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</h1>" + statusBody + (foot == "" ? "</body></html>" : foot));
+        return;
+      }
+
+      var dHref = decodeURIComponent(href);
+      var readFrom = "." + dHref;
+      var dirImagesMissing = false;
+      fs.stat(readFrom, function (err, stats) {
+        if (err) {
+          if (err.code == "ENOENT") {
+            if (__dirname != process.cwd() && dHref.match(/^\/\.dirimages\/(?:(?!\.png$).)+\.png$/)) {
+              dirImagesMissing = true;
+              readFrom = __dirname + dHref;
+            } else {
+              callServerError(404);
               serverconsole.errmessage("Resource not found.");
               return;
-            } else if (err.code == "EACCES") {
-              callServerError(403);
-              serverconsole.errmessage("Access denied.");
-              return;
-            } else if (err.code == "ENAMETOOLONG") {
-              callServerError(414);
-              return;
-            } else if (err.code == "EMFILE") {
-              callServerError(503);
-              return;
-            } else if (err.code == "ELOOP") {
-              callServerError(508); // The symbolic link loop is detected during file system operations.
-              serverconsole.errmessage("Symbolic link loop detected.");
-              return;
-            } else {
-              callServerError(500, err);
-              return;
             }
-          }
-
-          // Check if index file exists
-          if (!dirImagesMissing && (req.url == "/" || stats.isDirectory())) {
-            fs.stat((readFrom + "/index.html").replace(/\/+/g, "/"), function (e, s) {
-              if (e || !s.isFile()) {
-                fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
-                  if (e || !s.isFile()) {
-                    fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
-                      if (e || !s.isFile()) {
-                        properDirectoryListingAndStaticFileServe();
-                      } else {
-                        stats = s;
-                        ext = "xhtml";
-                        readFrom = (readFrom + "/index.xhtml").replace(/\/+/g, "/");
-                        properDirectoryListingAndStaticFileServe();
-                      }
-                    });
-                  } else {
-                    stats = s;
-                    ext = "htm";
-                    readFrom = (readFrom + "/index.htm").replace(/\/+/g, "/");
-                    properDirectoryListingAndStaticFileServe();
-                  }
-                });
-              } else {
-                stats = s;
-                ext = "html";
-                readFrom = (readFrom + "/index.html").replace(/\/+/g, "/");
-                properDirectoryListingAndStaticFileServe();
-              }
-            });
-          } else if (dirImagesMissing) {
-            fs.stat(readFrom, function (e, s) {
-              if (e || !s.isFile()) {
-                properDirectoryListingAndStaticFileServe();
-              } else {
-                stats = s;
-                properDirectoryListingAndStaticFileServe();
-              }
-            });
+          } else if (err.code == "ENOTDIR") {
+            callServerError(404); // Assume that file doesn't exist.
+            serverconsole.errmessage("Resource not found.");
+            return;
+          } else if (err.code == "EACCES") {
+            callServerError(403);
+            serverconsole.errmessage("Access denied.");
+            return;
+          } else if (err.code == "ENAMETOOLONG") {
+            callServerError(414);
+            return;
+          } else if (err.code == "EMFILE") {
+            callServerError(503);
+            return;
+          } else if (err.code == "ELOOP") {
+            callServerError(508); // The symbolic link loop is detected during file system operations.
+            serverconsole.errmessage("Symbolic link loop detected.");
+            return;
           } else {
-            properDirectoryListingAndStaticFileServe();
+            callServerError(500, err);
+            return;
           }
+        }
 
-          function properDirectoryListingAndStaticFileServe() {
-            if (stats.isFile()) {
-              var acceptEncoding = req.headers["accept-encoding"];
-              if (!acceptEncoding) acceptEncoding = "";
-
-              var filelen = stats.size;
-
-              // ETag code
-              var fileETag = undefined;
-              if (configJSON.enableETag == undefined || configJSON.enableETag) {
-                fileETag = generateETag(href, stats);
-                // Check if the client's request matches the ETag value (If-None-Match)
-                var clientETag = req.headers["if-none-match"];
-                if (clientETag === fileETag) {
-                  res.writeHead(304, http.STATUS_CODES[304], {
-                    "ETag": clientETag
+        // Check if index file exists
+        if (!dirImagesMissing && (req.url == "/" || stats.isDirectory())) {
+          fs.stat((readFrom + "/index.html").replace(/\/+/g, "/"), function (e, s) {
+            if (e || !s.isFile()) {
+              fs.stat((readFrom + "/index.htm").replace(/\/+/g, "/"), function (e, s) {
+                if (e || !s.isFile()) {
+                  fs.stat((readFrom + "/index.xhtml").replace(/\/+/g, "/"), function (e, s) {
+                    if (e || !s.isFile()) {
+                      properDirectoryListingAndStaticFileServe();
+                    } else {
+                      stats = s;
+                      ext = "xhtml";
+                      readFrom = (readFrom + "/index.xhtml").replace(/\/+/g, "/");
+                      properDirectoryListingAndStaticFileServe();
+                    }
                   });
-                  res.end();
-                  return;
+                } else {
+                  stats = s;
+                  ext = "htm";
+                  readFrom = (readFrom + "/index.htm").replace(/\/+/g, "/");
+                  properDirectoryListingAndStaticFileServe();
                 }
+              });
+            } else {
+              stats = s;
+              ext = "html";
+              readFrom = (readFrom + "/index.html").replace(/\/+/g, "/");
+              properDirectoryListingAndStaticFileServe();
+            }
+          });
+        } else if (dirImagesMissing) {
+          fs.stat(readFrom, function (e, s) {
+            if (e || !s.isFile()) {
+              properDirectoryListingAndStaticFileServe();
+            } else {
+              stats = s;
+              properDirectoryListingAndStaticFileServe();
+            }
+          });
+        } else {
+          properDirectoryListingAndStaticFileServe();
+        }
 
-                // Check if the client's request doesn't match the ETag value (If-Match)
-                var ifMatchETag = req.headers["if-match"];
-                if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
-                  callServerError(412, {
-                    "ETag": clientETag
-                  });
-                  return;
-                }
+        function properDirectoryListingAndStaticFileServe() {
+          if (stats.isFile()) {
+            var acceptEncoding = req.headers["accept-encoding"];
+            if (!acceptEncoding) acceptEncoding = "";
+
+            var filelen = stats.size;
+
+            // ETag code
+            var fileETag = undefined;
+            if (configJSON.enableETag == undefined || configJSON.enableETag) {
+              fileETag = generateETag(href, stats);
+              // Check if the client's request matches the ETag value (If-None-Match)
+              var clientETag = req.headers["if-none-match"];
+              if (clientETag === fileETag) {
+                res.writeHead(304, http.STATUS_CODES[304], {
+                  "ETag": clientETag
+                });
+                res.end();
+                return;
               }
 
-              // Handle partial content request
-              if (ext != "html" && req.headers["range"]) {
-                try {
-                  var rhd = getCustomHeaders();
-                  rhd["Accept-Ranges"] = "bytes";
-                  rhd["Content-Range"] = "bytes */" + filelen;
-                  var regexmatch = req.headers["range"].match(/bytes=([0-9]*)-([0-9]*)/);
-                  if (!regexmatch) {
+              // Check if the client's request doesn't match the ETag value (If-Match)
+              var ifMatchETag = req.headers["if-match"];
+              if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
+                callServerError(412, {
+                  "ETag": clientETag
+                });
+                return;
+              }
+            }
+
+            // Handle partial content request
+            if (ext != "html" && req.headers["range"]) {
+              try {
+                var rhd = getCustomHeaders();
+                rhd["Accept-Ranges"] = "bytes";
+                rhd["Content-Range"] = "bytes */" + filelen;
+                var regexmatch = req.headers["range"].match(/bytes=([0-9]*)-([0-9]*)/);
+                if (!regexmatch) {
+                  callServerError(416, rhd);
+                } else {
+                  // Process the partial content request
+                  var beginOrig = regexmatch[1];
+                  var endOrig = regexmatch[2];
+                  var begin = 0;
+                  var end = filelen - 1;
+                  if (beginOrig == "" && endOrig == "") {
                     callServerError(416, rhd);
+                    return;
+                  } else if (beginOrig == "") {
+                    begin = end - parseInt(endOrig) + 1;
                   } else {
-                    // Process the partial content request
-                    var beginOrig = regexmatch[1];
-                    var endOrig = regexmatch[2];
-                    var begin = 0;
-                    var end = filelen - 1;
-                    if (beginOrig == "" && endOrig == "") {
-                      callServerError(416, rhd);
-                      return;
-                    } else if (beginOrig == "") {
-                      begin = end - parseInt(endOrig) + 1;
-                    } else {
-                      begin = parseInt(beginOrig);
-                      if (endOrig != "") end = parseInt(endOrig);
-                    }
-                    if (begin > end || begin < 0 || begin > filelen - 1) {
-                      callServerError(416, rhd);
-                      return;
-                    }
-                    if (end > filelen - 1) end = filelen - 1;
-                    rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
-                    rhd["Content-Length"] = end - begin + 1;
-                    if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
-                    if (fileETag) rhd["ETag"] = fileETag;
-
-                    if (req.method != "HEAD") {
-                      var readStream = fs.createReadStream(readFrom, {
-                        start: begin,
-                        end: end
-                      });
-                      readStream.on("error", function (err) {
-                        if (err.code == "ENOENT") {
-                          callServerError(404);
-                          serverconsole.errmessage("Resource not found.");
-                        } else if (err.code == "ENOTDIR") {
-                          callServerError(404); // Assume that file doesn't exist.
-                          serverconsole.errmessage("Resource not found.");
-                        } else if (err.code == "EACCES") {
-                          callServerError(403);
-                          serverconsole.errmessage("Access denied.");
-                        } else if (err.code == "ENAMETOOLONG") {
-                          callServerError(414);
-                        } else if (err.code == "EMFILE") {
-                          callServerError(503);
-                        } else if (err.code == "ELOOP") {
-                          callServerError(508); // The symbolic link loop is detected during file system operations.
-                          serverconsole.errmessage("Symbolic link loop detected.");
-                        } else {
-                          callServerError(500, err);
-                        }
-                      }).on("open", function () {
-                        try {
-                          res.writeHead(206, http.STATUS_CODES[206], rhd);
-                          readStream.pipe(res);
-                          serverconsole.resmessage("Client successfully received content.");
-                        } catch (err) {
-                          callServerError(500, err);
-                        }
-                      });
-                    } else {
-                      res.writeHead(206, http.STATUS_CODES[206], rhd);
-                      res.end();
-                    }
+                    begin = parseInt(beginOrig);
+                    if (endOrig != "") end = parseInt(endOrig);
                   }
-                } catch (err) {
-                  callServerError(500, err);
-                }
-              } else {
-                // Helper function to check if compression is allowed for the file
-                function canCompress(path, list) {
-                  var canCompress = true;
-                  for (var i = 0; i < list.length; i++) {
-                    if (createRegex(list[i], true).test(path)) {
-                      canCompress = false;
-                      break;
-                    }
+                  if (begin > end || begin < 0 || begin > filelen - 1) {
+                    callServerError(416, rhd);
+                    return;
                   }
-                  return canCompress;
-                }
-
-                var useBrotli = (ext != "br" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/));
-                var useDeflate = (ext != "zip" && filelen > 256 && acceptEncoding.match(/\bdeflate\b/));
-                var useGzip = (ext != "gz" && filelen > 256 && acceptEncoding.match(/\bgzip\b/));
-
-                var isCompressable = true;
-                try {
-                  // Check for files not to compressed and compression enabling setting. Also check for browser quirks and adjust compression accordingly
-                  if((!useBrotli && !useDeflate && !useGzip) || configJSON.enableCompression !== true || !canCompress(href, dontCompress)) {
-                    isCompressable = false; // Compression is disabled
-                  } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml") {
-                    if (/^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                      isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
-                    } else if (/^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
-                      isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
-                    }
-                  } else {
-                    if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
-                      isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
-                    }
-                  }
-                } catch (err) {
-                  callServerError(500, err);
-                  return;
-                }
-
-                // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
-                if (process.isBun && useBrotli && isCompressable) {
-                  try {
-                    zlib.createBrotliCompress();
-                  } catch (err) {
-                    useBrotli = false;
-                  }
-                }
-
-                try {
-                  var hdhds = {};
-                  if (useBrotli && isCompressable) {
-                    hdhds["Content-Encoding"] = "br";
-                  } else if (useDeflate && isCompressable) {
-                    hdhds["Content-Encoding"] = "deflate";
-                  } else if (useGzip && isCompressable) {
-                    hdhds["Content-Encoding"] = "gzip";
-                  } else {
-                    if (ext == "html") {
-                      hdhds["Content-Length"] = head.length + filelen + foot.length;
-                    } else {
-                      hdhds["Content-Length"] = filelen;
-                    }
-                  }
-                  if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
-                  delete hdhds["Content-Type"];
-                  if (!(mime.contentType(ext) == false) && ext != "") hdhds["Content-Type"] = mime.contentType(ext);
-                  if (fileETag) hdhds["ETag"] = fileETag;
+                  if (end > filelen - 1) end = filelen - 1;
+                  rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
+                  rhd["Content-Length"] = end - begin + 1;
+                  if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
+                  if (fileETag) rhd["ETag"] = fileETag;
 
                   if (req.method != "HEAD") {
-                    var readStream = fs.createReadStream(readFrom);
+                    var readStream = fs.createReadStream(readFrom, {
+                      start: begin,
+                      end: end
+                    });
                     readStream.on("error", function (err) {
                       if (err.code == "ENOENT") {
                         callServerError(404);
@@ -3820,208 +3714,314 @@ if (!cluster.isPrimary) {
                       }
                     }).on("open", function () {
                       try {
-                        var resStream = {};
-                        if (useBrotli && isCompressable) {
-                          resStream = zlib.createBrotliCompress();
-                          resStream.pipe(res);
-                        } else if (useDeflate && isCompressable) {
-                          resStream = zlib.createDeflateRaw();
-                          resStream.pipe(res);
-                        } else if (useGzip && isCompressable) {
-                          resStream = zlib.createGzip();
-                          resStream.pipe(res);
-                        } else {
-                          resStream = res;
-                        }
-                        if (ext == "html") {
-                          function afterWriteCallback() {
-                            readStream.on("end", function () {
-                              resStream.end(foot);
-                            });
-                            readStream.pipe(resStream, {
-                              end: false
-                            });
-                          }
-                          res.writeHead(200, http.STATUS_CODES[200], hdhds);
-                          if (!resStream.write(head)) {
-                            resStream.on("drain", afterWriteCallback);
-                          } else {
-                            process.nextTick(afterWriteCallback);
-                          }
-                        } else {
-                          res.writeHead(200, http.STATUS_CODES[200], hdhds);
-                          readStream.pipe(resStream);
-                        }
+                        res.writeHead(206, http.STATUS_CODES[206], rhd);
+                        readStream.pipe(res);
                         serverconsole.resmessage("Client successfully received content.");
                       } catch (err) {
                         callServerError(500, err);
                       }
                     });
                   } else {
-                    res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                    res.writeHead(206, http.STATUS_CODES[206], rhd);
                     res.end();
-                    serverconsole.resmessage("Client successfully received content.");
                   }
+                }
+              } catch (err) {
+                callServerError(500, err);
+              }
+            } else {
+              // Helper function to check if compression is allowed for the file
+              function canCompress(path, list) {
+                var canCompress = true;
+                for (var i = 0; i < list.length; i++) {
+                  if (createRegex(list[i], true).test(path)) {
+                    canCompress = false;
+                    break;
+                  }
+                }
+                return canCompress;
+              }
+
+              var useBrotli = (ext != "br" && filelen > 256 && zlib.createBrotliCompress && acceptEncoding.match(/\bbr\b/));
+              var useDeflate = (ext != "zip" && filelen > 256 && acceptEncoding.match(/\bdeflate\b/));
+              var useGzip = (ext != "gz" && filelen > 256 && acceptEncoding.match(/\bgzip\b/));
+
+              var isCompressable = true;
+              try {
+                // Check for files not to compressed and compression enabling setting. Also check for browser quirks and adjust compression accordingly
+                if((!useBrotli && !useDeflate && !useGzip) || configJSON.enableCompression !== true || !canCompress(href, dontCompress)) {
+                  isCompressable = false; // Compression is disabled
+                } else if (ext != "html" && ext != "htm" && ext != "xhtml" && ext != "xht" && ext != "shtml") {
+                  if (/^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                    isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
+                  } else if (/^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
+                    isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
+                  }
+                } else {
+                  if (/^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(req.headers["user-agent"]) && !(/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(req.headers["user-agent"]))) {
+                    isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
+                  }
+                }
+              } catch (err) {
+                callServerError(500, err);
+                return;
+              }
+
+              // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
+              if (process.isBun && useBrotli && isCompressable) {
+                try {
+                  zlib.createBrotliCompress();
                 } catch (err) {
-                  callServerError(500, err);
+                  useBrotli = false;
                 }
               }
-            } else if (stats.isDirectory()) {
-              // Check if directory listing is enabled in the configuration
-              if (checkForEnabledDirectoryListing(req.headers.host, req.socket ? req.socket.localAddress : undefined)) {
-                var customDirListingHeader = "";
-                var customDirListingFooter = "";
 
-                function getCustomDirListingHeader(callback) {
-                  fs.readFile(("." + dHref + "/.dirhead").replace(/\/+/g, "/"), function (err, data) {
-                    if (err) {
-                      if (err.code == "ENOENT" || err.code == "EISDIR") {
-                        if (os.platform != "win32" || href != "/") {
-                          fs.readFile(("." + dHref + "/HEAD.html").replace(/\/+/g, "/"), function (err, data) {
-                            if (err) {
-                              if (err.code == "ENOENT" || err.code == "EISDIR") {
-                                callback();
-                              } else {
-                                callServerError(500, err);
-                              }
-                            } else {
-                              customDirListingHeader = data.toString();
-                              callback();
-                            }
+              try {
+                var hdhds = {};
+                if (useBrotli && isCompressable) {
+                  hdhds["Content-Encoding"] = "br";
+                } else if (useDeflate && isCompressable) {
+                  hdhds["Content-Encoding"] = "deflate";
+                } else if (useGzip && isCompressable) {
+                  hdhds["Content-Encoding"] = "gzip";
+                } else {
+                  if (ext == "html") {
+                    hdhds["Content-Length"] = head.length + filelen + foot.length;
+                  } else {
+                    hdhds["Content-Length"] = filelen;
+                  }
+                }
+                if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
+                delete hdhds["Content-Type"];
+                if (!(mime.contentType(ext) == false) && ext != "") hdhds["Content-Type"] = mime.contentType(ext);
+                if (fileETag) hdhds["ETag"] = fileETag;
+
+                if (req.method != "HEAD") {
+                  var readStream = fs.createReadStream(readFrom);
+                  readStream.on("error", function (err) {
+                    if (err.code == "ENOENT") {
+                      callServerError(404);
+                      serverconsole.errmessage("Resource not found.");
+                    } else if (err.code == "ENOTDIR") {
+                      callServerError(404); // Assume that file doesn't exist.
+                      serverconsole.errmessage("Resource not found.");
+                    } else if (err.code == "EACCES") {
+                      callServerError(403);
+                      serverconsole.errmessage("Access denied.");
+                    } else if (err.code == "ENAMETOOLONG") {
+                      callServerError(414);
+                    } else if (err.code == "EMFILE") {
+                      callServerError(503);
+                    } else if (err.code == "ELOOP") {
+                      callServerError(508); // The symbolic link loop is detected during file system operations.
+                      serverconsole.errmessage("Symbolic link loop detected.");
+                    } else {
+                      callServerError(500, err);
+                    }
+                  }).on("open", function () {
+                    try {
+                      var resStream = {};
+                      if (useBrotli && isCompressable) {
+                        resStream = zlib.createBrotliCompress();
+                        resStream.pipe(res);
+                      } else if (useDeflate && isCompressable) {
+                        resStream = zlib.createDeflateRaw();
+                        resStream.pipe(res);
+                      } else if (useGzip && isCompressable) {
+                        resStream = zlib.createGzip();
+                        resStream.pipe(res);
+                      } else {
+                        resStream = res;
+                      }
+                      if (ext == "html") {
+                        function afterWriteCallback() {
+                          readStream.on("end", function () {
+                            resStream.end(foot);
                           });
+                          readStream.pipe(resStream, {
+                            end: false
+                          });
+                        }
+                        res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                        if (!resStream.write(head)) {
+                          resStream.on("drain", afterWriteCallback);
                         } else {
-                          callback();
+                          process.nextTick(afterWriteCallback);
                         }
                       } else {
-                        callServerError(500, err);
+                        res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                        readStream.pipe(resStream);
                       }
-                    } else {
-                      customDirListingHeader = data.toString();
-                      callback();
+                      serverconsole.resmessage("Client successfully received content.");
+                    } catch (err) {
+                      callServerError(500, err);
                     }
                   });
+                } else {
+                  res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                  res.end();
+                  serverconsole.resmessage("Client successfully received content.");
                 }
+              } catch (err) {
+                callServerError(500, err);
+              }
+            }
+          } else if (stats.isDirectory()) {
+            // Check if directory listing is enabled in the configuration
+            if (checkForEnabledDirectoryListing(req.headers.host, req.socket ? req.socket.localAddress : undefined)) {
+              var customDirListingHeader = "";
+              var customDirListingFooter = "";
 
-                function getCustomDirListingFooter(callback) {
-                  fs.readFile(("." + dHref + "/.dirfoot").replace(/\/+/g, "/"), function (err, data) {
-                    if (err) {
-                      if (err.code == "ENOENT" || err.code == "EISDIR") {
-                        if (os.platform != "win32" || href != "/") {
-                          fs.readFile(("." + dHref + "/FOOT.html").replace(/\/+/g, "/"), function (err, data) {
-                            if (err) {
-                              if (err.code == "ENOENT" || err.code == "EISDIR") {
-                                callback();
-                              } else {
-                                callServerError(500, err);
-                              }
-                            } else {
-                              customDirListingFooter = data.toString();
+              function getCustomDirListingHeader(callback) {
+                fs.readFile(("." + dHref + "/.dirhead").replace(/\/+/g, "/"), function (err, data) {
+                  if (err) {
+                    if (err.code == "ENOENT" || err.code == "EISDIR") {
+                      if (os.platform != "win32" || href != "/") {
+                        fs.readFile(("." + dHref + "/HEAD.html").replace(/\/+/g, "/"), function (err, data) {
+                          if (err) {
+                            if (err.code == "ENOENT" || err.code == "EISDIR") {
                               callback();
+                            } else {
+                              callServerError(500, err);
                             }
-                          });
-                        } else {
-                          callback();
-                        }
+                          } else {
+                            customDirListingHeader = data.toString();
+                            callback();
+                          }
+                        });
                       } else {
-                        callServerError(500, err);
+                        callback();
                       }
                     } else {
-                      customDirListingFooter = data.toString();
-                      callback();
+                      callServerError(500, err);
                     }
-                  });
-                }
+                  } else {
+                    customDirListingHeader = data.toString();
+                    callback();
+                  }
+                });
+              }
 
-                // Read custom header and footer content (if available)
-                getCustomDirListingHeader(function () {
-                  getCustomDirListingFooter(function () {
-                    // Check if custom header has HTML tag
-                    var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
+              function getCustomDirListingFooter(callback) {
+                fs.readFile(("." + dHref + "/.dirfoot").replace(/\/+/g, "/"), function (err, data) {
+                  if (err) {
+                    if (err.code == "ENOENT" || err.code == "EISDIR") {
+                      if (os.platform != "win32" || href != "/") {
+                        fs.readFile(("." + dHref + "/FOOT.html").replace(/\/+/g, "/"), function (err, data) {
+                          if (err) {
+                            if (err.code == "ENOENT" || err.code == "EISDIR") {
+                              callback();
+                            } else {
+                              callServerError(500, err);
+                            }
+                          } else {
+                            customDirListingFooter = data.toString();
+                            callback();
+                          }
+                        });
+                      } else {
+                        callback();
+                      }
+                    } else {
+                      callServerError(500, err);
+                    }
+                  } else {
+                    customDirListingFooter = data.toString();
+                    callback();
+                  }
+                });
+              }
 
-                    // Generate HTML head and footer based on configuration and custom content
-                    var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
-                      (!headerHasHTMLTag ?
-                        "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
-                        customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
-                      head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
+              // Read custom header and footer content (if available)
+              getCustomDirListingHeader(function () {
+                getCustomDirListingFooter(function () {
+                  // Check if custom header has HTML tag
+                  var headerHasHTMLTag = customDirListingHeader.replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "").match(/<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i);
+
+                  // Generate HTML head and footer based on configuration and custom content
+                  var htmlHead = (!configJSON.enableDirectoryListingWithDefaultHead || head == "" ?
+                    (!headerHasHTMLTag ?
+                      "<!DOCTYPE html><html><head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title><meta charset=\"UTF-8\" /><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /></head><body>" :
+                      customDirListingHeader.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) :
+                    head.replace(/<head>/i, "<head><title>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</title>")) +
                       (!headerHasHTMLTag ? customDirListingHeader : "") +
                       "<h1>Directory: " + decodeURIComponent(origHref).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</h1><table id=\"directoryListing\"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>" + (checkPathLevel(decodeURIComponent(origHref)) < 1 ? "" : "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/return.png\" width=\"24px\" height=\"24px\" alt=\"[RET]\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" + (origHref).replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") + "\">Return</a></td><td></td><td></td></tr>");
 
-                    var htmlFoot = "</table><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p>" + customDirListingFooter + (!configJSON.enableDirectoryListingWithDefaultHead || foot == "" ? "</body></html>" : foot);
+                  var htmlFoot = "</table><p><i>" + (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + (req.headers.host == undefined ? "" : " on " + String(req.headers.host).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) + "</i></p>" + customDirListingFooter + (!configJSON.enableDirectoryListingWithDefaultHead || foot == "" ? "</body></html>" : foot);
 
-                    if (fs.existsSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/"))) {
-                      htmlFoot = "</table><hr/>" + fs.readFileSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/")) + htmlFoot;
-                    }
+                  if (fs.existsSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/"))) {
+                    htmlFoot = "</table><hr/>" + fs.readFileSync("." + decodeURIComponent(href) + "/.maindesc".replace(/\/+/g, "/")) + htmlFoot;
+                  }
 
-                    fs.readdir(readFrom, function (err, list) {
-                      try {
-                        if (err) throw err;
-                        list = list.sort();
+                  fs.readdir(readFrom, function (err, list) {
+                    try {
+                      if (err) throw err;
+                      list = list.sort();
 
-                        // Function to get stats for all files in the directory
-                        function getStatsForAllFilesI(fileList, callback, prefix, pushArray, index) {
-                          if (fileList.length == 0) {
-                            callback(pushArray);
-                            return;
-                          }
+                      // Function to get stats for all files in the directory
+                      function getStatsForAllFilesI(fileList, callback, prefix, pushArray, index) {
+                        if (fileList.length == 0) {
+                          callback(pushArray);
+                          return;
+                        }
 
-                          fs.stat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
-                            if (err) {
-                              fs.lstat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
-                                pushArray.push({
-                                  name: fileList[index],
-                                  stats: err ? null : stats,
-                                  errored: true
-                                });
-                                if (index < fileList.length - 1) {
-                                  getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
-                                } else {
-                                  callback(pushArray);
-                                }
-                              });
-                            } else {
+                        fs.stat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
+                          if (err) {
+                            fs.lstat((prefix + "/" + fileList[index]).replace(/\/+/g, "/"), function (err, stats) {
                               pushArray.push({
                                 name: fileList[index],
-                                stats: stats,
-                                errored: false
+                                stats: err ? null : stats,
+                                errored: true
                               });
                               if (index < fileList.length - 1) {
                                 getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
                               } else {
                                 callback(pushArray);
                               }
+                            });
+                          } else {
+                            pushArray.push({
+                              name: fileList[index],
+                              stats: stats,
+                              errored: false
+                            });
+                            if (index < fileList.length - 1) {
+                              getStatsForAllFilesI(fileList, callback, prefix, pushArray, index + 1);
+                            } else {
+                              callback(pushArray);
                             }
-                          });
-                        }
+                          }
+                        });
+                      }
 
-                        // Wrapper function to get stats for all files
-                        function getStatsForAllFiles(fileList, prefix, callback) {
-                          if (!prefix) prefix = "";
-                          getStatsForAllFilesI(fileList, callback, prefix, [], 0);
-                        }
+                      // Wrapper function to get stats for all files
+                      function getStatsForAllFiles(fileList, prefix, callback) {
+                        if (!prefix) prefix = "";
+                        getStatsForAllFilesI(fileList, callback, prefix, [], 0);
+                      }
 
-                        // Get stats for all files in the directory and generate the listing
-                        getStatsForAllFiles(list, readFrom, function (filelist) {
-                          var directoryListingRows = [];
-                          for (var i = 0; i < filelist.length; i++) {
-                            if (filelist[i].name[0] !== ".") {
-                              var estats = filelist[i].stats;
-                              var ename = filelist[i].name;
-                              var eext = ename.match(/\.([^.]+)$/);
-                              eext = eext ? eext[1] : "";
-                              var emime = eext ? mime.contentType(eext) : false;
-                              if (filelist[i].errored) {
-                                directoryListingRows.push(
-                                  "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
+                      // Get stats for all files in the directory and generate the listing
+                      getStatsForAllFiles(list, readFrom, function (filelist) {
+                        var directoryListingRows = [];
+                        for (var i = 0; i < filelist.length; i++) {
+                          if (filelist[i].name[0] !== ".") {
+                            var estats = filelist[i].stats;
+                            var ename = filelist[i].name;
+                            var eext = ename.match(/\.([^.]+)$/);
+                            eext = eext ? eext[1] : "";
+                            var emime = eext ? mime.contentType(eext) : false;
+                            if (filelist[i].errored) {
+                              directoryListingRows.push(
+                                "<tr><td style=\"width: 24px;\"><img src=\"/.dirimages/bad.png\" alt=\"[BAD]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
                                   (href + "/" + encodeURI(ename)).replace(/\/+/g, "/") +
                                   "\">" +
                                   ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
                                   "</a></td><td>-</td><td>" +
                                   (estats ? estats.mtime.toDateString() : "-") +
                                   "</td></tr>\r\n"
-                                );
-                              } else {
-                                var entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
+                              );
+                            } else {
+                              var entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
                                   (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
                                   (estats.isDirectory() ? "/" : "") +
                                   "\">" +
@@ -4032,11 +4032,11 @@ if (!cluster.isPrimary) {
                                   estats.mtime.toDateString() +
                                   "</td></tr>\r\n";
 
-                                // Determine the file type and set the appropriate image and alt text
-                                if (estats.isDirectory()) {
-                                  entry = entry.replace("[img]", "/.dirimages/directory.png").replace("[alt]", "[DIR]");
-                                } else if (!estats.isFile()) {
-                                  entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
+                              // Determine the file type and set the appropriate image and alt text
+                              if (estats.isDirectory()) {
+                                entry = entry.replace("[img]", "/.dirimages/directory.png").replace("[alt]", "[DIR]");
+                              } else if (!estats.isFile()) {
+                                entry = "<tr><td style=\"width: 24px;\"><img src=\"[img]\" alt=\"[alt]\" width=\"24px\" height=\"24px\" /></td><td style=\"word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;\"><a href=\"" +
                                     (origHref + "/" + encodeURIComponent(ename)).replace(/\/+/g, "/") +
                                     "\">" +
                                     ename.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
@@ -4044,98 +4044,98 @@ if (!cluster.isPrimary) {
                                     estats.mtime.toDateString() +
                                     "</td></tr>\r\n";
 
-                                  // Determine the special file types (block device, character device, etc.)
-                                  if (estats.isBlockDevice()) {
-                                    entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[BLK]");
-                                  } else if (estats.isCharacterDevice()) {
-                                    entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[CHR]");
-                                  } else if (estats.isFIFO()) {
-                                    entry = entry.replace("[img]", "/.dirimages/fifo.png").replace("[alt]", "[FIF]");
-                                  } else if (estats.isSocket()) {
-                                    entry = entry.replace("[img]", "/.dirimages/socket.png").replace("[alt]", "[SCK]");
-                                  }
-                                } else if (ename.match(/README|LICEN[SC]E/i)) {
-                                  entry = entry.replace("[img]", "/.dirimages/important.png").replace("[alt]", "[IMP]");
-                                } else if (eext.match(/^(?:[xs]?html?|xml)$/i)) {
-                                  entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (eext == "xml" ? "[XML]" : "[HTM]"));
-                                } else if (eext == "js") {
-                                  entry = entry.replace("[img]", "/.dirimages/javascript.png").replace("[alt]", "[JS ]");
-                                } else if (eext == "php") {
-                                  entry = entry.replace("[img]", "/.dirimages/php.png").replace("[alt]", "[PHP]");
-                                } else if (eext == "css") {
-                                  entry = entry.replace("[img]", "/.dirimages/css.png").replace("[alt]", "[CSS]");
-                                } else if (emime && emime.split("/")[0] == "image") {
-                                  entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", (eext == "ico" ? "[ICO]" : "[IMG]"));
-                                } else if (emime && emime.split("/")[0] == "font") {
-                                  entry = entry.replace("[img]", "/.dirimages/font.png").replace("[alt]", "[FON]");
-                                } else if (emime && emime.split("/")[0] == "audio") {
-                                  entry = entry.replace("[img]", "/.dirimages/audio.png").replace("[alt]", "[AUD]");
-                                } else if ((emime && emime.split("/")[0] == "text") || eext == "json") {
-                                  entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (eext == "json" ? "[JSO]" : "[TXT]"));
-                                } else if (emime && emime.split("/")[0] == "video") {
-                                  entry = entry.replace("[img]", "/.dirimages/video.png").replace("[alt]", "[VID]");
-                                } else if (eext.match(/^(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/i)) {
-                                  entry = entry.replace("[img]", "/.dirimages/archive.png").replace("[alt]", "[ARC]");
-                                } else if (eext.match(/^(?:[id]mg|iso|flp)$/i)) {
-                                  entry = entry.replace("[img]", "/.dirimages/diskimage.png").replace("[alt]", "[DSK]");
-                                } else {
-                                  entry = entry.replace("[img]", "/.dirimages/other.png").replace("[alt]", "[OTH]");
+                                // Determine the special file types (block device, character device, etc.)
+                                if (estats.isBlockDevice()) {
+                                  entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[BLK]");
+                                } else if (estats.isCharacterDevice()) {
+                                  entry = entry.replace("[img]", "/.dirimages/hwdevice.png").replace("[alt]", "[CHR]");
+                                } else if (estats.isFIFO()) {
+                                  entry = entry.replace("[img]", "/.dirimages/fifo.png").replace("[alt]", "[FIF]");
+                                } else if (estats.isSocket()) {
+                                  entry = entry.replace("[img]", "/.dirimages/socket.png").replace("[alt]", "[SCK]");
                                 }
-                                directoryListingRows.push(entry);
+                              } else if (ename.match(/README|LICEN[SC]E/i)) {
+                                entry = entry.replace("[img]", "/.dirimages/important.png").replace("[alt]", "[IMP]");
+                              } else if (eext.match(/^(?:[xs]?html?|xml)$/i)) {
+                                entry = entry.replace("[img]", "/.dirimages/html.png").replace("[alt]", (eext == "xml" ? "[XML]" : "[HTM]"));
+                              } else if (eext == "js") {
+                                entry = entry.replace("[img]", "/.dirimages/javascript.png").replace("[alt]", "[JS ]");
+                              } else if (eext == "php") {
+                                entry = entry.replace("[img]", "/.dirimages/php.png").replace("[alt]", "[PHP]");
+                              } else if (eext == "css") {
+                                entry = entry.replace("[img]", "/.dirimages/css.png").replace("[alt]", "[CSS]");
+                              } else if (emime && emime.split("/")[0] == "image") {
+                                entry = entry.replace("[img]", "/.dirimages/image.png").replace("[alt]", (eext == "ico" ? "[ICO]" : "[IMG]"));
+                              } else if (emime && emime.split("/")[0] == "font") {
+                                entry = entry.replace("[img]", "/.dirimages/font.png").replace("[alt]", "[FON]");
+                              } else if (emime && emime.split("/")[0] == "audio") {
+                                entry = entry.replace("[img]", "/.dirimages/audio.png").replace("[alt]", "[AUD]");
+                              } else if ((emime && emime.split("/")[0] == "text") || eext == "json") {
+                                entry = entry.replace("[img]", "/.dirimages/text.png").replace("[alt]", (eext == "json" ? "[JSO]" : "[TXT]"));
+                              } else if (emime && emime.split("/")[0] == "video") {
+                                entry = entry.replace("[img]", "/.dirimages/video.png").replace("[alt]", "[VID]");
+                              } else if (eext.match(/^(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/i)) {
+                                entry = entry.replace("[img]", "/.dirimages/archive.png").replace("[alt]", "[ARC]");
+                              } else if (eext.match(/^(?:[id]mg|iso|flp)$/i)) {
+                                entry = entry.replace("[img]", "/.dirimages/diskimage.png").replace("[alt]", "[DSK]");
+                              } else {
+                                entry = entry.replace("[img]", "/.dirimages/other.png").replace("[alt]", "[OTH]");
                               }
+                              directoryListingRows.push(entry);
                             }
                           }
-
-                          // Push the information about empty directory
-                          if (directoryListingRows.length == 0) {
-                            directoryListingRows.push("<tr><td></td><td>No files found</td><td></td><td></td></tr>");
-                          }
-
-                          // Send the directory listing response
-                          res.writeHead(200, http.STATUS_CODES[200], {
-                            "Content-Type": "text/html; charset=utf-8"
-                          });
-                          res.end(htmlHead + directoryListingRows.join("") + htmlFoot);
-                          serverconsole.resmessage("Client successfully received content.");
-                        });
-
-                      } catch (err) {
-                        if (err.code == "ENOENT") {
-                          callServerError(404);
-                          serverconsole.errmessage("Resource not found.");
-                        } else if (err.code == "ENOTDIR") {
-                          callServerError(404); // Assume that file doesn't exist.
-                          serverconsole.errmessage("Resource not found.");
-                        } else if (err.code == "EACCES") {
-                          callServerError(403);
-                          serverconsole.errmessage("Access denied.");
-                        } else if (err.code == "ENAMETOOLONG") {
-                          callServerError(414);
-                        } else if (err.code == "EMFILE") {
-                          callServerError(503);
-                        } else if (err.code == "ELOOP") {
-                          callServerError(508); // The symbolic link loop is detected during file system operations.
-                          serverconsole.errmessage("Symbolic link loop detected.");
-                        } else {
-                          callServerError(500, err);
                         }
+
+                        // Push the information about empty directory
+                        if (directoryListingRows.length == 0) {
+                          directoryListingRows.push("<tr><td></td><td>No files found</td><td></td><td></td></tr>");
+                        }
+
+                        // Send the directory listing response
+                        res.writeHead(200, http.STATUS_CODES[200], {
+                          "Content-Type": "text/html; charset=utf-8"
+                        });
+                        res.end(htmlHead + directoryListingRows.join("") + htmlFoot);
+                        serverconsole.resmessage("Client successfully received content.");
+                      });
+
+                    } catch (err) {
+                      if (err.code == "ENOENT") {
+                        callServerError(404);
+                        serverconsole.errmessage("Resource not found.");
+                      } else if (err.code == "ENOTDIR") {
+                        callServerError(404); // Assume that file doesn't exist.
+                        serverconsole.errmessage("Resource not found.");
+                      } else if (err.code == "EACCES") {
+                        callServerError(403);
+                        serverconsole.errmessage("Access denied.");
+                      } else if (err.code == "ENAMETOOLONG") {
+                        callServerError(414);
+                      } else if (err.code == "EMFILE") {
+                        callServerError(503);
+                      } else if (err.code == "ELOOP") {
+                        callServerError(508); // The symbolic link loop is detected during file system operations.
+                        serverconsole.errmessage("Symbolic link loop detected.");
+                      } else {
+                        callServerError(500, err);
                       }
-                    });
+                    }
                   });
                 });
-              } else {
-                // Directory listing is disabled, call 403 Forbidden error
-                callServerError(403);
-                serverconsole.errmessage("Directory listing is disabled.");
-              }
+              });
             } else {
-              callServerError(501);
-              serverconsole.errmessage("SVR.JS doesn't support block devices, character devices, FIFOs nor sockets.");
-              return;
+              // Directory listing is disabled, call 403 Forbidden error
+              callServerError(403);
+              serverconsole.errmessage("Directory listing is disabled.");
             }
+          } else {
+            callServerError(501);
+            serverconsole.errmessage("SVR.JS doesn't support block devices, character devices, FIFOs nor sockets.");
+            return;
           }
-        });
-      }
+        }
+      });
+    }
 
     try {
       // Scan the block list
