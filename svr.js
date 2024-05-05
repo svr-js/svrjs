@@ -2661,62 +2661,10 @@ if (!cluster.isPrimary) {
     malformedcounter++;
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " sent invalid request.");
-
-    function getCustomHeader(callback) {
-  fs.readFile(("./.head").replace(/\/+/g, "/"), function (err, data) {
-    if (err) {
-      if (err.code == "ENOENT" || err.code == "EISDIR") {
-        fs.readFile(("./head.html").replace(/\/+/g, "/"), function (err, data) {
-          if (err) {
-            if (err.code == "ENOENT" || err.code == "EISDIR") {
-              callback();
-            } else {
-              callServerError(500, err);
-            }
-          } else {
-            head = data.toString();
-            callback();
-          }
-        });
-      } else {
-        callServerError(500, err);
-      }
-    } else {
-      head = data.toString();
-      callback();
-    }
-  });
-}
-
-function getCustomFooter(callback) {
-  fs.readFile(("./.foot").replace(/\/+/g, "/"), function (err, data) {
-    if (err) {
-      if (err.code == "ENOENT" || err.code == "EISDIR") {
-        fs.readFile(("./foot.html").replace(/\/+/g, "/"), function (err, data) {
-          if (err) {
-            if (err.code == "ENOENT" || err.code == "EISDIR") {
-              callback();
-            } else {
-              callServerError(500, err);
-            }
-          } else {
-            foot = data.toString();
-            callback();
-          }
-        });
-      } else {
-        callServerError(500, err);
-      }
-    } else {
-      foot = data.toString();
-      callback();
-    }
-  });
-}
-
-getCustomHeader(function () {
-  getCustomFooter(function () {
     try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+
       if ((err.code && (err.code.indexOf("ERR_SSL_") == 0 || err.code.indexOf("ERR_TLS_") == 0)) || (!err.code && err.message.indexOf("SSL routines") != -1)) {
         if (err.code == "ERR_SSL_HTTP_REQUEST" || err.message.indexOf("http request") != -1) {
           serverconsole.errmessage("Client sent HTTP request to HTTPS port.");
@@ -2805,8 +2753,6 @@ getCustomHeader(function () {
       serverconsole.errmessage("There was an error while determining type of malformed request.");
       callServerError(400);
     }
-  });
-});
   }
 
   function connhandler(request, socket, head) {
@@ -2920,10 +2866,9 @@ getCustomHeader(function () {
     }
 
     function vres() {
-      serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
-      if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
+        serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
+        if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
     }
-
     modExecute(mods, vres);
   }
 
@@ -3368,57 +3313,12 @@ getCustomHeader(function () {
       });
     }
 
-    function getCustomHeader(callback) {
-  fs.readFile(("./.head").replace(/\/+/g, "/"), function (err, data) {
-    if (err) {
-      if (err.code == "ENOENT" || err.code == "EISDIR") {
-        fs.readFile(("./head.html").replace(/\/+/g, "/"), function (err, data) {
-          if (err) {
-            if (err.code == "ENOENT" || err.code == "EISDIR") {
-              callback();
-            } else {
-              callServerError(500, err);
-            }
-          } else {
-            head = data.toString();
-            callback();
-          }
-        });
-      } else {
-        callServerError(500, err);
-      }
-    } else {
-      head = data.toString();
-      callback();
+    try {
+      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    } catch (err) {
+      callServerError(500, err);
     }
-  });
-}
-
-function getCustomFooter(callback) {
-  fs.readFile(("./.foot").replace(/\/+/g, "/"), function (err, data) {
-    if (err) {
-      if (err.code == "ENOENT" || err.code == "EISDIR") {
-        fs.readFile(("./foot.html").replace(/\/+/g, "/"), function (err, data) {
-          if (err) {
-            if (err.code == "ENOENT" || err.code == "EISDIR") {
-              callback();
-            } else {
-              callServerError(500, err);
-            }
-          } else {
-            foot = data.toString();
-            callback();
-          }
-        });
-      } else {
-        callServerError(500, err);
-      }
-    } else {
-      foot = data.toString();
-      callback();
-    }
-  });
-}
 
 
     // Function to perform HTTP redirection to a specified destination URL
@@ -3492,8 +3392,6 @@ function getCustomFooter(callback) {
       });
     }
 
-    getCustomHeader( function () {
-      getCustomFooter( function () {
     // Authenticated user variable
     var authUser = null;
 
@@ -3522,7 +3420,6 @@ function getCustomFooter(callback) {
       return;
     }
     var origHref = href; // Placeholder origHref
-
 
     if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
       // Expectations not met.
@@ -3554,7 +3451,7 @@ function getCustomFooter(callback) {
 
     var vresCalled = false;
 
-    function vres() {
+      function vres() {
         if (vresCalled) {
           process.emitWarning("elseCallback() invoked multiple times.", {
             code: "WARN_SVRJS_MULTIPLE_ELSECALLBACK"
@@ -4958,9 +4855,8 @@ function getCustomFooter(callback) {
     } catch (err) {
       callServerError(500, err);
     }
-  });
-    });
   }
+
   function serverErrorHandler(err, isRedirect) {
     if(isRedirect) attmtsRedir--;
     else attmts--;
