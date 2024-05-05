@@ -2661,10 +2661,62 @@ if (!cluster.isPrimary) {
     malformedcounter++;
     serverconsole.locmessage("Somebody connected to " + (secure && fromMain ? ((typeof sport == "number" ? "port " : "socket ") + sport) : ((typeof port == "number" ? "port " : "socket ") + port)) + "...");
     serverconsole.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " sent invalid request.");
-    try {
-      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
 
+    function getCustomHeader(callback) {
+  fs.readFile(("./.head").replace(/\/+/g, "/"), function (err, data) {
+    if (err) {
+      if (err.code == "ENOENT" || err.code == "EISDIR") {
+        fs.readFile(("./head.html").replace(/\/+/g, "/"), function (err, data) {
+          if (err) {
+            if (err.code == "ENOENT" || err.code == "EISDIR") {
+              callback();
+            } else {
+              callServerError(500, err);
+            }
+          } else {
+            head = data.toString();
+            callback();
+          }
+        });
+      } else {
+        callServerError(500, err);
+      }
+    } else {
+      head = data.toString();
+      callback();
+    }
+  });
+}
+
+function getCustomFooter(callback) {
+  fs.readFile(("./.foot").replace(/\/+/g, "/"), function (err, data) {
+    if (err) {
+      if (err.code == "ENOENT" || err.code == "EISDIR") {
+        fs.readFile(("./foot.html").replace(/\/+/g, "/"), function (err, data) {
+          if (err) {
+            if (err.code == "ENOENT" || err.code == "EISDIR") {
+              callback();
+            } else {
+              callServerError(500, err);
+            }
+          } else {
+            foot = data.toString();
+            callback();
+          }
+        });
+      } else {
+        callServerError(500, err);
+      }
+    } else {
+      foot = data.toString();
+      callback();
+    }
+  });
+}
+
+getCustomHeader(function () {
+  getCustomFooter(function () {
+    try {
       if ((err.code && (err.code.indexOf("ERR_SSL_") == 0 || err.code.indexOf("ERR_TLS_") == 0)) || (!err.code && err.message.indexOf("SSL routines") != -1)) {
         if (err.code == "ERR_SSL_HTTP_REQUEST" || err.message.indexOf("http request") != -1) {
           serverconsole.errmessage("Client sent HTTP request to HTTPS port.");
@@ -2753,6 +2805,8 @@ if (!cluster.isPrimary) {
       serverconsole.errmessage("There was an error while determining type of malformed request.");
       callServerError(400);
     }
+  });
+});
   }
 
   function connhandler(request, socket, head) {
@@ -2865,13 +2919,12 @@ if (!cluster.isPrimary) {
       modFunction();
     }
 
-    function vres(req, socket, head, serverconsole) {
-      return function () {
-        serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
-        if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
-      };
+    function vres() {
+      serverconsole.errmessage("SVR.JS doesn't support proxy without proxy mod.");
+      if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
     }
-    modExecute(mods, vres(req, socket, head, serverconsole));
+
+    modExecute(mods, vres);
   }
 
   function reqhandler(req, res, fromMain) {
@@ -3315,12 +3368,57 @@ if (!cluster.isPrimary) {
       });
     }
 
-    try {
-      head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-      foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
-    } catch (err) {
-      callServerError(500, err);
+    function getCustomHeader(callback) {
+  fs.readFile(("./.head").replace(/\/+/g, "/"), function (err, data) {
+    if (err) {
+      if (err.code == "ENOENT" || err.code == "EISDIR") {
+        fs.readFile(("./head.html").replace(/\/+/g, "/"), function (err, data) {
+          if (err) {
+            if (err.code == "ENOENT" || err.code == "EISDIR") {
+              callback();
+            } else {
+              callServerError(500, err);
+            }
+          } else {
+            head = data.toString();
+            callback();
+          }
+        });
+      } else {
+        callServerError(500, err);
+      }
+    } else {
+      head = data.toString();
+      callback();
     }
+  });
+}
+
+function getCustomFooter(callback) {
+  fs.readFile(("./.foot").replace(/\/+/g, "/"), function (err, data) {
+    if (err) {
+      if (err.code == "ENOENT" || err.code == "EISDIR") {
+        fs.readFile(("./foot.html").replace(/\/+/g, "/"), function (err, data) {
+          if (err) {
+            if (err.code == "ENOENT" || err.code == "EISDIR") {
+              callback();
+            } else {
+              callServerError(500, err);
+            }
+          } else {
+            foot = data.toString();
+            callback();
+          }
+        });
+      } else {
+        callServerError(500, err);
+      }
+    } else {
+      foot = data.toString();
+      callback();
+    }
+  });
+}
 
 
     // Function to perform HTTP redirection to a specified destination URL
@@ -3394,6 +3492,8 @@ if (!cluster.isPrimary) {
       });
     }
 
+    getCustomHeader( function () {
+      getCustomFooter( function () {
     // Authenticated user variable
     var authUser = null;
 
@@ -3421,6 +3521,7 @@ if (!cluster.isPrimary) {
       serverconsole.errmessage("Bad request!");
       return;
     }
+    var origHref = href; // Placeholder origHref
 
 
     if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
@@ -3453,8 +3554,7 @@ if (!cluster.isPrimary) {
 
     var vresCalled = false;
 
-    function vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {
-      return function () {
+    function vres() {
         if (vresCalled) {
           process.emitWarning("elseCallback() invoked multiple times.", {
             code: "WARN_SVRJS_MULTIPLE_ELSECALLBACK"
@@ -4138,8 +4238,7 @@ if (!cluster.isPrimary) {
             }
           }
         });
-      };
-    }
+      }
 
     try {
       // Scan the block list
@@ -4356,7 +4455,7 @@ if (!cluster.isPrimary) {
         }
       }
 
-      var origHref = href;
+      origHref = href;
 
       // Add web root postfixes
       if (!isProxy) {
@@ -4801,7 +4900,7 @@ if (!cluster.isPrimary) {
                       serverconsole.reqmessage("Client is logged in as \"" + String(username).replace(/[\r\n]/g, "") + "\".");
                       authUser = username;
                       redirectTrailingSlashes(function () {
-                        modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser));
+                        modExecute(mods, vres);
                       });
                     }
                   } catch (err) {
@@ -4850,7 +4949,7 @@ if (!cluster.isPrimary) {
             }
           } else {
             redirectTrailingSlashes(function () {
-              modExecute(mods, vres(req, res, serverconsole, responseEnd, href, ext, uobject, search, "index.html", users, page404, head, foot, "", callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser));
+              modExecute(mods, vres);
             });
           }
         }
@@ -4859,8 +4958,9 @@ if (!cluster.isPrimary) {
     } catch (err) {
       callServerError(500, err);
     }
+  });
+    });
   }
-
   function serverErrorHandler(err, isRedirect) {
     if(isRedirect) attmtsRedir--;
     else attmts--;
