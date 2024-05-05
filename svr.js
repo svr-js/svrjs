@@ -1347,6 +1347,81 @@ function sanitizeURL(resource, allowDoubleSlashes) {
   else return sanitizedResource;
 }
 
+// SVR.JS URL parser function
+function parseURL(uri, prepend) {
+  // Replace newline characters with its respective URL encodings
+  uri = uri.replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+
+  // If URL begins with a slash, prepend a string if available
+  if (prepend && uri[0] == "/") uri = prepend.replace(/\/+$/,"") + uri;
+
+  // Determine if URL has slashes
+  var hasSlashes = (uri.indexOf("/") != -1);
+
+  // Parse the URL using regular expression
+  var parsedURI = uri.match(/^(?:([^:]+:)(\/\/)?)?(?:([^@]+)@)?([^:\/?#\*]+|\[[^\*]\/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/);
+  // Match 1: protocol
+  // Match 2: slashes after protocol
+  // Match 3: authentication credentials
+  // Match 4: host name
+  // Match 5: port
+  // Match 6: path name
+  // Match 7: query string
+  // Match 8: hash
+
+  // If regular expression didn't match the entire URL, throw an error
+  if (parsedURI[0].length != uri.length) throw new Error("Invalid URL: " + uri);
+
+  // If match 1 is not empty, set the slash variable based on state of match 2
+  if (parsedURI[1]) hasSlashes = (parsedURI[2] == "//");
+
+  // If match 6 is empty and URL has slashes, set it to a slash.
+  if (hasSlashes && !parsedURI[6]) parsedURI[6] = "/";
+
+  // If match 4 contains Unicode characters, convert it to Punycode. If the result is an empty string, throw an error
+  if (parsedURI[4] && !parsedURI[4].match(/^[a-zA-Z0-9\.\-]+$/)) {
+    parsedURI[4] = url.domainToASCII(parsedURI[4]);
+    if (!parsedURI[4]) throw new Error("Invalid URL: " + uri);
+  }
+
+  // Create a new URL object
+  var uobject = new url.Url();
+
+  // Populate a URL object
+  if (hasSlashes) uobject.slashes = true;
+  if (parsedURI[1]) uobject.protocol = parsedURI[1];
+  if (parsedURI[3]) uobject.auth = parsedURI[3];
+  if (parsedURI[4]) {
+    uobject.host = parsedURI[4] + (parsedURI[5] ? (":" + parsedURI[5]) : "");
+    if (parsedURI[4][0] == "[") uobject.hostname = parsedURI[4].substring(1, parsedURI[4].length-1);
+    else uobject.hostname = parsedURI[4];
+  }
+  if (parsedURI[5]) uobject.port = parsedURI[5];
+  if (parsedURI[6]) uobject.pathname = parsedURI[6];
+  if (parsedURI[7]) {
+    uobject.search = parsedURI[7];
+    // Parse query strings
+    var qobject = Object.create(null);
+    var parsedQuery = parsedURI[7].substring(1).match(/([^&=]*)(?:=([^&]*))?/g);
+    parsedQuery.forEach(function (qp) {
+      if (qp.length > 0) {
+        var parsedQP = qp.match(/([^&=]*)(?:=([^&]*))?/);
+        if (parsedQP) {
+          qobject[parsedQP[1]] = parsedQP[2] ? parsedQP[2] : "";
+        }
+      }
+    });
+    uobject.query = qobject;
+  } else {
+    uobject.query = Object.create(null);
+  }
+  if (parsedURI[8]) uobject.hash = parsedURI[8];
+  if (uobject.pathname) uobject.path = uobject.pathname + (uobject.search ? uobject.search : "");
+  uobject.href = (uobject.protocol ? (uobject.protocol + (uobject.slashes ? "//" : "")) : "") + (uobject.auth ? (uobject.auth + "@") : "") + (uobject.hostname ? uobject.hostname : "") + (uobject.path ? uobject.path : "") + (uobject.hash ? uobject.hash : "");
+
+  return uobject;
+}
+
 // Node.JS mojibake URL fixing function
 function fixNodeMojibakeURL(string) {
   var encoded = "";
@@ -3319,68 +3394,19 @@ if (!cluster.isPrimary) {
       });
     }
 
-
-    // Function to parse a URL string into a URL object
-    function parseURL(uri) {
-      // Prepare the path (remove multiple slashes)
-      var preparedURI = uri.replace(/^\/{2,}/,"/");
-      // Check if the URL API is available (Node.js version >= 10)
-      if (typeof URL !== "undefined" && url.Url) {
-        try {
-          // Create a new URL object using the provided URI and base URL
-          var uobject = new URL(preparedURI, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
-
-          // Create a new URL object (similar to deprecated url.Url)
-          var nuobject = new url.Url();
-
-          // Set properties of the new URL object from the provided URL
-          if (preparedURI.indexOf("/") != -1) nuobject.slashes = true;
-          if (uobject.protocol != "") nuobject.protocol = uobject.protocol;
-          if (uobject.username != "" && uobject.password != "") nuobject.auth = uobject.username + ":" + uobject.password;
-          if (uobject.host != "") nuobject.host = uobject.host;
-          if (uobject.hostname != "") nuobject.hostname = uobject.hostname;
-          if (uobject.port != "") nuobject.port = uobject.port;
-          if (uobject.pathname != "") nuobject.pathname = uobject.pathname;
-          if (uobject.search != "") nuobject.search = uobject.search;
-          if (uobject.hash != "") nuobject.hash = uobject.hash;
-          if (uobject.href != "") nuobject.href = uobject.href;
-
-          // Adjust the pathname and href properties if the URI doesn't start with "/"
-          if (preparedURI[0] != "/") {
-            if (nuobject.pathname) {
-              nuobject.pathname = nuobject.pathname.substring(1);
-              nuobject.href = nuobject.pathname + (nuobject.search ? nuobject.search : "");
-            }
-          }
-
-          // Set the path property as a combination of pathname and search
-          if (nuobject.pathname) {
-            nuobject.path = nuobject.pathname + (nuobject.search ? nuobject.search : "");
-          }
-
-          // Initialize the query object and copy URL search parameters to it
-          nuobject.query = {};
-          uobject.searchParams.forEach(function (value, key) {
-            nuobject.query[key] = value;
-          });
-
-          // Return the created URL object
-          return nuobject;
-        } catch (err) {
-          // If there was an error using the URL API, fall back to deprecated url.parse
-          return url.parse(preparedURI, true);
-        }
-      } else {
-        // If the URL API is not available, fall back to deprecated url.parse
-        return url.parse(preparedURI, true);
-      }
-    }
-
     // Authenticated user variable
     var authUser = null;
 
     // URL-related objects.
-    var uobject = parseURL(req.url);
+    var uobject = {};
+    try {
+      uobject = parseURL(req.url, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+    } catch (err) {
+      // Return an 400 error
+      callServerError(400);
+      serverconsole.errmessage("Bad request!");
+      return;
+    }
     var search = uobject.search;
     var href = uobject.pathname;
     var ext = href.match(/[^\/]\.([^.]+)$/);
@@ -4173,7 +4199,14 @@ if (!cluster.isPrimary) {
         serverconsole.resmessage("URL sanitized: " + req.url + " => " + sanitizedURL);
         if (rewriteDirtyURLs) {
           req.url = sanitizedURL;
-          uobject = parseURL(req.url);
+          try {
+            uobject = parseURL(req.url, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+          } catch (err) {
+            // Return an 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
           search = uobject.search;
           href = uobject.pathname;
           ext = href.match(/[^\/]\.([^.]+)$/);
@@ -4352,7 +4385,14 @@ if (!cluster.isPrimary) {
         if (urlWithPostfix != preparedReqUrl3) {
           serverconsole.resmessage("Added web root postfix: " + req.url + " => " + urlWithPostfix);
           req.url = urlWithPostfix;
-          uobject = parseURL(req.url);
+          try {
+            uobject = parseURL(req.url, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+          } catch (err) {
+            // Return an 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
           search = uobject.search;
           href = uobject.pathname;
           ext = href.match(/[^\/]\.([^.]+)$/);
@@ -4388,7 +4428,14 @@ if (!cluster.isPrimary) {
             rewrittenAgainURL = url.format(rewrittenAgainURL);
             serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
             req.url = rewrittenAgainURL;
-            uobject = parseURL(req.url);
+            try {
+              uobject = parseURL(req.url, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+            } catch (err) {
+              // Return an 400 error
+              callServerError(400);
+              serverconsole.errmessage("Bad request!");
+              return;
+            }
             search = uobject.search;
             href = uobject.pathname;
             ext = href.match(/[^\/]\.([^.]+)$/);
@@ -4415,7 +4462,14 @@ if (!cluster.isPrimary) {
         if (rewrittenURL != req.url) {
           serverconsole.resmessage("URL rewritten: " + req.url + " => " + rewrittenURL);
           req.url = rewrittenURL;
-          uobject = parseURL(req.url);
+          try {
+            uobject = parseURL(req.url, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+          } catch (err) {
+            // Return an 400 error
+            callServerError(400);
+            serverconsole.errmessage("Bad request!");
+            return;
+          }
           search = uobject.search;
           href = uobject.pathname;
           ext = href.match(/[^\/]\.([^.]+)$/);
@@ -4450,7 +4504,14 @@ if (!cluster.isPrimary) {
             rewrittenAgainURL = url.format(rewrittenAgainURL);
             serverconsole.resmessage("URL sanitized: " + req.url + " => " + rewrittenAgainURL);
             req.url = rewrittenAgainURL;
-            uobject = parseURL(req.url);
+            try {
+              uobject = parseURL(req.url, "http" + (req.socket.encrypted ? "s" : "") + "://" + (req.headers.host ? req.headers.host : (domain ? domain : "unknown.invalid")));
+            } catch (err) {
+              // Return an 400 error
+              callServerError(400);
+              serverconsole.errmessage("Bad request!");
+              return;
+            }
             search = uobject.search;
             href = uobject.pathname;
             ext = href.match(/[^\/]\.([^.]+)$/);
