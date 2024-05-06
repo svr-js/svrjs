@@ -1,32 +1,96 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.14.15 Tests</title>
+    <title>SVR.JS 3.15.0 Tests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
-      body {
-        font-family: FreeSans, Helvetica, Tahoma, Arial, sans-serif;
+      html {
+        background-color: #dfffdf;
+        color: #000000;
+        font-family: FreeSans, Helvetica, Tahoma, Verdana, Arial, sans-serif;
+        margin: 0.75em;
         text-align: center;
+      }
+
+      body {
+        background-color: #ffffff;
+        padding: 0.5em 0.5em 0.1em;
+        margin: 0.5em auto;
+        width: 90%;
+        max-width: 800px;
+        -webkit-box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+        -moz-box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+        box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.15)
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.25em;
+        margin: 0.3em 0 0.5em
+      }
+
+      pre,
+      code {
+        background-color: #dfffdf;
+        -webkit-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+        -moz-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+        display: block;
+        padding: 0.2em;
+        font-family: "DejaVu Sans Mono", "Bitstream Vera Sans Mono", Hack, Menlo, Consolas, Monaco, monospace;
+        font-size: 0.85em;
+        margin: auto;
+        width: 95%;
+      }
+
+      @media screen and (prefers-color-scheme: dark) {
+        html {
+          background-color: #002000;
+          color: #ffffff
+        }
+
+        body {
+          background-color: #000f00;
+          -webkit-box-shadow: 0 5px 10px 0 rgba(127, 127, 127, 0.15);
+          -moz-box-shadow: 0 5px 10px 0 rgba(127, 127, 127, 0.15);
+          box-shadow: 0 5px 10px 0 rgba(127, 127, 127, 0.15)
+        }
+
+        pre,
+        code {
+          background-color: #002000;
+          -webkit-box-shadow: 0 2px 4px 0 rgba(127, 127, 127, 0.1);
+          -moz-box-shadow: 0 2px 4px 0 rgba(127, 127, 127, 0.1);
+          box-shadow: 0 2px 4px 0 rgba(127, 127, 127, 0.1)
+        }
+
+        a {
+          color: #ffffff
+        }
+
+        a:hover {
+          color: #00ff00
+        }
       }
     </style>
   </head>
   <body>
-    <h1>SVR.JS 3.14.15 Tests</h1>
+    <h1>SVR.JS 3.15.0 Tests</h1>
     <h2>Directory (without trailing slash)</h2>
-    <iframe src="/testdir" width="50%" height="300px"></iframe>
+    <iframe src="/testdir" width="75%" height="300px"></iframe>
     <h2>Directory (with query)</h2>
-    <iframe src="/testdir/?query=value" width="50%" height="300px"></iframe>
+    <iframe src="/testdir/?query=value" width="75%" height="300px"></iframe>
     <h2>Directory (personalized)</h2>
-    <iframe src="/testdir/.personalized" width="50%" height="300px"></iframe>
+    <iframe src="/testdir/.personalized" width="75%" height="300px"></iframe>
     <h2>404 Error</h2>
-    <iframe src="/tfhgfhggf" width="50%" height="300px"></iframe>
+    <iframe src="/tfhgfhggf" width="75%" height="300px"></iframe>
     <h2>Server Side Javascript</h2>
-    <iframe src="/hello.svr" width="50%" height="300px"></iframe>
+    <iframe src="/hello.svr" width="75%" height="300px"></iframe>
     <h2>Proxy test</h2>
-    <iframe src="/proxy.svr/this/hello.svr" width="50%" height="300px" id="proxy"></iframe>
+    <iframe src="/proxy.svr/this/hello.svr" width="75%" height="300px" id="proxy"></iframe>
     <h2>URL rewriting test (/testdir_rewritten => /testdir)</h2>
-    <iframe src="/testdir_rewritten" width="50%" height="300px"></iframe>
+    <iframe src="/testdir_rewritten" width="75%" height="300px"></iframe>
     <br/>
     <br/>
     <img src="/powered.png" />
