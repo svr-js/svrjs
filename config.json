@@ -3,7 +3,7 @@
   "port": 80,
   "pubport": 80,
   "page404": "404.html",
-  "timestamp": 1693773733148,
+  "timestamp": 1709477722479,
   "blacklist": [],
   "nonStandardCodes": [],
   "enableCompression": true,
@@ -28,59 +28,11 @@
       ]
     },
     {
-      "definingRegex": "/^\\/invoke500\\/\\?/",
+      "definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",
       "replacements": [
         {
-          "regex": "/\\/invoke500\\/\\?/",
-          "replacement": "/invoke500.svr?"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500\\/.+\\//",
-      "replacements": [
-        {
-          "regex": "/\\/\\?/",
-          "replacement": "&"
-        },
-        {
-          "regex": "/invoke500\\//",
-          "replacement": "invoke500.svr?"
-        },
-        {
-          "regex": "/\\/(?!invoke500.svr?)/",
-          "replacement": ""
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500\\/.+/",
-      "replacements": [
-        {
-          "regex": "/\\?/",
-          "replacement": "&"
-        },
-        {
-          "regex": "/invoke500\\//",
-          "replacement": "invoke500.svr?"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500\\//",
-      "replacements": [
-        {
-          "regex": "/\\/invoke500\\//",
-          "replacement": "/invoke500.svr"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/invoke500$/",
-      "replacements": [
-        {
-          "regex": "/\\/invoke500/",
-          "replacement": "/invoke500.svr"
+          "regex": "/^\\/testdir_rewritten($|[\\/?#])/",
+          "replacement": "/testdir$1"
         }
       ]
     }
@@ -88,12 +40,23 @@
   "allowStatus": true,
   "dontCompress": [
     "/.*\\.ipxe$/",
-    "/.*\\.img$/",
-    "/.*\\.iso$/"
+    "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
+    "/.*\\.(?:[id]mg|iso|flp)$/",
+    "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
+    "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"
   ],
   "enableIPSpoofing": false,
   "secure": false,
   "sni": {},
   "disableNonEncryptedServer": false,
-  "disableToHTTPSRedirect": false
+  "disableToHTTPSRedirect": false,
+  "enableETag": true,
+  "disableUnusedWorkerTermination": false,
+  "rewriteDirtyURLs": true,
+  "errorPages": [],
+  "useWebRootServerSideScript": true,
+  "exposeModsInErrorPages": true,
+  "disableTrailingSlashRedirects": false,
+  "environmentVariables": {},
+  "allowDoubleSlashes": false
 }

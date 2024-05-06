@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.4.42</title>
+    <title>SVR.JS 3.14.16</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -12,122 +12,86 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.4.42</h1>
+    <h1>Welcome to SVR.JS 3.14.16</h1>
     <br/>
-    <img src="/logo.png" style="width: 256px;" />
+    <img src="/logo.png" style="width: 256px; max-width: 100%;" />
     <br/>
-    <p>If you see this page, that means, that the server is properly working. You can further configure the server and replace <i>index.html</i> and <i>tests.html</i> pages with custom ones.</p>
+    <p>If you see this page that means that the server is working properly. You can further configure the server and replace <i>index.html</i> and <i>tests.html</i> pages with custom ones.</p>
     <p>Default <i>config.json</i> looks like this:</p>
-    <div style="background-color: #e0e0e0; padding: 5px; text-align: left; display: inline-block;">
-      <code>
-        {<br/>
-        &nbsp;&nbsp;"users": [],<br/>
-        &nbsp;&nbsp;"port": 80,<br/>
-        &nbsp;&nbsp;"pubport": 80,<br/>
-        &nbsp;&nbsp;"page404": "404.html",<br/>
-        &nbsp;&nbsp;"timestamp": 1680954429282,<br/>
-        &nbsp;&nbsp;"blacklist": [],<br/>
-        &nbsp;&nbsp;"nonStandardCodes": [],<br/>
-        &nbsp;&nbsp;"enableCompression": true,<br/>
-        &nbsp;&nbsp;"customHeaders": {},<br/>
-        &nbsp;&nbsp;"enableHTTP2": false,<br/>
-        &nbsp;&nbsp;"enableLogging": true,<br/>
-        &nbsp;&nbsp;"enableDirectoryListing": true,<br/>
-        &nbsp;&nbsp;"enableDirectoryListingWithDefaultHead": false,<br/>
-        &nbsp;&nbsp;"serverAdministratorEmail": "[no contact information]",<br/>
-        &nbsp;&nbsp;"stackHidden": false,<br/>
-        &nbsp;&nbsp;"enableRemoteLogBrowsing": false,<br/>
-        &nbsp;&nbsp;"exposeServerVersion": true,<br/>
-        &nbsp;&nbsp;"disableServerSideScriptExpose": true,<br/>
-        &nbsp;&nbsp;"rewriteMap": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/^\\/serverSideScript\\.js($|[#?])/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/NONEXISTENT_PAGE$1"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/(?!invoke500.svr?)/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": ""<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\/.+/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\?/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "&amp;"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "invoke500.svr?"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500\\//",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"definingRegex": "/^\\/invoke500$/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacements": [<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"regex": "/\\/invoke500/",<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"replacement": "/invoke500.svr"<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;}<br/>
-        &nbsp;&nbsp;],<br/>
-        &nbsp;&nbsp;"allowStatus": true,<br/>
-        &nbsp;&nbsp;"dontCompress": ["/.*\\.ipxe$/","/.*\\.img$/","/.*\\.iso$/"],<br/>
-        &nbsp;&nbsp;"enableIPSpoofing": false,<br/>
-        &nbsp;&nbsp;"secure": false,<br/>
-        &nbsp;&nbsp;"sni": {},<br/>
-        &nbsp;&nbsp;"disableNonEncryptedServer": false,<br/>
-        &nbsp;&nbsp;"disableToHTTPSRedirect": false<br/>
+    <code style="background-color: #e0e0e0; padding: 5px; text-align: left; display: block; display: inline-block;">
+      <pre style="margin: 0.2em; white-space: pre-wrap; overflow-wrap: break-word; word-wrap: break-word; word-break: break-all; word-break: break-word">{
+  "users": [],
+  "port": 80,
+  "pubport": 80,
+  "page404": "404.html",
+  "timestamp": 1709477722479,
+  "blacklist": [],
+  "nonStandardCodes": [],
+  "enableCompression": true,
+  "customHeaders": {},
+  "enableHTTP2": false,
+  "enableLogging": true,
+  "enableDirectoryListing": true,
+  "enableDirectoryListingWithDefaultHead": false,
+  "serverAdministratorEmail": "[no contact information]",
+  "stackHidden": false,
+  "enableRemoteLogBrowsing": false,
+  "exposeServerVersion": true,
+  "disableServerSideScriptExpose": true,
+  "rewriteMap": [
+    {
+      "definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",
+      "replacements": [
+        {
+          "regex": "/^\\/serverSideScript\\.js($|[#?])/",
+          "replacement": "/NONEXISTENT_PAGE$1"
         }
-      </code>
-    </div>
+      ]
+    },
+    {
+      "definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",
+      "replacements": [
+        {
+          "regex": "/^\\/testdir_rewritten($|[\\/?#])/",
+          "replacement": "/testdir$1"
+        }
+      ]
+    }
+  ],
+  "allowStatus": true,
+  "dontCompress": [
+    "/.*\\.ipxe$/",
+    "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
+    "/.*\\.(?:[id]mg|iso|flp)$/",
+    "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
+    "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"
+  ],
+  "enableIPSpoofing": false,
+  "secure": false,
+  "sni": {},
+  "disableNonEncryptedServer": false,
+  "disableToHTTPSRedirect": false,
+  "enableETag": true,
+  "disableUnusedWorkerTermination": false,
+  "rewriteDirtyURLs": true,
+  "errorPages": [],
+  "useWebRootServerSideScript": true,
+  "exposeModsInErrorPages": true,
+  "disableTrailingSlashRedirects": false,
+  "environmentVariables": {},
+  "allowDoubleSlashes": false
+}</pre>
+    </code>
     <p>Changes:</p>
-    <ul>
-      <li>Custom head and foot inclusion is now returning 500 error in case of server error instead of crashing the server.</li>
+    <ul style="display: inline-block; margin: 0;">
+      <li>Prevented DoS attacks performed with forward proxy HTTP requests with malformed URLs.</li>
     </ul>
-    <br/>
-    <a href="/tests.html">Tests</a><br/>
-    <a href="/licenses">Licenses</a><br/>
-    <a href="/svrjsstatus.svr">SVR.JS status page</a><br/>
-    <a href="https://svrjs.org/docs">More Information</a>
-    <br/>
-    <br/>
+    <p>
+      <a href="/tests.html">Tests</a><br/>
+      <a href="/licenses/">Licenses</a><br/>
+      <a href="/svrjsstatus.svr">SVR.JS status page</a><br/>
+      <a href="https://svrjs.org/docs">SVR.JS documentation</a>
+    </p>
     <img src="/powered.png" />
   </body>
 </html>
