@@ -3748,8 +3748,8 @@ if (!cluster.isPrimary) {
                         } else {
                           res.writeHead(206, http.STATUS_CODES[206], rhd);
                           readStream.pipe(res);
-                          serverconsole.resmessage("Client successfully received content.");
                         }
+                        serverconsole.resmessage("Client successfully received content.");
                       } catch (err) {
                         callServerError(500, err);
                       }
