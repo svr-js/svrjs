@@ -3654,7 +3654,7 @@ if (!cluster.isPrimary) {
             }
 
             // Handle partial content request
-            if (ext != "html" && req.headers["range"]) {
+            if (req.headers["range"]) {
               try {
                 var rhd = getCustomHeaders();
                 rhd["Accept-Ranges"] = "bytes";
@@ -3666,8 +3666,9 @@ if (!cluster.isPrimary) {
                   // Process the partial content request
                   var beginOrig = regexmatch[1];
                   var endOrig = regexmatch[2];
+                  var maxEnd = filelen - 1 + (ext == "html" ? head.length + foot.length : 0)
                   var begin = 0;
-                  var end = filelen - 1;
+                  var end = maxEnd;
                   if (beginOrig == "" && endOrig == "") {
                     callServerError(416, rhd);
                     return;
@@ -3677,11 +3678,11 @@ if (!cluster.isPrimary) {
                     begin = parseInt(beginOrig);
                     if (endOrig != "") end = parseInt(endOrig);
                   }
-                  if (begin > end || begin < 0 || begin > filelen - 1) {
+                  if (begin > end || begin < 0 || begin > maxEnd) {
                     callServerError(416, rhd);
                     return;
                   }
-                  if (end > filelen - 1) end = filelen - 1;
+                  if (end > maxEnd) end = maxEnd;
                   rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
                   rhd["Content-Length"] = end - begin + 1;
                   delete rhd["Content-Type"];
@@ -3690,9 +3691,18 @@ if (!cluster.isPrimary) {
                   if (fileETag) rhd["ETag"] = fileETag;
 
                   if (req.method != "HEAD") {
+                    if (ext == "html" && begin < head.length && (end - begin) < head.length) {
+                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.end(head.substring(begin, end + 1));
+                      return;
+                    } else if (ext == "html" && begin >= head.length + filelen){
+                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.end(foot.substring(begin - head.length - filelen, end - head.length - filelen + 1));
+                      return;
+                    }
                     var readStream = fs.createReadStream(readFrom, {
-                      start: begin,
-                      end: end
+                      start: ext == "html" ? Math.max(0, begin - head.length) : begin,
+                      end: ext == "html" ? Math.min(filelen, end - head.length) : end
                     });
                     readStream.on("error", function (err) {
                       if (err.code == "ENOENT") {
@@ -3716,9 +3726,30 @@ if (!cluster.isPrimary) {
                       }
                     }).on("open", function () {
                       try {
-                        res.writeHead(206, http.STATUS_CODES[206], rhd);
-                        readStream.pipe(res);
-                        serverconsole.resmessage("Client successfully received content.");
+                        if (ext == "html") {
+                          function afterWriteCallback() {
+                            readStream.on("end", function () {
+                              if(end > head.length + filelen) {
+                                res.end(foot.substring(0, end - head.length - filelen + 1));
+                              }
+                            });
+                            readStream.pipe(res, {
+                              end: (end > head.length + filelen) ? false : true
+                            });
+                          }
+                          res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                          if (begin > head.length) {
+                            afterWriteCallback();
+                          } else if (!res.write(head.substring(begin, head.length - begin))) {
+                            res.on("drain", afterWriteCallback);
+                          } else {
+                            process.nextTick(afterWriteCallback);
+                          }
+                        } else {
+                          res.writeHead(206, http.STATUS_CODES[206], rhd);
+                          readStream.pipe(res);
+                          serverconsole.resmessage("Client successfully received content.");
+                        }
                       } catch (err) {
                         callServerError(500, err);
                       }
@@ -3793,7 +3824,7 @@ if (!cluster.isPrimary) {
                     hdhds["Content-Length"] = filelen;
                   }
                 }
-                if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
+                hdhds["Accept-Ranges"] = "bytes";
                 delete hdhds["Content-Type"];
                 var mtype = mime.contentType(ext);
                 if (mtype && ext != "") hdhds["Content-Type"] = mtype;
