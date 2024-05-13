@@ -3684,7 +3684,9 @@ if (!cluster.isPrimary) {
                   if (end > filelen - 1) end = filelen - 1;
                   rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
                   rhd["Content-Length"] = end - begin + 1;
-                  if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
+                  delete mtype["Content-Type"];
+                  var mtype = mime.contentType(ext);
+                  if (mtype && ext != "") rhd["Content-Type"] = mtype;
                   if (fileETag) rhd["ETag"] = fileETag;
 
                   if (req.method != "HEAD") {
@@ -3793,7 +3795,8 @@ if (!cluster.isPrimary) {
                 }
                 if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
                 delete hdhds["Content-Type"];
-                if (!(mime.contentType(ext) == false) && ext != "") hdhds["Content-Type"] = mime.contentType(ext);
+                var mtype = mime.contentType(ext);
+                if (mtype && ext != "") hdhds["Content-Type"] = mtype;
                 if (fileETag) hdhds["ETag"] = fileETag;
 
                 if (req.method != "HEAD") {
