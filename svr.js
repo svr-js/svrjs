@@ -3728,17 +3728,17 @@ if (!cluster.isPrimary) {
                       try {
                         if (ext == "html") {
                           function afterWriteCallback() {
-                            readStream.on("end", function () {
-                              if(end > head.length + filelen) {
+                            if(foot.length > 0 && end > head.length + filelen) {
+                              readStream.on("end", function () {
                                 res.end(foot.substring(0, end - head.length - filelen + 1));
-                              }
-                            });
+                              });
+                            }
                             readStream.pipe(res, {
-                              end: (end > head.length + filelen) ? false : true
+                              end: !(foot.length > 0 && end > head.length + filelen)
                             });
                           }
                           res.writeHead(206, http.STATUS_CODES[206], hdhds);
-                          if (begin > head.length) {
+                          if (head.length == 0 || begin > head.length) {
                             afterWriteCallback();
                           } else if (!res.write(head.substring(begin, head.length - begin))) {
                             res.on("drain", afterWriteCallback);
@@ -3869,15 +3869,19 @@ if (!cluster.isPrimary) {
                       }
                       if (ext == "html") {
                         function afterWriteCallback() {
-                          readStream.on("end", function () {
-                            resStream.end(foot);
-                          });
+                          if (foot.length > 0) {
+                            readStream.on("end", function () {
+                              resStream.end(foot);
+                            });
+                          }
                           readStream.pipe(resStream, {
-                            end: false
+                            end: (foot.length == 0)
                           });
                         }
                         res.writeHead(200, http.STATUS_CODES[200], hdhds);
-                        if (!resStream.write(head)) {
+                        if (head.length == 0) {
+                          afterWriteCallback();
+                        } else if (!resStream.write(head)) {
                           resStream.on("drain", afterWriteCallback);
                         } else {
                           process.nextTick(afterWriteCallback);
