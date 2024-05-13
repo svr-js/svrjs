@@ -3684,7 +3684,7 @@ if (!cluster.isPrimary) {
                   if (end > filelen - 1) end = filelen - 1;
                   rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
                   rhd["Content-Length"] = end - begin + 1;
-                  delete mtype["Content-Type"];
+                  delete rhd["Content-Type"];
                   var mtype = mime.contentType(ext);
                   if (mtype && ext != "") rhd["Content-Type"] = mtype;
                   if (fileETag) rhd["ETag"] = fileETag;
