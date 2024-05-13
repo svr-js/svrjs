@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.15.0";
+var version = "3.15.1";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -3654,7 +3654,7 @@ if (!cluster.isPrimary) {
             }
 
             // Handle partial content request
-            if (ext != "html" && req.headers["range"]) {
+            if (req.headers["range"]) {
               try {
                 var rhd = getCustomHeaders();
                 rhd["Accept-Ranges"] = "bytes";
@@ -3666,8 +3666,9 @@ if (!cluster.isPrimary) {
                   // Process the partial content request
                   var beginOrig = regexmatch[1];
                   var endOrig = regexmatch[2];
+                  var maxEnd = filelen - 1 + (ext == "html" ? head.length + foot.length : 0)
                   var begin = 0;
-                  var end = filelen - 1;
+                  var end = maxEnd;
                   if (beginOrig == "" && endOrig == "") {
                     callServerError(416, rhd);
                     return;
@@ -3677,20 +3678,31 @@ if (!cluster.isPrimary) {
                     begin = parseInt(beginOrig);
                     if (endOrig != "") end = parseInt(endOrig);
                   }
-                  if (begin > end || begin < 0 || begin > filelen - 1) {
+                  if (begin > end || begin < 0 || begin > maxEnd) {
                     callServerError(416, rhd);
                     return;
                   }
-                  if (end > filelen - 1) end = filelen - 1;
+                  if (end > maxEnd) end = maxEnd;
                   rhd["Content-Range"] = "bytes " + begin + "-" + end + "/" + filelen;
                   rhd["Content-Length"] = end - begin + 1;
-                  if (!(mime.contentType(ext) == false) && ext != "") rhd["Content-Type"] = mime.contentType(ext);
+                  delete rhd["Content-Type"];
+                  var mtype = mime.contentType(ext);
+                  if (mtype && ext != "") rhd["Content-Type"] = mtype;
                   if (fileETag) rhd["ETag"] = fileETag;
 
                   if (req.method != "HEAD") {
+                    if (ext == "html" && begin < head.length && (end - begin) < head.length) {
+                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.end(head.substring(begin, end + 1));
+                      return;
+                    } else if (ext == "html" && begin >= head.length + filelen){
+                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.end(foot.substring(begin - head.length - filelen, end - head.length - filelen + 1));
+                      return;
+                    }
                     var readStream = fs.createReadStream(readFrom, {
-                      start: begin,
-                      end: end
+                      start: ext == "html" ? Math.max(0, begin - head.length) : begin,
+                      end: ext == "html" ? Math.min(filelen, end - head.length) : end
                     });
                     readStream.on("error", function (err) {
                       if (err.code == "ENOENT") {
@@ -3714,8 +3726,29 @@ if (!cluster.isPrimary) {
                       }
                     }).on("open", function () {
                       try {
-                        res.writeHead(206, http.STATUS_CODES[206], rhd);
-                        readStream.pipe(res);
+                        if (ext == "html") {
+                          function afterWriteCallback() {
+                            if(foot.length > 0 && end > head.length + filelen) {
+                              readStream.on("end", function () {
+                                res.end(foot.substring(0, end - head.length - filelen + 1));
+                              });
+                            }
+                            readStream.pipe(res, {
+                              end: !(foot.length > 0 && end > head.length + filelen)
+                            });
+                          }
+                          res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                          if (head.length == 0 || begin > head.length) {
+                            afterWriteCallback();
+                          } else if (!res.write(head.substring(begin, head.length - begin))) {
+                            res.on("drain", afterWriteCallback);
+                          } else {
+                            process.nextTick(afterWriteCallback);
+                          }
+                        } else {
+                          res.writeHead(206, http.STATUS_CODES[206], rhd);
+                          readStream.pipe(res);
+                        }
                         serverconsole.resmessage("Client successfully received content.");
                       } catch (err) {
                         callServerError(500, err);
@@ -3791,9 +3824,10 @@ if (!cluster.isPrimary) {
                     hdhds["Content-Length"] = filelen;
                   }
                 }
-                if (ext != "html") hdhds["Accept-Ranges"] = "bytes";
+                hdhds["Accept-Ranges"] = "bytes";
                 delete hdhds["Content-Type"];
-                if (!(mime.contentType(ext) == false) && ext != "") hdhds["Content-Type"] = mime.contentType(ext);
+                var mtype = mime.contentType(ext);
+                if (mtype && ext != "") hdhds["Content-Type"] = mtype;
                 if (fileETag) hdhds["ETag"] = fileETag;
 
                 if (req.method != "HEAD") {
@@ -3835,15 +3869,19 @@ if (!cluster.isPrimary) {
                       }
                       if (ext == "html") {
                         function afterWriteCallback() {
-                          readStream.on("end", function () {
-                            resStream.end(foot);
-                          });
+                          if (foot.length > 0) {
+                            readStream.on("end", function () {
+                              resStream.end(foot);
+                            });
+                          }
                           readStream.pipe(resStream, {
-                            end: false
+                            end: (foot.length == 0)
                           });
                         }
                         res.writeHead(200, http.STATUS_CODES[200], hdhds);
-                        if (!resStream.write(head)) {
+                        if (head.length == 0) {
+                          afterWriteCallback();
+                        } else if (!resStream.write(head)) {
                           resStream.on("drain", afterWriteCallback);
                         } else {
                           process.nextTick(afterWriteCallback);

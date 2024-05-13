@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.15.0</title>
+    <title>SVR.JS 3.15.1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -76,7 +76,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.15.0</h1>
+    <h1>Welcome to SVR.JS 3.15.1</h1>
     <br />
     <img src="/logo.png" style="width: 224px; max-width: 100%;" />
     <br />
@@ -148,11 +148,9 @@
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
-      <li>Changed URL parser from wrapper over WHATWG URL parser to custom regex-based URL parser.</li>
-      <li>Optimized server code.</li>
-      <li>Redesigned default error pages.</li>
-      <li>Removed blocking file system calls from the directory listing function.</li>
-      <li>Replaced <i>path.extname()</i> function with regex-based function.</li>
+      <li>Added Content-Range support for HTML files.</li>
+      <li>MIME type lookups are now performed once, not twice.</li>
+      <li>Optimized static file serving function.</li>
     </ul>
     <p>
       <a href="/tests.html">Tests</a><br />
