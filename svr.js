@@ -5806,20 +5806,17 @@ function saveConfig() {
 
 // Process event listeners
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
-  process.on("uncaughtException", function (err) {
-    // CRASH HANDLER
-    serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
-    serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(generateErrorStack(err));
-    process.exit(err.errno);
-  });
-  process.on("unhandledRejection", function (err) {
-    // CRASH HANDLER
-    serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
+  // Crash handler
+  function crashHandlerMaster(err) {
+    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
     process.exit(err.errno);
-  });
+  }
+
+  process.on("uncaughtException", crashHandlerMaster);
+  process.on("unhandledRejection", crashHandlerMaster);
+
   process.on("exit", function (code) {
     try {
       if (!configJSONRErr && !configJSONPErr) {
