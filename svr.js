@@ -5331,25 +5331,25 @@ function start(init) {
       }, 300000);
     } else if (cluster.isPrimary) {
       setInterval(function () {
-        var allClusters = Object.keys(cluster.workers);
+        var allWorkers = Object.keys(cluster.workers);
         var goodWorkers = [];
 
         function checkWorker(callback, _id) {
           if (typeof _id === "undefined") _id = 0;
-          if (_id >= allClusters.length) {
+          if (_id >= allWorkers.length) {
             callback();
             return;
           }
           try {
-            if (cluster.workers[allClusters[_id]]) {
+            if (cluster.workers[allWorkers[_id]]) {
               isWorkerHungUpBuff2 = true;
-              cluster.workers[allClusters[_id]].on("message", msgListener);
-              cluster.workers[allClusters[_id]].send("\x14PINGPING");
+              cluster.workers[allWorkers[_id]].on("message", msgListener);
+              cluster.workers[allWorkers[_id]].send("\x14PINGPING");
               setTimeout(function () {
                 if (isWorkerHungUpBuff2) {
                   checkWorker(callback, _id + 1);
                 } else {
-                  goodWorkers.push(allClusters[_id]);
+                  goodWorkers.push(allWorkers[_id]);
                   checkWorker(callback, _id + 1);
                 }
               }, 250);
@@ -5357,10 +5357,10 @@ function start(init) {
               checkWorker(callback, _id + 1);
             }
           } catch (err) {
-            if (cluster.workers[allClusters[_id]]) {
-              cluster.workers[allClusters[_id]].removeAllListeners("message");
-              cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
-              cluster.workers[allClusters[_id]].on("message", listenConnListener);
+            if (cluster.workers[allWorkers[_id]]) {
+              cluster.workers[allWorkers[_id]].removeAllListeners("message");
+              cluster.workers[allWorkers[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allWorkers[_id]]));
+              cluster.workers[allWorkers[_id]].on("message", listenConnListener);
             }
             checkWorker(callback, _id + 1);
           }
@@ -5457,16 +5457,16 @@ function start(init) {
         var command = argss.shift();
         if (line != "") {
           if (cluster.isPrimary !== undefined) {
-            var allClusters = Object.keys(cluster.workers);
+            var allWorkers = Object.keys(cluster.workers);
             if (command == "block") commands.block(argss);
             if (command == "unblock") commands.unblock(argss);
             if (command == "restart") {
               var stopError = false;
               exiting = true;
-              for (var i = 0; i < allClusters.length; i++) {
+              for (var i = 0; i < allWorkers.length; i++) {
                 try {
-                  if (cluster.workers[allClusters[i]]) {
-                    cluster.workers[allClusters[i]].kill();
+                  if (cluster.workers[allWorkers[i]]) {
+                    cluster.workers[allWorkers[i]].kill();
                   }
                 } catch (err) {
                   stopError = true;
@@ -5503,9 +5503,9 @@ function start(init) {
             }
             if (command == "stop") {
               exiting = true;
-              allClusters = Object.keys(cluster.workers);
+              allWorkers = Object.keys(cluster.workers);
             }
-            allClusters.forEach(function (clusterID) {
+            allWorkers.forEach(function (clusterID) {
               try {
                 if (cluster.workers[clusterID]) {
                   cluster.workers[clusterID].on("message", msgListener);
@@ -5674,28 +5674,28 @@ function start(init) {
           setTimeout(function () {
             setInterval(function () {
               if (!closedMaster && !exiting) {
-                var allClusters = Object.keys(cluster.workers);
-                var minClusters = 0;
-                minClusters = Math.ceil(cpus * 0.625);
-                if (minClusters < 2) minClusters = 2;
+                var allWorkers = Object.keys(cluster.workers);
+                var minWorkers = 0;
+                minWorkers = Math.ceil(cpus * 0.625);
+                if (minWorkers < 2) minWorkers = 2;
                 var goodWorkers = [];
 
                 function checkWorker(callback, _id) {
                   if (typeof _id === "undefined") _id = 0;
-                  if (_id >= allClusters.length) {
+                  if (_id >= allWorkers.length) {
                     callback();
                     return;
                   }
                   try {
-                    if (cluster.workers[allClusters[_id]]) {
+                    if (cluster.workers[allWorkers[_id]]) {
                       isWorkerHungUpBuff = true;
-                      cluster.workers[allClusters[_id]].on("message", msgListener);
-                      cluster.workers[allClusters[_id]].send("\x14KILLPING");
+                      cluster.workers[allWorkers[_id]].on("message", msgListener);
+                      cluster.workers[allWorkers[_id]].send("\x14KILLPING");
                       setTimeout(function () {
                         if (isWorkerHungUpBuff) {
                           checkWorker(callback, _id + 1);
                         } else {
-                          goodWorkers.push(allClusters[_id]);
+                          goodWorkers.push(allWorkers[_id]);
                           checkWorker(callback, _id + 1);
                         }
                       }, 250);
@@ -5703,16 +5703,16 @@ function start(init) {
                       checkWorker(callback, _id + 1);
                     }
                   } catch (err) {
-                    if (cluster.workers[allClusters[_id]]) {
-                      cluster.workers[allClusters[_id]].removeAllListeners("message");
-                      cluster.workers[allClusters[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allClusters[_id]]));
-                      cluster.workers[allClusters[_id]].on("message", listenConnListener);
+                    if (cluster.workers[allWorkers[_id]]) {
+                      cluster.workers[allWorkers[_id]].removeAllListeners("message");
+                      cluster.workers[allWorkers[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allWorkers[_id]]));
+                      cluster.workers[allWorkers[_id]].on("message", listenConnListener);
                     }
                     checkWorker(callback, _id + 1);
                   }
                 }
                 checkWorker(function () {
-                  if (goodWorkers.length > minClusters) {
+                  if (goodWorkers.length > minWorkers) {
                     var wN = Math.floor(Math.random() * goodWorkers.length);
                     if (wN == goodWorkers.length) return;
                     try {
@@ -5853,11 +5853,11 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     reallyExiting = true;
     if (cluster.isPrimary !== undefined) {
       exiting = true;
-      var allClusters = Object.keys(cluster.workers);
-      for (var i = 0; i < allClusters.length; i++) {
+      var allWorkers = Object.keys(cluster.workers);
+      for (var i = 0; i < allWorkers.length; i++) {
         try {
-          if (cluster.workers[allClusters[i]]) {
-            cluster.workers[allClusters[i]].send("stop");
+          if (cluster.workers[allWorkers[i]]) {
+            cluster.workers[allWorkers[i]].send("stop");
           }
         } catch (err) {
           // Worker will crash with EPIPE anyway.
