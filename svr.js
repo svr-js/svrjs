@@ -5476,7 +5476,6 @@ function start(init) {
               SVRJSInitialized = false;
               closedMaster = true;
               var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
-              if (cpus > 16) cpus = 16;
               try {
                 var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
                 if (cpus > useAvailableCores) cpus = useAvailableCores;
@@ -5547,7 +5546,6 @@ function start(init) {
       // Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
         var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
-        if (cpus > 16) cpus = 16;
         try {
           var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
           if (cpus > useAvailableCores) cpus = useAvailableCores;
