@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.15.2";
+var version = "3.15.3";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -1359,7 +1359,7 @@ function parseURL(uri, prepend) {
   var hasSlashes = (uri.indexOf("/") != -1);
 
   // Parse the URL using regular expression
-  var parsedURI = uri.match(/^(?:([^:]+:)(\/\/)?)?(?:([^@]+)@)?([^:\/?#\*]+|\[[^\*]\/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/);
+  var parsedURI = uri.match(/^(?:([^:]+:)(\/\/)?)?(?:([^@\/?#\*]+)@)?([^:\/?#\*]+|\[[^\*]\/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/);
   // Match 1: protocol
   // Match 2: slashes after protocol
   // Match 3: authentication credentials
