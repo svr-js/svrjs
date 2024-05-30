@@ -5506,7 +5506,7 @@ function start(init) {
               closedMaster = true;
 
               workersToFork = getWorkerCountToFork();
-              forkWorkers(workersToFork, function() {
+              forkWorkers(workersToFork, function () {
                 SVRJSInitialized = true;
                 exiting = false;
                 serverconsole.climessage("SVR.JS workers restarted.");
@@ -5559,7 +5559,7 @@ function start(init) {
       // Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
         workersToFork = getWorkerCountToFork();
-        forkWorkers(workersToFork, function() {
+        forkWorkers(workersToFork, function () {
           SVRJSInitialized = true;
         });
 
