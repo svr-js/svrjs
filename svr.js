@@ -5320,6 +5320,35 @@ function start(init) {
 
 
   if (init) {
+    var workersToFork = 1;
+
+    function getWorkerCountToFork() {
+      var workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
+      try {
+        var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
+        if (workersToFork > useAvailableCores) workersToFork = useAvailableCores;
+      } catch (err) {
+        // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
+      }
+      if (workersToFork < 1) workersToFork = 1; // If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
+      return workersToFork;
+    }
+
+    function forkWorkers(workersToFork, callback) {
+      for (var i = 0; i < workersToFork; i++) {
+        if (i == 0) {
+          SVRJSFork();
+        } else {
+          setTimeout((function (i) {
+            return function () {
+              SVRJSFork();
+              if (i >= workersToFork - 1) callback();
+            };
+          })(i), i * 6.6);
+        }
+      }
+    }
+
     if (cluster.isPrimary === undefined) {
       setInterval(function () {
         try {
@@ -5475,30 +5504,14 @@ function start(init) {
               if (stopError) serverconsole.climessage("Some SVR.JS workers might not be stopped.");
               SVRJSInitialized = false;
               closedMaster = true;
-              var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
-              try {
-                var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
-                if (cpus > useAvailableCores) cpus = useAvailableCores;
-              } catch (err) {
-                // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
-              }
-              if (cpus < 1) cpus = 1; // If SVR.JS is running on Haiku or if useAvailableCores = 0
-              for (var i = 0; i < cpus; i++) {
-                if (i == 0) {
-                  SVRJSFork();
-                } else {
-                  setTimeout((function (i) {
-                    return function () {
-                      SVRJSFork();
-                      if (i >= cpus - 1) {
-                        SVRJSInitialized = true;
-                        exiting = false;
-                        serverconsole.climessage("SVR.JS workers restarted.");
-                      }
-                    };
-                  })(i), i * 6.6);
-                }
-              }
+
+              workersToFork = getWorkerCountToFork();
+              forkWorkers(workersToFork, function() {
+                SVRJSInitialized = true;
+                exiting = false;
+                serverconsole.climessage("SVR.JS workers restarted.");
+              });
+
               return;
             }
             if (command == "stop") {
@@ -5545,26 +5558,11 @@ function start(init) {
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
       // Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
-        var cpus = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
-        try {
-          var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
-          if (cpus > useAvailableCores) cpus = useAvailableCores;
-        } catch (err) {
-          // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
-        }
-        if (cpus < 1) cpus = 1; // If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
-        for (var i = 0; i < cpus; i++) {
-          if (i == 0) {
-            SVRJSFork();
-          } else {
-            setTimeout((function (i) {
-              return function () {
-                SVRJSFork();
-                if (i >= cpus - 1) SVRJSInitialized = true;
-              };
-            })(i), i * 6.6);
-          }
-        }
+        workersToFork = getWorkerCountToFork();
+        forkWorkers(workersToFork, function() {
+          SVRJSInitialized = true;
+        });
+
         cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
           if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
             var tries = parseInt(msg.substring(8, 9));
@@ -5675,9 +5673,12 @@ function start(init) {
             setInterval(function () {
               if (!closedMaster && !exiting) {
                 var allWorkers = Object.keys(cluster.workers);
+
                 var minWorkers = 0;
-                minWorkers = Math.ceil(cpus * 0.625);
+                minWorkers = Math.ceil(workersToFork * 0.625);
                 if (minWorkers < 2) minWorkers = 2;
+                if (minWorkers > 12) minWorkers = 12;
+
                 var goodWorkers = [];
 
                 function checkWorker(callback, _id) {
