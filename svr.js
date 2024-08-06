@@ -1202,6 +1202,7 @@ var wwwrootPostfixesVHost = [];
 var wwwrootPostfixPrefixesVHost = [];
 var allowDoubleSlashes = false;
 var allowPostfixDoubleSlashes = false;
+var optOutOfStatisticsServer = false;
 
 // Get properties from config.json
 if (configJSON.blacklist != undefined) rawBlockList = configJSON.blacklist;
@@ -1259,7 +1260,7 @@ if (configJSON.wwwrootPostfixesVHost != undefined) wwwrootPostfixesVHost = confi
 if (configJSON.wwwrootPostfixPrefixesVHost != undefined) wwwrootPostfixPrefixesVHost = configJSON.wwwrootPostfixPrefixesVHost;
 if (configJSON.allowDoubleSlashes != undefined) allowDoubleSlashes = configJSON.allowDoubleSlashes;
 if (configJSON.allowPostfixDoubleSlashes != undefined) allowPostfixDoubleSlashes = configJSON.allowPostfixDoubleSlashes;
-
+if (configJSON.optOutOfStatisticsServer != undefined) optOutOfStatisticsServer = configJSON.optOutOfStatisticsServer;
 var wwwrootError = null;
 try {
   if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
@@ -5063,6 +5064,52 @@ function listeningMessage() {
       if (!(secure && disableNonEncryptedServer) && !listenToLocalhost) serverconsole.locmessage("* http://" + domain + (pubport == 80 ? "" : (":" + pubport)));
     }
     serverconsole.locmessage("For CLI help, you can type \"help\"");
+
+    // Code for sending data to a statistics server
+    if (!optOutOfStatisticsServer) {
+      if (crypto.__disabled__ !== undefined) {
+        serverconsole.locwarnmessage("Sending data to statistics server is disabled, because the server only supports HTTPS, and your Node.JS version doesn't have crypto support.");
+      } else {
+        var statisticsToSend = JSON.stringify({
+          version: version,
+          runtime: process.isBun ? "Bun" : "Node.js",
+          runtimeVersion: process.isBun ? process.versions.bun : process.version,
+          mods: modInfos
+        });
+        var statisticsRequest = https.request("https://statistics.svrjs.org/collect.svr", {
+          method: "POST",
+          headers: {
+            "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS"),
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(statisticsToSend)
+          }
+        }, function (res) {
+          var statusCode = res.statusCode;
+          var data = "";
+          res.on("data", function (chunk) {
+            data += chunk.toString();
+          });
+          res.on("end", function () {
+            try {
+              var parsedJson = {};
+              try {
+                parsedJson = JSON.parse(data);
+              } catch (err) {
+                throw new Error("JSON parse error (response parsing failed).");
+              }
+              if (parsedJson.status != statusCode) throw new Error("Status code mismatch");
+              if (statusCode != 200) throw new Error(parsedJson.message);
+            } catch (err) {
+              serverconsole.locwarnmessage("There was a problem, when sending data to statistics server! Reason: " + err.message);
+            }
+          });
+        });
+        statisticsRequest.on("error", function (err) {
+          serverconsole.locwarnmessage("There was a problem, when sending data to statistics server! Reason: " + err.message);
+        });
+        statisticsRequest.end(statisticsToSend);
+      }
+    }
   });
 }
 
@@ -5098,6 +5145,7 @@ function start(init) {
       }
       if (secure && configJSON.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.");
       if (disableMods) serverconsole.locwarnmessage("SVR.JS is running without mods and server-side JavaScript enabled. Web applications may not work as expected");
+      if (optOutOfStatisticsServer) serverconsole.locmessage("SVR.JS is configured to opt out of sending data to the statistics server.");
       console.log();
 
       // Display mod and server-side JavaScript errors
@@ -5791,6 +5839,7 @@ function saveConfig() {
       if (configJSONobj.disableTrailingSlashRedirects === undefined) configJSONobj.disableTrailingSlashRedirects = false;
       if (configJSONobj.environmentVariables === undefined) configJSONobj.environmentVariables = {};
       if (configJSONobj.allowDoubleSlashes === undefined) configJSONobj.allowDoubleSlashes = false;
+      if (configJSONobj.optOutOfStatisticsServer === undefined) configJSONobj.optOutOfStatisticsServer = false;
 
       var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
       fs.writeFileSync(__dirname + "/config.json", configString);
