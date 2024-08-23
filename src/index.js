@@ -141,4 +141,4 @@ function requestHandler(req, res) {
 // Create HTTP server
 http.createServer(requestHandler).listen(3000);
 
-throw wwwrootError;
+if(wwwrootError) throw wwwrootError;
