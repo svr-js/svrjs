@@ -441,7 +441,8 @@ module.exports = (req, res, logFacilities, config, next) => {
           try {
             if (err) throw err;
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-            responseEnd(
+            //TODO: res.end -> responseEnd
+            res.end(
               data
                 .toString()
                 .replace(
