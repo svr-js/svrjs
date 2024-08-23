@@ -137,7 +137,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   }
 
   /*if (req.headers["x-svr-js-from-main-thread"] == "true" && req.socket && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
-      var headers = config.getCustomHeaders();
+      let headers = config.getCustomHeaders();
       res.writeHead(204, http.STATUS_CODES[204], headers);
       res.end();
       return;
@@ -145,8 +145,8 @@ module.exports = (req, res, logFacilities, config, next) => {
 
   req.url = fixNodeMojibakeURL(req.url);
 
-  var headWritten = false;
-  var lastStatusCode = null;
+  let headWritten = false;
+  let lastStatusCode = null;
   res.writeHeadNative = res.writeHead;
   res.writeHead = function (code, codeDescription, headers) {
     if (
@@ -186,7 +186,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     res.writeHeadNative(code, codeDescription, headers);
   };
 
-  var finished = false;
+  let finished = false;
   res.on("finish", function () {
     if (!finished) {
       finished = true;
@@ -260,7 +260,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   process.reqcounter++;
 
   // Process the Host header
-  var oldHostHeader = req.headers.host;
+  let oldHostHeader = req.headers.host;
   if (typeof req.headers.host == "string") {
     req.headers.host = req.headers.host.toLowerCase();
     if (!req.headers.host.match(/^\.+$/))
@@ -659,6 +659,9 @@ module.exports = (req, res, logFacilities, config, next) => {
     // Return from the function
     return;
   };
+
+  // Authenticated user variable
+  req.authUser = null;
 
   if (req.url == "*") {
     // Handle "*" URL
