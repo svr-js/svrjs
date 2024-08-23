@@ -119,7 +119,7 @@ esbuild.build({
   bundle: true,
   outfile: "dist/svr.js", // Output file
   platform: "node",
-  target: "es2020",
+  target: "es2017",
   plugins: [
     esbuildCopyPlugin.copy({
       resolveFrom: __dirname,

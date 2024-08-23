@@ -1,3 +1,4 @@
+// SVR.JS path sanitizer function
 function sanitizeURL(resource, allowDoubleSlashes) {
   if (resource == "*" || resource == "") return resource;
   // Remove null characters
@@ -7,17 +8,17 @@ function sanitizeURL(resource, allowDoubleSlashes) {
     throw new URIError("URI malformed");
   // Decode URL-encoded characters while preserving certain characters
   resource = resource.replace(/%([0-9a-f]{2})/gi, (match, hex) => {
-    var decodedChar = String.fromCharCode(parseInt(hex, 16));
+    const decodedChar = String.fromCharCode(parseInt(hex, 16));
     return /(?!["<>^`{|}?#%])[!-~]/.test(decodedChar) ? decodedChar : "%" + hex;
   });
   // Encode certain characters
   resource = resource.replace(/[<>^`{|}]]/g, (character) => {
-    var charCode = character.charCodeAt(0);
+    const charCode = character.charCodeAt(0);
     return (
       "%" + (charCode < 16 ? "0" : "") + charCode.toString(16).toUpperCase()
     );
   });
-  var sanitizedResource = resource;
+  let sanitizedResource = resource;
   // Ensure the resource starts with a slash
   if (resource[0] != "/") sanitizedResource = "/" + sanitizedResource;
   // Convert backslashes to slashes and handle duplicate slashes
