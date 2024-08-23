@@ -2,6 +2,7 @@ const esbuild = require("esbuild");
 const esbuildCopyPlugin = require("esbuild-plugin-copy");
 const fs = require("fs");
 const ejs = require("ejs");
+const archiver = require("archiver");
 const dependencies = JSON.parse(fs.readFileSync(__dirname + "/package.json")).dependencies || {};
 const requiredDependencyList = Object.keys(dependencies);
 let dependencyList = Object.keys(dependencies);
@@ -97,6 +98,13 @@ if (fs.existsSync(__dirname + "/dist")) {
 }
 fs.mkdirSync(__dirname + "/dist");
 
+// Remove the out directory if exists, and create a new one.
+if (fs.existsSync(__dirname + "/out")) {
+  if (fs.rmSync) fs.rmSync(__dirname + "/out", {recursive: true});
+  else fs.rmdirSync(__dirname + "/out", {recursive: true});
+}
+fs.mkdirSync(__dirname + "/out");
+
 // Create a licenses directory
 fs.mkdirSync(__dirname + "/generatedAssets/licenses");
 
@@ -135,6 +143,15 @@ esbuild.build({
       }
     })
   ],
+}).then(() => {
+  const archiveName = "svr.js." + version.toLowerCase().replace(/[^0-9a-z]+/g,".") + ".zip";
+  const output = fs.createWriteStream(__dirname + "/out/" + archiveName);
+  const archive = archiver("zip", {
+    zlib: { level: 9 } // Sets the compression level.
+  });
+  archive.pipe(output);
+  archive.directory("dist/", false);
+  archive.finalize();
 }).catch((err) => {
   throw err;
 });
