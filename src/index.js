@@ -101,7 +101,8 @@ const serverconsole = serverconsoleConstructor(configJSON.enableLogging);
 
 let middleware = [
   require("./middleware/core.js"),
-  require("./middleware/urlSanitizer.js")
+  require("./middleware/urlSanitizer.js"),
+  require("./middleware/redirects.js")
 ];
 
 function addMiddleware(mw) {
