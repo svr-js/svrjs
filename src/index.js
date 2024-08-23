@@ -1,9 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
-const sanitizeURL = require("./utils/urlSanitizer.js");
 //const generateErrorStack = require("./utils/generateErrorStack.js");
-//const serverHTTPErrorDescs = require("./res/httpErrorDescriptions.js");
 const getOS = require("./utils/getOS.js");
 const svrjsInfo = require("../svrjs.json");
 const version = svrjsInfo.version;
@@ -27,11 +25,13 @@ if (!configJSON.exposeServerVersion) configJSON.exposeServerVersion = false;
 if (!configJSON.exposeModsInErrorPages) configJSON.exposeModsInErrorPages = false;
 if (!configJSON.enableLogging) configJSON.enableLogging = true;
 if (!configJSON.serverAdministratorEmail) configJSON.serverAdministratorEmail = "webmaster@svrjs.org";
+if (!configJSON.customHeaders) configJSON.customHeaders = {};
 
 const serverconsole = serverconsoleConstructor(configJSON.enableLogging);
 
 let middleware = [
-  require("./middleware/core.js")
+  require("./middleware/core.js"),
+  require("./middleware/urlSanitizer.js")
 ];
 
 function addMiddleware(mw) {
@@ -66,8 +66,11 @@ function requestHandler(req, res) {
       try {
         currentMiddleware(req, res, logFacilities, config, next);
       } catch (err) {
-        if (res.error) res.error(500);
+        if (res.error) res.error(500, err);
         else {
+          logFacilities.errmessage("There was an error while processing the request!");
+                logFacilities.errmessage("Stack:");
+                logFacilities.errmessage(err.stack);
           res.writeHead(500, "Internal Server Error", {
             Server: (config.exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
           });
