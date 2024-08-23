@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "build": "node esbuild.config.js",
+    "dev": "npm run build && npm run start",
     "lint": "eslint src/**/*.js",
     "lint:fix": "npm run lint -- --fix",
+    "start": "node dist/svr.js",
     "test": "jest"
   },
   "devDependencies": {
