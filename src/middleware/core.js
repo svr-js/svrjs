@@ -295,6 +295,16 @@ module.exports = (req, res, logFacilities, config, next) => {
       "Host name rewritten: " + oldHostHeader + " => " + req.headers.host,
     );
 
+    // Header and footer placeholders
+    res.head = "";
+    res.foot = "";
+
+    res.responseEnd = (body) => {
+      // If body is Buffer, then it is converted to String anyway.
+      res.write(head + body + foot);
+      res.end();
+    }
+
   // Server error calling method
   res.error = (errorCode, extName, stack, ch) => {
     if (typeof errorCode !== "number") {
@@ -444,8 +454,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           try {
             if (err) throw err;
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
-            //TODO: res.end -> responseEnd
-            res.end(
+            res.responseEnd(
               data
                 .toString()
                 .replace(
@@ -660,6 +669,13 @@ module.exports = (req, res, logFacilities, config, next) => {
     return;
   };
 
+  try {
+    res.head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
+    res.foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+  } catch (err) {
+    callServerError(500, err);
+  }
+
   // Authenticated user variable
   req.authUser = null;
 
@@ -679,6 +695,12 @@ module.exports = (req, res, logFacilities, config, next) => {
     }
   }
 
+  if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
+    // Expectations not met.
+    callServerError(417);
+    return;
+  }
+  
   if (req.method == "CONNECT") {
     // CONNECT requests should be handled in "connect" event.
     callServerError(501);
