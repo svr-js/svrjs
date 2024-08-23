@@ -6,14 +6,14 @@ module.exports = (req, res, logFacilities, config, next) => {
   if (config.secure && !fromMain && !config.disableNonEncryptedServer && !config.disableToHTTPSRedirect) {
     var hostx = req.headers.host;
     if (hostx === undefined) {
-      serverconsole.errmessage("Host header is missing.");
-      callServerError(400);
+      logFacilities.errmessage("Host header is missing.");
+      res.error(400);
       return;
     }
 
     if (req.isProxy) {
-      callServerError(501);
-      serverconsole.errmessage("This server will never be a proxy.");
+      res.error(501);
+      logFacilities.errmessage("This server will never be a proxy.");
       return;
     }
 
