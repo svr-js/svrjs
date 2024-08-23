@@ -1418,7 +1418,7 @@ function parseURL(uri, prepend) {
   }
   if (parsedURI[8]) uobject.hash = parsedURI[8];
   if (uobject.pathname) uobject.path = uobject.pathname + (uobject.search ? uobject.search : "");
-  uobject.href = (uobject.protocol ? (uobject.protocol + (uobject.slashes ? "//" : "")) : "") + (uobject.auth ? (uobject.auth + "@") : "") + (uobject.hostname ? uobject.hostname : "") + (uobject.path ? uobject.path : "") + (uobject.hash ? uobject.hash : "");
+  uobject.href = (uobject.protocol ? (uobject.protocol + (uobject.slashes ? "//" : "")) : "") + (uobject.auth ? (uobject.auth + "@") : "") + (uobject.hostname ? uobject.hostname : "") + (uobject.port ? ":" + uobject.port : "") + (uobject.path ? uobject.path : "") + (uobject.hash ? uobject.hash : "");
 
   return uobject;
 }
