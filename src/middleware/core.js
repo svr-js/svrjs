@@ -75,6 +75,9 @@ module.exports = (req, res, logFacilities, config, next) => {
     return ph;
   };
 
+  // Estimate fromMain from SVR.JS 3.x
+  let fromMain = !(config.secure && !req.socket.encrypted);
+
   // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
   if (config.enableHTTP2 == true && req.httpVersion == "2.0") {
     // Set HTTP/1.x methods (to prevent process warnings)
@@ -196,9 +199,6 @@ module.exports = (req, res, logFacilities, config, next) => {
       logFacilities.locmessage("Client disconnected.");
     }
   });
-
-  // TODO: fromMain
-  let fromMain = true;
 
   req.isProxy = false;
   if (req.url[0] != "/" && req.url != "*") req.isProxy = true;
