@@ -8,12 +8,36 @@ const version = svrjsInfo.version;
 //const parseURL = require("./utils/urlParser.js");
 //const fixNodeMojibakeURL = require("./utils/urlMojibakeFixer.js");
 
+let inspector = undefined;
+try {
+  inspector = require("inspector");
+} catch (err) {
+  // Don't use inspector
+}
+
 // Create log, mods and temp directories, if they don't exist.
 if (!fs.existsSync(__dirname + "/log")) fs.mkdirSync(__dirname + "/log");
 if (!fs.existsSync(__dirname + "/mods")) fs.mkdirSync(__dirname + "/mods");
 if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
 
 const serverconsoleConstructor = require("./utils/serverconsole.js");
+
+let inspectorURL = undefined;
+try {
+  if (inspector) {
+    inspectorURL = inspector.url();
+  }
+} catch (err) {
+  // Failed to get inspector URL
+}
+
+if (!process.stdout.isTTY && !inspectorURL) {
+  // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
+  console.log = function () {};
+  process.stdout.write = function () {};
+  process.stdout._write = function () {};
+  process.stdout._writev = function () {};
+}
 
 let configJSON = {};
 
