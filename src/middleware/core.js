@@ -673,7 +673,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     res.head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
     res.foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
   } catch (err) {
-    callServerError(500, err);
+    res.error(500, err);
   }
 
   // Authenticated user variable
@@ -690,20 +690,20 @@ module.exports = (req, res, logFacilities, config, next) => {
       return;
     } else {
       // SVR.JS doesn't understand that request, so throw an 400 error
-      callServerError(400);
+      res.error(400);
       return;
     }
   }
 
   if (req.headers["expect"] && req.headers["expect"] != "100-continue") {
     // Expectations not met.
-    callServerError(417);
+    res.error(417);
     return;
   }
-  
+
   if (req.method == "CONNECT") {
     // CONNECT requests should be handled in "connect" event.
-    callServerError(501);
+    res.error(501);
     logFacilities.errmessage(
       "CONNECT requests aren't supported. Your JS runtime probably doesn't support 'connect' handler for HTTP library.",
     );
