@@ -128,11 +128,11 @@ module.exports = (req, res, logFacilities, config, next) => {
         return;
       }
 
-      var sHref = sanitizeURL(
+      const sHref = sanitizeURL(
         req.parsedURL.pathname,
         config.allowDoubleSlashes,
       );
-      var preparedReqUrl2 =
+      const preparedReqUrl2 =
         req.parsedURL.pathname + req.parsedURL.search + req.parsedURL.hash;
 
       if (
