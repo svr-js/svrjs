@@ -4,7 +4,7 @@ const fs = require("fs");
 //const getOS = require("./utils/getOS.js");
 const generateServerString = require("./utils/generateServerString.js")
 const svrjsInfo = require("../svrjs.json");
-const version = svrjsInfo.version;
+const {version} = svrjsInfo;
 //const parseURL = require("./utils/urlParser.js");
 //const fixNodeMojibakeURL = require("./utils/urlMojibakeFixer.js");
 

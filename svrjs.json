@@ -1,3 +1,5 @@
 {
-  "version": "Nightly-GitNext"
+  "version": "Nightly-GitNext",
+  "name": "SVR.JS",
+  "documentationURL": "https://svrjs.org/docs"
 }

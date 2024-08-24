@@ -5,7 +5,6 @@ const generateErrorStack = require("../utils/generateErrorStack.js");
 const generateServerString = require("../utils/generateServerString.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const fixNodeMojibakeURL = require("../utils/urlMojibakeFixer.js");
-//const getOS = require("../utils/getOS.js");
 const ipMatch = require("../utils/ipMatch.js");
 const svrjsInfo = require("../../svrjs.json");
 const version = svrjsInfo.version;

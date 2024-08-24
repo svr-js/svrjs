@@ -1,10 +1,11 @@
 const svrjsInfo = require("../../svrjs.json");
-const version = svrjsInfo.version;
+const {version, name} = svrjsInfo;
 const getOS = require("./getOS.js");
 
 function generateServerString(exposeServerVersion) {
   return exposeServerVersion
-  ? "SVR.JS/" +
+  ? name +
+    "/" +
     version +
     " (" +
     getOS() +
@@ -13,7 +14,7 @@ function generateServerString(exposeServerVersion) {
       ? "Bun/v" + process.versions.bun + "; like Node.JS/" + process.version
       : "Node.JS/" + process.version) +
     ")"
-  : "SVR.JS";
+  : name;
 }
 
 module.exports = generateServerString;

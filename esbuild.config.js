@@ -6,7 +6,8 @@ const archiver = require("archiver");
 const dependencies = JSON.parse(fs.readFileSync(__dirname + "/package.json")).dependencies || {};
 const requiredDependencyList = Object.keys(dependencies);
 let dependencyList = Object.keys(dependencies);
-const version = JSON.parse(fs.readFileSync(__dirname + "/svrjs.json")).version;
+const svrjsInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.json"));
+const {name, version, documentationURL} = svrjsInfo;
 
 // Function to find and add all dependencies into the dependencyList array.
 function findAllDependencies(curList) {
@@ -53,7 +54,8 @@ let licenseElements = "";
 dependencyList.forEach((dependency) => {
   const packageJSON = JSON.parse(fs.readFileSync(__dirname + "/node_modules/" + dependency.replace(/\/\.\./g,"") + "/package.json").toString());
   licenseElements += licenseElementTemplate({
-    name: packageJSON.name,
+    moduleName: packageJSON.name,
+    name: name,
     license: packageJSON.license,
     description: packageJSON.description || "No description",
     author: packageJSON.author ? packageJSON.author.name : packageJSON.author,
@@ -63,24 +65,28 @@ dependencyList.forEach((dependency) => {
 
 // Generate pages
 const licensesPage = layoutTemplate({
-  title: "SVR.JS " + version + " Licenses",
+  title: name + " " + version + " Licenses",
   content: licensesTemplate({
+    name: name,
     version: version,
     licenses: licenseElements
   })
 });
 
 const testsPage = layoutTemplate({
-  title: "SVR.JS " + version + " Tests",
+  title: name + " " + version + " Tests",
   content: testsTemplate({
+    name: name,
     version: version
   })
 });
 
 const indexPage = layoutTemplate({
-  title: "SVR.JS " + version,
+  title: name + " " + version,
   content: indexTemplate({
-    version: version
+    name: name,
+    version: version,
+    documentationURL: documentationURL
   })
 });
 

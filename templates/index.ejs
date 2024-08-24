@@ -1,4 +1,4 @@
-    <h1>Welcome to SVR.JS <%= version %></h1>
+    <h1>Welcome to <%= name %> <%= version %></h1>
     <% if (version.indexOf("Nightly-") == 0) { %>
     <div style="background-color: #ffff00; color: #000000; border-color: #ff7f00; border-width: 5px; border-style: solid; padding: 5px; display: inline-block;">
       <b style="font-size: 26px">WARNING!</b><br />
@@ -82,8 +82,8 @@
     <p>
       <a href="/tests.html">Tests</a><br />
       <a href="/licenses/">Licenses</a><br />
-      <a href="/svrjsstatus.svr">SVR.JS status page</a><br />
-      <a href="https://svrjs.org/docs">SVR.JS documentation</a>
+      <a href="/svrjsstatus.svr"><%= name %> status page</a><br />
+      <a href="<%= documentationURL %>"><%= name %> documentation</a>
     </p>
     <img src="/powered.png" />
   </body>
