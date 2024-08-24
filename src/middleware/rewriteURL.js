@@ -1,9 +1,16 @@
+const fs = require("fs");
 const url = require("url");
 const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
 
 module.exports = (req, res, logFacilities, config, next) => {
+  try {
+    decodeURIComponent(req.parsedURL.pathname);
+  } catch (err) {
+    res.error(400);
+  }
+
   const matchHostname = (hostname) => {
     if (typeof hostname == "undefined" || hostname == "*") {
       return true;
@@ -27,57 +34,83 @@ module.exports = (req, res, logFacilities, config, next) => {
     return false;
   };
 
-  // Add web root postfixes
-  if (!req.isProxy) {
-    let preparedReqUrl3 = config.allowPostfixDoubleSlashes
-      ? req.parsedURL.pathname.replace(/\/+/, "/") +
-        req.parsedURL.search +
-        req.parsedURL.hash
-      : req.url;
-    let urlWithPostfix = preparedReqUrl3;
-    let postfixPrefix = "";
-    config.wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
-      if (preparedReqUrl3.indexOf(currentPostfixPrefix) == 0) {
-        if (currentPostfixPrefix.match(/\/+$/))
-          postfixPrefix = currentPostfixPrefix.replace(/\/+$/, "");
-        else if (
-          urlWithPostfix.length == currentPostfixPrefix.length ||
-          urlWithPostfix[currentPostfixPrefix.length] == "?" ||
-          urlWithPostfix[currentPostfixPrefix.length] == "/" ||
-          urlWithPostfix[currentPostfixPrefix.length] == "#"
-        )
-          postfixPrefix = currentPostfixPrefix;
-        else return true;
-        urlWithPostfix = urlWithPostfix.substring(postfixPrefix.length);
-        return false;
-      } else {
-        return true;
+  // Handle URL rewriting
+  const rewriteURL = (address, map, callback, _fileState, _mapBegIndex) => {
+    let rewrittenURL = address;
+    let doCallback = true;
+    if (!req.isProxy) {
+      for (let i = _mapBegIndex ? _mapBegIndex : 0; i < map.length; i++) {
+        let mapEntry = map[i];
+        if (
+          req.parsedUrl.pathname != "/" &&
+          (mapEntry.isNotDirectory || mapEntry.isNotFile) &&
+          !_fileState
+        ) {
+          fs.stat(
+            "." + decodeURIComponent(req.parsedUrl.pathname),
+            (err, stats) => {
+              var _fileState = 3;
+              if (err) {
+                _fileState = 3;
+              } else if (stats.isDirectory()) {
+                _fileState = 2;
+              } else if (stats.isFile()) {
+                _fileState = 1;
+              } else {
+                _fileState = 3;
+              }
+              rewriteURL(address, map, callback, _fileState, i);
+            },
+          );
+          doCallback = false;
+          break;
+        }
+        let tempRewrittenURL = rewrittenURL;
+        if (!mapEntry.allowDoubleSlashes) {
+          address = address.replace(/\/+/g, "/");
+          tempRewrittenURL = address;
+        }
+        if (
+          matchHostname(mapEntry.host) &&
+          ipMatch(
+            mapEntry.ip,
+            req.socket ? req.socket.localAddress : undefined,
+          ) &&
+          address.match(createRegex(mapEntry.definingRegex)) &&
+          !(mapEntry.isNotDirectory && _fileState == 2) &&
+          !(mapEntry.isNotFile && _fileState == 1)
+        ) {
+          rewrittenURL = tempRewrittenURL;
+          try {
+            mapEntry.replacements.forEach(function (replacement) {
+              rewrittenURL = rewrittenURL.replace(
+                createRegex(replacement.regex),
+                replacement.replacement,
+              );
+            });
+            if (mapEntry.append) rewrittenURL += mapEntry.append;
+          } catch (err) {
+            doCallback = false;
+            callback(err, null);
+          }
+          break;
+        }
       }
-    });
-    config.wwwrootPostfixesVHost.every(function (postfixEntry) {
-      if (
-        matchHostname(postfixEntry.host) &&
-        ipMatch(
-          postfixEntry.ip,
-          req.socket ? req.socket.localAddress : undefined,
-        ) &&
-        !(
-          postfixEntry.skipRegex &&
-          preparedReqUrl3.match(createRegex(postfixEntry.skipRegex))
-        )
-      ) {
-        urlWithPostfix =
-          postfixPrefix + "/" + postfixEntry.postfix + urlWithPostfix;
-        return false;
-      } else {
-        return true;
-      }
-    });
-    if (urlWithPostfix != preparedReqUrl3) {
+    }
+    if (doCallback) callback(null, rewrittenURL);
+  };
+
+  // Rewrite URLs
+  rewriteURL(req.url, config.rewriteMap, function (err, rewrittenURL) {
+    if (err) {
+      res.error(500, err);
+      return;
+    }
+    if (rewrittenURL != req.url) {
       logFacilities.resmessage(
-        "Added web root postfix: " + req.url + " => " + urlWithPostfix,
+        "URL rewritten: " + req.url + " => " + rewrittenURL,
       );
-      req.url = urlWithPostfix;
+      req.url = rewrittenURL;
       try {
         req.parsedURL = new URL(
           req.url,
@@ -145,7 +178,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         }
       }
     }
-  }
 
-  next();
+    next();
+  });
 };
