@@ -1,6 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const generateServerString = require("./utils/generateServerString.js");
+const deleteFolderRecursive = require("./utils/deleteFolderRecursive.js");
 const svrjsInfo = require("../svrjs.json");
 const {version} = svrjsInfo;
 
@@ -22,20 +23,7 @@ if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into pr
 let forceSecure = false;
 let disableMods = false;
 
-function deleteFolderRecursive(path) {
-  if (fs.existsSync(path)) {
-    fs.readdirSync(path).forEach(function (file) {
-      var curPath = path + "/" + file;
-      if (fs.statSync(curPath).isDirectory()) { // recurse
-        deleteFolderRecursive(curPath);
-      } else { // delete file
-        fs.unlinkSync(curPath);
-      }
-    });
-    fs.rmdirSync(path);
-  }
-}
-
+// Handle command line arguments
 const args = process.argv;
 for (let i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("bun") > -1 ? 2 : 1); i < args.length; i++) {
   if (args[i] == "-h" || args[i] == "--help" || args[i] == "-?" || args[i] == "/h" || args[i] == "/?") {
@@ -71,7 +59,7 @@ for (let i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("b
     deleteFolderRecursive(process.dirname + "/temp");
     fs.mkdirSync(process.dirname + "/temp");
     console.log("Removing configuration file...");
-    fs.unlinkSync("config.json");
+    fs.unlinkSync(process.dirname + "config.json");
     console.log("Done!");
     process.exit(0);
   } else if (args[i] == "--disable-mods") {
