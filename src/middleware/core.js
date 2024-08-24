@@ -7,8 +7,6 @@ const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const fixNodeMojibakeURL = require("../utils/urlMojibakeFixer.js");
 const ipMatch = require("../utils/ipMatch.js");
 const matchHostname = require("../utils/matchHostname.js");
-const svrjsInfo = require("../../svrjs.json");
-const version = svrjsInfo.version;
 
 if (!process.err4xxcounter) process.err4xxcounter = 0;
 if (!process.err5xxcounter) process.err5xxcounter = 0;

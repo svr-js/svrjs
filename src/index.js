@@ -108,8 +108,10 @@ let middleware = [
   require("./middleware/core.js"),
   require("./middleware/urlSanitizer.js"),
   require("./middleware/redirects.js"),
+  // TODO: blocklist
   require("./middleware/webRootPostfixes.js"),
-  require("./middleware/rewriteURL.js")
+  require("./middleware/rewriteURL.js"),
+  require("./middleware/responseHeaders.js")
 ];
 
 function addMiddleware(mw) {
