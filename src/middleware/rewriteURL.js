@@ -3,6 +3,7 @@ const url = require("url");
 const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
+const matchHostname = require("../utils/matchHostname.js");
 
 module.exports = (req, res, logFacilities, config, next) => {
   try {
@@ -10,29 +11,6 @@ module.exports = (req, res, logFacilities, config, next) => {
   } catch (err) {
     res.error(400);
   }
-
-  const matchHostname = (hostname) => {
-    if (typeof hostname == "undefined" || hostname == "*") {
-      return true;
-    } else if (
-      req.headers.host &&
-      hostname.indexOf("*.") == 0 &&
-      hostname != "*."
-    ) {
-      const hostnamesRoot = hostname.substring(2);
-      if (
-        req.headers.host == hostnamesRoot ||
-        (req.headers.host.length > hostnamesRoot.length &&
-          req.headers.host.indexOf("." + hostnamesRoot) ==
-            req.headers.host.length - hostnamesRoot.length - 1)
-      ) {
-        return true;
-      }
-    } else if (req.headers.host && req.headers.host == hostname) {
-      return true;
-    }
-    return false;
-  };
 
   // Handle URL rewriting
   const rewriteURL = (address, map, callback, _fileState, _mapBegIndex) => {
@@ -71,7 +49,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           tempRewrittenURL = address;
         }
         if (
-          matchHostname(mapEntry.host) &&
+          matchHostname(mapEntry.host, req.headers.host) &&
           ipMatch(
             mapEntry.ip,
             req.socket ? req.socket.localAddress : undefined,

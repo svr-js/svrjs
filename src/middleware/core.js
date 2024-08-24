@@ -6,6 +6,7 @@ const generateServerString = require("../utils/generateServerString.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const fixNodeMojibakeURL = require("../utils/urlMojibakeFixer.js");
 const ipMatch = require("../utils/ipMatch.js");
+const matchHostname = require("../utils/matchHostname.js");
 const svrjsInfo = require("../../svrjs.json");
 const version = svrjsInfo.version;
 
@@ -14,29 +15,6 @@ if (!process.err5xxcounter) process.err5xxcounter = 0;
 if (!process.reqcounter) process.reqcounter = 0;
 
 module.exports = (req, res, logFacilities, config, next) => {
-  const matchHostname = (hostname) => {
-    if (typeof hostname == "undefined" || hostname == "*") {
-      return true;
-    } else if (
-      req.headers.host &&
-      hostname.indexOf("*.") == 0 &&
-      hostname != "*."
-    ) {
-      const hostnamesRoot = hostname.substring(2);
-      if (
-        req.headers.host == hostnamesRoot ||
-        (req.headers.host.length > hostnamesRoot.length &&
-          req.headers.host.indexOf("." + hostnamesRoot) ==
-            req.headers.host.length - hostnamesRoot.length - 1)
-      ) {
-        return true;
-      }
-    } else if (req.headers.host && req.headers.host == hostname) {
-      return true;
-    }
-    return false;
-  };
-
   config.generateServerString = () => {
     return generateServerString(config.exposeServerVersion);
   };
@@ -48,7 +26,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       let vhostP = null;
       config.customHeadersVHost.every(function (vhost) {
         if (
-          matchHostname(vhost.host) &&
+          matchHostname(vhost.host, req.headers.host) &&
           ipMatch(vhost.ip, req.socket ? req.socket.localAddress : undefined)
         ) {
           vhostP = vhost;
@@ -398,7 +376,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       if (
         list[_i].scode != errorCode ||
         !(
-          matchHostname(list[_i].host) &&
+          matchHostname(list[_i].host, req.headers.host) &&
           ipMatch(list[_i].ip, req.socket ? req.socket.localAddress : undefined)
         )
       ) {
