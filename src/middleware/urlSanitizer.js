@@ -1,5 +1,4 @@
 const sanitizeURL = require("../utils/urlSanitizer.js");
-const url = require("url");
 
 module.exports = (req, res, logFacilities, config, next) => {
   // Sanitize URL
@@ -12,16 +11,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
   // Check if URL is "dirty"
   if (req.parsedURL.pathname != sanitizedHref && !req.isProxy) {
-    let sanitizedURL = new url.Url();
-    sanitizedURL.path = null;
-    sanitizedURL.href = null;
-    sanitizedURL.pathname = sanitizedHref;
-    sanitizedURL.hostname = null;
-    sanitizedURL.host = null;
-    sanitizedURL.port = null;
-    sanitizedURL.protocol = null;
-    sanitizedURL.slashes = null;
-    sanitizedURL = url.format(sanitizedURL);
+    let sanitizedURL = sanitizedHref + req.parsedURL.search + req.parsedURL.hash;
     logFacilities.resmessage(
       "URL sanitized: " + req.url + " => " + sanitizedURL,
     );

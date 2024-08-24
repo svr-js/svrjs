@@ -113,16 +113,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         logFacilities.errmessage("Content blocked.");
         return;
       } else if (sHref != req.parsedURL.pathname) {
-        var rewrittenAgainURL = new url.Url();
-        rewrittenAgainURL.path = null;
-        rewrittenAgainURL.href = null;
-        rewrittenAgainURL.pathname = sHref;
-        rewrittenAgainURL.hostname = null;
-        rewrittenAgainURL.host = null;
-        rewrittenAgainURL.port = null;
-        rewrittenAgainURL.protocol = null;
-        rewrittenAgainURL.slashes = null;
-        rewrittenAgainURL = url.format(rewrittenAgainURL);
+        let rewrittenAgainURL = sHref + req.parsedURL.search + req.parsedURL.hash;
         logFacilities.resmessage(
           "URL sanitized: " + req.url + " => " + rewrittenAgainURL,
         );

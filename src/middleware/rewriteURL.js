@@ -1,5 +1,4 @@
 const fs = require("fs");
-const url = require("url");
 const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
@@ -126,16 +125,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         logFacilities.errmessage("Content blocked.");
         return;
       } else if (sHref != req.parsedURL.pathname) {
-        var rewrittenAgainURL = new url.Url();
-        rewrittenAgainURL.path = null;
-        rewrittenAgainURL.href = null;
-        rewrittenAgainURL.pathname = sHref;
-        rewrittenAgainURL.hostname = null;
-        rewrittenAgainURL.host = null;
-        rewrittenAgainURL.port = null;
-        rewrittenAgainURL.protocol = null;
-        rewrittenAgainURL.slashes = null;
-        rewrittenAgainURL = url.format(rewrittenAgainURL);
+        var rewrittenAgainURL = sHref + req.parsedURL.search + req.parsedURL.hash;
         logFacilities.resmessage(
           "URL sanitized: " + req.url + " => " + rewrittenAgainURL,
         );

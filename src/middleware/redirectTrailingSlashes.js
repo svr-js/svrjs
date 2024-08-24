@@ -1,5 +1,4 @@
 const fs = require("fs");
-const url = require("url");
 
 module.exports = (req, res, logFacilities, config, next) => {
   // Trailing slash redirection
@@ -21,17 +20,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               res.error(500, err);
             }
           } else {
-            var destinationURL = new url.Url();
-            destinationURL.path = null;
-            destinationURL.href = null;
-            destinationURL.pathname = req.originalParsedURL.pathname + "/";
-            destinationURL.hostname = null;
-            destinationURL.host = null;
-            destinationURL.port = null;
-            destinationURL.protocol = null;
-            destinationURL.slashes = null;
-            destinationURL = url.format(destinationURL);
-            res.redirect(destinationURL);
+            res.redirect(req.originalParsedURL.pathname + "/" + req.parsedURL.search + req.parsedURL.hash);
           }
         },
       );
