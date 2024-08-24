@@ -187,6 +187,8 @@ let middleware = [
   require("./middleware/checkForbiddenPaths.js"),
   require("./middleware/nonStandardCodesAndHttpAuthentication.js"),
   require("./middleware/redirectTrailingSlashes.js")
+  // TODO: SVR.JS mods go here
+  // TODO: default handler
 ];
 
 function addMiddleware(mw) {
