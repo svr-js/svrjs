@@ -547,7 +547,7 @@ function ipMatch(IP1, IP2) {
 
   // Function to normalize IPv4 address (remove leading zeros)
   function normalizeIPv4Address(address) {
-    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "");
+    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
   }
 
   // Function to expand IPv6 address to full format
