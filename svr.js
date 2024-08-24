@@ -49,7 +49,7 @@ function factoryReset() {
   deleteFolderRecursive(__dirname + "/temp");
   fs.mkdirSync(__dirname + "/temp");
   console.log("Removing configuration file...");
-  fs.unlinkSync("config.json");
+  fs.unlinkSync(__dirname + "/config.json");
   console.log("Done!");
   process.exit(0);
 }
