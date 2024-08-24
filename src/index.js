@@ -35,6 +35,7 @@ if (process.serverConfig.secure) {
   if (process.serverConfig.spubport === undefined) process.serverConfig.spubport = 443;
   if (process.serverConfig.sni === undefined) process.serverConfig.sni = {};
   if (process.serverConfig.enableOCSPStapling === undefined) process.serverConfig.enableOCSPStapling = false;
+  
 }
 if (process.serverConfig.port === undefined) process.serverConfig.port = 80;
 if (process.serverConfig.pubport === undefined) process.serverConfig.pubport = 80;
@@ -70,6 +71,8 @@ if (process.serverConfig.useWebRootServerSideScript === undefined) process.serve
 if (process.serverConfig.exposeModsInErrorPages === undefined) process.serverConfig.exposeModsInErrorPages = true;
 if (process.serverConfig.disableTrailingSlashRedirects === undefined) process.serverConfig.disableTrailingSlashRedirects = false;
 if (process.serverConfig.environmentVariables === undefined) process.serverConfig.environmentVariables = {};
+if (process.serverConfig.customHeadersVHost === undefined) process.serverConfig.customHeadersVHost = [];
+if (process.serverConfig.enableDirectoryListingVHost === undefined) process.serverConfig.enableDirectoryListingVHost = [];
 if (process.serverConfig.wwwrootPostfixesVHost === undefined) process.serverConfig.wwwrootPostfixesVHost = [];
 if (process.serverConfig.wwwrootPostfixPrefixesVHost === undefined) process.serverConfig.wwwrootPostfixPrefixesVHost = [];
 if (process.serverConfig.allowDoubleSlashes === undefined) process.serverConfig.allowDoubleSlashes = false;
@@ -111,7 +114,8 @@ let middleware = [
   // TODO: blocklist
   require("./middleware/webRootPostfixes.js"),
   require("./middleware/rewriteURL.js"),
-  require("./middleware/responseHeaders.js")
+  require("./middleware/responseHeaders.js"),
+  require("./middleware/checkForbiddenPaths.js")
 ];
 
 function addMiddleware(mw) {
