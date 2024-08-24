@@ -1,4 +1,3 @@
-const { emitWarning } = require("process");
 const sanitizeURL = require("../utils/urlSanitizer.js");
 const url = require("url");
 

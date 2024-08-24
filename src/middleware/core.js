@@ -1,9 +1,11 @@
 const http = require("http");
 const fs = require("fs");
+const net = require("net");
 const generateErrorStack = require("../utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const fixNodeMojibakeURL = require("../utils/urlMojibakeFixer.js");
 const getOS = require("../utils/getOS.js");
+const ipMatch = require("../utils/ipMatch.js");
 const svrjsInfo = require("../../svrjs.json");
 const version = svrjsInfo.version;
 
@@ -295,15 +297,15 @@ module.exports = (req, res, logFacilities, config, next) => {
       "Host name rewritten: " + oldHostHeader + " => " + req.headers.host,
     );
 
-    // Header and footer placeholders
-    res.head = "";
-    res.foot = "";
+  // Header and footer placeholders
+  res.head = "";
+  res.foot = "";
 
-    res.responseEnd = (body) => {
-      // If body is Buffer, then it is converted to String anyway.
-      res.write(head + body + foot);
-      res.end();
-    }
+  res.responseEnd = (body) => {
+    // If body is Buffer, then it is converted to String anyway.
+    res.write(res.head + body + res.foot);
+    res.end();
+  };
 
   // Server error calling method
   res.error = (errorCode, extName, stack, ch) => {
@@ -670,8 +672,16 @@ module.exports = (req, res, logFacilities, config, next) => {
   };
 
   try {
-    res.head = fs.existsSync("./.head") ? fs.readFileSync("./.head").toString() : (fs.existsSync("./head.html") ? fs.readFileSync("./head.html").toString() : ""); // header
-    res.foot = fs.existsSync("./.foot") ? fs.readFileSync("./.foot").toString() : (fs.existsSync("./foot.html") ? fs.readFileSync("./foot.html").toString() : ""); // footer
+    res.head = fs.existsSync("./.head")
+      ? fs.readFileSync("./.head").toString()
+      : fs.existsSync("./head.html")
+        ? fs.readFileSync("./head.html").toString()
+        : ""; // header
+    res.foot = fs.existsSync("./.foot")
+      ? fs.readFileSync("./.foot").toString()
+      : fs.existsSync("./foot.html")
+        ? fs.readFileSync("./foot.html").toString()
+        : ""; // footer
   } catch (err) {
     res.error(500, err);
   }

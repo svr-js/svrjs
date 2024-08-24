@@ -3,7 +3,12 @@ module.exports = (req, res, logFacilities, config, next) => {
   let fromMain = !(config.secure && !req.socket.encrypted);
 
   // Handle redirects to HTTPS
-  if (config.secure && !fromMain && !config.disableNonEncryptedServer && !config.disableToHTTPSRedirect) {
+  if (
+    config.secure &&
+    !fromMain &&
+    !config.disableNonEncryptedServer &&
+    !config.disableToHTTPSRedirect
+  ) {
     var hostx = req.headers.host;
     if (hostx === undefined) {
       logFacilities.errmessage("Host header is missing.");
@@ -17,7 +22,13 @@ module.exports = (req, res, logFacilities, config, next) => {
       return;
     }
 
-    var isPublicServer = !(req.socket.realRemoteAddress ? req.socket.realRemoteAddress : req.socket.remoteAddress).match(/^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i);
+    var isPublicServer = !(
+      req.socket.realRemoteAddress
+        ? req.socket.realRemoteAddress
+        : req.socket.remoteAddress
+    ).match(
+      /^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i,
+    );
 
     var destinationPort = 0;
 
@@ -26,13 +37,21 @@ module.exports = (req, res, logFacilities, config, next) => {
     var hostPort = parsedHostx[2] ? parseInt(parsedHostx[2]) : 80;
     if (isNaN(hostPort)) hostPort = 80;
 
-    if (hostPort == config.port || (config.port == config.pubport && !isPublicServer)) {
+    if (
+      hostPort == config.port ||
+      (config.port == config.pubport && !isPublicServer)
+    ) {
       destinationPort = config.sport;
     } else {
       destinationPort = config.spubport;
     }
 
-    redirect("https://" + hostname + (destinationPort == 443 ? "" : (":" + destinationPort)) + req.url);
+    res.redirect(
+      "https://" +
+        hostname +
+        (destinationPort == 443 ? "" : ":" + destinationPort) +
+        req.url,
+    );
     return;
   }
 
@@ -40,13 +59,23 @@ module.exports = (req, res, logFacilities, config, next) => {
   if (config.wwwredirect) {
     let hostname = req.headers.host.split(":");
     let hostport = null;
-    if (hostname.length > 1 && (hostname[0] != "[" || hostname[hostname.length - 1] != "]")) hostport = hostname.pop();
+    if (
+      hostname.length > 1 &&
+      (hostname[0] != "[" || hostname[hostname.length - 1] != "]")
+    )
+      hostport = hostname.pop();
     hostname = hostname.join(":");
-    if (hostname == domain && hostname.indexOf("www.") != 0) {
-      res.redirect((req.socket.encrypted ? "https" : "http") + "://www." + hostname + (hostport ? ":" + hostport : "") + req.url.replace(/\/+/g, "/"));
+    if (hostname == config.domain && hostname.indexOf("www.") != 0) {
+      res.redirect(
+        (req.socket.encrypted ? "https" : "http") +
+          "://www." +
+          hostname +
+          (hostport ? ":" + hostport : "") +
+          req.url.replace(/\/+/g, "/"),
+      );
       return;
     }
   }
 
   next();
-}
+};
