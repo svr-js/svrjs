@@ -464,20 +464,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   /{server}/g,
                   "" +
                     (
-                      (config.exposeServerVersion
-                        ? "SVR.JS/" +
-                          version +
-                          " (" +
-                          getOS() +
-                          "; " +
-                          (process.isBun
-                            ? "Bun/v" +
-                              process.versions.bun +
-                              "; like Node.JS/" +
-                              process.version
-                            : "Node.JS/" + process.version) +
-                          ")"
-                        : "SVR.JS") +
+                      config.generateServerString() +
                       (!config.exposeModsInErrorPages || extName == undefined
                         ? ""
                         : " " + extName)

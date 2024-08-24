@@ -1,6 +1,6 @@
 const ipMatch = require("../../src/utils/ipMatch");
 
-describe("ipMatch", () => {
+describe("IP address matching function", () => {
   test("should return true if IP1 is empty", () => {
     expect(ipMatch("", "192.168.1.1")).toBe(true);
   });

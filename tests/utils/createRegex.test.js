@@ -5,7 +5,7 @@ jest.mock("os", () => ({
   platform: jest.fn(),
 }));
 
-describe("createRegex", () => {
+describe("Regular expression creation function", () => {
   beforeEach(() => {
     os.platform.mockReset();
   });
