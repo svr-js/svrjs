@@ -103,6 +103,9 @@ if (fs.existsSync(__dirname + "/dist")) {
   else fs.rmdirSync(__dirname + "/dist", {recursive: true});
 }
 fs.mkdirSync(__dirname + "/dist");
+fs.mkdirSync(__dirname + "/dist/log");
+fs.mkdirSync(__dirname + "/dist/mods");
+fs.mkdirSync(__dirname + "/dist/temp");
 
 // Remove the out directory if exists, and create a new one.
 if (fs.existsSync(__dirname + "/out")) {
