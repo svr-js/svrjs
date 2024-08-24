@@ -85,7 +85,10 @@ if (configJSON.useWebRootServerSideScript === undefined) configJSON.useWebRootSe
 if (configJSON.exposeModsInErrorPages === undefined) configJSON.exposeModsInErrorPages = true;
 if (configJSON.disableTrailingSlashRedirects === undefined) configJSON.disableTrailingSlashRedirects = false;
 if (configJSON.environmentVariables === undefined) configJSON.environmentVariables = {};
+if (configJSON.wwwrootPostfixesVHost === undefined) configJSON.wwwrootPostfixesVHost = [];
+if (configJSON.wwwrootPostfixPrefixesVHost === undefined) configJSON.wwwrootPostfixPrefixesVHost = [];
 if (configJSON.allowDoubleSlashes === undefined) configJSON.allowDoubleSlashes = false;
+if (configJSON.allowPostfixDoubleSlashes === undefined) configJSON.allowPostfixDoubleSlashes = false;
 if (configJSON.optOutOfStatisticsServer === undefined) configJSON.optOutOfStatisticsServer = false;
 
 configJSON.version = version; // Compatiblity for very old SVR.JS mods
@@ -102,7 +105,8 @@ const serverconsole = serverconsoleConstructor(configJSON.enableLogging);
 let middleware = [
   require("./middleware/core.js"),
   require("./middleware/urlSanitizer.js"),
-  require("./middleware/redirects.js")
+  require("./middleware/redirects.js"),
+  require("./middleware/webRootPostfixes.js")
 ];
 
 function addMiddleware(mw) {
