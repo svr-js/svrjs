@@ -3,16 +3,16 @@ const path = require("path");
 
 // Function to get URL path for use in forbidden path adding.
 function getInitializePath(to) {
-  var cwd = process.cwd();
+  const cwd = process.cwd();
   if (os.platform() == "win32") {
     to = to.replace(/\//g, "\\");
     if (to[0] == "\\") to = cwd.split("\\")[0] + to;
   }
-  var absoluteTo = path.isAbsolute(to)
+  const absoluteTo = path.isAbsolute(to)
     ? to
     : __dirname + (os.platform() == "win32" ? "\\" : "/") + to;
   if (os.platform() == "win32" && cwd[0] != absoluteTo[0]) return "";
-  var relative = path.relative(cwd, absoluteTo);
+  const relative = path.relative(cwd, absoluteTo);
   if (os.platform() == "win32") {
     return "/" + relative.replace(/\\/g, "/");
   } else {
@@ -22,7 +22,7 @@ function getInitializePath(to) {
 
 // Function to check if URL path name is a forbidden path.
 function isForbiddenPath(decodedHref, match) {
-  var forbiddenPath = forbiddenPaths[match];
+  const forbiddenPath = forbiddenPaths[match];
   if (!forbiddenPath) return false;
   if (typeof forbiddenPath === "string") {
     return (
@@ -45,7 +45,7 @@ function isForbiddenPath(decodedHref, match) {
 
 // Function to check if URL path name is index of one of defined forbidden paths.
 function isIndexOfForbiddenPath(decodedHref, match) {
-  var forbiddenPath = forbiddenPaths[match];
+  const forbiddenPath = forbiddenPaths[match];
   if (!forbiddenPath) return false;
   if (typeof forbiddenPath === "string") {
     return (
