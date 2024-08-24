@@ -1,5 +1,8 @@
 const http = require("http");
 const fs = require("fs");
+const generateServerString = require("./utils/generateServerString.js");
+const svrjsInfo = require("../svrjs.json");
+const {version} = svrjsInfo;
 
 let inspector = undefined;
 try {
@@ -10,19 +13,94 @@ try {
 
 process.dirname = __dirname;
 
+// TODO: after implementing clustering in new SVR.JS
+//process.singleThreaded = false;
+process.singleThreaded = true;
+
+if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
+
+let forceSecure = false;
+let disableMods = false;
+
+function deleteFolderRecursive(path) {
+  if (fs.existsSync(path)) {
+    fs.readdirSync(path).forEach(function (file) {
+      var curPath = path + "/" + file;
+      if (fs.statSync(curPath).isDirectory()) { // recurse
+        deleteFolderRecursive(curPath);
+      } else { // delete file
+        fs.unlinkSync(curPath);
+      }
+    });
+    fs.rmdirSync(path);
+  }
+}
+
+const args = process.argv;
+for (let i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("bun") > -1 ? 2 : 1); i < args.length; i++) {
+  if (args[i] == "-h" || args[i] == "--help" || args[i] == "-?" || args[i] == "/h" || args[i] == "/?") {
+    console.log("SVR.JS usage:");
+    console.log("node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]");
+    console.log("-h -? /h /? --help    -- Displays help");
+    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)");
+    console.log("--secure              -- Runs HTTPS server");
+    console.log("--disable-mods        -- Disables mods (safe mode)");
+    console.log("--single-threaded     -- Run single-threaded");
+    console.log("-v --version          -- Display server version");
+    process.exit(0);
+  } else if (args[i] == "--secure") {
+    forceSecure = true;
+  } else if (args[i] == "-v" || args[i] == "--version") {
+    console.log(generateServerString(true));
+    process.exit(0);
+  } else if (args[i] == "--clean") {
+    console.log("Removing logs...");
+    deleteFolderRecursive(process.dirname + "/log");
+    fs.mkdirSync(process.dirname + "/log");
+    console.log("Removing temp folder...");
+    deleteFolderRecursive(process.dirname + "/temp");
+    fs.mkdirSync(process.dirname + "/temp");
+    console.log("Done!");
+    process.exit(0);
+  } else if (args[i] == "--reset") {
+    console.log("Removing logs...");
+    deleteFolderRecursive(process.dirname + "/log");
+    fs.mkdirSync(process.dirname + "/log");
+    console.log("Removing temp folder...");
+    deleteFolderRecursive(process.dirname + "/temp");
+    fs.mkdirSync(process.dirname + "/temp");
+    console.log("Removing configuration file...");
+    fs.unlinkSync("config.json");
+    console.log("Done!");
+    process.exit(0);
+  } else if (args[i] == "--disable-mods") {
+    disableMods = true;
+  } else if (args[i] == "--single-threaded") {
+    process.singlethreaded = true;
+  } else {
+    console.log("Unrecognized argument: " + args[i]);
+    console.log("SVR.JS usage:");
+    console.log("node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]");
+    console.log("-h -? /h /? --help    -- Displays help");
+    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)");
+    console.log("--secure              -- Runs HTTPS server");
+    console.log("--disable-mods        -- Disables mods (safe mode)");
+    console.log("--single-threaded     -- Run single-threaded");
+    console.log("-v --version          -- Display server version");
+    process.exit(1);
+  }
+}
+
 // Create log, mods and temp directories, if they don't exist.
 if (!fs.existsSync(process.dirname + "/log")) fs.mkdirSync(process.dirname + "/log");
 if (!fs.existsSync(process.dirname + "/mods")) fs.mkdirSync(process.dirname + "/mods");
 if (!fs.existsSync(process.dirname + "/temp")) fs.mkdirSync(process.dirname + "/temp");
 
-// TODO: process.singleThreaded flag
-process.singleThreaded = true;
 const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
 //const generateErrorStack = require("./utils/generateErrorStack.js");
 //const getOS = require("./utils/getOS.js");
-const generateServerString = require("./utils/generateServerString.js")
-const svrjsInfo = require("../svrjs.json");
-const {version} = svrjsInfo;
 //const parseURL = require("./utils/urlParser.js");
 //const fixNodeMojibakeURL = require("./utils/urlMojibakeFixer.js");
 
@@ -30,6 +108,8 @@ process.serverConfig = {};
 
 // TODO: configuration from config.json
 if (process.serverConfig.users === undefined) process.serverConfig.users = [];
+if (process.serverConfig.secure === undefined) process.serverConfig.secure = false;
+if (forceSecure) process.serverConfig.secure = true;
 if (process.serverConfig.secure) {
   if (process.serverConfig.key === undefined) process.serverConfig.key = "cert/key.key";
   if (process.serverConfig.cert === undefined) process.serverConfig.cert = "cert/cert.crt";
@@ -62,7 +142,6 @@ if (process.serverConfig.allowStatus === undefined) process.serverConfig.allowSt
 if (process.serverConfig.rewriteMap === undefined) process.serverConfig.rewriteMap = [];
 if (process.serverConfig.dontCompress === undefined) process.serverConfig.dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
 if (process.serverConfig.enableIPSpoofing === undefined) process.serverConfig.enableIPSpoofing = false;
-if (process.serverConfig.secure === undefined) process.serverConfig.secure = false;
 if (process.serverConfig.disableNonEncryptedServer === undefined) process.serverConfig.disableNonEncryptedServer = false;
 if (process.serverConfig.disableToHTTPSRedirect === undefined) process.serverConfig.disableToHTTPSRedirect = false;
 if (process.serverConfig.enableETag === undefined) process.serverConfig.enableETag = true;
