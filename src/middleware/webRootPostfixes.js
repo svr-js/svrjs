@@ -1,4 +1,3 @@
-const url = require("url");
 const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
@@ -113,7 +112,8 @@ module.exports = (req, res, logFacilities, config, next) => {
         logFacilities.errmessage("Content blocked.");
         return;
       } else if (sHref != req.parsedURL.pathname) {
-        let rewrittenAgainURL = sHref + req.parsedURL.search + req.parsedURL.hash;
+        let rewrittenAgainURL =
+          sHref + req.parsedURL.search + req.parsedURL.hash;
         logFacilities.resmessage(
           "URL sanitized: " + req.url + " => " + rewrittenAgainURL,
         );

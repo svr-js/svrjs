@@ -11,7 +11,8 @@ module.exports = (req, res, logFacilities, config, next) => {
 
   // Check if URL is "dirty"
   if (req.parsedURL.pathname != sanitizedHref && !req.isProxy) {
-    let sanitizedURL = sanitizedHref + req.parsedURL.search + req.parsedURL.hash;
+    let sanitizedURL =
+      sanitizedHref + req.parsedURL.search + req.parsedURL.hash;
     logFacilities.resmessage(
       "URL sanitized: " + req.url + " => " + sanitizedURL,
     );

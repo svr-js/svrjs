@@ -125,7 +125,8 @@ module.exports = (req, res, logFacilities, config, next) => {
         logFacilities.errmessage("Content blocked.");
         return;
       } else if (sHref != req.parsedURL.pathname) {
-        var rewrittenAgainURL = sHref + req.parsedURL.search + req.parsedURL.hash;
+        var rewrittenAgainURL =
+          sHref + req.parsedURL.search + req.parsedURL.hash;
         logFacilities.resmessage(
           "URL sanitized: " + req.url + " => " + rewrittenAgainURL,
         );
