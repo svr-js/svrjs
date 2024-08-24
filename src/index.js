@@ -1,12 +1,5 @@
 const http = require("http");
 const fs = require("fs");
-//const generateErrorStack = require("./utils/generateErrorStack.js");
-//const getOS = require("./utils/getOS.js");
-const generateServerString = require("./utils/generateServerString.js")
-const svrjsInfo = require("../svrjs.json");
-const {version} = svrjsInfo;
-//const parseURL = require("./utils/urlParser.js");
-//const fixNodeMojibakeURL = require("./utils/urlMojibakeFixer.js");
 
 let inspector = undefined;
 try {
@@ -25,6 +18,13 @@ if (!fs.existsSync(process.dirname + "/temp")) fs.mkdirSync(process.dirname + "/
 // TODO: process.singleThreaded flag
 process.singleThreaded = true;
 const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
+//const generateErrorStack = require("./utils/generateErrorStack.js");
+//const getOS = require("./utils/getOS.js");
+const generateServerString = require("./utils/generateServerString.js")
+const svrjsInfo = require("../svrjs.json");
+const {version} = svrjsInfo;
+//const parseURL = require("./utils/urlParser.js");
+//const fixNodeMojibakeURL = require("./utils/urlMojibakeFixer.js");
 
 process.serverConfig = {};
 
