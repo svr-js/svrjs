@@ -15,10 +15,12 @@ try {
   // Don't use inspector
 }
 
+process.dirname = __dirname;
+
 // Create log, mods and temp directories, if they don't exist.
-if (!fs.existsSync(__dirname + "/log")) fs.mkdirSync(__dirname + "/log");
-if (!fs.existsSync(__dirname + "/mods")) fs.mkdirSync(__dirname + "/mods");
-if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
+if (!fs.existsSync(process.dirname + "/log")) fs.mkdirSync(process.dirname + "/log");
+if (!fs.existsSync(process.dirname + "/mods")) fs.mkdirSync(process.dirname + "/mods");
+if (!fs.existsSync(process.dirname + "/temp")) fs.mkdirSync(process.dirname + "/temp");
 
 // TODO: process.singleThreaded flag
 process.singleThreaded = true;
@@ -102,7 +104,7 @@ if (!process.stdout.isTTY && !inspectorURL) {
 
 var wwwrootError = null;
 try {
-  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(process.serverConfig.wwwroot != undefined ? process.serverConfig.wwwroot : __dirname);
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(process.serverConfig.wwwroot != undefined ? process.serverConfig.wwwroot : process.dirname);
 } catch (err) {
   wwwrootError = err;
 }

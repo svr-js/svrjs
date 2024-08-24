@@ -10,7 +10,7 @@ function getInitializePath(to) {
   }
   const absoluteTo = path.isAbsolute(to)
     ? to
-    : __dirname + (os.platform() == "win32" ? "\\" : "/") + to;
+    : process.dirname + (os.platform() == "win32" ? "\\" : "/") + to;
   if (os.platform() == "win32" && cwd[0] != absoluteTo[0]) return "";
   const relative = path.relative(cwd, absoluteTo);
   if (os.platform() == "win32") {
@@ -95,9 +95,9 @@ if (process.serverConfig.secure) {
 }
 forbiddenPaths.svrjs = getInitializePath(
   "./" +
-    (__dirname[__dirname.length - 1] != "/"
-      ? __filename.replace(__dirname + "/", "")
-      : __filename.replace(__dirname, "")),
+    (process.dirname[process.dirname.length - 1] != "/"
+      ? __filename.replace(process.dirname + "/", "")
+      : __filename.replace(process.dirname, "")),
 );
 forbiddenPaths.serverSideScripts = [];
 if (process.serverConfig.useWebRootServerSideScript) {

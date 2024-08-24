@@ -52,10 +52,10 @@ if (!process.singleThreaded) {
           os.platform() === "win32"
             ? path.join(
                 "\\\\?\\pipe",
-                __dirname,
+                process.dirname,
                 "temp/.W" + process.pid + ".ipc",
               )
-            : __dirname + "/temp/.W" + process.pid + ".ipc",
+            : process.dirname + "/temp/.W" + process.pid + ".ipc",
         );
 
         process.send = function (message) {
@@ -64,10 +64,10 @@ if (!process.singleThreaded) {
             os.platform() === "win32"
               ? path.join(
                   "\\\\?\\pipe",
-                  __dirname,
+                  process.dirname,
                   "temp/.P" + process.pid + ".ipc",
                 )
-              : __dirname + "/temp/.P" + process.pid + ".ipc",
+              : process.dirname + "/temp/.P" + process.pid + ".ipc",
             function () {
               fakeIPCConnection.end(message);
             },
@@ -159,10 +159,10 @@ if (!process.singleThreaded) {
           os.platform() === "win32"
             ? path.join(
                 "\\\\?\\pipe",
-                __dirname,
+                process.dirname,
                 "temp/.P" + newWorker.process.pid + ".ipc",
               )
-            : __dirname + "/temp/.P" + newWorker.process.pid + ".ipc",
+            : process.dirname + "/temp/.P" + newWorker.process.pid + ".ipc",
         );
 
         // Cleanup when worker process exits
@@ -186,10 +186,10 @@ if (!process.singleThreaded) {
               os.platform() === "win32"
                 ? path.join(
                     "\\\\?\\pipe",
-                    __dirname,
+                    process.dirname,
                     "temp/.W" + newWorker.process.pid + ".ipc",
                   )
-                : __dirname + "/temp/.W" + newWorker.process.pid + ".ipc",
+                : process.dirname + "/temp/.W" + newWorker.process.pid + ".ipc",
               function () {
                 fakeWorkerIPCConnection.end(message);
               },

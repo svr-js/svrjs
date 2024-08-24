@@ -13,7 +13,7 @@ function LOG(s) {
     if (enableLoggingIntoFile) {
       if (logSync) {
         fs.appendFileSync(
-          __dirname +
+          process.dirname +
             "/log/" +
             (cluster.isPrimary
               ? "master"
@@ -28,7 +28,7 @@ function LOG(s) {
       } else {
         if (!logFile) {
           logFile = fs.createWriteStream(
-            __dirname +
+            process.dirname +
               "/log/" +
               (cluster.isPrimary
                 ? "master"
