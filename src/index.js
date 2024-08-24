@@ -185,7 +185,8 @@ let middleware = [
   require("./middleware/rewriteURL.js"),
   require("./middleware/responseHeaders.js"),
   require("./middleware/checkForbiddenPaths.js"),
-  require("./middleware/nonStandardCodesAndHttpAuthentication.js")
+  require("./middleware/nonStandardCodesAndHttpAuthentication.js"),
+  require("./middleware/redirectTrailingSlashes.js")
 ];
 
 function addMiddleware(mw) {

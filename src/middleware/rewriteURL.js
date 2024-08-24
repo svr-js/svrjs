@@ -12,6 +12,8 @@ module.exports = (req, res, logFacilities, config, next) => {
     res.error(400);
   }
 
+  req.originalParsedURL = req.parsedURL;
+
   // Handle URL rewriting
   const rewriteURL = (address, map, callback, _fileState, _mapBegIndex) => {
     let rewrittenURL = address;
