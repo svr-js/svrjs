@@ -2,9 +2,10 @@ const http = require("http");
 const fs = require("fs");
 const net = require("net");
 const generateErrorStack = require("../utils/generateErrorStack.js");
+const generateServerString = require("../utils/generateServerString.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const fixNodeMojibakeURL = require("../utils/urlMojibakeFixer.js");
-const getOS = require("../utils/getOS.js");
+//const getOS = require("../utils/getOS.js");
 const ipMatch = require("../utils/ipMatch.js");
 const svrjsInfo = require("../../svrjs.json");
 const version = svrjsInfo.version;
@@ -37,6 +38,11 @@ module.exports = (req, res, logFacilities, config, next) => {
     return false;
   };
 
+  config.generateServerString = () => {
+    return generateServerString(config.exposeServerVersion);
+  };
+
+  // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
     let ph = Object.assign(config.customHeaders);
     if (config.customHeadersVHost) {
@@ -63,17 +69,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       if (typeof ph[phk] == "string")
         ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
     });
-    ph["Server"] = config.exposeServerVersion
-      ? "SVR.JS/" +
-        version +
-        " (" +
-        getOS() +
-        "; " +
-        (process.isBun
-          ? "Bun/v" + process.versions.bun + "; like Node.JS/" + process.version
-          : "Node.JS/" + process.version) +
-        ")"
-      : "SVR.JS";
+    ph["Server"] = config.generateServerString();
     return ph;
   };
 
@@ -588,20 +584,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   /{server}/g,
                   "" +
                     (
-                      (config.exposeServerVersion
-                        ? "SVR.JS/" +
-                          version +
-                          " (" +
-                          getOS() +
-                          "; " +
-                          (process.isBun
-                            ? "Bun/v" +
-                              process.versions.bun +
-                              "; like Node.JS/" +
-                              process.version
-                            : "Node.JS/" + process.version) +
-                          ")"
-                        : "SVR.JS") +
+                      config.generateServerString() +
                       (!config.exposeModsInErrorPages || extName == undefined
                         ? ""
                         : " " + extName)

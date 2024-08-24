@@ -1,7 +1,8 @@
 const http = require("http");
 const fs = require("fs");
 //const generateErrorStack = require("./utils/generateErrorStack.js");
-const getOS = require("./utils/getOS.js");
+//const getOS = require("./utils/getOS.js");
+const generateServerString = require("./utils/generateServerString.js")
 const svrjsInfo = require("../svrjs.json");
 const version = svrjsInfo.version;
 //const parseURL = require("./utils/urlParser.js");
@@ -149,7 +150,7 @@ function requestHandler(req, res) {
                 logFacilities.errmessage("Stack:");
                 logFacilities.errmessage(err.stack);
           res.writeHead(500, "Internal Server Error", {
-            Server: (config.exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
+            Server: generateServerString(config.exposeServerVersion)
           });
           res.end("Error while executing the request handler");
         }
@@ -158,7 +159,7 @@ function requestHandler(req, res) {
       if (res.error) res.error(404);
       else {
         res.writeHead(404, "Not Found", {
-          Server: (config.exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
+          Server: generateServerString(config.exposeServerVersion)
         });
         res.end("Request handler missing");
       }
