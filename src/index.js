@@ -23,6 +23,60 @@ if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
 process.singleThreaded = true;
 const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
 
+process.serverConfig = {};
+
+// TODO: configuration from config.json
+if (process.serverConfig.users === undefined) process.serverConfig.users = [];
+if (process.serverConfig.secure) {
+  if (process.serverConfig.key === undefined) process.serverConfig.key = "cert/key.key";
+  if (process.serverConfig.cert === undefined) process.serverConfig.cert = "cert/cert.crt";
+  if (process.serverConfig.sport === undefined) process.serverConfig.sport = 443;
+  if (process.serverConfig.spubport === undefined) process.serverConfig.spubport = 443;
+  if (process.serverConfig.sni === undefined) process.serverConfig.sni = {};
+  if (process.serverConfig.enableOCSPStapling === undefined) process.serverConfig.enableOCSPStapling = false;
+}
+if (process.serverConfig.port === undefined) process.serverConfig.port = 80;
+if (process.serverConfig.pubport === undefined) process.serverConfig.pubport = 80;
+if (process.serverConfig.domain === undefined && process.serverConfig.domian !== undefined) process.serverConfig.domain = process.serverConfig.domian;
+delete process.serverConfig.domian;
+if (process.serverConfig.page404 === undefined) process.serverConfig.page404 = "404.html";
+//process.serverConfig.timestamp = timestamp; //TODO
+//process.serverConfig.blacklist = blocklist.raw; //TODO
+if (process.serverConfig.nonStandardCodes === undefined) process.serverConfig.nonStandardCodes = [];
+if (process.serverConfig.enableCompression === undefined) process.serverConfig.enableCompression = true;
+if (process.serverConfig.customHeaders === undefined) process.serverConfig.customHeaders = {};
+if (process.serverConfig.enableHTTP2 === undefined) process.serverConfig.enableHTTP2 = false;
+if (process.serverConfig.enableLogging === undefined) process.serverConfig.enableLogging = true;
+if (process.serverConfig.enableDirectoryListing === undefined) process.serverConfig.enableDirectoryListing = true;
+if (process.serverConfig.enableDirectoryListingWithDefaultHead === undefined) process.serverConfig.enableDirectoryListingWithDefaultHead = false;
+if (process.serverConfig.serverAdministratorEmail === undefined) process.serverConfig.serverAdministratorEmail = "[no contact information]";
+if (process.serverConfig.stackHidden === undefined) process.serverConfig.stackHidden = false;
+if (process.serverConfig.enableRemoteLogBrowsing === undefined) process.serverConfig.enableRemoteLogBrowsing = false;
+if (process.serverConfig.exposeServerVersion === undefined) process.serverConfig.exposeServerVersion = true;
+if (process.serverConfig.disableServerSideScriptExpose === undefined) process.serverConfig.disableServerSideScriptExpose = true;
+if (process.serverConfig.allowStatus === undefined) process.serverConfig.allowStatus = true;
+if (process.serverConfig.rewriteMap === undefined) process.serverConfig.rewriteMap = [];
+if (process.serverConfig.dontCompress === undefined) process.serverConfig.dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
+if (process.serverConfig.enableIPSpoofing === undefined) process.serverConfig.enableIPSpoofing = false;
+if (process.serverConfig.secure === undefined) process.serverConfig.secure = false;
+if (process.serverConfig.disableNonEncryptedServer === undefined) process.serverConfig.disableNonEncryptedServer = false;
+if (process.serverConfig.disableToHTTPSRedirect === undefined) process.serverConfig.disableToHTTPSRedirect = false;
+if (process.serverConfig.enableETag === undefined) process.serverConfig.enableETag = true;
+if (process.serverConfig.disableUnusedWorkerTermination === undefined) process.serverConfig.disableUnusedWorkerTermination = false;
+if (process.serverConfig.rewriteDirtyURLs === undefined) process.serverConfig.rewriteDirtyURLs = false;
+if (process.serverConfig.errorPages === undefined) process.serverConfig.errorPages = [];
+if (process.serverConfig.useWebRootServerSideScript === undefined) process.serverConfig.useWebRootServerSideScript = true;
+if (process.serverConfig.exposeModsInErrorPages === undefined) process.serverConfig.exposeModsInErrorPages = true;
+if (process.serverConfig.disableTrailingSlashRedirects === undefined) process.serverConfig.disableTrailingSlashRedirects = false;
+if (process.serverConfig.environmentVariables === undefined) process.serverConfig.environmentVariables = {};
+if (process.serverConfig.wwwrootPostfixesVHost === undefined) process.serverConfig.wwwrootPostfixesVHost = [];
+if (process.serverConfig.wwwrootPostfixPrefixesVHost === undefined) process.serverConfig.wwwrootPostfixPrefixesVHost = [];
+if (process.serverConfig.allowDoubleSlashes === undefined) process.serverConfig.allowDoubleSlashes = false;
+if (process.serverConfig.allowPostfixDoubleSlashes === undefined) process.serverConfig.allowPostfixDoubleSlashes = false;
+if (process.serverConfig.optOutOfStatisticsServer === undefined) process.serverConfig.optOutOfStatisticsServer = false;
+
+process.serverConfig.version = version; // Compatiblity for very old SVR.JS mods
+
 const serverconsoleConstructor = require("./utils/serverconsole.js");
 
 let inspectorURL = undefined;
@@ -42,68 +96,14 @@ if (!process.stdout.isTTY && !inspectorURL) {
   process.stdout._writev = function () {};
 }
 
-let configJSON = {};
-
-// TODO: configuration from config.json
-if (configJSON.users === undefined) configJSON.users = [];
-if (configJSON.secure) {
-  if (configJSON.key === undefined) configJSON.key = "cert/key.key";
-  if (configJSON.cert === undefined) configJSON.cert = "cert/cert.crt";
-  if (configJSON.sport === undefined) configJSON.sport = 443;
-  if (configJSON.spubport === undefined) configJSON.spubport = 443;
-  if (configJSON.sni === undefined) configJSON.sni = {};
-  if (configJSON.enableOCSPStapling === undefined) configJSON.enableOCSPStapling = false;
-}
-if (configJSON.port === undefined) configJSON.port = 80;
-if (configJSON.pubport === undefined) configJSON.pubport = 80;
-if (configJSON.domain === undefined && configJSON.domian !== undefined) configJSON.domain = configJSON.domian;
-delete configJSON.domian;
-if (configJSON.page404 === undefined) configJSON.page404 = "404.html";
-//configJSON.timestamp = timestamp; //TODO
-//configJSON.blacklist = blocklist.raw; //TODO
-if (configJSON.nonStandardCodes === undefined) configJSON.nonStandardCodes = [];
-if (configJSON.enableCompression === undefined) configJSON.enableCompression = true;
-if (configJSON.customHeaders === undefined) configJSON.customHeaders = {};
-if (configJSON.enableHTTP2 === undefined) configJSON.enableHTTP2 = false;
-if (configJSON.enableLogging === undefined) configJSON.enableLogging = true;
-if (configJSON.enableDirectoryListing === undefined) configJSON.enableDirectoryListing = true;
-if (configJSON.enableDirectoryListingWithDefaultHead === undefined) configJSON.enableDirectoryListingWithDefaultHead = false;
-if (configJSON.serverAdministratorEmail === undefined) configJSON.serverAdministratorEmail = "[no contact information]";
-if (configJSON.stackHidden === undefined) configJSON.stackHidden = false;
-if (configJSON.enableRemoteLogBrowsing === undefined) configJSON.enableRemoteLogBrowsing = false;
-if (configJSON.exposeServerVersion === undefined) configJSON.exposeServerVersion = true;
-if (configJSON.disableServerSideScriptExpose === undefined) configJSON.disableServerSideScriptExpose = true;
-if (configJSON.allowStatus === undefined) configJSON.allowStatus = true;
-if (configJSON.rewriteMap === undefined) configJSON.rewriteMap = [];
-if (configJSON.dontCompress === undefined) configJSON.dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
-if (configJSON.enableIPSpoofing === undefined) configJSON.enableIPSpoofing = false;
-if (configJSON.secure === undefined) configJSON.secure = false;
-if (configJSON.disableNonEncryptedServer === undefined) configJSON.disableNonEncryptedServer = false;
-if (configJSON.disableToHTTPSRedirect === undefined) configJSON.disableToHTTPSRedirect = false;
-if (configJSON.enableETag === undefined) configJSON.enableETag = true;
-if (configJSON.disableUnusedWorkerTermination === undefined) configJSON.disableUnusedWorkerTermination = false;
-if (configJSON.rewriteDirtyURLs === undefined) configJSON.rewriteDirtyURLs = false;
-if (configJSON.errorPages === undefined) configJSON.errorPages = [];
-if (configJSON.useWebRootServerSideScript === undefined) configJSON.useWebRootServerSideScript = true;
-if (configJSON.exposeModsInErrorPages === undefined) configJSON.exposeModsInErrorPages = true;
-if (configJSON.disableTrailingSlashRedirects === undefined) configJSON.disableTrailingSlashRedirects = false;
-if (configJSON.environmentVariables === undefined) configJSON.environmentVariables = {};
-if (configJSON.wwwrootPostfixesVHost === undefined) configJSON.wwwrootPostfixesVHost = [];
-if (configJSON.wwwrootPostfixPrefixesVHost === undefined) configJSON.wwwrootPostfixPrefixesVHost = [];
-if (configJSON.allowDoubleSlashes === undefined) configJSON.allowDoubleSlashes = false;
-if (configJSON.allowPostfixDoubleSlashes === undefined) configJSON.allowPostfixDoubleSlashes = false;
-if (configJSON.optOutOfStatisticsServer === undefined) configJSON.optOutOfStatisticsServer = false;
-
-configJSON.version = version; // Compatiblity for very old SVR.JS mods
-
 var wwwrootError = null;
 try {
-  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(configJSON.wwwroot != undefined ? configJSON.wwwroot : __dirname);
+  if (cluster.isPrimary || cluster.isPrimary === undefined) process.chdir(process.serverConfig.wwwroot != undefined ? process.serverConfig.wwwroot : __dirname);
 } catch (err) {
   wwwrootError = err;
 }
 
-const serverconsole = serverconsoleConstructor(configJSON.enableLogging);
+const serverconsole = serverconsoleConstructor(process.serverConfig.enableLogging);
 
 let middleware = [
   require("./middleware/core.js"),
@@ -134,7 +134,7 @@ function requestHandler(req, res) {
   };
 
   // SVR.JS configuration object (modified)
-  const config = Object.assign(configJSON);
+  const config = Object.assign(process.serverConfig);
 
   let index = 0;
 
