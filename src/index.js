@@ -1,6 +1,5 @@
 const http = require("http");
 const fs = require("fs");
-const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
 //const generateErrorStack = require("./utils/generateErrorStack.js");
 const getOS = require("./utils/getOS.js");
 const svrjsInfo = require("../svrjs.json");
@@ -19,6 +18,10 @@ try {
 if (!fs.existsSync(__dirname + "/log")) fs.mkdirSync(__dirname + "/log");
 if (!fs.existsSync(__dirname + "/mods")) fs.mkdirSync(__dirname + "/mods");
 if (!fs.existsSync(__dirname + "/temp")) fs.mkdirSync(__dirname + "/temp");
+
+// TODO: process.singleThreaded flag
+process.singleThreaded = true;
+const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
 
 const serverconsoleConstructor = require("./utils/serverconsole.js");
 
