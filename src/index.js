@@ -59,7 +59,7 @@ for (let i = (process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("b
     deleteFolderRecursive(process.dirname + "/temp");
     fs.mkdirSync(process.dirname + "/temp");
     console.log("Removing configuration file...");
-    fs.unlinkSync(process.dirname + "config.json");
+    fs.unlinkSync(process.dirname + "/config.json");
     console.log("Done!");
     process.exit(0);
   } else if (args[i] == "--disable-mods") {
