@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-let enableLoggingIntoFile = false;
+let enableLoggingIntoFile = process.serverConfig.enableLogging;
 let logFile = undefined;
 let logSync = false;
 let cluster = require("./clusterBunShim.js");
@@ -271,7 +271,4 @@ process.exit = function (code) {
   }
 };
 
-module.exports = (enableLoggingIntoFileParam) => {
-  enableLoggingIntoFile = enableLoggingIntoFileParam;
-  return serverconsole;
-};
+module.exports = serverconsole;

@@ -77,7 +77,7 @@ if (process.serverConfig.optOutOfStatisticsServer === undefined) process.serverC
 
 process.serverConfig.version = version; // Compatiblity for very old SVR.JS mods
 
-const serverconsoleConstructor = require("./utils/serverconsole.js");
+const serverconsole = require("./utils/serverconsole.js");
 
 let inspectorURL = undefined;
 try {
@@ -102,8 +102,6 @@ try {
 } catch (err) {
   wwwrootError = err;
 }
-
-const serverconsole = serverconsoleConstructor(process.serverConfig.enableLogging);
 
 let middleware = [
   require("./middleware/core.js"),
