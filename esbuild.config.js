@@ -142,6 +142,9 @@ esbuild.build({
       assets: {
         from: ["./assets/**/*"],
         to: ["./dist"],
+      },
+      globbyOptions: {
+        dot: true
       }
     }),
     esbuildCopyPlugin.copy({
