@@ -73,6 +73,17 @@ try {
   };
 }
 
+let ocsp = {};
+let ocspCache = {};
+try {
+  ocsp = require("ocsp");
+  ocspCache = new ocsp.Cache();
+} catch (err) {
+  ocsp = {
+    _errored: err
+  };
+}
+
 process.dirname = __dirname;
 process.filename = __filename;
 
@@ -815,8 +826,7 @@ if (process.serverConfig.secure) {
     delete sock._parent.reallyDestroy;
   });
 
-  // TODO: OCSP stapling
-  /*if (process.serverConfig.enableOCSPStapling && !ocsp._errored) {
+  if (process.serverConfig.enableOCSPStapling && !ocsp._errored) {
     server.on("OCSPRequest", function (cert, issuer, callback) {
       ocsp.getOCSPURI(cert, function (err, uri) {
         if (err) return callback(err);
@@ -830,7 +840,7 @@ if (process.serverConfig.secure) {
         ocspCache.request(req.id, options, callback);
       });
     });
-  }*/
+  }
 }
 
 // TODO: close, open, stop, restart commands

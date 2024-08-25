@@ -27,6 +27,7 @@
   "dependencies": {
     "formidable": "^2.1.2",
     "mime-types": "^2.1.35",
+    "ocsp": "^1.2.0",
     "tar": "^6.2.1"
   }
 }
