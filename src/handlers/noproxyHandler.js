@@ -1,4 +1,3 @@
-const generateServerString = require("../utils/generateServerString");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
@@ -58,7 +57,7 @@ function noproxyHandler(req, socket, head) {
   if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
 }
 
-module.exports = (serverconsoleO, middlewareO) => {
+module.exports = (serverconsoleO) => {
   serverconsole = serverconsoleO;
   return noproxyHandler;
 };

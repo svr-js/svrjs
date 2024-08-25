@@ -21,6 +21,58 @@ try {
   };
 }
 
+let http2 = {};
+try {
+  http2 = require("http2");
+  if (process.isBun) {
+    try {
+      http2.Http2ServerRequest();
+    } catch (err) {
+      if (
+        err.name == "NotImplementedError" ||
+        err.code == "ERR_NOT_IMPLEMENTED"
+      )
+        throw err;
+    }
+  }
+} catch (err) {
+  http2.__disabled__ = null;
+  http2.createServer = function () {
+    throw new Error("HTTP/2 support is not present");
+  };
+  http2.createSecureServer = function () {
+    throw new Error("HTTP/2 support is not present");
+  };
+  http2.connect = function () {
+    throw new Error("HTTP/2 support is not present");
+  };
+  http2.get = function () {
+    throw new Error("HTTP/2 support is not present");
+  };
+}
+let crypto = {
+  __disabled__: null,
+};
+let https = {
+  createServer: function () {
+    throw new Error("Crypto support is not present");
+  },
+  connect: function () {
+    throw new Error("Crypto support is not present");
+  },
+  get: function () {
+    throw new Error("Crypto support is not present");
+  },
+};
+try {
+  crypto = require("crypto");
+  https = require("https");
+} catch (err) {
+  http2.createSecureServer = function () {
+    throw new Error("Crypto support is not present");
+  };
+}
+
 process.dirname = __dirname;
 process.filename = __filename;
 
@@ -598,20 +650,21 @@ if (process.serverConfig.enableHTTP2 == true) {
       requireHostHeader: false,
       key: key,
       cert: cert,
-      requestCert: configJSON.useClientCertificate,
-      rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
-      ciphers: configJSON.cipherSuite,
-      ecdhCurve: configJSON.ecdhCurve,
-      minVersion: configJSON.tlsMinVersion,
-      maxVersion: configJSON.tlsMaxVersion,
-      sigalgs: configJSON.signatureAlgorithms,
-      settings: configJSON.http2Settings,
+      requestCert: process.serverConfig.useClientCertificate,
+      rejectUnauthorized:
+        process.serverConfig.rejectUnauthorizedClientCertificates,
+      ciphers: process.serverConfig.cipherSuite,
+      ecdhCurve: process.serverConfig.ecdhCurve,
+      minVersion: process.serverConfig.tlsMinVersion,
+      maxVersion: process.serverConfig.tlsMaxVersion,
+      sigalgs: process.serverConfig.signatureAlgorithms,
+      settings: process.serverConfig.http2Settings,
     });
   } else {
     server = http2.createServer({
       allowHTTP1: true,
       requireHostHeader: false,
-      settings: configJSON.http2Settings,
+      settings: process.serverConfig.http2Settings,
     });
   }
 } else {
@@ -620,13 +673,14 @@ if (process.serverConfig.enableHTTP2 == true) {
       key: key,
       cert: cert,
       requireHostHeader: false,
-      requestCert: configJSON.useClientCertificate,
-      rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
-      ciphers: configJSON.cipherSuite,
-      ecdhCurve: configJSON.ecdhCurve,
-      minVersion: configJSON.tlsMinVersion,
-      maxVersion: configJSON.tlsMaxVersion,
-      sigalgs: configJSON.signatureAlgorithms,
+      requestCert: process.serverConfig.useClientCertificate,
+      rejectUnauthorized:
+        process.serverConfig.rejectUnauthorizedClientCertificates,
+      ciphers: process.serverConfig.cipherSuite,
+      ecdhCurve: process.serverConfig.ecdhCurve,
+      minVersion: process.serverConfig.tlsMinVersion,
+      maxVersion: process.serverConfig.tlsMaxVersion,
+      sigalgs: process.serverConfig.signatureAlgorithms,
     });
   } else {
     try {
@@ -640,18 +694,37 @@ if (process.serverConfig.enableHTTP2 == true) {
 }
 
 // Load SNI contexts into HTTP server
-if (secure) {
+if (process.serverConfig.secure) {
   try {
     sniCredentials.forEach(function (sniCredentialsSingle) {
       server.addContext(sniCredentialsSingle.name, {
         cert: sniCredentialsSingle.cert,
-        key: sniCredentialsSingle.key
+        key: sniCredentialsSingle.key,
       });
       try {
-        var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
-        if (!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
-        server._contexts[server._contexts.length - 1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
-      } catch (ex) {
+        var snMatches = sniCredentialsSingle.name.match(
+          /^([^:[]*|\[[^]]*\]?)((?::.*)?)$/,
+        );
+        if (!snMatches[1][0].match(/^\.+$/))
+          snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
+        server._contexts[server._contexts.length - 1][0] = new RegExp(
+          "^" +
+            snMatches[1]
+              .replace(/([.^$+?\-\\[\]{}])/g, "\\$1")
+              .replace(/\*/g, "[^.:]*") +
+            (snMatches[1][0] == "[" ||
+            snMatches[1].match(
+              /^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/,
+            )
+              ? ""
+              : ".?") +
+            snMatches[2]
+              .replace(/([.^$+?\-\\[\]{}])/g, "\\$1")
+              .replace(/\*/g, "[^.]*") +
+            "$",
+          "i",
+        );
+      } catch (err) {
         // Can't replace regex, ignoring...
       }
     });
