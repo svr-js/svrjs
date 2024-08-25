@@ -211,7 +211,8 @@ let middleware = [
   // TODO: SVR.JS mods go here
   // TODO: default handler
   require("./middleware/defaultHandlerChecks.js"),
-  require("./middleware/status.js")
+  require("./middleware/status.js"),
+  require("./middleware/staticFileServingAndDirectoryListings.js")
 ];
 
 function addMiddleware(mw) {
