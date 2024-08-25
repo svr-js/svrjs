@@ -6,6 +6,8 @@ const {
   isIndexOfForbiddenPath,
   forbiddenPaths,
 } = require("../utils/forbiddenPaths.js");
+const svrjsInfo = require("../../svrjs.json");
+const { name } = svrjsInfo;
 
 forbiddenPaths.config = getInitializePath("./config.json");
 forbiddenPaths.certificates = [];
@@ -88,7 +90,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     !config.exposeServerVersion
   ) {
     res.error(403);
-    logFacilities.errmessage("Access to SVR.JS script is denied.");
+    logFacilities.errmessage("Access to " + name + " script is denied.");
     return;
   } else if (
     (isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") ||

@@ -144,7 +144,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       } else if (nonscode.scode == 410) {
         logFacilities.errmessage("Content is gone.");
       } else if (nonscode.scode == 418) {
-        logFacilities.errmessage("SVR.JS is always a teapot ;)");
+        logFacilities.errmessage(name + " is always a teapot ;)");
       } else {
         logFacilities.errmessage("Client fails receiving content.");
       }
@@ -175,7 +175,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              "SVR.JS doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.",
+              name + " doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.",
             ),
           );
           return;
@@ -214,7 +214,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              "SVR.JS doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.",
+              name + " doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.",
             ),
           );
           return;
@@ -262,7 +262,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           'Basic realm="' +
           (authcode.realm
             ? authcode.realm.replace(/(\\|")/g, "\\$1")
-            : "SVR.JS HTTP Basic Authorization") +
+            : (name + " HTTP Basic Authorization")) +
           '", charset="UTF-8"';
         const credentials = req.headers["authorization"];
         if (!credentials) {

@@ -1,4 +1,6 @@
 const generateServerString = require("../utils/generateServerString");
+const svrjsInfo = require("../../svrjs.json");
+const { name } = svrjsInfo;
 
 let serverconsole = {};
 let middleware = [];
@@ -79,7 +81,7 @@ function proxyHandler(req, socket, head) {
       }
     } else {
       logFacilities.errmessage(
-        "SVR.JS doesn't support proxy without proxy mod.",
+        name + " doesn't support proxy without proxy mod.",
       );
       if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
     }

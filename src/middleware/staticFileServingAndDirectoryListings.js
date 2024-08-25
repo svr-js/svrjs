@@ -8,6 +8,8 @@ const ipMatch = require("../utils/ipMatch.js");
 const createRegex = require("../utils/createRegex.js");
 const sha256 = require("../utils/sha256.js");
 const sizify = require("../utils/sizify.js");
+const svrjsInfo = require("../../svrjs.json");
+const { name } = svrjsInfo;
 
 // ETag-related
 let ETagDB = {};
@@ -937,7 +939,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       } else {
         res.error(501);
         logFacilities.errmessage(
-          "SVR.JS doesn't support block devices, character devices, FIFOs nor sockets.",
+          name + " doesn't support block devices, character devices, FIFOs nor sockets.",
         );
         return;
       }

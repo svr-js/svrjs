@@ -3,7 +3,7 @@ const fs = require("fs");
 const generateServerString = require("./utils/generateServerString.js");
 const deleteFolderRecursive = require("./utils/deleteFolderRecursive.js");
 const svrjsInfo = require("../svrjs.json");
-const { version } = svrjsInfo;
+const { name, version } = svrjsInfo;
 
 let inspector = undefined;
 try {
@@ -46,14 +46,14 @@ for (
     args[i] == "/h" ||
     args[i] == "/?"
   ) {
-    console.log("SVR.JS usage:");
+    console.log(name + " usage:");
     console.log(
       "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
     );
     console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)",
+      "--reset               -- Resets " + name + " to default settings (WARNING: DANGEROUS)",
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -91,14 +91,14 @@ for (
     process.singlethreaded = true;
   } else {
     console.log("Unrecognized argument: " + args[i]);
-    console.log("SVR.JS usage:");
+    console.log(name + " usage:");
     console.log(
       "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
     );
     console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans up files created by SVR.JS");
+    console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets SVR.JS to default settings (WARNING: DANGEROUS)",
+      "--reset               -- Resets " + name + " to default settings (WARNING: DANGEROUS)",
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
