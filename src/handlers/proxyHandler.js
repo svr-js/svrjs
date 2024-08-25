@@ -55,7 +55,7 @@ function proxyHandler(req, socket, head) {
         );
         logFacilities.errmessage("Stack:");
         logFacilities.errmessage(err.stack);
-        socket.end("HTTP/1.1 500 Internal Server Error\n\n");
+        if (!socket.destroyed) socket.end("HTTP/1.1 500 Internal Server Error\n\n");
       }
     } else {
       logFacilities.errmessage("SVR.JS doesn't support proxy without proxy mod.");
