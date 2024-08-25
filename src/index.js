@@ -944,9 +944,60 @@ if (process.serverConfig.secure) {
   }
 }
 
-// TODO: close, open, stop, restart commands
+// TODO: stop, restart commands
 // Base commands
 let commands = {
+  close: function () {
+    try {
+      server.close();
+      if (
+        process.serverConfig.secure &&
+        !process.serverConfig.disableNonEncryptedServer
+      ) {
+        server2.close();
+      }
+      log("Server closed.");
+      if (cluster.isPrimary !== undefined) process.send("\x12CLOSE");
+    } catch (err) {
+      log("Cannot close server! Reason: " + err.message);
+    }
+  },
+  open: function () {
+    try {
+      if (
+        typeof (process.serverConfig.secure
+          ? process.serverConfig.sport
+          : process.serverConfig.port) == "number" &&
+        (process.serverConfig.secure ? sListenAddress : listenAddress)
+      ) {
+        server.listen(
+          process.serverConfig.secure
+            ? process.serverConfig.sport
+            : process.serverConfig.port,
+          process.serverConfig.secure ? sListenAddress : listenAddress,
+        );
+      } else {
+        server.listen(
+          process.serverConfig.secure
+            ? process.serverConfig.sport
+            : process.serverConfig.port,
+        );
+      }
+      if (
+        process.serverConfig.secure &&
+        !process.serverConfig.disableNonEncryptedServer
+      ) {
+        if (typeof process.serverConfig.port == "number" && listenAddress) {
+          server2.listen(process.serverConfig.port, listenAddress);
+        } else {
+          server2.listen(process.serverConfig.port);
+        }
+      }
+      log("Server opened.");
+    } catch (err) {
+      log("Cannot open server! Reason: " + err.message);
+    }
+  },
   help: (args, log) => {
     log("Server commands:\n" + Object.keys(commands).join(" "));
   },
