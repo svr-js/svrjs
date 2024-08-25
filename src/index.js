@@ -336,7 +336,7 @@ let middleware = [
   require("./middleware/checkForbiddenPaths.js"),
   require("./middleware/nonStandardCodesAndHttpAuthentication.js"),
   require("./middleware/redirectTrailingSlashes.js"),
-  ...mods,  // Load SVR.JS mods as middleware
+  ...mods, // Load SVR.JS mods as middleware
   require("./middleware/defaultHandlerChecks.js"),
   require("./middleware/status.js"),
   require("./middleware/staticFileServingAndDirectoryListings.js"),
@@ -372,6 +372,6 @@ if (wwwrootError) throw wwwrootError;
 if (configJSONRErr) throw configJSONRErr;
 if (configJSONPErr) throw configJSONPErr;
 modLoadingErrors.forEach((modLoadingError) => {
-  console.log("Error while loading \"" + modLoadingError.modName + "\" mod:");
+  console.log('Error while loading "' + modLoadingError.modName + '" mod:');
   console.log(modLoadingError.error);
 });
