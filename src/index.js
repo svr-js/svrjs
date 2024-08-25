@@ -336,7 +336,7 @@ let middleware = [
   require("./middleware/checkForbiddenPaths.js"),
   require("./middleware/nonStandardCodesAndHttpAuthentication.js"),
   require("./middleware/redirectTrailingSlashes.js"),
-  ...mods,
+  ...mods,  // Load SVR.JS mods as middleware
   require("./middleware/defaultHandlerChecks.js"),
   require("./middleware/status.js"),
   require("./middleware/staticFileServingAndDirectoryListings.js"),
