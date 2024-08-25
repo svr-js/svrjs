@@ -5856,7 +5856,7 @@ function saveConfig() {
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   // Crash handler
   function crashHandlerMaster(err) {
-    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
+    serverconsole.locerrmessage("SVR.JS main process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
     process.exit(err.errno !== undefined ? err.errno : 1);
