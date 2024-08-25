@@ -19,7 +19,9 @@ function serverErrorHandler(err, isRedirect, server, start) {
     );
   } else {
     try {
-      process.send("\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code);
+      process.send(
+        "\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code,
+      );
     } catch (err) {
       // Probably main process exited
     }
@@ -29,7 +31,8 @@ function serverErrorHandler(err, isRedirect, server, start) {
     setTimeout(start, 900);
   } else {
     try {
-      if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
+      if (cluster.isPrimary !== undefined)
+        process.send("\x12ERRCRASH" + err.code);
     } catch (err) {
       // Probably main process exited
     }
@@ -50,14 +53,18 @@ process.messageEventListeners.push((worker, serverconsole) => {
     if (message.indexOf("\x12ERRLIST") == 0) {
       const tries = parseInt(msg.substring(8, 9));
       const errCode = msg.substring(9);
-      serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
+      serverconsole.locerrmessage(
+        serverErrorDescs[errCode]
+          ? serverErrorDescs[errCode]
+          : serverErrorDescs["UNKNOWN"],
+      );
       serverconsole.locmessage(tries + " attempts left.");
     }
     if (message.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
       const errno = errors[msg.substring(9)];
       process.exit(errno !== undefined ? errno : 1);
     }
-  }
+  };
 });
 
 module.exports = (serverconsoleO) => {
