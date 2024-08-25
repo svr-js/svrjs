@@ -78,4 +78,28 @@ describe("IP block list functionality", () => {
       false,
     );
   });
+
+  test("should handle edge cases for IPv4 addresses", () => {
+    blockList.add("192.168.1.0/30");
+    expect(blockList.check("192.168.1.1")).toBe(true);
+    expect(blockList.check("192.168.1.2")).toBe(true);
+    expect(blockList.check("192.168.1.3")).toBe(true);
+    expect(blockList.check("192.168.1.4")).toBe(false);
+  });
+
+  test("should handle edge cases for IPv6 addresses", () => {
+    blockList.add("2001:0db8:85a3::/64");
+    expect(blockList.check("2001:0db8:85a2:ffff:ffff:ffff:ffff:ffff")).toBe(
+      false,
+    );
+    expect(blockList.check("2001:0db8:85a3:0000:0000:0000:0000:0000")).toBe(
+      true,
+    );
+    expect(blockList.check("2001:0db8:85a3:0000:ffff:ffff:ffff:ffff")).toBe(
+      true,
+    );
+    expect(blockList.check("2001:0db8:85a3:0001:0000:0000:0000:0000")).toBe(
+      false,
+    );
+  });
 });
