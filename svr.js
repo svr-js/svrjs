@@ -730,7 +730,7 @@ function ipBlockList(rawBlockList) {
     var ips = ip.split(":");
     var ip2s = [];
     ips.forEach(function (ipe) {
-      ip2s.push(parseInt(ipe));
+      ip2s.push(parseInt(ipe, 16));
     });
     return ip2s;
   }
@@ -764,9 +764,9 @@ function ipBlockList(rawBlockList) {
   function checkIfIPv6CIDRMatches(ipBlock, cidrObject) {
     if (!cidrObject.v6) return false;
     for (var i = 0; i < 8; i++) {
-      if (ipBlock[i] < cidrObject.min[i] || ipBlock[i] > cidrObject.max[i]) return true;
+      if (ipBlock[i] < cidrObject.min[i] || ipBlock[i] > cidrObject.max[i]) return false;
     }
-    return false;
+    return true;
   }
 
   // Function to add an IP or CIDR block to the block list
