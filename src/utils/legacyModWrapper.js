@@ -25,16 +25,16 @@ module.exports = (legacyMod) => {
       // If the request method is not POST, return a 405 Method Not Allowed error
       if (req.method != "POST") {
         // Get the default custom headers and add "Allow" header with value "POST"
-        var customHeaders = getCustomHeaders();
+        let customHeaders = config.getCustomHeaders();
         customHeaders["Allow"] = "POST";
 
         // Call the server error function with 405 status code and custom headers
-        callServerError(405, customHeaders);
+        res.error(405, customHeaders);
         return;
       }
 
       // Set formidableOptions to options, if provided; otherwise, set it to an empty object
-      var formidableOptions = options ? options : {};
+      let formidableOptions = options ? options : {};
 
       // If no callback is provided, set the callback to options and reset formidableOptions
       if (!callback) {
@@ -43,17 +43,17 @@ module.exports = (legacyMod) => {
       }
 
       // If the formidable module had an error, call the server error function with 500 status code and error stack
-      if (formidable._errored) callServerError(500, formidable._errored);
+      if (formidable._errored) res.error(500, formidable._errored);
 
       // Create a new formidable form
-      var form = formidable(formidableOptions);
+      const form = formidable(formidableOptions);
 
       // Parse the request and process the fields and files
       form.parse(req, function (err, fields, files) {
         // If there was an error, call the server error function with status code determined by error
         if (err) {
-          if (err.httpCode) callServerError(err.httpCode);
-          else callServerError(400);
+          if (err.httpCode) res.error(err.httpCode);
+          else res.error(400);
           return;
         }
         // Otherwise, call the provided callback function with the parsed fields and files
