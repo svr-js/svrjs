@@ -521,7 +521,9 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   function crashHandlerMaster(err) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
+    serverconsole.locerrmessage(
+      err.stack ? generateErrorStack(err) : String(err),
+    );
     process.exit(err.errno);
   }
 
@@ -535,7 +537,10 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
         saveConfig();
       }*/
     } catch (err) {
-      serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+      serverconsole.locwarnmessage(
+        "There was a problem while saving configuration file. Reason: " +
+          err.message,
+      );
     }
     try {
       deleteFolderRecursive(process.dirname + "/temp");
@@ -547,9 +552,16 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     } catch (err) {
       // Error!
     }
-    if (process.isBun && process.versions.bun && process.versions.bun[0] == "0") {
+    if (
+      process.isBun &&
+      process.versions.bun &&
+      process.versions.bun[0] == "0"
+    ) {
       try {
-        fs.writeFileSync(process.dirname + "/temp/serverSideScript.js", "// Placeholder server-side JavaScript to workaround Bun bug.\r\n");
+        fs.writeFileSync(
+          process.dirname + "/temp/serverSideScript.js",
+          "// Placeholder server-side JavaScript to workaround Bun bug.\r\n",
+        );
       } catch (err) {
         // Error!
       }
@@ -564,7 +576,6 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     }
   });
   process.on("SIGINT", function () {
-    reallyExiting = true;
     if (cluster.isPrimary !== undefined) {
       exiting = true;
       // TODO: commands
@@ -587,7 +598,9 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   function crashHandler(err) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
-    serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
+    serverconsole.locerrmessage(
+      err.stack ? generateErrorStack(err) : String(err),
+    );
     process.exit(err.errno);
   }
 
