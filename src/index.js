@@ -207,6 +207,10 @@ if (!fs.existsSync(process.dirname + "/temp"))
 const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
 const legacyModWrapper = require("./utils/legacyModWrapper.js");
 const generateErrorStack = require("./utils/generateErrorStack.js");
+const {
+  calculateNetworkIPv4FromCidr,
+  calculateBroadcastIPv4FromCidr,
+} = require("./utils/ipSubnetUtils.js");
 //const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 //const getOS = require("./utils/getOS.js");
 //const parseURL = require("./utils/urlParser.js");
@@ -344,7 +348,7 @@ if (typeof process.serverConfig.port === "string") {
   if (process.serverConfig.port.match(/^[0-9]+$/)) {
     process.serverConfig.port = parseInt(process.serverConfig.port);
   } else {
-    const portLMatch = port.match(
+    const portLMatch = process.serverConfig.port.match(
       /^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/,
     );
     if (portLMatch) {
@@ -357,7 +361,7 @@ if (typeof process.serverConfig.port === "string") {
 }
 if (typeof process.serverConfig.sport === "string") {
   if (process.serverConfig.sport.match(/^[0-9]+$/)) {
-    process.serverConfig.sport = parseInt(sport);
+    process.serverConfig.sport = parseInt(process.serverConfig.sport);
   } else {
     const sportLMatch = process.serverConfig.sport.match(
       /^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/,
@@ -401,6 +405,58 @@ try {
 } catch (err) {
   wwwrootError = err;
 }
+
+// IP and network inteface-related
+let ifaces = {};
+let ifaceEx = null;
+try {
+  ifaces = os.networkInterfaces();
+} catch (err) {
+  ifaceEx = err;
+}
+var ips = [];
+const brdIPs = ["255.255.255.255", "127.255.255.255", "0.255.255.255"];
+const netIPs = ["127.0.0.0"];
+
+Object.keys(ifaces).forEach((ifname) => {
+  let alias = 0;
+  ifaces[ifname].forEach((iface) => {
+    if (iface.family !== "IPv4" || iface.internal !== false) {
+      return;
+    }
+    if (alias >= 1) {
+      ips.push(ifname + ":" + alias, iface.address);
+    } else {
+      ips.push(ifname, iface.address);
+    }
+    brdIPs.push(calculateBroadcastIPv4FromCidr(iface.cidr));
+    netIPs.push(calculateNetworkIPv4FromCidr(iface.cidr));
+    alias++;
+  });
+});
+
+if (ips.length == 0) {
+  Object.keys(ifaces).forEach((ifname) => {
+    let alias = 0;
+    ifaces[ifname].forEach((iface) => {
+      if (iface.family !== "IPv6" || iface.internal !== false) {
+        return;
+      }
+      if (alias >= 1) {
+        ips.push(ifname + ":" + alias, iface.address);
+      } else {
+        ips.push(ifname, iface.address);
+      }
+      alias++;
+    });
+  });
+}
+
+// Server IP address
+var host = ips[(ips.length) - 1];
+if (!host) host = "[offline]";
+
+// TODO: Public IP address-related
 
 // SSL-related
 let key = "";
@@ -931,6 +987,108 @@ middleware.forEach((middlewareO) => {
   }
 });
 
+// SVR.JS worker spawn-related
+let SVRJSInitialized = false;
+let crashed = false;
+let threadLimitWarned = false;
+
+// SVR.JS worker forking function
+function SVRJSFork() {
+  // Log
+  if (SVRJSInitialized)
+    serverconsole.locmessage(
+      "Starting next thread, because previous one hung up/crashed...",
+    );
+  // Fork new worker
+  var newWorker = {};
+  try {
+    if (
+      !threadLimitWarned &&
+      cluster.__shimmed__ &&
+      process.isBun &&
+      process.versions.bun &&
+      process.versions.bun[0] != "0"
+    ) {
+      threadLimitWarned = true;
+      serverconsole.locwarnmessage(
+        "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+      );
+    }
+    if (
+      !(
+        cluster.__shimmed__ &&
+        process.isBun &&
+        process.versions.bun &&
+        process.versions.bun[0] != "0" &&
+        Object.keys(cluster.workers) > 0
+      )
+    ) {
+      newWorker = cluster.fork();
+    } else {
+      if (SVRJSInitialized)
+        serverconsole.locwarnmessage(
+          "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+        );
+    }
+  } catch (err) {
+    if (err.name == "NotImplementedError") {
+      // If cluster.fork throws a NotImplementedError, shim cluster module
+      cluster.bunShim();
+      if (
+        !threadLimitWarned &&
+        cluster.__shimmed__ &&
+        process.isBun &&
+        process.versions.bun &&
+        process.versions.bun[0] != "0"
+      ) {
+        threadLimitWarned = true;
+        serverconsole.locwarnmessage(
+          "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+        );
+      }
+      if (
+        !(
+          cluster.__shimmed__ &&
+          process.isBun &&
+          process.versions.bun &&
+          process.versions.bun[0] != "0" &&
+          Object.keys(cluster.workers) > 0
+        )
+      ) {
+        newWorker = cluster.fork();
+      } else {
+        if (SVRJSInitialized)
+          serverconsole.locwarnmessage(
+            "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+          );
+      }
+    } else {
+      throw err;
+    }
+  }
+
+  // Add event listeners
+  if (newWorker.on) {
+    newWorker.on("error", function (err) {
+      if (!exiting)
+        serverconsole.locwarnmessage(
+          "There was a problem when handling SVR.JS worker! (from master process side) Reason: " +
+            err.message,
+        );
+    });
+    newWorker.on("exit", function () {
+      if (!exiting && Object.keys(cluster.workers).length == 0) {
+        crashed = true;
+        SVRJSFork();
+      }
+    });
+    // TODO: add listeners to workers
+    // newWorker.on("message", bruteForceListenerWrapper(newWorker));
+    // newWorker.on("message", listenConnListener);
+  }
+}
+
+// Starting function
 function start(init) {
   init = Boolean(init);
   if (cluster.isPrimary || cluster.isPrimary === undefined) {
@@ -970,7 +1128,7 @@ function start(init) {
               /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/,
             )
           ) &&
-          users.some(function (entry) {
+          process.serverConfig.users.some(function (entry) {
             return entry.pbkdf2;
           })
         )
@@ -1161,7 +1319,12 @@ function start(init) {
     }
 
     // Print server startup information
-    if (!(process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer))
+    if (
+      !(
+        process.serverConfig.secure &&
+        process.serverConfig.disableNonEncryptedServer
+      )
+    )
       serverconsole.locmessage(
         "Starting HTTP server at " +
           (typeof process.serverConfig.port == "number"
@@ -1213,7 +1376,10 @@ function start(init) {
     } catch (err) {
       if (err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
     }
-    if (process.serverConfig.secure && !process.serverConfig.disableNonEncryptedServer) {
+    if (
+      process.serverConfig.secure &&
+      !process.serverConfig.disableNonEncryptedServer
+    ) {
       try {
         if (typeof process.serverConfig.port == "number" && listenAddress) {
           server2.listen(process.serverConfig.port, listenAddress);
