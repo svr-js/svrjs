@@ -13,6 +13,7 @@ try {
 }
 
 process.dirname = __dirname;
+process.filename = __filename;
 
 // TODO: after implementing clustering in new SVR.JS
 //process.singleThreaded = false;

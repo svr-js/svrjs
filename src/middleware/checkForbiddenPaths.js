@@ -1,81 +1,11 @@
-const os = require("os");
-const path = require("path");
-
-// Function to get URL path for use in forbidden path adding.
-function getInitializePath(to) {
-  const cwd = process.cwd();
-  if (os.platform() == "win32") {
-    to = to.replace(/\//g, "\\");
-    if (to[0] == "\\") to = cwd.split("\\")[0] + to;
-  }
-  const absoluteTo = path.isAbsolute(to)
-    ? to
-    : process.dirname + (os.platform() == "win32" ? "\\" : "/") + to;
-  if (os.platform() == "win32" && cwd[0] != absoluteTo[0]) return "";
-  const relative = path.relative(cwd, absoluteTo);
-  if (os.platform() == "win32") {
-    return "/" + relative.replace(/\\/g, "/");
-  } else {
-    return "/" + relative;
-  }
-}
-
-// Function to check if URL path name is a forbidden path.
-function isForbiddenPath(decodedHref, match) {
-  const forbiddenPath = forbiddenPaths[match];
-  if (!forbiddenPath) return false;
-  if (typeof forbiddenPath === "string") {
-    return (
-      decodedHref === forbiddenPath ||
-      (os.platform() === "win32" &&
-        decodedHref.toLowerCase() === forbiddenPath.toLowerCase())
-    );
-  }
-  if (typeof forbiddenPath === "object") {
-    return forbiddenPath.some(function (forbiddenPathSingle) {
-      return (
-        decodedHref === forbiddenPathSingle ||
-        (os.platform() === "win32" &&
-          decodedHref.toLowerCase() === forbiddenPathSingle.toLowerCase())
-      );
-    });
-  }
-  return false;
-}
-
-// Function to check if URL path name is index of one of defined forbidden paths.
-function isIndexOfForbiddenPath(decodedHref, match) {
-  const forbiddenPath = forbiddenPaths[match];
-  if (!forbiddenPath) return false;
-  if (typeof forbiddenPath === "string") {
-    return (
-      decodedHref === forbiddenPath ||
-      decodedHref.indexOf(forbiddenPath + "/") === 0 ||
-      (os.platform() === "win32" &&
-        (decodedHref.toLowerCase() === forbiddenPath.toLowerCase() ||
-          decodedHref
-            .toLowerCase()
-            .indexOf(forbiddenPath.toLowerCase() + "/") === 0))
-    );
-  }
-  if (typeof forbiddenPath === "object") {
-    return forbiddenPath.some(function (forbiddenPathSingle) {
-      return (
-        decodedHref === forbiddenPathSingle ||
-        decodedHref.indexOf(forbiddenPathSingle + "/") === 0 ||
-        (os.platform() === "win32" &&
-          (decodedHref.toLowerCase() === forbiddenPathSingle.toLowerCase() ||
-            decodedHref
-              .toLowerCase()
-              .indexOf(forbiddenPathSingle.toLowerCase() + "/") === 0))
-      );
-    });
-  }
-  return false;
-}
-
-// Set up forbidden paths
-var forbiddenPaths = {};
+// WARNING: This middleware is optimized for production SVR.JS, and may not work correctly for development SVR.JS.
+// Use "npm run dev" to test SVR.JS web server itself.
+const {
+  getInitializePath,
+  isForbiddenPath,
+  isIndexOfForbiddenPath,
+  forbiddenPaths,
+} = require("../utils/forbiddenPaths.js");
 
 forbiddenPaths.config = getInitializePath("./config.json");
 forbiddenPaths.certificates = [];
@@ -96,8 +26,8 @@ if (process.serverConfig.secure) {
 forbiddenPaths.svrjs = getInitializePath(
   "./" +
     (process.dirname[process.dirname.length - 1] != "/"
-      ? __filename.replace(process.dirname + "/", "")
-      : __filename.replace(process.dirname, "")),
+      ? process.filename.replace(process.dirname + "/", "")
+      : process.filename.replace(process.dirname, "")),
 );
 forbiddenPaths.serverSideScripts = [];
 if (process.serverConfig.useWebRootServerSideScript) {
