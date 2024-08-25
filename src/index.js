@@ -453,7 +453,7 @@ if (ips.length == 0) {
 }
 
 // Server IP address
-var host = ips[(ips.length) - 1];
+var host = ips[ips.length - 1];
 if (!host) host = "[offline]";
 
 // TODO: Public IP address-related
