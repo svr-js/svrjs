@@ -1,6 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const os = require("os");
+const readline = require("readline");
 const logo = require("./res/logo.js");
 const generateServerString = require("./utils/generateServerString.js");
 const deleteFolderRecursive = require("./utils/deleteFolderRecursive.js");
@@ -747,8 +748,17 @@ const serverErrorHandler = require("./handlers/serverErrorHandler.js")(
   serverconsole,
 );
 
+function listeningMessage() {
+  closedMaster = false;
+  if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
+    process.send("\x12LISTEN");
+    return;
+  }
+  // TODO: listeningMessage()
+}
+
 let reqcounterKillReq = 0;
-let closedMaster = false; // TODO: closedMaster
+let closedMaster = true;
 
 let server = {};
 let server2 = {};
@@ -775,7 +785,7 @@ server2.on("error", (err) => {
 });
 server2.on("listening", () => {
   serverErrorHandler.resetAttempts(true);
-  // TODO: listeningMessage();
+  listeningMessage();
 });
 
 // Create HTTP server
@@ -879,7 +889,7 @@ server.on("error", function (err) {
 });
 server.on("listening", () => {
   serverErrorHandler.resetAttempts(false);
-  // TODO: listeningMessage();
+  listeningMessage();
 });
 
 if (process.serverConfig.secure) {
@@ -1089,14 +1099,11 @@ let commands = {
 middleware.forEach((middlewareO) => {
   if (middlewareO.commands) {
     Object.keys(middlewareO.commands).forEach((command) => {
-      if (commands[command]) {
-        commands[command] = (args, log) => {
-          middlewareO.commands(args, log, commands[command]);
-        };
+      const prevCommand = commands[command];
+      if (prevCommand) {
+        commands[command] = (args, log) => middlewareO.commands[command](args, log, prevCommand);
       } else {
-        commands[command] = (args, log) => {
-          middlewareO.commands(args, log, () => {});
-        };
+        commands[command] = (args, log) => middlewareO.commands[command](args, log, () => {});
       }
     });
   }
@@ -1243,9 +1250,27 @@ function forkWorkers(workersToFork, callback) {
 // TODO: main message event listener
 process.messageEventListeners.push((worker, serverconsole) => {
   return (message) => {
-    console.log("Message received from worker: " + message);
+    if (message == "\x12LISTEN") {
+      listeningMessage();
+    }
   };
 });
+
+function msgListener(message) {
+  if (message == "\x12END") {
+    for (let i = 0; i < Object.keys(cluster.workers).length; i++) {
+      cluster.workers[Object.keys(cluster.workers)[i]].removeAllListeners("message");
+      addListenersToWorker(cluster.workers[Object.keys(cluster.workers)[i]]);
+    }
+  }
+  if (message == "\x12END") {
+    // Do nothing
+  } else if (message[0] == "\x12") {
+    console.log("RECEIVED CONTROL MESSAGE: " + message.substr(1));
+  } else {
+    serverconsole.climessage(message);
+  }
+}
 
 // Starting function
 function start(init) {
@@ -1631,14 +1656,13 @@ function start(init) {
       }, 300000);
     }*/
 
-    /*
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
         try {
           if (line == "") {
             // Does Nothing
             process.send("\x12END");
-          } else if (line == "\x14SAVECONF") {
+          } /*else if (line == "\x14SAVECONF") {
             // Save configuration file
             try {
               saveConfig();
@@ -1666,10 +1690,10 @@ function start(init) {
             } else {
               reqcounterKillReq = reqcounter;
             }
-          } else if (commands[line.split(" ")[0]] !== undefined && commands[line.split(" ")[0]] !== null) {
+          }*/ else if (commands[line.split(" ")[0]] !== undefined && commands[line.split(" ")[0]] !== null) {
             var argss = line.split(" ");
             var command = argss.shift();
-            commands[command](argss);
+            commands[command](argss, (msg) => process.send(msg));
             process.send("\x12END");
           } else {
             process.send("Unrecognized command \"" + line.split(" ")[0] + "\".");
@@ -1683,7 +1707,7 @@ function start(init) {
         }
       });
     } else {
-      var rla = readline.createInterface({
+      const rla = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
         prompt: ""
@@ -1691,13 +1715,13 @@ function start(init) {
       rla.prompt();
       rla.on("line", function (line) {
         line = line.trim();
-        var argss = line.split(" ");
-        var command = argss.shift();
+        const argss = line.split(" ");
+        const command = argss.shift();
         if (line != "") {
           if (cluster.isPrimary !== undefined) {
             var allWorkers = Object.keys(cluster.workers);
-            if (command == "block") commands.block(argss);
-            if (command == "unblock") commands.unblock(argss);
+            if (command == "block") commands.block(argss, serverconsole.climessage);
+            if (command == "unblock") commands.unblock(argss, serverconsole.climessage);
             if (command == "restart") {
               var stopError = false;
               exiting = true;
@@ -1727,7 +1751,7 @@ function start(init) {
               exiting = true;
               allWorkers = Object.keys(cluster.workers);
             }
-            allWorkers.forEach(function (clusterID) {
+            allWorkers.forEach((clusterID)=> {
               try {
                 if (cluster.workers[clusterID]) {
                   cluster.workers[clusterID].on("message", msgListener);
@@ -1736,25 +1760,19 @@ function start(init) {
               } catch (err) {
                 if (cluster.workers[clusterID]) {
                   cluster.workers[clusterID].removeAllListeners("message");
-                  cluster.workers[clusterID].on("message", bruteForceListenerWrapper(cluster.workers[clusterID]));
-                  cluster.workers[clusterID].on("message", listenConnListener);
+                  addListenersToWorker(cluster.workers[clusterID]);
                 }
                 serverconsole.climessage("Can't run command \"" + command + "\".");
               }
             });
             if (command == "stop") {
               setTimeout(function () {
-                reallyExiting = true;
-                process.exit(0);
+                commands[command](argss, serverconsole.climessage);
               }, 50);
             }
           } else {
-            if (command == "stop") {
-              reallyExiting = true;
-              process.exit(0);
-            }
             try {
-              commands[command](argss);
+              commands[command](argss, serverconsole.climessage);
             } catch (err) {
               serverconsole.climessage("Unrecognized command \"" + command + "\".");
             }
@@ -1762,7 +1780,7 @@ function start(init) {
         }
         rla.prompt();
       });
-    }*/
+    }
 
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
       // Cluster forking code
