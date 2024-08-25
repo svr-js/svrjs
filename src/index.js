@@ -745,6 +745,8 @@ const serverErrorHandler = require("./handlers/serverErrorHandler.js")(
   serverconsole,
 );
 
+let reqcounterKillReq = 0;
+
 let server = {};
 let server2 = {};
 
