@@ -12,3 +12,5 @@ module.exports = (req, res, logFacilities, config, next) => {
 
   next();
 };
+
+module.exports.proxySafe = true;

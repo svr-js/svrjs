@@ -990,3 +990,5 @@ module.exports = (req, res, logFacilities, config, next) => {
     }
   });
 };
+
+module.exports.proxySafe = true;

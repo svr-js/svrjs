@@ -51,3 +51,5 @@ module.exports.commands = {
     }
   },
 };
+
+module.exports.proxySafe = true;

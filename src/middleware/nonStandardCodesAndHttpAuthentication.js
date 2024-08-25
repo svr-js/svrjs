@@ -462,3 +462,5 @@ module.exports.commands = {
     passCommand(args, log);
   },
 };
+
+module.exports.proxySafe = true;
