@@ -963,7 +963,6 @@ if (process.serverConfig.secure) {
   }
 }
 
-// TODO: restart commands
 // Base commands
 let commands = {
   close: (args, log) => {
@@ -1093,6 +1092,10 @@ let commands = {
       }
     }
   },
+  restart: (args, log) => {
+    if (cluster.isPrimary === undefined) log("This command is not supported on single-threaded " + name + ".");
+    else log("This command need to be run in " + name + " master.");
+  }
 };
 
 // Load commands from middleware
@@ -1579,15 +1582,6 @@ function start(init) {
   }
 
   // TODO: implement clustering and commands
-  /*
-  // SVR.JS commmands (only restart is there)
-  var commands = {
-    restart: function () {
-      if (cluster.isPrimary === undefined) serverconsole.climessage("This command is not supported on single-threaded " + name + ".");
-      else process.send("This command need to be run in " + name + " master.");
-    }
-  };
-  */
 
   if (init) {
     let workersToFork = 1;
