@@ -80,7 +80,7 @@ try {
   ocspCache = new ocsp.Cache();
 } catch (err) {
   ocsp = {
-    _errored: err
+    _errored: err,
   };
 }
 
@@ -834,7 +834,7 @@ if (process.serverConfig.secure) {
         const req = ocsp.request.generate(cert, issuer);
         const options = {
           url: uri,
-          ocsp: req.data
+          ocsp: req.data,
         };
 
         ocspCache.request(req.id, options, callback);
