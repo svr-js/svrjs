@@ -97,8 +97,8 @@ try {
 }
 
 // TODO: after implementing clustering in new SVR.JS
-//process.singleThreaded = false;
-process.singleThreaded = true;
+process.singleThreaded = false;
+//process.singleThreaded = true;
 
 process.err4xxcounter = 0;
 process.err5xxcounter = 0;
@@ -1505,10 +1505,10 @@ function start(init) {
   };
   */
 
-  /*if (init) {
+  if (init) {
     var workersToFork = 1;
 
-    function getWorkerCountToFork() {
+    const getWorkerCountToFork = () => {
       var workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
       try {
         var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
@@ -1520,7 +1520,7 @@ function start(init) {
       return workersToFork;
     }
 
-    function forkWorkers(workersToFork, callback) {
+    const forkWorkers = (workersToFork, callback) => {
       for (var i = 0; i < workersToFork; i++) {
         if (i == 0) {
           SVRJSFork();
@@ -1535,7 +1535,8 @@ function start(init) {
       }
     }
 
-    if (cluster.isPrimary === undefined) {
+    // TODO: saveConfig
+    /*if (cluster.isPrimary === undefined) {
       setInterval(function () {
         try {
           saveConfig();
@@ -1598,7 +1599,9 @@ function start(init) {
           }
         });
       }, 300000);
-    }
+    }*/
+
+    /*
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
         try {
@@ -1729,7 +1732,7 @@ function start(init) {
         }
         rla.prompt();
       });
-    }
+    }*/
 
     if (cluster.isPrimary || cluster.isPrimary === undefined) {
       // Cluster forking code
@@ -1739,7 +1742,7 @@ function start(init) {
           SVRJSInitialized = true;
         });
 
-        cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
+        /*cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
           if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
             var tries = parseInt(msg.substring(8, 9));
             var errCode = msg.substring(9);
@@ -1750,8 +1753,9 @@ function start(init) {
             var errno = errors[msg.substring(9)];
             process.exit(errno ? errno : 1);
           }
-        });
+        });*/
 
+        /*
         // Hangup check and restart
         setInterval(function () {
           if (!closedMaster && !exiting) {
@@ -1841,8 +1845,9 @@ function start(init) {
               });
             }
           }
-        }, 4550);
+        }, 4550);*/
 
+        /*
         // Termination of unused good workers
         if (!disableUnusedWorkerTermination && cluster.isPrimary !== undefined) {
           setTimeout(function () {
@@ -1911,10 +1916,10 @@ function start(init) {
               }
             }, 300000);
           }, 2000);
-        }
+        }*/
       }
     }
-  }*/
+  }
 }
 
 modLoadingErrors.forEach((modLoadingError) => {
