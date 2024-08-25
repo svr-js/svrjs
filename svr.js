@@ -5859,7 +5859,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
-    process.exit(err.errno);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }
 
   process.on("uncaughtException", crashHandlerMaster);
@@ -5923,7 +5923,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
-    process.exit(err.errno);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }
 
   process.on("uncaughtException", crashHandler);
@@ -5947,6 +5947,6 @@ try {
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
   setTimeout(function () {
-    process.exit(err.errno ? err.errno : 1);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }, 10);
 }
