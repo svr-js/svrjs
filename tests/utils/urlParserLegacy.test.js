@@ -1,4 +1,4 @@
-const parseURL = require("../../src/utils/urlParser.js");
+const parseURL = require("../../src/utils/urlParserLegacy.js");
 
 describe("URL parser", () => {
   test("should parse a simple URL", () => {
