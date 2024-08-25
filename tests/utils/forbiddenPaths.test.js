@@ -5,7 +5,6 @@ const {
   forbiddenPaths,
 } = require("../../src/utils/forbiddenPaths");
 const os = require("os");
-const path = require("path");
 
 jest.mock("os", () => ({
   platform: jest.fn(),
