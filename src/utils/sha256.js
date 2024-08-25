@@ -131,7 +131,7 @@ function sha256(s) {
         0x5be0cd19,
       );
       let W = new Array(64);
-      let a, b, c, d, e, f, g, h, i, j;
+      let a, b, c, d, e, f, g, h;
       let T1, T2;
 
       m[l >> 5] |= 0x80 << (24 - (l % 32));
