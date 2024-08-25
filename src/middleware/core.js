@@ -100,8 +100,8 @@ module.exports = (req, res, logFacilities, config, next) => {
         'Either ":path" or ":method" pseudoheader is missing.',
       );
       if (Buffer.alloc) err.rawPacket = Buffer.alloc(0);
-      return;
-      // TODO: reqerrhandler(err, req.socket, fromMain);
+      if (req.socket && req.socket.server)
+        req.socket.server.emit("clientError", err, req.socket);
     }
   }
 
