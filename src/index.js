@@ -1195,6 +1195,33 @@ function SVRJSFork() {
   }
 }
 
+function getWorkerCountToFork() {
+  let workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
+  try {
+    const useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
+    if (workersToFork > useAvailableCores) workersToFork = useAvailableCores;
+  } catch (err) {
+    // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
+  }
+  if (workersToFork < 1) workersToFork = 1; // If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
+  return workersToFork;
+}
+
+function forkWorkers(workersToFork, callback) {
+  for (var i = 0; i < workersToFork; i++) {
+    if (i == 0) {
+      SVRJSFork();
+    } else {
+      setTimeout((function (i) {
+        return function () {
+          SVRJSFork();
+          if (i >= workersToFork - 1) callback();
+        };
+      })(i), i * 6.6);
+    }
+  }
+}
+
 // TODO: main message event listener
 process.messageEventListeners.push((worker, serverconsole) => {
   return (message) => {
@@ -1519,33 +1546,6 @@ function start(init) {
 
   if (init) {
     let workersToFork = 1;
-
-    const getWorkerCountToFork = () => {
-      let workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
-      try {
-        const useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
-        if (workersToFork > useAvailableCores) workersToFork = useAvailableCores;
-      } catch (err) {
-        // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
-      }
-      if (workersToFork < 1) workersToFork = 1; // If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
-      return workersToFork;
-    }
-
-    const forkWorkers = (workersToFork, callback) => {
-      for (var i = 0; i < workersToFork; i++) {
-        if (i == 0) {
-          SVRJSFork();
-        } else {
-          setTimeout((function (i) {
-            return function () {
-              SVRJSFork();
-              if (i >= workersToFork - 1) callback();
-            };
-          })(i), i * 6.6);
-        }
-      }
-    }
 
     // TODO: saveConfig
     /*if (cluster.isPrimary === undefined) {
