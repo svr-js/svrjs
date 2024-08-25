@@ -92,6 +92,8 @@ process.err5xxcounter = 0;
 process.reqcounter = 0;
 process.malformedcounter = 0;
 
+process.messageEventListeners = [];
+
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
 
 let exiting = false;

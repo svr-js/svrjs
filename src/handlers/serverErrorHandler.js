@@ -18,23 +18,21 @@ function serverErrorHandler(err, isRedirect, server, start) {
       (isRedirect ? attmtsRedir : attmts) + " attempts left.",
     );
   } else {
-    // TODO: worker message listener
-    /*try {
-        process.send("\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code);
-      } catch (err) {
-        // Probably main process exited
-      }*/
+    try {
+      process.send("\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code);
+    } catch (err) {
+      // Probably main process exited
+    }
   }
   if ((isRedirect ? attmtsRedir : attmts) > 0) {
     server.close();
     setTimeout(start, 900);
   } else {
-    // TODO: worker message listener
-    /*try {
-        if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
-      } catch (err) {
-        // Probably main process exited
-      }*/
+    try {
+      if (cluster.isPrimary !== undefined) process.send("\x12ERRCRASH" + err.code);
+    } catch (err) {
+      // Probably main process exited
+    }
     setTimeout(function () {
       var errno = os.constants.errno[err.code];
       process.exit(errno !== undefined ? errno : 1);
@@ -46,6 +44,21 @@ serverErrorHandler.resetAttempts = (isRedirect) => {
   if (isRedirect) attmtsRedir = 5;
   else attmts = 5;
 };
+
+process.messageEventListeners.push((worker, serverconsole) => {
+  return (message) => {
+    if (message.indexOf("\x12ERRLIST") == 0) {
+      const tries = parseInt(msg.substring(8, 9));
+      const errCode = msg.substring(9);
+      serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
+      serverconsole.locmessage(tries + " attempts left.");
+    }
+    if (message.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
+      const errno = errors[msg.substring(9)];
+      process.exit(errno !== undefined ? errno : 1);
+    }
+  }
+});
 
 module.exports = (serverconsoleO) => {
   serverconsole = serverconsoleO;

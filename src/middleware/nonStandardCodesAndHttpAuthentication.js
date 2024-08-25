@@ -422,8 +422,8 @@ module.exports = (req, res, logFacilities, config, next) => {
 };
 
 // IPC listener for brute force protection
-module.exports.mainMessageListenerWrapper = (worker) => {
-  return function bruteForceListener(message) {
+process.messageEventListeners.push((worker, serverconsole) => {
+  return (message) => {
     let ip = "";
     if (message.substring(0, 6) == "\x12AUTHQ") {
       ip = message.substring(6);
@@ -458,7 +458,7 @@ module.exports.mainMessageListenerWrapper = (worker) => {
       }
     }
   };
-};
+});
 
 module.exports.commands = {
   stop: (args, log, passCommand) => {
