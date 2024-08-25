@@ -18,7 +18,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 };
 
 module.exports.commands = {
-  block: (ip, logFacilities, passCommand) => {
+  block: (ip, log, passCommand) => {
     if (ip == undefined || JSON.stringify(ip) == "[]") {
       log("Cannot block non-existent IP.");
     } else {
@@ -32,10 +32,10 @@ module.exports.commands = {
       }
       process.config.blacklist = blocklist.raw;
       log("IPs successfully blocked.");
-      passCommand(args, logFacilities);
+      passCommand(ip, log);
     }
   },
-  unblock: (ip, logFacilities, passCommand) => {
+  unblock: (ip, log, passCommand) => {
     if (ip == undefined || JSON.stringify(ip) == "[]") {
       log("Cannot unblock non-existent IP.");
     } else {
@@ -47,7 +47,7 @@ module.exports.commands = {
       }
       process.config.blacklist = blocklist.raw;
       log("IPs successfully unblocked.");
-      passCommand(args, logFacilities);
+      passCommand(ip, log);
     }
   },
 };
