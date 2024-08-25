@@ -1265,7 +1265,7 @@ function msgListener(message) {
   }
   if (message == "\x12END") {
     // Do nothing
-  } else if (msg == "\x12CLOSE") {
+  } else if (message == "\x12CLOSE") {
     closedMaster = true;
   } else if (message[0] == "\x12") {
     console.log("RECEIVED CONTROL MESSAGE: " + message.substr(1));
