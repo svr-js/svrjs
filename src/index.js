@@ -378,7 +378,9 @@ if (typeof process.serverConfig.sport === "string") {
 const serverconsole = require("./utils/serverconsole.js");
 
 function addListenersToWorker(worker) {
-  process.messageEventListeners.forEach((messageEventListener) => worker.on("message", messageEventListener(worker, serverconsole)));
+  process.messageEventListeners.forEach((messageEventListener) =>
+    worker.on("message", messageEventListener(worker, serverconsole)),
+  );
 }
 
 let inspectorURL = undefined;
@@ -1028,7 +1030,11 @@ let commands = {
   },
   stop: (args, log) => {
     let retcode = args[0];
-    if ((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
+    if (
+      !cluster.isPrimary &&
+      cluster.isPrimary !== undefined &&
+      server.listening
+    ) {
       try {
         server.close(function () {
           if (server2.listening) {
@@ -1120,7 +1126,8 @@ function SVRJSFork() {
     ) {
       threadLimitWarned = true;
       serverconsole.locwarnmessage(
-        name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+        name +
+          " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
       );
     }
     if (
@@ -1136,7 +1143,8 @@ function SVRJSFork() {
     } else {
       if (SVRJSInitialized)
         serverconsole.locwarnmessage(
-          name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+          name +
+            " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
         );
     }
   } catch (err) {
@@ -1152,7 +1160,8 @@ function SVRJSFork() {
       ) {
         threadLimitWarned = true;
         serverconsole.locwarnmessage(
-          name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+          name +
+            " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
         );
       }
       if (
@@ -1168,7 +1177,8 @@ function SVRJSFork() {
       } else {
         if (SVRJSInitialized)
           serverconsole.locwarnmessage(
-            name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+            name +
+              " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
           );
       }
     } else {
@@ -1199,9 +1209,11 @@ function SVRJSFork() {
 }
 
 function getWorkerCountToFork() {
-  let workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
+  let workersToFork = os.availableParallelism
+    ? os.availableParallelism()
+    : os.cpus().length;
   try {
-    const useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
+    const useAvailableCores = Math.round(os.freemem() / 50000000) - 1; // 1 core deleted for safety...
     if (workersToFork > useAvailableCores) workersToFork = useAvailableCores;
   } catch (err) {
     // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
@@ -1215,12 +1227,15 @@ function forkWorkers(workersToFork, callback) {
     if (i == 0) {
       SVRJSFork();
     } else {
-      setTimeout((function (i) {
-        return function () {
-          SVRJSFork();
-          if (i >= workersToFork - 1) callback();
-        };
-      })(i), i * 6.6);
+      setTimeout(
+        (function (i) {
+          return function () {
+            SVRJSFork();
+            if (i >= workersToFork - 1) callback();
+          };
+        })(i),
+        i * 6.6,
+      );
     }
   }
 }
@@ -1229,7 +1244,7 @@ function forkWorkers(workersToFork, callback) {
 process.messageEventListeners.push((worker, serverconsole) => {
   return (message) => {
     console.log("Message received from worker: " + message);
-  }
+  };
 });
 
 // Starting function
@@ -1770,44 +1785,76 @@ function start(init) {
           }
         });*/
 
-        
         // Hangup check and restart
         setInterval(function () {
           if (!closedMaster && !exiting) {
             let chksocket = {};
-            if (process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer) {
-              chksocket = https.get({
-                hostname: (typeof process.serverConfig.sport == "number" && sListenAddress) ? sListenAddress : "localhost",
-                port: (typeof process.serverConfig.sport == "number") ? process.serverConfig.sport : undefined,
-                socketPath: (typeof process.serverConfig.sport == "number") ? undefined : process.serverConfig.sport,
-                headers: {
-                  "X-SVR-JS-From-Main-Thread": "true",
-                  "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
-                },
-                timeout: 1620,
-                rejectUnauthorized: false
-              }, function (res) {
-                chksocket.removeAllListeners("timeout");
-                res.destroy();
-                res.on("data", function () {});
-                res.on("end", function () {});
-                crashed = false;
-              }).on("error", function () {
-                if (!exiting) {
-                  if (!crashed) SVRJSFork();
-                  else crashed = false;
-                }
-              }).on("timeout", function () {
-                if (!exiting) SVRJSFork();
-                crashed = true;
-              });
-            } else if ((process.serverConfig.enableHTTP2 == undefined ? false : process.serverConfig.enableHTTP2) && !process.serverConfig.secure) {
+            if (
+              process.serverConfig.secure &&
+              process.serverConfig.disableNonEncryptedServer
+            ) {
+              chksocket = https
+                .get(
+                  {
+                    hostname:
+                      typeof process.serverConfig.sport == "number" &&
+                      sListenAddress
+                        ? sListenAddress
+                        : "localhost",
+                    port:
+                      typeof process.serverConfig.sport == "number"
+                        ? process.serverConfig.sport
+                        : undefined,
+                    socketPath:
+                      typeof process.serverConfig.sport == "number"
+                        ? undefined
+                        : process.serverConfig.sport,
+                    headers: {
+                      "X-SVR-JS-From-Main-Thread": "true",
+                      "User-Agent": generateServerString(true),
+                    },
+                    timeout: 1620,
+                    rejectUnauthorized: false,
+                  },
+                  function (res) {
+                    chksocket.removeAllListeners("timeout");
+                    res.destroy();
+                    res.on("data", function () {});
+                    res.on("end", function () {});
+                    crashed = false;
+                  },
+                )
+                .on("error", function () {
+                  if (!exiting) {
+                    if (!crashed) SVRJSFork();
+                    else crashed = false;
+                  }
+                })
+                .on("timeout", function () {
+                  if (!exiting) SVRJSFork();
+                  crashed = true;
+                });
+            } else if (
+              (process.serverConfig.enableHTTP2 == undefined
+                ? false
+                : process.serverConfig.enableHTTP2) &&
+              !process.serverConfig.secure
+            ) {
               // It doesn't support through Unix sockets or Windows named pipes
-              var address = ((typeof process.serverConfig.port == "number" && listenAddress) ? listenAddress : "localhost").replace(/\/@/g, "");
+              var address = (
+                typeof process.serverConfig.port == "number" && listenAddress
+                  ? listenAddress
+                  : "localhost"
+              ).replace(/\/@/g, "");
               if (address.indexOf(":") > -1) {
                 address = "[" + address + "]";
               }
-              var connection = http2.connect("http://" + address + ":" + process.serverConfig.port.toString());
+              var connection = http2.connect(
+                "http://" +
+                  address +
+                  ":" +
+                  process.serverConfig.port.toString(),
+              );
               connection.on("error", function () {
                 if (!exiting) {
                   if (!crashed) SVRJSFork();
@@ -1821,7 +1868,7 @@ function start(init) {
               chksocket = connection.request({
                 ":path": "/",
                 "x-svr-js-from-main-thread": "true",
-                "user-agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
+                "user-agent": generateServerString(true),
               });
               chksocket.on("response", function () {
                 connection.close();
@@ -1834,30 +1881,46 @@ function start(init) {
                 }
               });
             } else {
-              chksocket = http.get({
-                hostname: (typeof process.serverConfig.port == "number" && listenAddress) ? listenAddress : "localhost",
-                port: (typeof process.serverConfig.port == "number") ? process.serverConfig.port : undefined,
-                socketPath: (typeof process.serverConfig.port == "number") ? undefined : process.serverConfig.port,
-                headers: {
-                  "X-SVR-JS-From-Main-Thread": "true",
-                  "User-Agent": generateServerString(true)
-                },
-                timeout: 1620
-              }, function (res) {
-                chksocket.removeAllListeners("timeout");
-                res.destroy();
-                res.on("data", function () {});
-                res.on("end", function () {});
-                crashed = false;
-              }).on("error", function () {
-                if (!exiting) {
-                  if (!crashed) SVRJSFork();
-                  else crashed = false;
-                }
-              }).on("timeout", function () {
-                if (!exiting) SVRJSFork();
-                crashed = true;
-              });
+              chksocket = http
+                .get(
+                  {
+                    hostname:
+                      typeof process.serverConfig.port == "number" &&
+                      listenAddress
+                        ? listenAddress
+                        : "localhost",
+                    port:
+                      typeof process.serverConfig.port == "number"
+                        ? process.serverConfig.port
+                        : undefined,
+                    socketPath:
+                      typeof process.serverConfig.port == "number"
+                        ? undefined
+                        : process.serverConfig.port,
+                    headers: {
+                      "X-SVR-JS-From-Main-Thread": "true",
+                      "User-Agent": generateServerString(true),
+                    },
+                    timeout: 1620,
+                  },
+                  function (res) {
+                    chksocket.removeAllListeners("timeout");
+                    res.destroy();
+                    res.on("data", function () {});
+                    res.on("end", function () {});
+                    crashed = false;
+                  },
+                )
+                .on("error", function () {
+                  if (!exiting) {
+                    if (!crashed) SVRJSFork();
+                    else crashed = false;
+                  }
+                })
+                .on("timeout", function () {
+                  if (!exiting) SVRJSFork();
+                  crashed = true;
+                });
             }
           }
         }, 4550);

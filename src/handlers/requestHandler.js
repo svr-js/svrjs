@@ -126,7 +126,17 @@ function requestHandler(req, res) {
     }
   }
 
-  if (req.headers["x-svr-js-from-main-thread"] == "true" && req.socket && (!req.socket.remoteAddress || req.socket.remoteAddress == "::1" || req.socket.remoteAddress == "::ffff:127.0.0.1" || req.socket.remoteAddress == "127.0.0.1" || req.socket.remoteAddress == "localhost" || req.socket.remoteAddress == host || req.socket.remoteAddress == "::ffff:" + host)) {
+  if (
+    req.headers["x-svr-js-from-main-thread"] == "true" &&
+    req.socket &&
+    (!req.socket.remoteAddress ||
+      req.socket.remoteAddress == "::1" ||
+      req.socket.remoteAddress == "::ffff:127.0.0.1" ||
+      req.socket.remoteAddress == "127.0.0.1" ||
+      req.socket.remoteAddress == "localhost" ||
+      req.socket.remoteAddress == host ||
+      req.socket.remoteAddress == "::ffff:" + host)
+  ) {
     let headers = config.getCustomHeaders();
     res.writeHead(204, http.STATUS_CODES[204], headers);
     res.end();
