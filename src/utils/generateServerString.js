@@ -4,7 +4,7 @@ const getOS = require("./getOS.js");
 
 function generateServerString(exposeServerVersion) {
   return exposeServerVersion
-    ? name +
+    ? name.replace(/ /g, "-") +
         "/" +
         version +
         " (" +
@@ -14,7 +14,7 @@ function generateServerString(exposeServerVersion) {
           ? "Bun/v" + process.versions.bun + "; like Node.JS/" + process.version
           : "Node.JS/" + process.version) +
         ")"
-    : name;
+    : name.replace(/ /g, "-");
 }
 
 module.exports = generateServerString;
