@@ -3693,11 +3693,11 @@ if (!cluster.isPrimary) {
 
                   if (req.method != "HEAD") {
                     if (ext == "html" && begin < head.length && (end - begin) < head.length) {
-                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.writeHead(206, http.STATUS_CODES[206], rhd);
                       res.end(head.substring(begin, end + 1));
                       return;
                     } else if (ext == "html" && begin >= head.length + filelen){
-                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.writeHead(206, http.STATUS_CODES[206], rhd);
                       res.end(foot.substring(begin - head.length - filelen, end - head.length - filelen + 1));
                       return;
                     }
