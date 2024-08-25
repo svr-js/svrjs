@@ -3738,7 +3738,7 @@ if (!cluster.isPrimary) {
                               end: !(foot.length > 0 && end > head.length + filelen)
                             });
                           }
-                          res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                          res.writeHead(206, http.STATUS_CODES[206], rhd);
                           if (head.length == 0 || begin > head.length) {
                             afterWriteCallback();
                           } else if (!res.write(head.substring(begin, head.length - begin))) {
