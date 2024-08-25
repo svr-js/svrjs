@@ -480,10 +480,6 @@ let middleware = [
   require("./middleware/staticFileServingAndDirectoryListings.js"),
 ];
 
-//function addMiddleware(mw) {
-//  middleware.push(mw);
-//}
-
 const requestHandler = require("./handlers/requestHandler.js")(
   serverconsole,
   middleware,
