@@ -209,7 +209,6 @@ let middleware = [
   require("./middleware/nonStandardCodesAndHttpAuthentication.js"),
   require("./middleware/redirectTrailingSlashes.js"),
   // TODO: SVR.JS mods go here
-  // TODO: default handler
   require("./middleware/defaultHandlerChecks.js"),
   require("./middleware/status.js"),
   require("./middleware/staticFileServingAndDirectoryListings.js")
