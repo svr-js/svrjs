@@ -944,10 +944,10 @@ if (process.serverConfig.secure) {
   }
 }
 
-// TODO: stop, restart commands
+// TODO: restart commands
 // Base commands
 let commands = {
-  close: function () {
+  close: (args, log) => {
     try {
       server.close();
       if (
@@ -962,7 +962,7 @@ let commands = {
       log("Cannot close server! Reason: " + err.message);
     }
   },
-  open: function () {
+  open: (args, log) => {
     try {
       if (
         typeof (process.serverConfig.secure
@@ -1001,7 +1001,7 @@ let commands = {
   help: (args, log) => {
     log("Server commands:\n" + Object.keys(commands).join(" "));
   },
-  mods: function (args, log) {
+  mods: (args, log) => {
     log("Mods:");
     for (let i = 0; i < modInfos.length; i++) {
       log(
@@ -1016,8 +1016,59 @@ let commands = {
       log("No mods installed.");
     }
   },
-  clear: function (args, log) {
+  clear: (args, log) => {
     console.clear();
+  },
+  stop: (args, log) => {
+    let retcode = args[0];
+    if ((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
+      try {
+        server.close(function () {
+          if (server2.listening) {
+            try {
+              server2.close(function () {
+                if (!process.removeFakeIPC) {
+                  if (typeof retcode == "number") {
+                    process.exit(retcode);
+                  } else {
+                    process.exit(0);
+                  }
+                }
+              });
+            } catch (err) {
+              if (!process.removeFakeIPC) {
+                if (typeof retcode == "number") {
+                  process.exit(retcode);
+                } else {
+                  process.exit(0);
+                }
+              }
+            }
+          } else {
+            if (!process.removeFakeIPC) {
+              if (typeof retcode == "number") {
+                process.exit(retcode);
+              } else {
+                process.exit(0);
+              }
+            }
+          }
+        });
+      } catch (err) {
+        if (typeof retcode == "number") {
+          process.exit(retcode);
+        } else {
+          process.exit(0);
+        }
+      }
+      if (process.removeFakeIPC) process.removeFakeIPC();
+    } else {
+      if (typeof retcode == "number") {
+        process.exit(retcode);
+      } else {
+        process.exit(0);
+      }
+    }
   },
 };
 
@@ -1445,150 +1496,8 @@ function start(init) {
 
   // TODO: implement clustering and commands
   /*
-  // SVR.JS commmands
+  // SVR.JS commmands (only restart is there)
   var commands = {
-    close: function () {
-      try {
-        server.close();
-        if (process.serverConfig.secure && !process.serverConfig.disableNonEncryptedServer) {
-          server2.close();
-        }
-        if (cluster.isPrimary === undefined) serverconsole.climessage("Server closed.");
-        else {
-          process.send("Server closed.");
-          process.send("\x12CLOSE");
-        }
-      } catch (err) {
-        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot close server! Reason: " + err.message);
-        else process.send("Cannot close server! Reason: " + err.message);
-      }
-    },
-    open: function () {
-      try {
-        if (typeof (process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port) == "number" && (process.serverConfig.secure ? sListenAddress : listenAddress)) {
-          server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port, process.serverConfig.secure ? sListenAddress : listenAddress);
-        } else {
-          server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port);
-        }
-        if (process.serverConfig.secure && !process.serverConfig.disableNonEncryptedServer) {
-          if (typeof process.serverConfig.port == "number" && listenAddress) {
-            server2.listen(process.serverConfig.port, listenAddress);
-          } else {
-            server2.listen(process.serverConfig.port);
-          }
-        }
-        if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
-        else {
-          process.send("Server opened.");
-        }
-      } catch (err) {
-        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot open server! Reason: " + err.message);
-        else process.send("Cannot open server! Reason: " + err.message);
-      }
-    },
-    help: function () {
-      if (cluster.isPrimary === undefined) serverconsole.climessage("Server commands:\n" + Object.keys(commands).join(" "));
-      else process.send("Server commands:\n" + Object.keys(commands).join(" "));
-    },
-    mods: function () {
-      if (cluster.isPrimary === undefined) serverconsole.climessage("Mods:");
-      else process.send("Mods:");
-      for (var i = 0; i < modInfos.length; i++) {
-        if (cluster.isPrimary === undefined) serverconsole.climessage((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
-        else process.send((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
-      }
-      if (modInfos.length == 0) {
-        if (cluster.isPrimary === undefined) serverconsole.climessage("No mods installed.");
-        else process.send("No mods installed.");
-      }
-    },
-    stop: function (retcode) {
-      reallyExiting = true;
-      clearInterval(passwordHashCacheIntervalId);
-      if ((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
-        try {
-          server.close(function () {
-            if (server2.listening) {
-              try {
-                server2.close(function () {
-                  if (!process.removeFakeIPC) {
-                    if (typeof retcode == "number") {
-                      process.exit(retcode);
-                    } else {
-                      process.exit(0);
-                    }
-                  }
-                });
-              } catch (err) {
-                if (!process.removeFakeIPC) {
-                  if (typeof retcode == "number") {
-                    process.exit(retcode);
-                  } else {
-                    process.exit(0);
-                  }
-                }
-              }
-            } else {
-              if (!process.removeFakeIPC) {
-                if (typeof retcode == "number") {
-                  process.exit(retcode);
-                } else {
-                  process.exit(0);
-                }
-              }
-            }
-          });
-        } catch (err) {
-          if (typeof retcode == "number") {
-            process.exit(retcode);
-          } else {
-            process.exit(0);
-          }
-        }
-        if (process.removeFakeIPC) process.removeFakeIPC();
-      } else {
-        if (typeof retcode == "number") {
-          process.exit(retcode);
-        } else {
-          process.exit(0);
-        }
-      }
-    },
-    clear: function () {
-      console.clear();
-    },
-    block: function (ip) {
-      if (ip == undefined || JSON.stringify(ip) == "[]") {
-        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot block non-existent IP.");
-        else if (!cluster.isPrimary) process.send("Cannot block non-existent IP.");
-      } else {
-        for (var i = 0; i < ip.length; i++) {
-          if (ip[i] != "localhost" && ip[i].indexOf(":") == -1) {
-            ip[i] = "::ffff:" + ip[i];
-          }
-          if (!blocklist.check(ip[i])) {
-            blocklist.add(ip[i]);
-          }
-        }
-        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully blocked.");
-        else if (!cluster.isPrimary) process.send("IPs successfully blocked.");
-      }
-    },
-    unblock: function (ip) {
-      if (ip == undefined || JSON.stringify(ip) == "[]") {
-        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot unblock non-existent IP.");
-        else if (!cluster.isPrimary) process.send("Cannot unblock non-existent IP.");
-      } else {
-        for (var i = 0; i < ip.length; i++) {
-          if (ip[i].indexOf(":") == -1) {
-            ip[i] = "::ffff:" + ip[i];
-          }
-          blocklist.remove(ip[i]);
-        }
-        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully unblocked.");
-        else if (!cluster.isPrimary) process.send("IPs successfully unblocked.");
-      }
-    },
     restart: function () {
       if (cluster.isPrimary === undefined) serverconsole.climessage("This command is not supported on single-threaded " + name + ".");
       else process.send("This command need to be run in " + name + " master.");
