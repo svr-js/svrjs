@@ -746,6 +746,7 @@ const serverErrorHandler = require("./handlers/serverErrorHandler.js")(
 );
 
 let reqcounterKillReq = 0;
+let closedMaster = false; // TODO: closedMaster
 
 let server = {};
 let server2 = {};
@@ -1769,11 +1770,11 @@ function start(init) {
           }
         });*/
 
-        /*
+        
         // Hangup check and restart
         setInterval(function () {
           if (!closedMaster && !exiting) {
-            var chksocket = {};
+            let chksocket = {};
             if (process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer) {
               chksocket = https.get({
                 hostname: (typeof process.serverConfig.sport == "number" && sListenAddress) ? sListenAddress : "localhost",
@@ -1839,7 +1840,7 @@ function start(init) {
                 socketPath: (typeof process.serverConfig.port == "number") ? undefined : process.serverConfig.port,
                 headers: {
                   "X-SVR-JS-From-Main-Thread": "true",
-                  "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
+                  "User-Agent": generateServerString(true)
                 },
                 timeout: 1620
               }, function (res) {
@@ -1859,7 +1860,7 @@ function start(init) {
               });
             }
           }
-        }, 4550);*/
+        }, 4550);
 
         /*
         // Termination of unused good workers
