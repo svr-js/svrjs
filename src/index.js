@@ -2086,9 +2086,8 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   process.on("SIGINT", function () {
     if (cluster.isPrimary !== undefined) {
       exiting = true;
-      // TODO: commands
-      //const allWorkers = Object.keys(cluster.workers);
-      /*for (var i = 0; i < allWorkers.length; i++) {
+      const allWorkers = Object.keys(cluster.workers);
+      for (var i = 0; i < allWorkers.length; i++) {
         try {
           if (cluster.workers[allWorkers[i]]) {
             cluster.workers[allWorkers[i]].send("stop");
@@ -2096,7 +2095,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
         } catch (err) {
           // Worker will crash with EPIPE anyway.
         }
-      }*/
+      }
     }
     serverconsole.locmessage("Server terminated using SIGINT");
     process.exit();
