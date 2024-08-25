@@ -82,7 +82,12 @@ module.exports = (req, res, logFacilities, config, next) => {
     });
     res.end(
       (res.head == ""
-        ? "<!DOCTYPE html><html><head><title>SVR.JS status" +
+        ? "<!DOCTYPE html><html><head><title>" +
+          name
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;") +
+          " status" +
           (req.headers.host == undefined
             ? ""
             : " for " +
