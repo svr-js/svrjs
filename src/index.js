@@ -623,6 +623,10 @@ const clientErrorHandler = require("./handlers/clientErrorHandler.js")(
   serverconsole,
 );
 
+const serverErrorHandler = require("./handlers/serverErrorHandler.js")(
+  serverconsole,
+);
+
 let server = {};
 let server2 = {};
 
@@ -643,6 +647,13 @@ server2.on(
   "connect",
   process.serverConfig.disableToHTTPSRedirect ? proxyHandler : noproxyHandler,
 );
+server2.on("error", (err) => {
+  serverErrorHandler(err, true, server2, start);
+});
+server2.on("listening", () => {
+  serverErrorHandler.resetAttempts(true);
+  // TODO: listeningMessage();
+});
 
 // Create HTTP server
 if (process.serverConfig.enableHTTP2 == true) {
@@ -740,6 +751,13 @@ server.on("request", requestHandler);
 server.on("checkExpectation", requestHandler);
 server.on("connect", proxyHandler);
 server.on("clientError", clientErrorHandler);
+server.on("error", function (err) {
+  serverErrorHandler(err, false, server, start);
+});
+server.on("listening", () => {
+  serverErrorHandler.resetAttempts(false);
+  // TODO: listeningMessage();
+});
 
 if (process.serverConfig.secure) {
   server.prependListener("connection", function (sock) {
@@ -856,16 +874,19 @@ middleware.forEach((middlewareO) => {
   }
 });
 
-// TODO: HTTP ports
-// Listen HTTP server to port 3000
-server.listen(3000);
+// TODO: HTTP ports and start script
+function start() {
+  // Listen HTTP server to port 3000
+  server.listen(3000);
 
-// TODO: error logging
-if (wwwrootError) throw wwwrootError;
-if (configJSONRErr) throw configJSONRErr;
-if (configJSONPErr) throw configJSONPErr;
-if (certificateError) throw certificateError;
-if (sniReDos) throw new Error("SNI REDOS!!!");
+  // TODO: error logging
+  if (wwwrootError) throw wwwrootError;
+  if (configJSONRErr) throw configJSONRErr;
+  if (configJSONPErr) throw configJSONPErr;
+  if (certificateError) throw certificateError;
+  if (sniReDos) throw new Error("SNI REDOS!!!");
+}
+
 modLoadingErrors.forEach((modLoadingError) => {
   console.log('Error while loading "' + modLoadingError.modName + '" mod:');
   console.log(modLoadingError.error);
@@ -879,7 +900,7 @@ if (SSJSError) {
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   // Crash handler
   function crashHandlerMaster(err) {
-    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
+    serverconsole.locerrmessage("SVR.JS main process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
       err.stack ? generateErrorStack(err) : String(err),
@@ -976,3 +997,5 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     }
   });
 }
+
+start();

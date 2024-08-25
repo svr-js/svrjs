@@ -1,5 +1,5 @@
 // HTTP error descriptions
-var serverHTTPErrorDescs = {
+const serverHTTPErrorDescs = {
   200: "The request succeeded! :)",
   201: "A new resource has been created.",
   202: "The request has been accepted for processing, but the processing has not been completed.",
