@@ -377,6 +377,10 @@ if (typeof process.serverConfig.sport === "string") {
 
 const serverconsole = require("./utils/serverconsole.js");
 
+function addListenersToWorker(worker) {
+  process.messageEventListeners.forEach((messageEventListener) => worker.on("message", messageEventListener(worker, serverconsole)));
+}
+
 let inspectorURL = undefined;
 try {
   if (inspector) {
@@ -1113,7 +1117,7 @@ function SVRJSFork() {
     ) {
       threadLimitWarned = true;
       serverconsole.locwarnmessage(
-        "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+        name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
       );
     }
     if (
@@ -1129,7 +1133,7 @@ function SVRJSFork() {
     } else {
       if (SVRJSInitialized)
         serverconsole.locwarnmessage(
-          "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+          name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
         );
     }
   } catch (err) {
@@ -1145,7 +1149,7 @@ function SVRJSFork() {
       ) {
         threadLimitWarned = true;
         serverconsole.locwarnmessage(
-          "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+          name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
         );
       }
       if (
@@ -1161,7 +1165,7 @@ function SVRJSFork() {
       } else {
         if (SVRJSInitialized)
           serverconsole.locwarnmessage(
-            "SVR.JS limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+            name + " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
           );
       }
     } else {
@@ -1187,8 +1191,16 @@ function SVRJSFork() {
     // TODO: add listeners to workers
     // newWorker.on("message", bruteForceListenerWrapper(newWorker));
     // newWorker.on("message", listenConnListener);
+    addListenersToWorker(newWorker);
   }
 }
+
+// TODO: main message event listener
+process.messageEventListeners.push((worker, serverconsole) => {
+  return (message) => {
+    console.log("Message received from worker: " + message);
+  }
+});
 
 // Starting function
 function start(init) {
@@ -1506,12 +1518,12 @@ function start(init) {
   */
 
   if (init) {
-    var workersToFork = 1;
+    let workersToFork = 1;
 
     const getWorkerCountToFork = () => {
-      var workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
+      let workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
       try {
-        var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
+        const useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
         if (workersToFork > useAvailableCores) workersToFork = useAvailableCores;
       } catch (err) {
         // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
