@@ -482,6 +482,27 @@ let middleware = [
   require("./middleware/staticFileServingAndDirectoryListings.js"),
 ];
 
+// HTTP server handlers
+const requestHandler = require("./handlers/requestHandler.js")(
+  serverconsole,
+  middleware,
+);
+
+const proxyHandler = require("./handlers/proxyHandler.js")(
+  serverconsole,
+  middleware,
+);
+
+const clientErrorHandler = require("./handlers/clientErrorHandler.js")(
+  serverconsole,
+);
+
+// Create HTTP server
+const server = http
+  .createServer(requestHandler)
+  .on("connect", proxyHandler)
+  .on("clientError", clientErrorHandler);
+
 // TODO: close, open, stop, restart commands
 // Base commands
 let commands = {
@@ -525,27 +546,9 @@ middleware.forEach((middlewareO) => {
   }
 });
 
-// HTTP server handlers
-const requestHandler = require("./handlers/requestHandler.js")(
-  serverconsole,
-  middleware,
-);
-
-const proxyHandler = require("./handlers/proxyHandler.js")(
-  serverconsole,
-  middleware,
-);
-
-const clientErrorHandler = require("./handlers/clientErrorHandler.js")(
-  serverconsole,
-);
-
-// Create HTTP server
-http
-  .createServer(requestHandler)
-  .on("connect", proxyHandler)
-  .on("clientError", clientErrorHandler)
-  .listen(3000);
+// TODO: HTTP ports
+// Listen HTTP server to port 3000
+server.listen(3000);
 
 // TODO: error logging
 if (wwwrootError) throw wwwrootError;
