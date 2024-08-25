@@ -175,7 +175,7 @@ for (
   } else if (args[i] == "--disable-mods") {
     disableMods = true;
   } else if (args[i] == "--single-threaded") {
-    process.singlethreaded = true;
+    process.singleThreaded = true;
   } else {
     console.log("Unrecognized argument: " + args[i]);
     console.log(name + " usage:");
