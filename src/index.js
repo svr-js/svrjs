@@ -300,6 +300,76 @@ try {
   wwwrootError = err;
 }
 
+// SSL-related
+let key = "";
+let cert = "";
+
+if (process.serverConfig.secure) {
+  if (!process.serverConfig.key) process.serverConfig.key = "cert/key.key";
+  if (!process.serverConfig.cert) process.serverConfig.cert = "cert/cert.crt";
+} else {
+  key = "SSL DISABLED";
+  cert = "SSL DISABLED";
+  process.serverConfig.cert = "SSL DISABLED";
+  process.serverConfig.key = "SSL DISABLED";
+}
+
+let certificateError = null;
+let sniReDos = false;
+let sniCredentials = [];
+
+// Load certificates
+if (process.serverConfig.secure) {
+  try {
+    key = fs
+      .readFileSync(
+        process.serverConfig.key[0] != "/" &&
+          !process.serverConfig.key.match(/^[A-Z0-9]:\\/)
+          ? process.dirname + "/" + process.serverConfig.key
+          : process.serverConfig.key,
+      )
+      .toString();
+    cert = fs
+      .readFileSync(
+        process.serverConfig.cert[0] != "/" &&
+          !process.serverConfig.cert.match(/^[A-Z0-9]:\\/)
+          ? process.dirname + "/" + process.serverConfig.cert
+          : process.serverConfig.cert,
+      )
+      .toString();
+    const sniNames = Object.keys(process.serverConfig.sni);
+    sniNames.forEach(function (sniName) {
+      if (
+        typeof sniName === "string" &&
+        sniName.match(/\*[^*.:]*\*[^*.:]*(?:\.|:|$)/)
+      ) {
+        sniReDos = true;
+      }
+      sniCredentials.push({
+        name: sniName,
+        cert: fs
+          .readFileSync(
+            process.serverConfig.sni[sniName].cert[0] != "/" &&
+              !process.serverConfig.sni[sniName].cert.match(/^[A-Z0-9]:\\/)
+              ? process.dirname + "/" + process.serverConfig.sni[sniName].cert
+              : process.serverConfig.sni[sniName].cert,
+          )
+          .toString(),
+        key: fs
+          .readFileSync(
+            process.serverConfig.sni[sniName].key[0] != "/" &&
+              !process.serverConfig.sni[sniName].key.match(/^[A-Z0-9]:\\/)
+              ? process.dirname + "/" + process.serverConfig.sni[sniName].key
+              : process.serverConfig.sni[sniName].key,
+          )
+          .toString(),
+      });
+    });
+  } catch (err) {
+    certificateError = err;
+  }
+}
+
 let mods = [];
 const modFiles = fs.readdirSync(__dirname + "/mods").sort();
 let modInfos = [];
@@ -515,7 +585,10 @@ try {
 server2.on("request", requestHandler);
 server2.on("checkExpectation", requestHandler);
 server2.on("clientError", clientErrorHandler);
-server2.on("connect", process.serverConfig.disableToHTTPSRedirect ? proxyHandler : noproxyHandler);
+server2.on(
+  "connect",
+  process.serverConfig.disableToHTTPSRedirect ? proxyHandler : noproxyHandler,
+);
 
 // Create HTTP server
 if (process.serverConfig.enableHTTP2 == true) {
@@ -566,26 +639,26 @@ if (process.serverConfig.enableHTTP2 == true) {
   }
 }
 
-// TODO: SNI
-//if (secure) {
-//  try {
-//    sniCredentials.forEach(function (sniCredentialsSingle) {
-//      server.addContext(sniCredentialsSingle.name, {
-//        cert: sniCredentialsSingle.cert,
-//        key: sniCredentialsSingle.key
-//      });
-//      try {
-//        var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
-//        if (!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
-//        server._contexts[server._contexts.length - 1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
-//      } catch (ex) {
-//        // Can't replace regex, ignoring...
-//      }
-//    });
-//  } catch (err) {
-//    // SNI error
-//  }
-//}
+// Load SNI contexts into HTTP server
+if (secure) {
+  try {
+    sniCredentials.forEach(function (sniCredentialsSingle) {
+      server.addContext(sniCredentialsSingle.name, {
+        cert: sniCredentialsSingle.cert,
+        key: sniCredentialsSingle.key
+      });
+      try {
+        var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
+        if (!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
+        server._contexts[server._contexts.length - 1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
+      } catch (ex) {
+        // Can't replace regex, ignoring...
+      }
+    });
+  } catch (err) {
+    // SNI error
+  }
+}
 
 // Add handlers to the server
 server.on("request", requestHandler);
@@ -716,6 +789,8 @@ server.listen(3000);
 if (wwwrootError) throw wwwrootError;
 if (configJSONRErr) throw configJSONRErr;
 if (configJSONPErr) throw configJSONPErr;
+if (certificateError) throw certificateError;
+if (sniReDos) throw new Error("SNI REDOS!!!");
 modLoadingErrors.forEach((modLoadingError) => {
   console.log('Error while loading "' + modLoadingError.modName + '" mod:');
   console.log(modLoadingError.error);
