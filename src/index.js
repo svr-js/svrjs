@@ -1236,7 +1236,7 @@ function start(init) {
   init = Boolean(init);
   if (cluster.isPrimary || cluster.isPrimary === undefined) {
     if (init) {
-      for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
+      for (let i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
       console.log(
         "Welcome to \x1b[1m" +
