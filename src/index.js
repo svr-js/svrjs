@@ -831,8 +831,8 @@ if (process.serverConfig.secure) {
       ocsp.getOCSPURI(cert, function (err, uri) {
         if (err) return callback(err);
 
-        var req = ocsp.request.generate(cert, issuer);
-        var options = {
+        const req = ocsp.request.generate(cert, issuer);
+        const options = {
           url: uri,
           ocsp: req.data
         };
