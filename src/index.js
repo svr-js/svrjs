@@ -113,7 +113,8 @@ if (process.serverConfig.pubport === undefined) process.serverConfig.pubport = 8
 if (process.serverConfig.domain === undefined && process.serverConfig.domian !== undefined) process.serverConfig.domain = process.serverConfig.domian;
 delete process.serverConfig.domian;
 if (process.serverConfig.page404 === undefined) process.serverConfig.page404 = "404.html";
-//process.serverConfig.timestamp = timestamp; //TODO
+process.serverConfig.timestamp = new Date().getTime();
+if (process.serverConfig.blacklist === undefined) process.serverConfig.blacklist = [];
 //process.serverConfig.blacklist = blocklist.raw; //TODO
 if (process.serverConfig.nonStandardCodes === undefined) process.serverConfig.nonStandardCodes = [];
 if (process.serverConfig.enableCompression === undefined) process.serverConfig.enableCompression = true;

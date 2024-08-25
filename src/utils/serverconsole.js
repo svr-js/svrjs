@@ -5,7 +5,7 @@ let logFile = undefined;
 let logSync = false;
 let cluster = require("./clusterBunShim.js");
 let reallyExiting = false;
-let timestamp = new Date().getTime();
+const timestamp = process.serverConfig.timestamp;
 
 // Logging function
 function LOG(s) {
