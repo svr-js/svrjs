@@ -279,7 +279,6 @@ try {
 }
 
 let middleware = [
-  require("./middleware/core.js"),
   require("./middleware/urlSanitizer.js"),
   require("./middleware/redirects.js"),
   require("./middleware/blocklist.js"),
