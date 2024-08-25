@@ -19,6 +19,11 @@ process.filename = __filename;
 //process.singleThreaded = false;
 process.singleThreaded = true;
 
+process.err4xxcounter = 0;
+process.err5xxcounter = 0;
+process.reqcounter = 0;
+process.malformedcounter = 0;
+
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
 
 let forceSecure = false;
@@ -202,9 +207,11 @@ let middleware = [
   require("./middleware/responseHeaders.js"),
   require("./middleware/checkForbiddenPaths.js"),
   require("./middleware/nonStandardCodesAndHttpAuthentication.js"),
-  require("./middleware/redirectTrailingSlashes.js")
+  require("./middleware/redirectTrailingSlashes.js"),
   // TODO: SVR.JS mods go here
   // TODO: default handler
+  require("./middleware/defaultHandlerChecks.js"),
+  require("./middleware/status.js")
 ];
 
 function addMiddleware(mw) {
