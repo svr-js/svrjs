@@ -21,7 +21,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       for (let i = _mapBegIndex ? _mapBegIndex : 0; i < map.length; i++) {
         let mapEntry = map[i];
         if (
-          req.parsedUrl.pathname != "/" &&
+          req.parsedURL.pathname != "/" &&
           (mapEntry.isNotDirectory || mapEntry.isNotFile) &&
           !_fileState
         ) {
