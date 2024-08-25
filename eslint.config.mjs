@@ -11,7 +11,7 @@ export default [
     }
   },
   {
-    files: ["tests/**/*.test.js"],
+    files: ["tests/*.test.js", "tests/**/*.test.js"],
     ...jest.configs['flat/recommended'],
     rules: {
       ...jest.configs['flat/recommended'].rules,
