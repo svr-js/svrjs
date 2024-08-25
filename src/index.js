@@ -282,6 +282,50 @@ try {
   wwwrootError = err;
 }
 
+let mods = [];
+const modFiles = fs.readdirSync(__dirname + "/mods").sort();
+let modInfos = [];
+let modLoadingErrors = [];
+
+if (!disableMods) {
+  // Iterate through the list of mod files
+  modFiles.forEach((modFileRaw) => {
+    // Build the path to the current mod file
+    const modFile = process.dirname + "/mods/" + modFileRaw;
+
+    // Check if the current mod file is a regular file
+    if (fs.statSync(modFile).isFile()) {
+      if (modFile.indexOf(".js") == modFile.length - 3) {
+        try {
+          const mod = require(modFile);
+          mods.push(mod);
+          if (mod.modInfo) modInfos.push(mod.modInfo);
+          else {
+            modInfos.push({
+              name:
+                "Unknown mod (" +
+                modFileRaw +
+                "; module.exports.modInfo not set)",
+              version: "ERROR",
+            });
+          }
+        } catch (err) {
+          modLoadingErrors.push({
+            error: err,
+            modName: modFileRaw,
+          });
+        }
+      } else {
+        // TODO: implement SVR.JS 2.x and 3.x mod (.tar.gz extension) support
+        modLoadingErrors.push({
+          error: new Error("This mod is unsupported by " + name + "."),
+          modName: modFileRaw,
+        });
+      }
+    }
+  });
+}
+
 let middleware = [
   require("./middleware/urlSanitizer.js"),
   require("./middleware/redirects.js"),
@@ -292,7 +336,7 @@ let middleware = [
   require("./middleware/checkForbiddenPaths.js"),
   require("./middleware/nonStandardCodesAndHttpAuthentication.js"),
   require("./middleware/redirectTrailingSlashes.js"),
-  // TODO: SVR.JS mods go here
+  ...mods,
   require("./middleware/defaultHandlerChecks.js"),
   require("./middleware/status.js"),
   require("./middleware/staticFileServingAndDirectoryListings.js"),
@@ -323,6 +367,11 @@ http
   .on("clientError", clientErrorHandler)
   .listen(3000);
 
+// TODO: error logging
 if (wwwrootError) throw wwwrootError;
 if (configJSONRErr) throw configJSONRErr;
 if (configJSONPErr) throw configJSONPErr;
+modLoadingErrors.forEach((modLoadingError) => {
+  console.log("Error while loading \"" + modLoadingError.modName + "\" mod:");
+  console.log(modLoadingError.error);
+});
