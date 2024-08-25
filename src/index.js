@@ -1,5 +1,7 @@
 const http = require("http");
 const fs = require("fs");
+const os = require("os");
+const logo = require("./res/logo.js");
 const generateServerString = require("./utils/generateServerString.js");
 const deleteFolderRecursive = require("./utils/deleteFolderRecursive.js");
 const svrjsInfo = require("../svrjs.json");
@@ -336,6 +338,31 @@ if (process.serverConfig.optOutOfStatisticsServer === undefined)
 process.serverConfig.version = version;
 process.serverConfig.productName = name;
 
+let listenAddress = undefined;
+let sListenAddress = undefined;
+if (typeof process.serverConfig.port === "string") {
+  if (process.serverConfig.port.match(/^[0-9]+$/)) {
+    process.serverConfig.port = parseInt(process.serverConfig.port);
+  } else {
+    const portLMatch = port.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
+    if (portLMatch) {
+      listenAddress = portLMatch[1].replace(/^\[|\]$/g, "").replace(/^::ffff:/i, "");
+      process.serverConfig.port = parseInt(portLMatch[2]);
+    }
+  }
+}
+if (typeof process.serverConfig.sport === "string") {
+  if (process.serverConfig.sport.match(/^[0-9]+$/)) {
+    process.serverConfig.sport = parseInt(sport);
+  } else {
+    const sportLMatch = process.serverConfig.sport.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
+    if (sportLMatch) {
+      sListenAddress = sportLMatch[1].replace(/^\[|\]$/g, "").replace(/^::ffff:/i, "");
+      process.serverConfig.sport = parseInt(sportLMatch[2]);
+    }
+  }
+}
+
 const serverconsole = require("./utils/serverconsole.js");
 
 let inspectorURL = undefined;
@@ -436,6 +463,16 @@ if (process.serverConfig.secure) {
     certificateError = err;
   }
 }
+
+let vnum = 0;
+try {
+  vnum = process.config.variables.node_module_version;
+} catch (err) {
+  // Version number not retrieved
+}
+
+if (vnum === undefined) vnum = 0;
+if (process.isBun) vnum = 64;
 
 let mods = [];
 const modFiles = fs.readdirSync(__dirname + "/mods").sort();
@@ -886,17 +923,673 @@ middleware.forEach((middlewareO) => {
   }
 });
 
-// TODO: HTTP ports and start script
-function start() {
-  // Listen HTTP server to port 3000
-  server.listen(3000);
+function start(init) {
+  init = Boolean(init);
+  if (cluster.isPrimary || cluster.isPrimary === undefined) {
+    if (init) {
+      for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
+      console.log();
+      console.log("Welcome to \x1b[1m" + name + " - a web server running on Node.JS\x1b[0m");
 
-  // TODO: error logging
-  if (wwwrootError) throw wwwrootError;
-  if (configJSONRErr) throw configJSONRErr;
-  if (configJSONPErr) throw configJSONPErr;
-  if (certificateError) throw certificateError;
-  if (sniReDos) throw new Error("SNI REDOS!!!");
+      // Print warnings
+      if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
+      if (process.serverConfig.enableHTTP2 && !process.serverConfig.secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
+      if (process.isBun) {
+        serverconsole.locwarnmessage("Bun support is experimental. Some features of " + name + ", " + name + " mods and " + name + " server-side JavaScript may not work as expected.");
+        if (process.isBun && !(process.versions.bun && !process.versions.bun.match(/^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/)) && users.some(function (entry) {
+          return entry.pbkdf2;
+        })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service.");
+      }
+      if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running " + name + " on single thread. Reliability may suffer, as the server is stopped after crash.");
+      if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
+      if (crypto.__disabled__ === undefined && !crypto.scrypt) serverconsole.locwarnmessage("Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work.");
+      if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).");
+      if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982).");
+      if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running " + name + " as root. It's recommended to run " + name + " as an non-root user. Running " + name + " as root may increase the risks of OS command execution vulnerabilities.");
+      if (!process.isBun && process.serverConfig.secure && process.versions && process.versions.openssl && process.versions.openssl.substring(0, 2) == "1.") {
+        if (new Date() > new Date("11 September 2023")) {
+          serverconsole.locwarnmessage("OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+        } else {
+          serverconsole.locwarnmessage("OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+        }
+      }
+      if (process.serverConfig.secure && process.serverConfig.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.");
+      if (process.serverConfig.disableMods) serverconsole.locwarnmessage("" + name + " is running without mods and server-side JavaScript enabled. Web applications may not work as expected");
+      if (process.serverConfig.optOutOfStatisticsServer) serverconsole.locmessage("" + name + " is configured to opt out of sending data to the statistics server.");
+      console.log();
+
+      // Display mod and server-side JavaScript errors
+      if (process.isPrimary || process.isPrimary === undefined) {
+        modLoadingErrors.forEach(function (modLoadingError) {
+          serverconsole.locwarnmessage("There was a problem while loading a \"" + String(modLoadingError.modName).replace(/[\r\n]/g, "") + "\" mod.");
+          serverconsole.locwarnmessage("Stack:");
+          serverconsole.locwarnmessage(generateErrorStack(modLoadingError.error));
+        });
+        if (SSJSError) {
+          serverconsole.locwarnmessage("There was a problem while loading server-side JavaScript.");
+          serverconsole.locwarnmessage("Stack:");
+          serverconsole.locwarnmessage(generateErrorStack(SSJSError));
+        }
+        if (SSJSError || modLoadingErrors.length > 0) console.log();
+      }
+
+      // Print server information
+      serverconsole.locmessage("Server version: " + version);
+      if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);
+      else serverconsole.locmessage("Node.JS version: " + process.version);
+      const CPUs = os.cpus();
+      if (CPUs.length > 0) serverconsole.locmessage("CPU: " + (CPUs.length > 1 ? CPUs.length + "x " : "") + CPUs[0].model);
+
+      // Throw errors
+      if (vnum < 64) throw new Error("" + name + " requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by " + name + ".");
+      if (configJSONRErr) throw new Error("Can't read " + name + " configuration file: " + configJSONRErr.message);
+      if (configJSONPErr) throw new Error("" + name + " configuration parse error: " + configJSONPErr.message);
+      if (process.serverConfig.enableHTTP2 && !process.serverConfig.secure && (typeof process.serverConfig.port != "number")) throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by " + name + ".");
+      if (process.serverConfig.enableHTTP2 && http2.__disabled__ !== undefined) throw new Error("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with " + name + "");
+      if (listenAddress) {
+        if (listenAddress.match(/^[0-9]+$/)) throw new Error("Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).");
+        if (listenAddress.match(/^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i)) throw new Error("" + name + " can't listen on multicast address.");
+        if (brdIPs.indexOf(listenAddress) > -1) throw new Error("" + name + " can't listen on broadcast address.");
+        if (netIPs.indexOf(listenAddress) > -1) throw new Error("" + name + " can't listen on subnet address.");
+      }
+      if (certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
+      if (wwwrootError) throw new Error("There was a problem with your web root: " + wwwrootError.message);
+      if (sniReDos) throw new Error("Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.");
+    }
+
+    // Print server startup information
+    if (!(process.serverConfig.secure && disableNonEncryptedServer)) serverconsole.locmessage("Starting HTTP server at " + (typeof process.serverConfig.port == "number" ? (listenAddress ? ((listenAddress.indexOf(":") > -1 ? "[" + listenAddress + "]" : listenAddress)) + ":" : "port ") : "") + process.serverConfig.port.toString() + "...");
+    if (process.serverConfig.secure) serverconsole.locmessage("Starting HTTPS server at " + (typeof process.serverConfig.sport == "number" ? (sListenAddress ? ((sListenAddress.indexOf(":") > -1 ? "[" + sListenAddress + "]" : sListenAddress)) + ":" : "port ") : "") + process.serverConfig.sport.toString() + "...");
+  }
+
+
+  if (!cluster.isPrimary) {
+    try {
+      if (typeof (process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port) == "number" && (process.serverConfig.secure ? sListenAddress : listenAddress)) {
+        server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port, process.serverConfig.secure ? sListenAddress : listenAddress);
+      } else {
+        server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port);
+      }
+    } catch (err) {
+      if (err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+    }
+    if (process.serverConfig.secure && !disableNonEncryptedServer) {
+      try {
+        if (typeof process.serverConfig.port == "number" && listenAddress) {
+          server2.listen(process.serverConfig.port, listenAddress);
+        } else {
+          server2.listen(process.serverConfig.port);
+        }
+      } catch (err) {
+        if (err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
+      }
+    }
+  }
+
+
+  // TODO: implement clustering and commands
+  /*
+  // SVR.JS commmands
+  var commands = {
+    close: function () {
+      try {
+        server.close();
+        if (process.serverConfig.secure && !disableNonEncryptedServer) {
+          server2.close();
+        }
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Server closed.");
+        else {
+          process.send("Server closed.");
+          process.send("\x12CLOSE");
+        }
+      } catch (err) {
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot close server! Reason: " + err.message);
+        else process.send("Cannot close server! Reason: " + err.message);
+      }
+    },
+    open: function () {
+      try {
+        if (typeof (process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port) == "number" && (process.serverConfig.secure ? sListenAddress : listenAddress)) {
+          server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port, process.serverConfig.secure ? sListenAddress : listenAddress);
+        } else {
+          server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port);
+        }
+        if (process.serverConfig.secure && !disableNonEncryptedServer) {
+          if (typeof process.serverConfig.port == "number" && listenAddress) {
+            server2.listen(process.serverConfig.port, listenAddress);
+          } else {
+            server2.listen(process.serverConfig.port);
+          }
+        }
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Server opened.");
+        else {
+          process.send("Server opened.");
+        }
+      } catch (err) {
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot open server! Reason: " + err.message);
+        else process.send("Cannot open server! Reason: " + err.message);
+      }
+    },
+    help: function () {
+      if (cluster.isPrimary === undefined) serverconsole.climessage("Server commands:\n" + Object.keys(commands).join(" "));
+      else process.send("Server commands:\n" + Object.keys(commands).join(" "));
+    },
+    mods: function () {
+      if (cluster.isPrimary === undefined) serverconsole.climessage("Mods:");
+      else process.send("Mods:");
+      for (var i = 0; i < modInfos.length; i++) {
+        if (cluster.isPrimary === undefined) serverconsole.climessage((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
+        else process.send((i + 1).toString() + ". " + modInfos[i].name + " " + modInfos[i].version);
+      }
+      if (modInfos.length == 0) {
+        if (cluster.isPrimary === undefined) serverconsole.climessage("No mods installed.");
+        else process.send("No mods installed.");
+      }
+    },
+    stop: function (retcode) {
+      reallyExiting = true;
+      clearInterval(passwordHashCacheIntervalId);
+      if ((!cluster.isPrimary && cluster.isPrimary !== undefined) && server.listening) {
+        try {
+          server.close(function () {
+            if (server2.listening) {
+              try {
+                server2.close(function () {
+                  if (!process.removeFakeIPC) {
+                    if (typeof retcode == "number") {
+                      process.exit(retcode);
+                    } else {
+                      process.exit(0);
+                    }
+                  }
+                });
+              } catch (err) {
+                if (!process.removeFakeIPC) {
+                  if (typeof retcode == "number") {
+                    process.exit(retcode);
+                  } else {
+                    process.exit(0);
+                  }
+                }
+              }
+            } else {
+              if (!process.removeFakeIPC) {
+                if (typeof retcode == "number") {
+                  process.exit(retcode);
+                } else {
+                  process.exit(0);
+                }
+              }
+            }
+          });
+        } catch (err) {
+          if (typeof retcode == "number") {
+            process.exit(retcode);
+          } else {
+            process.exit(0);
+          }
+        }
+        if (process.removeFakeIPC) process.removeFakeIPC();
+      } else {
+        if (typeof retcode == "number") {
+          process.exit(retcode);
+        } else {
+          process.exit(0);
+        }
+      }
+    },
+    clear: function () {
+      console.clear();
+    },
+    block: function (ip) {
+      if (ip == undefined || JSON.stringify(ip) == "[]") {
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot block non-existent IP.");
+        else if (!cluster.isPrimary) process.send("Cannot block non-existent IP.");
+      } else {
+        for (var i = 0; i < ip.length; i++) {
+          if (ip[i] != "localhost" && ip[i].indexOf(":") == -1) {
+            ip[i] = "::ffff:" + ip[i];
+          }
+          if (!blocklist.check(ip[i])) {
+            blocklist.add(ip[i]);
+          }
+        }
+        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully blocked.");
+        else if (!cluster.isPrimary) process.send("IPs successfully blocked.");
+      }
+    },
+    unblock: function (ip) {
+      if (ip == undefined || JSON.stringify(ip) == "[]") {
+        if (cluster.isPrimary === undefined) serverconsole.climessage("Cannot unblock non-existent IP.");
+        else if (!cluster.isPrimary) process.send("Cannot unblock non-existent IP.");
+      } else {
+        for (var i = 0; i < ip.length; i++) {
+          if (ip[i].indexOf(":") == -1) {
+            ip[i] = "::ffff:" + ip[i];
+          }
+          blocklist.remove(ip[i]);
+        }
+        if (cluster.isPrimary === undefined) serverconsole.climessage("IPs successfully unblocked.");
+        else if (!cluster.isPrimary) process.send("IPs successfully unblocked.");
+      }
+    },
+    restart: function () {
+      if (cluster.isPrimary === undefined) serverconsole.climessage("This command is not supported on single-threaded " + name + ".");
+      else process.send("This command need to be run in " + name + " master.");
+    }
+  };
+  */
+
+  /*if (init) {
+    var workersToFork = 1;
+
+    function getWorkerCountToFork() {
+      var workersToFork = os.availableParallelism ? os.availableParallelism() : os.cpus().length;
+      try {
+        var useAvailableCores = Math.round((os.freemem()) / 50000000) - 1; // 1 core deleted for safety...
+        if (workersToFork > useAvailableCores) workersToFork = useAvailableCores;
+      } catch (err) {
+        // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
+      }
+      if (workersToFork < 1) workersToFork = 1; // If SVR.JS is run on Haiku (os.cpus in Haiku returns empty array) or if useAvailableCores = 0
+      return workersToFork;
+    }
+
+    function forkWorkers(workersToFork, callback) {
+      for (var i = 0; i < workersToFork; i++) {
+        if (i == 0) {
+          SVRJSFork();
+        } else {
+          setTimeout((function (i) {
+            return function () {
+              SVRJSFork();
+              if (i >= workersToFork - 1) callback();
+            };
+          })(i), i * 6.6);
+        }
+      }
+    }
+
+    if (cluster.isPrimary === undefined) {
+      setInterval(function () {
+        try {
+          saveConfig();
+          serverconsole.locmessage("Configuration saved.");
+        } catch (err) {
+          throw new Error(err);
+        }
+      }, 300000);
+    } else if (cluster.isPrimary) {
+      setInterval(function () {
+        var allWorkers = Object.keys(cluster.workers);
+        var goodWorkers = [];
+
+        function checkWorker(callback, _id) {
+          if (typeof _id === "undefined") _id = 0;
+          if (_id >= allWorkers.length) {
+            callback();
+            return;
+          }
+          try {
+            if (cluster.workers[allWorkers[_id]]) {
+              isWorkerHungUpBuff2 = true;
+              cluster.workers[allWorkers[_id]].on("message", msgListener);
+              cluster.workers[allWorkers[_id]].send("\x14PINGPING");
+              setTimeout(function () {
+                if (isWorkerHungUpBuff2) {
+                  checkWorker(callback, _id + 1);
+                } else {
+                  goodWorkers.push(allWorkers[_id]);
+                  checkWorker(callback, _id + 1);
+                }
+              }, 250);
+            } else {
+              checkWorker(callback, _id + 1);
+            }
+          } catch (err) {
+            if (cluster.workers[allWorkers[_id]]) {
+              cluster.workers[allWorkers[_id]].removeAllListeners("message");
+              cluster.workers[allWorkers[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allWorkers[_id]]));
+              cluster.workers[allWorkers[_id]].on("message", listenConnListener);
+            }
+            checkWorker(callback, _id + 1);
+          }
+        }
+        checkWorker(function () {
+          var wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
+          try {
+            if (cluster.workers[goodWorkers[wN]]) {
+              isWorkerHungUpBuff2 = true;
+              cluster.workers[goodWorkers[wN]].on("message", msgListener);
+              cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
+            }
+          } catch (err) {
+            if (cluster.workers[goodWorkers[wN]]) {
+              cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+              cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+              cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+            }
+            serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+          }
+        });
+      }, 300000);
+    }
+    if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
+      process.on("message", function (line) {
+        try {
+          if (line == "") {
+            // Does Nothing
+            process.send("\x12END");
+          } else if (line == "\x14SAVECONF") {
+            // Save configuration file
+            try {
+              saveConfig();
+              process.send("\x12SAVEGOOD");
+            } catch (err) {
+              process.send("\x12SAVEERR" + err.message);
+            }
+            process.send("\x12END");
+          } else if (line == "\x14KILLPING") {
+            if (!reallyExiting) {
+              process.send("\x12KILLOK");
+              process.send("\x12END");
+            }
+            // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
+          } else if (line == "\x14PINGPING") {
+            if (!reallyExiting) {
+              process.send("\x12PINGOK");
+              process.send("\x12END");
+            }
+            // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
+          } else if (line == "\x14KILLREQ") {
+            if (reqcounter - reqcounterKillReq < 2) {
+              process.send("\x12KILLTERMMSG");
+              process.nextTick(commands.stop);
+            } else {
+              reqcounterKillReq = reqcounter;
+            }
+          } else if (commands[line.split(" ")[0]] !== undefined && commands[line.split(" ")[0]] !== null) {
+            var argss = line.split(" ");
+            var command = argss.shift();
+            commands[command](argss);
+            process.send("\x12END");
+          } else {
+            process.send("Unrecognized command \"" + line.split(" ")[0] + "\".");
+            process.send("\x12END");
+          }
+        } catch (err) {
+          if (line != "") {
+            process.send("Can't execute command \"" + line.split(" ")[0] + "\".");
+            process.send("\x12END");
+          }
+        }
+      });
+    } else {
+      var rla = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        prompt: ""
+      });
+      rla.prompt();
+      rla.on("line", function (line) {
+        line = line.trim();
+        var argss = line.split(" ");
+        var command = argss.shift();
+        if (line != "") {
+          if (cluster.isPrimary !== undefined) {
+            var allWorkers = Object.keys(cluster.workers);
+            if (command == "block") commands.block(argss);
+            if (command == "unblock") commands.unblock(argss);
+            if (command == "restart") {
+              var stopError = false;
+              exiting = true;
+              for (var i = 0; i < allWorkers.length; i++) {
+                try {
+                  if (cluster.workers[allWorkers[i]]) {
+                    cluster.workers[allWorkers[i]].kill();
+                  }
+                } catch (err) {
+                  stopError = true;
+                }
+              }
+              if (stopError) serverconsole.climessage("Some " + name + " workers might not be stopped.");
+              SVRJSInitialized = false;
+              closedMaster = true;
+
+              workersToFork = getWorkerCountToFork();
+              forkWorkers(workersToFork, function () {
+                SVRJSInitialized = true;
+                exiting = false;
+                serverconsole.climessage("" + name + " workers restarted.");
+              });
+
+              return;
+            }
+            if (command == "stop") {
+              exiting = true;
+              allWorkers = Object.keys(cluster.workers);
+            }
+            allWorkers.forEach(function (clusterID) {
+              try {
+                if (cluster.workers[clusterID]) {
+                  cluster.workers[clusterID].on("message", msgListener);
+                  cluster.workers[clusterID].send(line);
+                }
+              } catch (err) {
+                if (cluster.workers[clusterID]) {
+                  cluster.workers[clusterID].removeAllListeners("message");
+                  cluster.workers[clusterID].on("message", bruteForceListenerWrapper(cluster.workers[clusterID]));
+                  cluster.workers[clusterID].on("message", listenConnListener);
+                }
+                serverconsole.climessage("Can't run command \"" + command + "\".");
+              }
+            });
+            if (command == "stop") {
+              setTimeout(function () {
+                reallyExiting = true;
+                process.exit(0);
+              }, 50);
+            }
+          } else {
+            if (command == "stop") {
+              reallyExiting = true;
+              process.exit(0);
+            }
+            try {
+              commands[command](argss);
+            } catch (err) {
+              serverconsole.climessage("Unrecognized command \"" + command + "\".");
+            }
+          }
+        }
+        rla.prompt();
+      });
+    }
+
+    if (cluster.isPrimary || cluster.isPrimary === undefined) {
+      // Cluster forking code
+      if (cluster.isPrimary !== undefined && init) {
+        workersToFork = getWorkerCountToFork();
+        forkWorkers(workersToFork, function () {
+          SVRJSInitialized = true;
+        });
+
+        cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
+          if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
+            var tries = parseInt(msg.substring(8, 9));
+            var errCode = msg.substring(9);
+            serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
+            serverconsole.locmessage(tries + " attempts left.");
+          }
+          if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
+            var errno = errors[msg.substring(9)];
+            process.exit(errno ? errno : 1);
+          }
+        });
+
+        // Hangup check and restart
+        setInterval(function () {
+          if (!closedMaster && !exiting) {
+            var chksocket = {};
+            if (process.serverConfig.secure && disableNonEncryptedServer) {
+              chksocket = https.get({
+                hostname: (typeof process.serverConfig.sport == "number" && sListenAddress) ? sListenAddress : "localhost",
+                port: (typeof process.serverConfig.sport == "number") ? process.serverConfig.sport : undefined,
+                socketPath: (typeof process.serverConfig.sport == "number") ? undefined : process.serverConfig.sport,
+                headers: {
+                  "X-SVR-JS-From-Main-Thread": "true",
+                  "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
+                },
+                timeout: 1620,
+                rejectUnauthorized: false
+              }, function (res) {
+                chksocket.removeAllListeners("timeout");
+                res.destroy();
+                res.on("data", function () {});
+                res.on("end", function () {});
+                crashed = false;
+              }).on("error", function () {
+                if (!exiting) {
+                  if (!crashed) SVRJSFork();
+                  else crashed = false;
+                }
+              }).on("timeout", function () {
+                if (!exiting) SVRJSFork();
+                crashed = true;
+              });
+            } else if ((process.serverConfig.enableHTTP2 == undefined ? false : process.serverConfig.enableHTTP2) && !process.serverConfig.secure) {
+              // It doesn't support through Unix sockets or Windows named pipes
+              var address = ((typeof process.serverConfig.port == "number" && listenAddress) ? listenAddress : "localhost").replace(/\/@/g, "");
+              if (address.indexOf(":") > -1) {
+                address = "[" + address + "]";
+              }
+              var connection = http2.connect("http://" + address + ":" + process.serverConfig.port.toString());
+              connection.on("error", function () {
+                if (!exiting) {
+                  if (!crashed) SVRJSFork();
+                  else crashed = false;
+                }
+              });
+              connection.setTimeout(1620, function () {
+                if (!exiting) SVRJSFork();
+                crashed = true;
+              });
+              chksocket = connection.request({
+                ":path": "/",
+                "x-svr-js-from-main-thread": "true",
+                "user-agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
+              });
+              chksocket.on("response", function () {
+                connection.close();
+                crashed = false;
+              });
+              chksocket.on("error", function () {
+                if (!exiting) {
+                  if (!crashed) SVRJSFork();
+                  else crashed = false;
+                }
+              });
+            } else {
+              chksocket = http.get({
+                hostname: (typeof process.serverConfig.port == "number" && listenAddress) ? listenAddress : "localhost",
+                port: (typeof process.serverConfig.port == "number") ? process.serverConfig.port : undefined,
+                socketPath: (typeof process.serverConfig.port == "number") ? undefined : process.serverConfig.port,
+                headers: {
+                  "X-SVR-JS-From-Main-Thread": "true",
+                  "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS")
+                },
+                timeout: 1620
+              }, function (res) {
+                chksocket.removeAllListeners("timeout");
+                res.destroy();
+                res.on("data", function () {});
+                res.on("end", function () {});
+                crashed = false;
+              }).on("error", function () {
+                if (!exiting) {
+                  if (!crashed) SVRJSFork();
+                  else crashed = false;
+                }
+              }).on("timeout", function () {
+                if (!exiting) SVRJSFork();
+                crashed = true;
+              });
+            }
+          }
+        }, 4550);
+
+        // Termination of unused good workers
+        if (!disableUnusedWorkerTermination && cluster.isPrimary !== undefined) {
+          setTimeout(function () {
+            setInterval(function () {
+              if (!closedMaster && !exiting) {
+                var allWorkers = Object.keys(cluster.workers);
+
+                var minWorkers = 0;
+                minWorkers = Math.ceil(workersToFork * 0.625);
+                if (minWorkers < 2) minWorkers = 2;
+                if (minWorkers > 12) minWorkers = 12;
+
+                var goodWorkers = [];
+
+                function checkWorker(callback, _id) {
+                  if (typeof _id === "undefined") _id = 0;
+                  if (_id >= allWorkers.length) {
+                    callback();
+                    return;
+                  }
+                  try {
+                    if (cluster.workers[allWorkers[_id]]) {
+                      isWorkerHungUpBuff = true;
+                      cluster.workers[allWorkers[_id]].on("message", msgListener);
+                      cluster.workers[allWorkers[_id]].send("\x14KILLPING");
+                      setTimeout(function () {
+                        if (isWorkerHungUpBuff) {
+                          checkWorker(callback, _id + 1);
+                        } else {
+                          goodWorkers.push(allWorkers[_id]);
+                          checkWorker(callback, _id + 1);
+                        }
+                      }, 250);
+                    } else {
+                      checkWorker(callback, _id + 1);
+                    }
+                  } catch (err) {
+                    if (cluster.workers[allWorkers[_id]]) {
+                      cluster.workers[allWorkers[_id]].removeAllListeners("message");
+                      cluster.workers[allWorkers[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allWorkers[_id]]));
+                      cluster.workers[allWorkers[_id]].on("message", listenConnListener);
+                    }
+                    checkWorker(callback, _id + 1);
+                  }
+                }
+                checkWorker(function () {
+                  if (goodWorkers.length > minWorkers) {
+                    var wN = Math.floor(Math.random() * goodWorkers.length);
+                    if (wN == goodWorkers.length) return;
+                    try {
+                      if (cluster.workers[goodWorkers[wN]]) {
+                        isWorkerHungUpBuff = true;
+                        cluster.workers[goodWorkers[wN]].on("message", msgListener);
+                        cluster.workers[goodWorkers[wN]].send("\x14KILLREQ");
+                      }
+                    } catch (err) {
+                      if (cluster.workers[goodWorkers[wN]]) {
+                        cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+                        cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
+                        cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+                      }
+                      serverconsole.locwarnmessage("There was a problem while terminating unused worker process. Reason: " + err.message);
+                    }
+                  }
+                });
+              }
+            }, 300000);
+          }, 2000);
+        }
+      }
+    }
+  }*/
 }
 
 modLoadingErrors.forEach((modLoadingError) => {
@@ -1010,4 +1703,4 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
 }
 
-start();
+start(true);
