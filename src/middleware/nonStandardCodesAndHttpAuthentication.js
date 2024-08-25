@@ -13,6 +13,20 @@ let pbkdf2Cache = [];
 let scryptCache = [];
 let passwordHashCacheIntervalId = -1;
 
+// Non-standard code object
+let nonStandardCodes = [];
+process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
+  var newObject = {};
+  Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
+    if (nsKey != "users") {
+      newObject[nsKey] = nonStandardCodeRaw[nsKey];
+    } else {
+      newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
+    }
+  });
+  nonStandardCodes.push(newObject);
+});
+
 if (!cluster.isPrimary) {
   passwordHashCacheIntervalId = setInterval(function () {
     pbkdf2Cache = pbkdf2Cache.filter(function (entry) {
@@ -34,12 +48,12 @@ module.exports = (req, res, logFacilities, config, next) => {
     : req.socket.remoteAddress;
 
   // Scan for non-standard codes
-  if (!req.isProxy && config.nonStandardCodes != undefined) {
-    for (let i = 0; i < config.nonStandardCodes.length; i++) {
+  if (!req.isProxy && nonStandardCodes != undefined) {
+    for (let i = 0; i < nonStandardCodes.length; i++) {
       if (
-        matchHostname(config.nonStandardCodes[i].host, req.headers.host) &&
+        matchHostname(nonStandardCodes[i].host, req.headers.host) &&
         ipMatch(
-          config.nonStandardCodes[i].ip,
+          nonStandardCodes[i].ip,
           req.socket ? req.socket.localAddress : undefined,
         )
       ) {
@@ -48,12 +62,9 @@ module.exports = (req, res, logFacilities, config, next) => {
           /\/+/g,
           "/",
         );
-        if (config.nonStandardCodes[i].regex) {
+        if (nonStandardCodes[i].regex) {
           // Regex match
-          var createdRegex = createRegex(
-            config.nonStandardCodes[i].regex,
-            true,
-          );
+          var createdRegex = createRegex(nonStandardCodes[i].regex, true);
           isMatch =
             req.url.match(createdRegex) ||
             hrefWithoutDuplicateSlashes.match(createdRegex);
@@ -61,13 +72,13 @@ module.exports = (req, res, logFacilities, config, next) => {
         } else {
           // Non-regex match
           isMatch =
-            config.nonStandardCodes[i].url == hrefWithoutDuplicateSlashes ||
+            nonStandardCodes[i].url == hrefWithoutDuplicateSlashes ||
             (os.platform() == "win32" &&
-              config.nonStandardCodes[i].url.toLowerCase() ==
+              nonStandardCodes[i].url.toLowerCase() ==
                 hrefWithoutDuplicateSlashes.toLowerCase());
         }
         if (isMatch) {
-          if (config.nonStandardCodes[i].scode == 401) {
+          if (nonStandardCodes[i].scode == 401) {
             // HTTP authentication
             if (authIndex == -1) {
               authIndex = i;
@@ -75,12 +86,11 @@ module.exports = (req, res, logFacilities, config, next) => {
           } else {
             if (nonscodeIndex == -1) {
               if (
-                (config.nonStandardCodes[i].scode == 403 ||
-                  config.nonStandardCodes[i].scode == 451) &&
-                config.nonStandardCodes[i].users !== undefined
+                (nonStandardCodes[i].scode == 403 ||
+                  nonStandardCodes[i].scode == 451) &&
+                nonStandardCodes[i].users !== undefined
               ) {
-                if (config.nonStandardCodes[i].users.check(reqip))
-                  nonscodeIndex = i;
+                if (nonStandardCodes[i].users.check(reqip)) nonscodeIndex = i;
               } else {
                 nonscodeIndex = i;
               }
@@ -93,7 +103,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
   // Handle non-standard codes
   if (nonscodeIndex > -1) {
-    let nonscode = config.nonStandardCodes[nonscodeIndex];
+    let nonscode = nonStandardCodes[nonscodeIndex];
     if (
       nonscode.scode == 301 ||
       nonscode.scode == 302 ||
@@ -143,7 +153,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
   // Handle HTTP authentication
   if (authIndex > -1) {
-    let authcode = config.nonStandardCodes[authIndex];
+    let authcode = nonStandardCodes[authIndex];
 
     // Function to check if passwords match
     const checkIfPasswordMatches = (list, password, callback, _i) => {
@@ -446,8 +456,8 @@ module.exports.mainMessageListenerWrapper = (worker) => {
 };
 
 module.exports.commands = {
-  stop: (args, passCommand) => {
+  stop: (args, log, passCommand) => {
     clearInterval(passwordHashCacheIntervalId);
-    passCommand(args);
+    passCommand(args, log);
   },
 };

@@ -4,12 +4,12 @@ function ipMatch(IP1, IP2) {
   if (!IP2) return false;
 
   // Function to normalize IPv4 address (remove leading zeros)
-  function normalizeIPv4Address(address) {
+  const normalizeIPv4Address = (address) => {
     return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
-  }
+  };
 
   // Function to expand IPv6 address to full format
-  function expandIPv6Address(address) {
+  const expandIPv6Address = (address) => {
     let fullAddress = "";
     let expandedAddress = "";
     let validGroupCount = 8;
@@ -53,7 +53,7 @@ function ipMatch(IP1, IP2) {
       expandedAddress += i != validGroupCount - 1 ? groups[i] + ":" : groups[i];
     }
     return expandedAddress;
-  }
+  };
 
   // Normalize or expand IP addresses
   IP1 = IP1.toLowerCase();

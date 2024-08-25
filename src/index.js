@@ -94,6 +94,21 @@ const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shi
 //const fixNodeMojibakeURL = require("./utils/urlMojibakeFixer.js");
 
 process.serverConfig = {};
+let configJSONRErr = undefined;
+let configJSONPErr = undefined;
+if (fs.existsSync(__dirname + "/config.json")) {
+  let configJSONf = "";
+  try {
+    configJSONf = fs.readFileSync(__dirname + "/config.json"); // Read JSON File
+    try {
+      process.serverConfig = JSON.parse(configJSONf); // Parse JSON
+    } catch (err2) {
+      configJSONPErr = err2;
+    }
+  } catch (err) {
+    configJSONRErr = err2;
+  }
+}
 
 // TODO: configuration from config.json
 if (process.serverConfig.users === undefined) process.serverConfig.users = [];
@@ -115,7 +130,6 @@ delete process.serverConfig.domian;
 if (process.serverConfig.page404 === undefined) process.serverConfig.page404 = "404.html";
 process.serverConfig.timestamp = new Date().getTime();
 if (process.serverConfig.blacklist === undefined) process.serverConfig.blacklist = [];
-//process.serverConfig.blacklist = blocklist.raw; //TODO
 if (process.serverConfig.nonStandardCodes === undefined) process.serverConfig.nonStandardCodes = [];
 if (process.serverConfig.enableCompression === undefined) process.serverConfig.enableCompression = true;
 if (process.serverConfig.customHeaders === undefined) process.serverConfig.customHeaders = {};
@@ -182,7 +196,7 @@ let middleware = [
   require("./middleware/core.js"),
   require("./middleware/urlSanitizer.js"),
   require("./middleware/redirects.js"),
-  // TODO: blocklist
+  require("./middleware/blocklist.js"),
   require("./middleware/webRootPostfixes.js"),
   require("./middleware/rewriteURL.js"),
   require("./middleware/responseHeaders.js"),
@@ -255,3 +269,5 @@ function requestHandler(req, res) {
 http.createServer(requestHandler).listen(3000);
 
 if(wwwrootError) throw wwwrootError;
+if(configJSONRErr) throw configJSONRErr;
+if(configJSONPErr) throw configJSONPErr;
