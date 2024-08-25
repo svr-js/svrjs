@@ -303,6 +303,11 @@ const requestHandler = require("./handlers/requestHandler.js")(
   middleware,
 );
 
+const proxyHandler = require("./handlers/proxyHandler.js")(
+  serverconsole,
+  middleware,
+);
+
 const clientErrorHandler = require("./handlers/clientErrorHandler.js")(
   serverconsole,
 );
@@ -310,6 +315,7 @@ const clientErrorHandler = require("./handlers/clientErrorHandler.js")(
 // Create HTTP server
 http
   .createServer(requestHandler)
+  .on("connect", proxyHandler)
   .on("clientError", clientErrorHandler)
   .listen(3000);
 
