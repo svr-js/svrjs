@@ -319,7 +319,9 @@ if (process.serverConfig.allowPostfixDoubleSlashes === undefined)
 if (process.serverConfig.optOutOfStatisticsServer === undefined)
   process.serverConfig.optOutOfStatisticsServer = false;
 
-process.serverConfig.version = version; // Compatiblity for very old SVR.JS mods
+// Compatiblity for very old SVR.JS mods
+process.serverConfig.version = version;
+process.serverConfig.productName = name;
 
 const serverconsole = require("./utils/serverconsole.js");
 
