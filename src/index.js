@@ -296,6 +296,7 @@ let mods = [];
 const modFiles = fs.readdirSync(__dirname + "/mods").sort();
 let modInfos = [];
 let modLoadingErrors = [];
+let SSJSError = undefined;
 
 if (!disableMods) {
   // Iterate through the list of mod files
@@ -402,7 +403,37 @@ if (!disableMods) {
       }
     }
   });
+
+  // Define the temporary server-side JavaScript file name
+  let tempServerSideScriptName = "serverSideScript.js";
+  if (!(process.isBun && process.versions.bun && process.versions.bun[0] == "0") && cluster.isPrimary === false) {
+    // If not the master process and it's not Bun, create a unique temporary server-side JavaScript file name for each worker
+    tempServerSideScriptName = ".serverSideScript_w" + Math.floor(Math.random() * 65536) + ".js";
+  }
+
+  // Determine path of server-side script file
+  let SSJSPath = "./serverSideScript.js";
+  if (!process.serverConfig.useWebRootServerSideScript) SSJSPath = process.dirname + "/serverSideScript.js";
+
+  // Check if a custom server side script file exists
+  if (fs.existsSync(SSJSPath) && fs.statSync(SSJSPath).isFile()) {
+    try {
+      // Prepend necessary modules and variables to the custom server side script
+      const modhead = "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" + (hexstrbase64 === undefined ? "" : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") + (crypto.__disabled__ === undefined ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n" : "") + "var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&(\"object\"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||\"*\"==e)return!0;if(req.headers.host&&0==e.indexOf(\"*.\")&&\"*.\"!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf(\".\"+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||\"win32\"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n";
+      const modfoot = "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
+      // Write the modified server side script to the temp folder
+      fs.writeFileSync(process.dirname + "/temp/" + tempServerSideScriptName, modhead + fs.readFileSync(SSJSPath) + modfoot);
+
+      // Add the server side script to the mods list
+      mods.push(legacyModWrapper(
+        require(process.dirname + "/temp/" + tempServerSideScriptName)
+      ));
+    } catch (err) {
+      SSJSError = err;
+    }
+  }
 }
+
 
 let middleware = [
   require("./middleware/urlSanitizer.js"),
@@ -453,3 +484,7 @@ modLoadingErrors.forEach((modLoadingError) => {
   console.log('Error while loading "' + modLoadingError.modName + '" mod:');
   console.log(modLoadingError.error);
 });
+if (SSJSError) {
+  console.log("Error while loading server-side JavaScript:");
+  console.log(SSJSError);
+}
