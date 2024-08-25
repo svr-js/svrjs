@@ -84,7 +84,7 @@ module.exports = (legacyMod) => {
       res.redirect, // redirect
       parsePostData, // parsePostData
       req.authUser, // authUser
-    );
+    )();
   };
 
   if (legacyModHandler.proxyCallback) {
@@ -96,7 +96,7 @@ module.exports = (legacyMod) => {
         config, // configJSON
         logFacilities, // serverconsole
         next, // elseCallback
-      );
+      )();
     };
   }
 
