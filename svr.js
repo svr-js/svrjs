@@ -1171,7 +1171,7 @@ if (fs.existsSync(__dirname + "/config.json")) {
       configJSONPErr = err2;
     }
   } catch (err) {
-    configJSONRErr = err2;
+    configJSONRErr = err;
   }
 }
 
