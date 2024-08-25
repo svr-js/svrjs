@@ -136,7 +136,7 @@ if (fs.existsSync(__dirname + "/config.json")) {
       configJSONPErr = err2;
     }
   } catch (err) {
-    configJSONRErr = err2;
+    configJSONRErr = err;
   }
 }
 
@@ -295,9 +295,9 @@ let middleware = [
   require("./middleware/staticFileServingAndDirectoryListings.js"),
 ];
 
-function addMiddleware(mw) {
-  middleware.push(mw);
-}
+//function addMiddleware(mw) {
+//  middleware.push(mw);
+//}
 
 const requestHandler = require("./handlers/requestHandler.js")(
   serverconsole,

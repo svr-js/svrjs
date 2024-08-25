@@ -2,7 +2,6 @@ const fs = require("fs");
 const http = require("http");
 const generateErrorStack = require("../utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
-const getOS = require("../utils/getOS.js");
 const generateServerString = require("../utils/generateServerString.js");
 let serverconsole = {};
 
