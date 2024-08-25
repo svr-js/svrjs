@@ -465,6 +465,7 @@ if (!disableMods) {
   }
 }
 
+// Middleware
 let middleware = [
   require("./middleware/urlSanitizer.js"),
   require("./middleware/redirects.js"),
@@ -481,6 +482,50 @@ let middleware = [
   require("./middleware/staticFileServingAndDirectoryListings.js"),
 ];
 
+// TODO: close, open, stop, restart commands
+// Base commands
+let commands = {
+  help: (args, log) => {
+    log("Server commands:\n" + Object.keys(commands).join(" "));
+  },
+  mods: function (args, log) {
+    log("Mods:");
+    for (let i = 0; i < modInfos.length; i++) {
+      log(
+        (i + 1).toString() +
+          ". " +
+          modInfos[i].name +
+          " " +
+          modInfos[i].version,
+      );
+    }
+    if (modInfos.length == 0) {
+      log("No mods installed.");
+    }
+  },
+  clear: function (args, log) {
+    console.clear();
+  },
+};
+
+// Load commands from middleware
+middleware.forEach((middlewareO) => {
+  if (middlewareO.commands) {
+    Object.keys(middlewareO.commands).forEach((command) => {
+      if (commands[command]) {
+        commands[command] = (args, log) => {
+          middlewareO.commands(args, log, commands[command]);
+        };
+      } else {
+        commands[command] = (args, log) => {
+          middlewareO.commands(args, log, () => {});
+        };
+      }
+    });
+  }
+});
+
+// HTTP server handlers
 const requestHandler = require("./handlers/requestHandler.js")(
   serverconsole,
   middleware,
