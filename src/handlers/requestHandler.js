@@ -710,7 +710,12 @@ function requestHandler(req, res) {
   // Call the next middleware function
   const next = () => {
     let currentMiddleware = middleware[index++];
-    while (req.isProxy && currentMiddleware && currentMiddleware.proxySafe !== false && !(currentMiddleware.proxySafe || currentMiddleware.proxy)) {
+    while (
+      req.isProxy &&
+      currentMiddleware &&
+      currentMiddleware.proxySafe !== false &&
+      !(currentMiddleware.proxySafe || currentMiddleware.proxy)
+    ) {
       currentMiddleware = middleware[index++];
     }
     if (currentMiddleware) {

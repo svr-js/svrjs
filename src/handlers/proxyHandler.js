@@ -1,3 +1,5 @@
+const generateServerString = require("../utils/generateServerString");
+
 let serverconsole = {};
 let middleware = [];
 
@@ -34,9 +36,26 @@ function proxyHandler(req, socket, head) {
   var reqip = socket.remoteAddress;
   var reqport = socket.remotePort;
   process.reqcounter++;
-  logFacilities.locmessage("Somebody connected to " + (config.secure ? ((typeof config.sport == "number" ? "port " : "socket ") + sport) : ((typeof config.port == "number" ? "port " : "socket ") + config.port)) + "...");
-  logFacilities.reqmessage("Client " + ((!reqip || reqip == "") ? "[unknown client]" : (reqip + ((reqport && reqport !== 0) && reqport != "" ? ":" + reqport : ""))) + " wants to proxy " + req.url + " through this server");
-  if (req.headers["user-agent"] != undefined) logFacilities.reqmessage("Client uses " + req.headers["user-agent"]);
+  logFacilities.locmessage(
+    "Somebody connected to " +
+      (config.secure
+        ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
+        : (typeof config.port == "number" ? "port " : "socket ") +
+          config.port) +
+      "...",
+  );
+  logFacilities.reqmessage(
+    "Client " +
+      (!reqip || reqip == ""
+        ? "[unknown client]"
+        : reqip +
+          (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")) +
+      " wants to proxy " +
+      req.url +
+      " through this server",
+  );
+  if (req.headers["user-agent"] != undefined)
+    logFacilities.reqmessage("Client uses " + req.headers["user-agent"]);
 
   let index = 0;
 
@@ -55,10 +74,13 @@ function proxyHandler(req, socket, head) {
         );
         logFacilities.errmessage("Stack:");
         logFacilities.errmessage(err.stack);
-        if (!socket.destroyed) socket.end("HTTP/1.1 500 Internal Server Error\n\n");
+        if (!socket.destroyed)
+          socket.end("HTTP/1.1 500 Internal Server Error\n\n");
       }
     } else {
-      logFacilities.errmessage("SVR.JS doesn't support proxy without proxy mod.");
+      logFacilities.errmessage(
+        "SVR.JS doesn't support proxy without proxy mod.",
+      );
       if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
     }
   };
@@ -72,4 +94,3 @@ module.exports = (serverconsoleO, middlewareO) => {
   middleware = middlewareO;
   return proxyHandler;
 };
-  
