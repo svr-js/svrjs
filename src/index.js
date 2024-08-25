@@ -493,15 +493,177 @@ const proxyHandler = require("./handlers/proxyHandler.js")(
   middleware,
 );
 
+const noproxyHandler = require("./handlers/noproxyHandler.js")(serverconsole);
+
 const clientErrorHandler = require("./handlers/clientErrorHandler.js")(
   serverconsole,
 );
 
+let server = {};
+let server2 = {};
+
+// Create secondary HTTP server
+try {
+  server2 = http.createServer({
+    requireHostHeader: false,
+  });
+} catch (err) {
+  server2 = http.createServer();
+}
+
+// Add handlers to secondary HTTP server
+server2.on("request", requestHandler);
+server2.on("checkExpectation", requestHandler);
+server2.on("clientError", clientErrorHandler);
+server2.on("connect", process.serverConfig.disableToHTTPSRedirect ? proxyHandler : noproxyHandler);
+
 // Create HTTP server
-const server = http
-  .createServer(requestHandler)
-  .on("connect", proxyHandler)
-  .on("clientError", clientErrorHandler);
+if (process.serverConfig.enableHTTP2 == true) {
+  if (process.serverConfig.secure) {
+    server = http2.createSecureServer({
+      allowHTTP1: true,
+      requireHostHeader: false,
+      key: key,
+      cert: cert,
+      requestCert: configJSON.useClientCertificate,
+      rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
+      ciphers: configJSON.cipherSuite,
+      ecdhCurve: configJSON.ecdhCurve,
+      minVersion: configJSON.tlsMinVersion,
+      maxVersion: configJSON.tlsMaxVersion,
+      sigalgs: configJSON.signatureAlgorithms,
+      settings: configJSON.http2Settings,
+    });
+  } else {
+    server = http2.createServer({
+      allowHTTP1: true,
+      requireHostHeader: false,
+      settings: configJSON.http2Settings,
+    });
+  }
+} else {
+  if (process.serverConfig.secure) {
+    server = https.createServer({
+      key: key,
+      cert: cert,
+      requireHostHeader: false,
+      requestCert: configJSON.useClientCertificate,
+      rejectUnauthorized: configJSON.rejectUnauthorizedClientCertificates,
+      ciphers: configJSON.cipherSuite,
+      ecdhCurve: configJSON.ecdhCurve,
+      minVersion: configJSON.tlsMinVersion,
+      maxVersion: configJSON.tlsMaxVersion,
+      sigalgs: configJSON.signatureAlgorithms,
+    });
+  } else {
+    try {
+      server = http.createServer({
+        requireHostHeader: false,
+      });
+    } catch (err) {
+      server = http.createServer();
+    }
+  }
+}
+
+// TODO: SNI
+//if (secure) {
+//  try {
+//    sniCredentials.forEach(function (sniCredentialsSingle) {
+//      server.addContext(sniCredentialsSingle.name, {
+//        cert: sniCredentialsSingle.cert,
+//        key: sniCredentialsSingle.key
+//      });
+//      try {
+//        var snMatches = sniCredentialsSingle.name.match(/^([^:[]*|\[[^]]*\]?)((?::.*)?)$/);
+//        if (!snMatches[1][0].match(/^\.+$/)) snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
+//        server._contexts[server._contexts.length - 1][0] = new RegExp("^" + snMatches[1].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.:]*") + ((snMatches[1][0] == "[" || snMatches[1].match(/^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/)) ? "" : "\.?") + snMatches[2].replace(/([.^$+?\-\\[\]{}])/g, "\\$1").replace(/\*/g, "[^.]*") + "$", "i");
+//      } catch (ex) {
+//        // Can't replace regex, ignoring...
+//      }
+//    });
+//  } catch (err) {
+//    // SNI error
+//  }
+//}
+
+// Add handlers to the server
+server.on("request", requestHandler);
+server.on("checkExpectation", requestHandler);
+server.on("connect", proxyHandler);
+server.on("clientError", clientErrorHandler);
+
+if (process.serverConfig.secure) {
+  server.prependListener("connection", function (sock) {
+    sock.reallyDestroy = sock.destroy;
+    sock.destroy = function () {
+      sock.toDestroy = true;
+    };
+  });
+
+  server.prependListener("tlsClientError", function (err, sock) {
+    if (
+      err.code == "ERR_SSL_HTTP_REQUEST" ||
+      err.message.indexOf("http request") != -1
+    ) {
+      sock._parent.destroy = sock._parent.reallyDestroy;
+      sock._readableState = sock._parent._readableState;
+      sock._writableState = sock._parent._writableState;
+      sock._parent.toDestroy = false;
+      sock.pipe = function (a, b, c) {
+        sock._parent.pipe(a, b, c);
+      };
+      sock.write = function (a, b, c) {
+        sock._parent.write(a, b, c);
+      };
+      sock.end = function (a, b, c) {
+        sock._parent.end(a, b, c);
+      };
+      sock.destroyed = sock._parent.destroyed;
+      sock.readable = sock._parent.readable;
+      sock.writable = sock._parent.writable;
+      sock.remoteAddress = sock._parent.remoteAddress;
+      sock.remotePort = sock._parent.remoteAddress;
+      sock.destroy = function (a, b, c) {
+        try {
+          sock._parent.destroy(a, b, c);
+          sock.destroyed = sock._parent.destroyed;
+        } catch (err) {
+          // Socket is probably already destroyed.
+        }
+      };
+    } else {
+      sock._parent.destroy = sock._parent.reallyDestroy;
+      try {
+        if (sock._parent.toDestroy) sock._parent.destroy();
+      } catch (err) {
+        // Socket is probably already destroyed.
+      }
+    }
+  });
+
+  server.prependListener("secureConnection", function (sock) {
+    sock._parent.destroy = sock._parent.reallyDestroy;
+    delete sock._parent.reallyDestroy;
+  });
+
+  // TODO: OCSP stapling
+  /*if (process.serverConfig.enableOCSPStapling && !ocsp._errored) {
+    server.on("OCSPRequest", function (cert, issuer, callback) {
+      ocsp.getOCSPURI(cert, function (err, uri) {
+        if (err) return callback(err);
+
+        var req = ocsp.request.generate(cert, issuer);
+        var options = {
+          url: uri,
+          ocsp: req.data
+        };
+
+        ocspCache.request(req.id, options, callback);
+      });
+    });
+  }*/
+}
 
 // TODO: close, open, stop, restart commands
 // Base commands
