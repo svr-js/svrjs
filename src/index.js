@@ -42,6 +42,7 @@ process.malformedcounter = 0;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
 
+let exiting = false;
 let forceSecure = false;
 let disableMods = false;
 
@@ -138,7 +139,7 @@ if (!fs.existsSync(process.dirname + "/temp"))
 
 const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
 const legacyModWrapper = require("./utils/legacyModWrapper.js");
-//const generateErrorStack = require("./utils/generateErrorStack.js");
+const generateErrorStack = require("./utils/generateErrorStack.js");
 //const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 //const getOS = require("./utils/getOS.js");
 //const parseURL = require("./utils/urlParser.js");
@@ -512,4 +513,93 @@ modLoadingErrors.forEach((modLoadingError) => {
 if (SSJSError) {
   console.log("Error while loading server-side JavaScript:");
   console.log(SSJSError);
+}
+
+// Process event listeners
+if (cluster.isPrimary || cluster.isPrimary === undefined) {
+  // Crash handler
+  function crashHandlerMaster(err) {
+    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
+    serverconsole.locerrmessage("Stack:");
+    serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
+    process.exit(err.errno);
+  }
+
+  process.on("uncaughtException", crashHandlerMaster);
+  process.on("unhandledRejection", crashHandlerMaster);
+
+  process.on("exit", function (code) {
+    try {
+      // TODO: saveConfig function
+      /*if (!configJSONRErr && !configJSONPErr) {
+        saveConfig();
+      }*/
+    } catch (err) {
+      serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+    }
+    try {
+      deleteFolderRecursive(process.dirname + "/temp");
+    } catch (err) {
+      // Error!
+    }
+    try {
+      fs.mkdirSync(process.dirname + "/temp");
+    } catch (err) {
+      // Error!
+    }
+    if (process.isBun && process.versions.bun && process.versions.bun[0] == "0") {
+      try {
+        fs.writeFileSync(process.dirname + "/temp/serverSideScript.js", "// Placeholder server-side JavaScript to workaround Bun bug.\r\n");
+      } catch (err) {
+        // Error!
+      }
+    }
+    serverconsole.locmessage("Server closed with exit code: " + code);
+  });
+  process.on("warning", function (warning) {
+    serverconsole.locwarnmessage(warning.message);
+    if (generateErrorStack(warning)) {
+      serverconsole.locwarnmessage("Stack:");
+      serverconsole.locwarnmessage(generateErrorStack(warning));
+    }
+  });
+  process.on("SIGINT", function () {
+    reallyExiting = true;
+    if (cluster.isPrimary !== undefined) {
+      exiting = true;
+      // TODO: commands
+      //const allWorkers = Object.keys(cluster.workers);
+      /*for (var i = 0; i < allWorkers.length; i++) {
+        try {
+          if (cluster.workers[allWorkers[i]]) {
+            cluster.workers[allWorkers[i]].send("stop");
+          }
+        } catch (err) {
+          // Worker will crash with EPIPE anyway.
+        }
+      }*/
+    }
+    serverconsole.locmessage("Server terminated using SIGINT");
+    process.exit();
+  });
+} else {
+  // Crash handler
+  function crashHandler(err) {
+    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
+    serverconsole.locerrmessage("Stack:");
+    serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
+    process.exit(err.errno);
+  }
+
+  process.on("uncaughtException", crashHandler);
+  process.on("unhandledRejection", crashHandler);
+
+  // Warning handler
+  process.on("warning", function (warning) {
+    serverconsole.locwarnmessage(warning.message);
+    if (warning.stack) {
+      serverconsole.locwarnmessage("Stack:");
+      serverconsole.locwarnmessage(generateErrorStack(warning));
+    }
+  });
 }
