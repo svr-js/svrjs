@@ -1,6 +1,6 @@
 const parseURL = require("../../src/utils/urlParserLegacy.js");
 
-describe("URL parser(for SVR.JS 2.x and 3.x mods)", () => {
+describe("URL parser (for SVR.JS 2.x and 3.x mods)", () => {
   test("should parse a simple URL", () => {
     const parsedUrl = parseURL("http://example.com");
     expect(parsedUrl.protocol).toBe("http:");
