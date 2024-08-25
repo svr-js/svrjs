@@ -344,9 +344,13 @@ if (typeof process.serverConfig.port === "string") {
   if (process.serverConfig.port.match(/^[0-9]+$/)) {
     process.serverConfig.port = parseInt(process.serverConfig.port);
   } else {
-    const portLMatch = port.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
+    const portLMatch = port.match(
+      /^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/,
+    );
     if (portLMatch) {
-      listenAddress = portLMatch[1].replace(/^\[|\]$/g, "").replace(/^::ffff:/i, "");
+      listenAddress = portLMatch[1]
+        .replace(/^\[|\]$/g, "")
+        .replace(/^::ffff:/i, "");
       process.serverConfig.port = parseInt(portLMatch[2]);
     }
   }
@@ -355,9 +359,13 @@ if (typeof process.serverConfig.sport === "string") {
   if (process.serverConfig.sport.match(/^[0-9]+$/)) {
     process.serverConfig.sport = parseInt(sport);
   } else {
-    const sportLMatch = process.serverConfig.sport.match(/^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/);
+    const sportLMatch = process.serverConfig.sport.match(
+      /^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/,
+    );
     if (sportLMatch) {
-      sListenAddress = sportLMatch[1].replace(/^\[|\]$/g, "").replace(/^::ffff:/i, "");
+      sListenAddress = sportLMatch[1]
+        .replace(/^\[|\]$/g, "")
+        .replace(/^::ffff:/i, "");
       process.serverConfig.sport = parseInt(sportLMatch[2]);
     }
   }
@@ -929,44 +937,145 @@ function start(init) {
     if (init) {
       for (i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
-      console.log("Welcome to \x1b[1m" + name + " - a web server running on Node.JS\x1b[0m");
+      console.log(
+        "Welcome to \x1b[1m" +
+          name +
+          " - a web server running on Node.JS\x1b[0m",
+      );
 
       // Print warnings
-      if (version.indexOf("Nightly-") === 0) serverconsole.locwarnmessage("This version is only for test purposes and may be unstable.");
-      if (process.serverConfig.enableHTTP2 && !process.serverConfig.secure) serverconsole.locwarnmessage("HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!");
+      if (version.indexOf("Nightly-") === 0)
+        serverconsole.locwarnmessage(
+          "This version is only for test purposes and may be unstable.",
+        );
+      if (process.serverConfig.enableHTTP2 && !process.serverConfig.secure)
+        serverconsole.locwarnmessage(
+          "HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!",
+        );
       if (process.isBun) {
-        serverconsole.locwarnmessage("Bun support is experimental. Some features of " + name + ", " + name + " mods and " + name + " server-side JavaScript may not work as expected.");
-        if (process.isBun && !(process.versions.bun && !process.versions.bun.match(/^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/)) && users.some(function (entry) {
-          return entry.pbkdf2;
-        })) serverconsole.locwarnmessage("PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service.");
+        serverconsole.locwarnmessage(
+          "Bun support is experimental. Some features of " +
+            name +
+            ", " +
+            name +
+            " mods and " +
+            name +
+            " server-side JavaScript may not work as expected.",
+        );
+        if (
+          process.isBun &&
+          !(
+            process.versions.bun &&
+            !process.versions.bun.match(
+              /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/,
+            )
+          ) &&
+          users.some(function (entry) {
+            return entry.pbkdf2;
+          })
+        )
+          serverconsole.locwarnmessage(
+            "PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service.",
+          );
       }
-      if (cluster.isPrimary === undefined) serverconsole.locwarnmessage("You're running " + name + " on single thread. Reliability may suffer, as the server is stopped after crash.");
-      if (crypto.__disabled__ !== undefined) serverconsole.locwarnmessage("Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.");
-      if (crypto.__disabled__ === undefined && !crypto.scrypt) serverconsole.locwarnmessage("Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work.");
-      if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).");
-      if (!process.isBun && /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(process.version)) serverconsole.locwarnmessage("Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982).");
-      if (process.getuid && process.getuid() == 0) serverconsole.locwarnmessage("You're running " + name + " as root. It's recommended to run " + name + " as an non-root user. Running " + name + " as root may increase the risks of OS command execution vulnerabilities.");
-      if (!process.isBun && process.serverConfig.secure && process.versions && process.versions.openssl && process.versions.openssl.substring(0, 2) == "1.") {
+      if (cluster.isPrimary === undefined)
+        serverconsole.locwarnmessage(
+          "You're running " +
+            name +
+            " on single thread. Reliability may suffer, as the server is stopped after crash.",
+        );
+      if (crypto.__disabled__ !== undefined)
+        serverconsole.locwarnmessage(
+          "Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.",
+        );
+      if (crypto.__disabled__ === undefined && !crypto.scrypt)
+        serverconsole.locwarnmessage(
+          "Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work.",
+        );
+      if (
+        !process.isBun &&
+        /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(
+          process.version,
+        )
+      )
+        serverconsole.locwarnmessage(
+          "Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).",
+        );
+      if (
+        !process.isBun &&
+        /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(
+          process.version,
+        )
+      )
+        serverconsole.locwarnmessage(
+          "Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982).",
+        );
+      if (process.getuid && process.getuid() == 0)
+        serverconsole.locwarnmessage(
+          "You're running " +
+            name +
+            " as root. It's recommended to run " +
+            name +
+            " as an non-root user. Running " +
+            name +
+            " as root may increase the risks of OS command execution vulnerabilities.",
+        );
+      if (
+        !process.isBun &&
+        process.serverConfig.secure &&
+        process.versions &&
+        process.versions.openssl &&
+        process.versions.openssl.substring(0, 2) == "1."
+      ) {
         if (new Date() > new Date("11 September 2023")) {
-          serverconsole.locwarnmessage("OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+          serverconsole.locwarnmessage(
+            "OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.",
+          );
         } else {
-          serverconsole.locwarnmessage("OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.");
+          serverconsole.locwarnmessage(
+            "OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.",
+          );
         }
       }
-      if (process.serverConfig.secure && process.serverConfig.enableOCSPStapling && ocsp._errored) serverconsole.locwarnmessage("Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.");
-      if (process.serverConfig.disableMods) serverconsole.locwarnmessage("" + name + " is running without mods and server-side JavaScript enabled. Web applications may not work as expected");
-      if (process.serverConfig.optOutOfStatisticsServer) serverconsole.locmessage("" + name + " is configured to opt out of sending data to the statistics server.");
+      if (
+        process.serverConfig.secure &&
+        process.serverConfig.enableOCSPStapling &&
+        ocsp._errored
+      )
+        serverconsole.locwarnmessage(
+          "Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.",
+        );
+      if (process.serverConfig.disableMods)
+        serverconsole.locwarnmessage(
+          "" +
+            name +
+            " is running without mods and server-side JavaScript enabled. Web applications may not work as expected",
+        );
+      if (process.serverConfig.optOutOfStatisticsServer)
+        serverconsole.locmessage(
+          "" +
+            name +
+            " is configured to opt out of sending data to the statistics server.",
+        );
       console.log();
 
       // Display mod and server-side JavaScript errors
       if (process.isPrimary || process.isPrimary === undefined) {
         modLoadingErrors.forEach(function (modLoadingError) {
-          serverconsole.locwarnmessage("There was a problem while loading a \"" + String(modLoadingError.modName).replace(/[\r\n]/g, "") + "\" mod.");
+          serverconsole.locwarnmessage(
+            'There was a problem while loading a "' +
+              String(modLoadingError.modName).replace(/[\r\n]/g, "") +
+              '" mod.',
+          );
           serverconsole.locwarnmessage("Stack:");
-          serverconsole.locwarnmessage(generateErrorStack(modLoadingError.error));
+          serverconsole.locwarnmessage(
+            generateErrorStack(modLoadingError.error),
+          );
         });
         if (SSJSError) {
-          serverconsole.locwarnmessage("There was a problem while loading server-side JavaScript.");
+          serverconsole.locwarnmessage(
+            "There was a problem while loading server-side JavaScript.",
+          );
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(SSJSError));
         }
@@ -975,45 +1084,136 @@ function start(init) {
 
       // Print server information
       serverconsole.locmessage("Server version: " + version);
-      if (process.isBun) serverconsole.locmessage("Bun version: v" + process.versions.bun);
+      if (process.isBun)
+        serverconsole.locmessage("Bun version: v" + process.versions.bun);
       else serverconsole.locmessage("Node.JS version: " + process.version);
       const CPUs = os.cpus();
-      if (CPUs.length > 0) serverconsole.locmessage("CPU: " + (CPUs.length > 1 ? CPUs.length + "x " : "") + CPUs[0].model);
+      if (CPUs.length > 0)
+        serverconsole.locmessage(
+          "CPU: " + (CPUs.length > 1 ? CPUs.length + "x " : "") + CPUs[0].model,
+        );
 
       // Throw errors
-      if (vnum < 64) throw new Error("" + name + " requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by " + name + ".");
-      if (configJSONRErr) throw new Error("Can't read " + name + " configuration file: " + configJSONRErr.message);
-      if (configJSONPErr) throw new Error("" + name + " configuration parse error: " + configJSONPErr.message);
-      if (process.serverConfig.enableHTTP2 && !process.serverConfig.secure && (typeof process.serverConfig.port != "number")) throw new Error("HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by " + name + ".");
-      if (process.serverConfig.enableHTTP2 && http2.__disabled__ !== undefined) throw new Error("HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with " + name + "");
+      if (vnum < 64)
+        throw new Error(
+          "" +
+            name +
+            " requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by " +
+            name +
+            ".",
+        );
+      if (configJSONRErr)
+        throw new Error(
+          "Can't read " +
+            name +
+            " configuration file: " +
+            configJSONRErr.message,
+        );
+      if (configJSONPErr)
+        throw new Error(
+          "" + name + " configuration parse error: " + configJSONPErr.message,
+        );
+      if (
+        process.serverConfig.enableHTTP2 &&
+        !process.serverConfig.secure &&
+        typeof process.serverConfig.port != "number"
+      )
+        throw new Error(
+          "HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by " +
+            name +
+            ".",
+        );
+      if (process.serverConfig.enableHTTP2 && http2.__disabled__ !== undefined)
+        throw new Error(
+          "HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with " +
+            name +
+            "",
+        );
       if (listenAddress) {
-        if (listenAddress.match(/^[0-9]+$/)) throw new Error("Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).");
-        if (listenAddress.match(/^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i)) throw new Error("" + name + " can't listen on multicast address.");
-        if (brdIPs.indexOf(listenAddress) > -1) throw new Error("" + name + " can't listen on broadcast address.");
-        if (netIPs.indexOf(listenAddress) > -1) throw new Error("" + name + " can't listen on subnet address.");
+        if (listenAddress.match(/^[0-9]+$/))
+          throw new Error(
+            "Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).",
+          );
+        if (
+          listenAddress.match(
+            /^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i,
+          )
+        )
+          throw new Error("" + name + " can't listen on multicast address.");
+        if (brdIPs.indexOf(listenAddress) > -1)
+          throw new Error("" + name + " can't listen on broadcast address.");
+        if (netIPs.indexOf(listenAddress) > -1)
+          throw new Error("" + name + " can't listen on subnet address.");
       }
-      if (certificateError) throw new Error("There was a problem with SSL certificate/private key: " + certificateError.message);
-      if (wwwrootError) throw new Error("There was a problem with your web root: " + wwwrootError.message);
-      if (sniReDos) throw new Error("Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.");
+      if (certificateError)
+        throw new Error(
+          "There was a problem with SSL certificate/private key: " +
+            certificateError.message,
+        );
+      if (wwwrootError)
+        throw new Error(
+          "There was a problem with your web root: " + wwwrootError.message,
+        );
+      if (sniReDos)
+        throw new Error(
+          "Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.",
+        );
     }
 
     // Print server startup information
-    if (!(process.serverConfig.secure && disableNonEncryptedServer)) serverconsole.locmessage("Starting HTTP server at " + (typeof process.serverConfig.port == "number" ? (listenAddress ? ((listenAddress.indexOf(":") > -1 ? "[" + listenAddress + "]" : listenAddress)) + ":" : "port ") : "") + process.serverConfig.port.toString() + "...");
-    if (process.serverConfig.secure) serverconsole.locmessage("Starting HTTPS server at " + (typeof process.serverConfig.sport == "number" ? (sListenAddress ? ((sListenAddress.indexOf(":") > -1 ? "[" + sListenAddress + "]" : sListenAddress)) + ":" : "port ") : "") + process.serverConfig.sport.toString() + "...");
+    if (!(process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer))
+      serverconsole.locmessage(
+        "Starting HTTP server at " +
+          (typeof process.serverConfig.port == "number"
+            ? listenAddress
+              ? (listenAddress.indexOf(":") > -1
+                  ? "[" + listenAddress + "]"
+                  : listenAddress) + ":"
+              : "port "
+            : "") +
+          process.serverConfig.port.toString() +
+          "...",
+      );
+    if (process.serverConfig.secure)
+      serverconsole.locmessage(
+        "Starting HTTPS server at " +
+          (typeof process.serverConfig.sport == "number"
+            ? sListenAddress
+              ? (sListenAddress.indexOf(":") > -1
+                  ? "[" + sListenAddress + "]"
+                  : sListenAddress) + ":"
+              : "port "
+            : "") +
+          process.serverConfig.sport.toString() +
+          "...",
+      );
   }
-
 
   if (!cluster.isPrimary) {
     try {
-      if (typeof (process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port) == "number" && (process.serverConfig.secure ? sListenAddress : listenAddress)) {
-        server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port, process.serverConfig.secure ? sListenAddress : listenAddress);
+      if (
+        typeof (process.serverConfig.secure
+          ? process.serverConfig.sport
+          : process.serverConfig.port) == "number" &&
+        (process.serverConfig.secure ? sListenAddress : listenAddress)
+      ) {
+        server.listen(
+          process.serverConfig.secure
+            ? process.serverConfig.sport
+            : process.serverConfig.port,
+          process.serverConfig.secure ? sListenAddress : listenAddress,
+        );
       } else {
-        server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port);
+        server.listen(
+          process.serverConfig.secure
+            ? process.serverConfig.sport
+            : process.serverConfig.port,
+        );
       }
     } catch (err) {
       if (err.code != "ERR_SERVER_ALREADY_LISTEN") throw err;
     }
-    if (process.serverConfig.secure && !disableNonEncryptedServer) {
+    if (process.serverConfig.secure && !process.serverConfig.disableNonEncryptedServer) {
       try {
         if (typeof process.serverConfig.port == "number" && listenAddress) {
           server2.listen(process.serverConfig.port, listenAddress);
@@ -1026,7 +1226,6 @@ function start(init) {
     }
   }
 
-
   // TODO: implement clustering and commands
   /*
   // SVR.JS commmands
@@ -1034,7 +1233,7 @@ function start(init) {
     close: function () {
       try {
         server.close();
-        if (process.serverConfig.secure && !disableNonEncryptedServer) {
+        if (process.serverConfig.secure && !process.serverConfig.disableNonEncryptedServer) {
           server2.close();
         }
         if (cluster.isPrimary === undefined) serverconsole.climessage("Server closed.");
@@ -1054,7 +1253,7 @@ function start(init) {
         } else {
           server.listen(process.serverConfig.secure ? process.serverConfig.sport : process.serverConfig.port);
         }
-        if (process.serverConfig.secure && !disableNonEncryptedServer) {
+        if (process.serverConfig.secure && !process.serverConfig.disableNonEncryptedServer) {
           if (typeof process.serverConfig.port == "number" && listenAddress) {
             server2.listen(process.serverConfig.port, listenAddress);
           } else {
@@ -1431,7 +1630,7 @@ function start(init) {
         setInterval(function () {
           if (!closedMaster && !exiting) {
             var chksocket = {};
-            if (process.serverConfig.secure && disableNonEncryptedServer) {
+            if (process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer) {
               chksocket = https.get({
                 hostname: (typeof process.serverConfig.sport == "number" && sListenAddress) ? sListenAddress : "localhost",
                 port: (typeof process.serverConfig.sport == "number") ? process.serverConfig.sport : undefined,
