@@ -939,7 +939,8 @@ module.exports = (req, res, logFacilities, config, next) => {
       } else {
         res.error(501);
         logFacilities.errmessage(
-          name + " doesn't support block devices, character devices, FIFOs nor sockets.",
+          name +
+            " doesn't support block devices, character devices, FIFOs nor sockets.",
         );
         return;
       }

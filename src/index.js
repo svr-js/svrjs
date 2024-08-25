@@ -53,7 +53,9 @@ for (
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets " + name + " to default settings (WARNING: DANGEROUS)",
+      "--reset               -- Resets " +
+        name +
+        " to default settings (WARNING: DANGEROUS)",
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -98,7 +100,9 @@ for (
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets " + name + " to default settings (WARNING: DANGEROUS)",
+      "--reset               -- Resets " +
+        name +
+        " to default settings (WARNING: DANGEROUS)",
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");

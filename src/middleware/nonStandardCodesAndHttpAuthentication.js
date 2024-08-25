@@ -5,6 +5,8 @@ const ipMatch = require("../utils/ipMatch.js");
 const matchHostname = require("../utils/matchHostname.js");
 const ipBlockList = require("../utils/ipBlockList.js");
 const cluster = require("../utils/clusterBunShim.js");
+const svrjsInfo = require("../../svrjs.json");
+const { name } = svrjsInfo;
 
 // Brute force protection-related
 let bruteForceDb = {};
@@ -175,7 +177,8 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              name + " doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.",
+              name +
+                " doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.",
             ),
           );
           return;
@@ -214,7 +217,8 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              name + " doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.",
+              name +
+                " doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.",
             ),
           );
           return;
@@ -262,7 +266,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           'Basic realm="' +
           (authcode.realm
             ? authcode.realm.replace(/(\\|")/g, "\\$1")
-            : (name + " HTTP Basic Authorization")) +
+            : name + " HTTP Basic Authorization") +
           '", charset="UTF-8"';
         const credentials = req.headers["authorization"];
         if (!credentials) {
