@@ -288,16 +288,15 @@ function clientErrorHandler(err, socket) {
               )
               .replace(
                 /{server}/g,
-                "" +
-                  (
-                    config.generateServerString() +
-                    (!config.exposeModsInErrorPages || extName == undefined
-                      ? ""
-                      : " " + extName)
-                  )
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;"),
+                (
+                  config.generateServerString() +
+                  (!config.exposeModsInErrorPages || extName == undefined
+                    ? ""
+                    : " " + extName)
+                )
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;"),
               )
               .replace(
                 /{contact}/g,
@@ -341,16 +340,15 @@ function clientErrorHandler(err, socket) {
                   )
                   .replace(
                     /{server}/g,
-                    "" +
-                      (
-                        config.generateServerString() +
-                        (!config.exposeModsInErrorPages || extName == undefined
-                          ? ""
-                          : " " + extName)
-                      )
-                        .replace(/&/g, "&amp;")
-                        .replace(/</g, "&lt;")
-                        .replace(/>/g, "&gt;"),
+                    (
+                      config.generateServerString() +
+                      (!config.exposeModsInErrorPages || extName == undefined
+                        ? ""
+                        : " " + extName)
+                    )
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;"),
                   )
                   .replace(
                     /{contact}/g,
@@ -409,10 +407,11 @@ function clientErrorHandler(err, socket) {
                   )
                   .replace(
                     /{server}/g,
-                    (config.generateServerString() +
-                    (config.exposeModsInErrorPages || extName == undefined)
-                      ? ""
-                      : " " + extName
+                    (
+                      config.generateServerString() +
+                      (!config.exposeModsInErrorPages || extName == undefined
+                        ? ""
+                        : " " + extName)
                     )
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
