@@ -12,6 +12,15 @@ try {
   // Don't use inspector
 }
 
+let tar = {};
+try {
+  tar = require("tar");
+} catch (err) {
+  tar = {
+    _errored: err,
+  };
+}
+
 process.dirname = __dirname;
 process.filename = __filename;
 
@@ -121,6 +130,7 @@ if (!fs.existsSync(process.dirname + "/temp"))
   fs.mkdirSync(process.dirname + "/temp");
 
 const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
+const legacyModWrapper = require("./utils/legacyModWrapper.js");
 //const generateErrorStack = require("./utils/generateErrorStack.js");
 //const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 //const getOS = require("./utils/getOS.js");
@@ -316,11 +326,79 @@ if (!disableMods) {
           });
         }
       } else {
-        // TODO: implement SVR.JS 2.x and 3.x mod (.tar.gz extension) support
-        modLoadingErrors.push({
-          error: new Error("This mod is unsupported by " + name + "."),
-          modName: modFileRaw,
-        });
+        try {
+          // Define the modloader folder name
+          let modloaderFolderName = "modloader";
+          if (cluster.isPrimary === false) {
+            // If not the master process, create a unique modloader folder name for each worker
+            modloaderFolderName =
+              ".modloader_w" + Math.floor(Math.random() * 65536);
+          }
+
+          // Determine if the mod file is a ".tar.gz" file or not
+          if (modFile.indexOf(".tar.gz") == modFile.length - 7) {
+            // If it's a ".tar.gz" file, extract its contents using `tar`
+            if (tar._errored) throw tar._errored;
+            tar.x({
+              file: modFile,
+              sync: true,
+              C:
+                process.dirname +
+                "/temp/" +
+                modloaderFolderName +
+                "/" +
+                modFileRaw,
+            });
+          } else {
+            // If it's not a ".tar.gz" file, throw an error about `svrmodpack` support being dropped
+            throw new Error(
+              "This version of " +
+                name +
+                ' no longer supports "svrmodpack" library for SVR.JS mods. Please consider using newer mods with .tar.gz format.',
+            );
+          }
+
+          // Add the mod to the mods list
+          mods.push(
+            legacyModWrapper(
+              require(
+                process.dirname +
+                  "/temp/" +
+                  modloaderFolderName +
+                  "/" +
+                  modFileRaw +
+                  "/index.js",
+              ),
+            ),
+          );
+
+          // Read the mod's info file
+          try {
+            modInfos.push(
+              JSON.parse(
+                fs.readFileSync(
+                  process.dirname +
+                    "/temp/" +
+                    modloaderFolderName +
+                    "/" +
+                    modFileRaw +
+                    "/mod.info",
+                ),
+              ),
+            );
+          } catch (err) {
+            // If failed to read info file, add a placeholder entry to modInfos with an error message
+            modInfos.push({
+              name: "Unknown mod (" + modFileRaw + ";" + err.message + ")",
+              version: "ERROR",
+            });
+          }
+        } catch (err) {
+          modLoadingErrors.push({
+            error: err,
+            modName: modFileRaw,
+          });
+        }
       }
     }
   });
