@@ -702,7 +702,7 @@ if (!disableMods) {
             throw new Error(
               "This version of " +
                 name +
-                ' no longer supports "svrmodpack" library for SVR.JS mods. Please consider using newer mods with .tar.gz format.',
+                ' no longer supports "svrmodpack" library for ' + name + ' mods. Please consider using newer mods with .tar.gz format.',
             );
           }
 
@@ -1383,7 +1383,7 @@ function SVRJSFork() {
     newWorker.on("error", function (err) {
       if (!exiting)
         serverconsole.locwarnmessage(
-          "There was a problem when handling SVR.JS worker! (from master process side) Reason: " +
+          "There was a problem when handling " + name + " worker! (from master process side) Reason: " +
             err.message,
         );
     });
@@ -2329,7 +2329,7 @@ function start(init) {
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   // Crash handler
   function crashHandlerMaster(err) {
-    serverconsole.locerrmessage("SVR.JS main process just crashed!!!");
+    serverconsole.locerrmessage(name + " main process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
       err.stack ? generateErrorStack(err) : String(err),
@@ -2404,7 +2404,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
 } else {
   // Crash handler
   function crashHandler(err) {
-    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
+    serverconsole.locerrmessage(name + " worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
       err.stack ? generateErrorStack(err) : String(err),
@@ -2429,7 +2429,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
 try {
   start(true);
 } catch (err) {
-  serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
+  serverconsole.locerrmessage("There was a problem starting " + name + "!!!");
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
   setTimeout(function () {
