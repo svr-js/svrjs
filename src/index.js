@@ -2253,4 +2253,14 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
 }
 
-start(true);
+// Start SVR.JS!
+try {
+  start(true);
+} catch (err) {
+  serverconsole.locerrmessage("There was a problem starting SVR.JS!!!");
+  serverconsole.locerrmessage("Stack:");
+  serverconsole.locerrmessage(generateErrorStack(err));
+  setTimeout(function () {
+    process.exit(err.errno !== undefined ? err.errno : 1);
+  }, 10);
+}
