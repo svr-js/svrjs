@@ -232,7 +232,6 @@ if (fs.existsSync(__dirname + "/config.json")) {
   }
 }
 
-// TODO: configuration from config.json
 if (process.serverConfig.users === undefined) process.serverConfig.users = [];
 if (process.serverConfig.secure === undefined)
   process.serverConfig.secure = false;
