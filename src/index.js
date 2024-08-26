@@ -7,7 +7,7 @@ const logo = require("./res/logo.js");
 const generateServerString = require("./utils/generateServerString.js");
 const deleteFolderRecursive = require("./utils/deleteFolderRecursive.js");
 const svrjsInfo = require("../svrjs.json");
-const { name, version, statisticsServerCollectEndpoint } = svrjsInfo;
+const { name, version } = svrjsInfo;
 
 let inspector = undefined;
 try {
@@ -211,6 +211,7 @@ const {
   calculateNetworkIPv4FromCidr,
   calculateBroadcastIPv4FromCidr,
 } = require("./utils/ipSubnetUtils.js");
+const sendStatistics = require("./utils/sendStatistics.js");
 
 process.serverConfig = {};
 let configJSONRErr = undefined;
@@ -990,59 +991,13 @@ function listeningMessage() {
           "Sending data to statistics server is disabled, because the server only supports HTTPS, and your Node.JS version doesn't have crypto support.",
         );
       } else {
-        const statisticsToSend = JSON.stringify({
-          version: version,
-          runtime: process.isBun ? "Bun" : "Node.js",
-          runtimeVersion: process.isBun
-            ? process.versions.bun
-            : process.version,
-          mods: modInfos,
+        sendStatistics(modInfos, (err) => {
+          if (err)
+            serverconsole.locwarnmessage(
+              "There was a problem, when sending data to statistics server! Reason: " +
+                err.message,
+            );
         });
-        const statisticsRequest = https.request(
-          statisticsServerCollectEndpoint,
-          {
-            method: "POST",
-            headers: {
-              "User-Agent": generateServerString(true),
-              "Content-Type": "application/json",
-              "Content-Length": Buffer.byteLength(statisticsToSend),
-            },
-          },
-          (res) => {
-            const statusCode = res.statusCode;
-            let data = "";
-            res.on("data", (chunk) => {
-              data += chunk.toString();
-            });
-            res.on("end", () => {
-              try {
-                let parsedJson = {};
-                try {
-                  parsedJson = JSON.parse(data);
-                } catch (err) {
-                  throw new Error(
-                    "JSON parse error (response parsing failed).",
-                  );
-                }
-                if (parsedJson.status != statusCode)
-                  throw new Error("Status code mismatch");
-                if (statusCode != 200) throw new Error(parsedJson.message);
-              } catch (err) {
-                serverconsole.locwarnmessage(
-                  "There was a problem, when sending data to statistics server! Reason: " +
-                    err.message,
-                );
-              }
-            });
-          },
-        );
-        statisticsRequest.on("error", (err) => {
-          serverconsole.locwarnmessage(
-            "There was a problem, when sending data to statistics server! Reason: " +
-              err.message,
-          );
-        });
-        statisticsRequest.end(statisticsToSend);
       }
     }
   });
