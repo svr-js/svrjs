@@ -1702,6 +1702,8 @@ function start(init) {
             } else {
               reqcounterKillReq = process.reqcounter;
             }
+          } else if (message[0] == "\x14") {
+            // Discard unrecognized control messages
           } else if (
             commands[line.split(" ")[0]] !== undefined &&
             commands[line.split(" ")[0]] !== null
