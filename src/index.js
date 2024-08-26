@@ -215,10 +215,10 @@ const {
 process.serverConfig = {};
 let configJSONRErr = undefined;
 let configJSONPErr = undefined;
-if (fs.existsSync(__dirname + "/config.json")) {
+if (fs.existsSync(process.dirname + "/config.json")) {
   let configJSONf = "";
   try {
-    configJSONf = fs.readFileSync(__dirname + "/config.json"); // Read JSON File
+    configJSONf = fs.readFileSync(process.dirname + "/config.json"); // Read JSON File
     try {
       process.serverConfig = JSON.parse(configJSONf); // Parse JSON
     } catch (err2) {
