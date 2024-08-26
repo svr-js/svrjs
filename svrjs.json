@@ -1,5 +1,6 @@
 {
   "version": "Nightly-GitNext",
   "name": "SVR.JS",
-  "documentationURL": "https://svrjs.org/docs"
+  "documentationURL": "https://svrjs.org/docs",
+  "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr"
 }

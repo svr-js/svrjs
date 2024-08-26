@@ -1,12 +1,13 @@
 const http = require("http");
 const fs = require("fs");
 const os = require("os");
+const dns = require("dns");
 const readline = require("readline");
 const logo = require("./res/logo.js");
 const generateServerString = require("./utils/generateServerString.js");
 const deleteFolderRecursive = require("./utils/deleteFolderRecursive.js");
 const svrjsInfo = require("../svrjs.json");
-const { name, version } = svrjsInfo;
+const { name, version, statisticsServerCollectEndpoint } = svrjsInfo;
 
 let inspector = undefined;
 try {
@@ -460,7 +461,103 @@ if (ips.length == 0) {
 var host = ips[ips.length - 1];
 if (!host) host = "[offline]";
 
-// TODO: Public IP address-related
+// Public IP address-related
+let ipRequestCompleted = false;
+let ipRequestGotError = false;
+let domain = process.serverConfig.domain ? process.serverConfig.domain : "";
+let pubip = "";
+
+function doIpRequest(isHTTPS, options) {
+  const ipRequest = (isHTTPS ? https : http).get(options, (res) => {
+    ipRequest.removeAllListeners("timeout");
+    res.on("data", function (d) {
+      if (res.statusCode != 200) {
+        ipRequestCompleted = true;
+        process.emit("ipRequestCompleted");
+        return;
+      }
+      pubip = d.toString();
+      if (domain) {
+        ipRequestCompleted = true;
+        process.emit("ipRequestCompleted");
+      } else {
+        let callbackDone = false;
+
+        const dnsTimeout = setTimeout(function () {
+          callbackDone = true;
+          ipRequestCompleted = true;
+          process.emit("ipRequestCompleted");
+        }, 3000);
+
+        try {
+          dns.reverse(pubip, function (err, hostnames) {
+            if (callbackDone) return;
+            clearTimeout(dnsTimeout);
+            if (!err && hostnames.length > 0) domain = hostnames[0];
+            ipRequestCompleted = true;
+            process.emit("ipRequestCompleted");
+          });
+        } catch (err) {
+          clearTimeout(dnsTimeout);
+          callbackDone = true;
+          ipRequestCompleted = true;
+          process.emit("ipRequestCompleted");
+        }
+      }
+    });
+  });
+  ipRequest.on("error", function () {
+    if (crypto.__disabled__ || ipRequestGotError) {
+      ipRequestCompleted = true;
+      process.emit("ipRequestCompleted");
+    } else {
+      ipRequestGotError = true;
+    }
+  });
+  ipRequest.on("timeout", function () {
+    if (crypto.__disabled__ || ipRequestGotError) {
+      ipRequestCompleted = true;
+      process.emit("ipRequestCompleted");
+    } else {
+      ipRequestGotError = true;
+    }
+  });
+  return ipRequest;
+}
+
+if (host != "[offline]" || ifaceEx) {
+  const ipRequest = doIpRequest(crypto.__disabled__ === undefined, {
+    host: "api64.ipify.org",
+    port: (crypto.__disabled__ !== undefined ? 80 : 443),
+    path: "/",
+    headers: {
+      "User-Agent": generateServerString(true)
+    },
+    timeout: 5000
+  });
+
+  if (crypto.__disabled__ === undefined) {
+    const ipRequest2 = doIpRequest(true, {
+      host: "api.seeip.org",
+      port: 443,
+      path: "/",
+      headers: {
+        "User-Agent": generateServerString(true)
+      },
+      timeout: 5000
+    });
+  }
+} else {
+  ipRequestCompleted = true;
+}
+
+function ipStatusCallback(callback) {
+  if (ipRequestCompleted) {
+    callback();
+  } else {
+    process.once("ipRequestCompleted", callback);
+  }
+}
 
 // SSL-related
 let key = "";
@@ -745,13 +842,99 @@ const serverErrorHandler = require("./handlers/serverErrorHandler.js")(
   serverconsole,
 );
 
+let messageTransmitted = false;
+
 function listeningMessage() {
   closedMaster = false;
   if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
     process.send("\x12LISTEN");
     return;
   }
-  // TODO: listeningMessage()
+  const listenToLocalhost = (listenAddress && (listenAddress == "localhost" || listenAddress.match(/^127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || listenAddress.match(/^(?:0{0,4}:)+0{0,3}1$/)));
+  const listenToAny = (!listenAddress || listenAddress.match(/^0{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || listenAddress.match(/^(?:0{0,4}:)+0{0,4}$/));
+  const sListenToLocalhost = (sListenAddress && (sListenAddress == "localhost" || sListenAddress.match(/^127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || sListenAddress.match(/^(?:0{0,4}:)+0{0,3}1$/)));
+  const sListenToAny = (!sListenAddress || sListenAddress.match(/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/) || sListenAddress.match(/^(?:0{0,4}:)+0{0,4}$/));
+  let accHost = host;
+  let sAccHost = host;
+  if (!listenToAny) accHost = listenAddress;
+  if (!sListenToAny) sAccHost = sListenAddress;
+  if (messageTransmitted) return;
+  messageTransmitted = true;
+  serverconsole.locmessage("Started server at: ");
+  if (process.serverConfig.secure && (sListenToLocalhost || sListenToAny)) {
+    if (typeof process.serverConfig.sport === "number") {
+      serverconsole.locmessage("* https://localhost" + (process.serverConfig.sport == 443 ? "" : (":" + process.serverConfig.sport)));
+    } else {
+      serverconsole.locmessage("* " + process.serverConfig.sport); // Unix socket or Windows named pipe
+    }
+  }
+  if (!(process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer) && (listenToLocalhost || listenToAny)) {
+    if (typeof process.serverConfig.port === "number") {
+      serverconsole.locmessage("* http://localhost" + (process.serverConfig.port == 80 ? "" : (":" + process.serverConfig.port)));
+    } else {
+      serverconsole.locmessage("* " + process.serverConfig.port); // Unix socket or Windows named pipe
+    }
+  }
+  if (process.serverConfig.secure && typeof process.serverConfig.sport === "number" && !sListenToLocalhost && (!sListenToAny || (host != "" && host != "[offline]"))) serverconsole.locmessage("* https://" + (sAccHost.indexOf(":") > -1 ? "[" + sAccHost + "]" : sAccHost) + (process.serverConfig.sport == 443 ? "" : (":" + process.serverConfig.sport)));
+  if (!(process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer) && !listenToLocalhost && (!listenToAny || (host != "" && host != "[offline]")) && typeof process.serverConfig.port === "number") serverconsole.locmessage("* http://" + (accHost.indexOf(":") > -1 ? "[" + accHost + "]" : accHost) + (process.serverConfig.port == 80 ? "" : (":" + process.serverConfig.port)));
+  ipStatusCallback(() => {
+    if (pubip != "") {
+      if (process.serverConfig.secure && !sListenToLocalhost) serverconsole.locmessage("* https://" + (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) + (process.serverConfig.spubport == 443 ? "" : (":" + process.serverConfig.spubport)));
+      if (!(process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer) && !listenToLocalhost) serverconsole.locmessage("* http://" + (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) + (process.serverConfig.pubport == 80 ? "" : (":" + process.serverConfig.pubport)));
+    }
+    if (domain != "") {
+      if (process.serverConfig.secure && !sListenToLocalhost) serverconsole.locmessage("* https://" + domain + (spubport == 443 ? "" : (":" + spubport)));
+      if (!(process.serverConfig.secure && process.serverConfig.disableNonEncryptedServer) && !listenToLocalhost) serverconsole.locmessage("* http://" + domain + (process.serverConfig.pubport == 80 ? "" : (":" + process.serverConfig.pubport)));
+    }
+    serverconsole.locmessage("For CLI help, you can type \"help\"");
+
+    // Code for sending data to a statistics server
+    // TODO: uncomment this
+    /*if (!optOutOfStatisticsServer) {
+      if (crypto.__disabled__ !== undefined) {
+        serverconsole.locwarnmessage("Sending data to statistics server is disabled, because the server only supports HTTPS, and your Node.JS version doesn't have crypto support.");
+      } else {
+        const statisticsToSend = JSON.stringify({
+          version: version,
+          runtime: process.isBun ? "Bun" : "Node.js",
+          runtimeVersion: process.isBun ? process.versions.bun : process.version,
+          mods: modInfos
+        });
+        const statisticsRequest = https.request(statisticsServerCollectEndpoint, {
+          method: "POST",
+          headers: {
+            "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS"),
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(statisticsToSend)
+          }
+        }, function (res) {
+          const statusCode = res.statusCode;
+          let data = "";
+          res.on("data", function (chunk) {
+            data += chunk.toString();
+          });
+          res.on("end", function () {
+            try {
+              let parsedJson = {};
+              try {
+                parsedJson = JSON.parse(data);
+              } catch (err) {
+                throw new Error("JSON parse error (response parsing failed).");
+              }
+              if (parsedJson.status != statusCode) throw new Error("Status code mismatch");
+              if (statusCode != 200) throw new Error(parsedJson.message);
+            } catch (err) {
+              serverconsole.locwarnmessage("There was a problem, when sending data to statistics server! Reason: " + err.message);
+            }
+          });
+        });
+        statisticsRequest.on("error", function (err) {
+          serverconsole.locwarnmessage("There was a problem, when sending data to statistics server! Reason: " + err.message);
+        });
+        statisticsRequest.end(statisticsToSend);
+      }
+    }*/
+  });
 }
 
 let reqcounterKillReq = 0;
