@@ -97,9 +97,7 @@ try {
   // Don't use hexstrbase64
 }
 
-// TODO: after implementing clustering in new SVR.JS
 process.singleThreaded = false;
-//process.singleThreaded = true;
 
 process.err4xxcounter = 0;
 process.err5xxcounter = 0;
