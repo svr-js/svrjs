@@ -1,5 +1,5 @@
 const generateServerString = require("./generateServerString.js");
-const svrjsInfo = require("../svrjs.json");
+const svrjsInfo = require("../../svrjs.json");
 const { version, statisticsServerCollectEndpoint } = svrjsInfo;
 
 let crypto = {
