@@ -49,7 +49,7 @@ function factoryReset() {
   deleteFolderRecursive(__dirname + "/temp");
   fs.mkdirSync(__dirname + "/temp");
   console.log("Removing configuration file...");
-  fs.unlinkSync("config.json");
+  fs.unlinkSync(__dirname + "/config.json");
   console.log("Done!");
   process.exit(0);
 }
@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.17";
+var version = "3.14.18";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -547,7 +547,7 @@ function ipMatch(IP1, IP2) {
 
   // Function to normalize IPv4 address (remove leading zeros)
   function normalizeIPv4Address(address) {
-    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "");
+    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
   }
 
   // Function to expand IPv6 address to full format
@@ -730,7 +730,7 @@ function ipBlockList(rawBlockList) {
     var ips = ip.split(":");
     var ip2s = [];
     ips.forEach(function (ipe) {
-      ip2s.push(parseInt(ipe));
+      ip2s.push(parseInt(ipe, 16));
     });
     return ip2s;
   }
@@ -764,9 +764,9 @@ function ipBlockList(rawBlockList) {
   function checkIfIPv6CIDRMatches(ipBlock, cidrObject) {
     if (!cidrObject.v6) return false;
     for (var i = 0; i < 8; i++) {
-      if (ipBlock[i] < cidrObject.min[i] || ipBlock[i] > cidrObject.max[i]) return true;
+      if (ipBlock[i] < cidrObject.min[i] || ipBlock[i] > cidrObject.max[i]) return false;
     }
-    return false;
+    return true;
   }
 
   // Function to add an IP or CIDR block to the block list
@@ -1082,7 +1082,7 @@ if (host != "[offline]" || ifaceEx) {
     }
   });
 
-  if (!crypto.__disabled) {
+  if (crypto.__disabled__ === undefined) {
     var ipRequest2 = https.get({
       host: "api.seeip.org",
       port: 443,
@@ -1171,7 +1171,7 @@ if (fs.existsSync(__dirname + "/config.json")) {
       configJSONPErr = err2;
     }
   } catch (err) {
-    configJSONRErr = err2;
+    configJSONRErr = err;
   }
 }
 
@@ -5700,14 +5700,14 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(generateErrorStack(err));
-    process.exit(err.errno);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   });
   process.on("unhandledRejection", function (err) {
     // CRASH HANDLER
     serverconsole.locerrmessage("SVR.JS master process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
-    process.exit(err.errno);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   });
   process.on("exit", function (code) {
     try {
@@ -5767,7 +5767,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
-    process.exit(err.errno);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }
 
   process.on("uncaughtException", crashHandler);
@@ -5791,6 +5791,6 @@ try {
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
   setTimeout(function () {
-    process.exit(err.errno ? err.errno : 1);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }, 10);
 }
