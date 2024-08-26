@@ -76,6 +76,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   let origHref = req.originalParsedURL.pathname;
   let ext = href.match(/[^\/]\.([^.]+)$/);
   if (!ext) ext = "";
+  else ext = ext[1].toLowerCase();
   let dHref = "";
   try {
     dHref = decodeURIComponent(href);
