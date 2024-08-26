@@ -889,8 +889,7 @@ function listeningMessage() {
     serverconsole.locmessage("For CLI help, you can type \"help\"");
 
     // Code for sending data to a statistics server
-    // TODO: uncomment this
-    /*if (!optOutOfStatisticsServer) {
+    if (!process.serverConfig.optOutOfStatisticsServer) {
       if (crypto.__disabled__ !== undefined) {
         serverconsole.locwarnmessage("Sending data to statistics server is disabled, because the server only supports HTTPS, and your Node.JS version doesn't have crypto support.");
       } else {
@@ -903,7 +902,7 @@ function listeningMessage() {
         const statisticsRequest = https.request(statisticsServerCollectEndpoint, {
           method: "POST",
           headers: {
-            "User-Agent": (exposeServerVersion ? "SVR.JS/" + version + " (" + getOS() + "; " + (process.isBun ? ("Bun/v" + process.versions.bun + "; like Node.JS/" + process.version) : ("Node.JS/" + process.version)) + ")" : "SVR.JS"),
+            "User-Agent": generateServerString(true),
             "Content-Type": "application/json",
             "Content-Length": Buffer.byteLength(statisticsToSend)
           }
@@ -933,7 +932,7 @@ function listeningMessage() {
         });
         statisticsRequest.end(statisticsToSend);
       }
-    }*/
+    }
   });
 }
 
