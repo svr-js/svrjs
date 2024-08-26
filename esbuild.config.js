@@ -124,19 +124,12 @@ fs.writeFileSync(__dirname + "/generatedAssets/licenses/index.html", licensesPag
 
 // Bundle the source and copy the assets using esbuild and esbuild-plugin-copy
 esbuild.build({
-  entryPoints: ["src/index.js"], // Your entry file
+  entryPoints: ["src/index.js"],
   bundle: true,
-  outfile: "dist/svr.js", // Output file
+  outfile: "dist/svr.js",
   platform: "node",
   target: "es2017",
   plugins: [
-    esbuildCopyPlugin.copy({
-      resolveFrom: __dirname,
-      assets: {
-        from: ["./utils/**/*"],
-        to: ["./dist"],
-      }
-    }),
     esbuildCopyPlugin.copy({
       resolveFrom: __dirname,
       assets: {
@@ -156,14 +149,31 @@ esbuild.build({
     })
   ],
 }).then(() => {
-  const archiveName = "svr.js." + version.toLowerCase().replace(/[^0-9a-z]+/g,".") + ".zip";
-  const output = fs.createWriteStream(__dirname + "/out/" + archiveName);
-  const archive = archiver("zip", {
-    zlib: { level: 9 } // Sets the compression level.
-  });
-  archive.pipe(output);
-  archive.directory("dist/", false);
-  archive.finalize();
+  const utilFilesAndDirectories = fs.existsSync(__dirname + "/utils") ? fs.readdirSync(__dirname + "/utils") : [];
+  const utilFiles = [];
+  utilFilesAndDirectories.forEach((entry) => {
+    if (fs.statSync(__dirname + "/utils/" + entry).isFile()) utilFiles.push(entry);
+  })
+
+  // Transpile utilities using esbuild
+  esbuild.build({
+    entryPoints: [utilFiles.map((filename) => "utils/" + filename)],
+    bundle: false,
+    outdir: "dist",
+    platform: "node",
+    target: "es2017",
+  }).then(() => {
+    const archiveName = "svr.js." + version.toLowerCase().replace(/[^0-9a-z]+/g,".") + ".zip";
+    const output = fs.createWriteStream(__dirname + "/out/" + archiveName);
+    const archive = archiver("zip", {
+      zlib: { level: 9 } // Sets the compression level.
+    });
+    archive.pipe(output);
+    archive.directory("dist/", false);
+    archive.finalize();
+  }).catch((err) => {
+    throw err;
+  })
 }).catch((err) => {
   throw err;
 });

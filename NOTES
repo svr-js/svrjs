@@ -1,2 +1,0 @@
-In the src folder, you can use any version - it will be transpiled to ES2017 by esbuild.
-But in the utils folder, you have to use at most ES2017, because it is not transpiled.
