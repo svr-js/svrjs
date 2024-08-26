@@ -406,14 +406,10 @@ module.exports = (req, res, logFacilities, config, next) => {
         logFacilities.errmessage("Brute force limit reached!");
       }
     } else {
-      var listenerEmitted = false;
-
       // Listen for brute-force protection response
       const authMessageListener = (message) => {
-        if (listenerEmitted) return;
         if (message == "\x14AUTHA" + reqip || message == "\x14AUTHD" + reqip) {
           process.removeListener("message", authMessageListener);
-          listenerEmitted = true;
         }
         if (message == "\x14AUTHD" + reqip) {
           res.error(429);
