@@ -522,7 +522,7 @@ function doIpRequest(isHTTPS, options) {
 }
 
 if (host != "[offline]" || ifaceEx) {
-  const ipRequest = doIpRequest(crypto.__disabled__ === undefined, {
+  doIpRequest(crypto.__disabled__ === undefined, {
     host: "api64.ipify.org",
     port: crypto.__disabled__ !== undefined ? 80 : 443,
     path: "/",
@@ -533,7 +533,7 @@ if (host != "[offline]" || ifaceEx) {
   });
 
   if (crypto.__disabled__ === undefined) {
-    const ipRequest2 = doIpRequest(true, {
+    doIpRequest(true, {
       host: "api.seeip.org",
       port: 443,
       path: "/",
