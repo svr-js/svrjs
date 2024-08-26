@@ -2078,10 +2078,9 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
 
   process.on("exit", function (code) {
     try {
-      // TODO: saveConfig function
-      /*if (!configJSONRErr && !configJSONPErr) {
+      if (!configJSONRErr && !configJSONPErr) {
         saveConfig();
-      }*/
+      }
     } catch (err) {
       serverconsole.locwarnmessage(
         "There was a problem while saving configuration file. Reason: " +
