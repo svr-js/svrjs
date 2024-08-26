@@ -1,6 +1,7 @@
 const esbuild = require("esbuild");
 const esbuildCopyPlugin = require("esbuild-plugin-copy");
 const fs = require("fs");
+const zlib = require("zlib");
 const ejs = require("ejs");
 const archiver = require("archiver");
 const dependencies = JSON.parse(fs.readFileSync(__dirname + "/package.json")).dependencies || {};
@@ -157,7 +158,7 @@ esbuild.build({
 
   // Transpile utilities using esbuild
   esbuild.build({
-    entryPoints: [utilFiles.map((filename) => "utils/" + filename)],
+    entryPoints: utilFiles.map((filename) => "utils/" + filename),
     bundle: false,
     outdir: "dist",
     platform: "node",
@@ -169,7 +170,12 @@ esbuild.build({
       zlib: { level: 9 } // Sets the compression level.
     });
     archive.pipe(output);
-    archive.directory("dist/", false);
+    archive.directory(__dirname + "/dist/", false);
+    const compressedSVRJSFileStream = fs.createReadStream(__dirname + "/dist/svr.js").pipe(zlib.createGzip({
+      level: 9
+    }));
+    archive.append(compressedSVRJSFileStream, { name: "svr.compressed" });
+    archive.append('const zlib = require("zlib");\nconst fs = require("fs");\nconst tar = require("tar");\nconsole.log("Deleting SVR.JS stub...");\nfs.unlinkSync("svr.js");\nconsole.log("Decompressing SVR.JS...");\nconst script = zlib.gunzipSync(fs.readFileSync("svr.compressed"));\nfs.unlinkSync("svr.compressed");\nfs.writeFileSync("svr.js",script);\nconsole.log("Restart SVR.JS to get server interface.");', {name: "svr.js"});
     archive.finalize();
   }).catch((err) => {
     throw err;
