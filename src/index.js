@@ -2144,15 +2144,6 @@ function start(init) {
   }
 }
 
-modLoadingErrors.forEach((modLoadingError) => {
-  console.log('Error while loading "' + modLoadingError.modName + '" mod:');
-  console.log(modLoadingError.error);
-});
-if (SSJSError) {
-  console.log("Error while loading server-side JavaScript:");
-  console.log(SSJSError);
-}
-
 // Process event listeners
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   // Crash handler
