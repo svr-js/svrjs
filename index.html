@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>SVR.JS 3.15.6</title>
+    <title>SVR.JS 3.15.7</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="UTF-8" />
     <style>
@@ -76,7 +76,7 @@
     </style>
   </head>
   <body>
-    <h1>Welcome to SVR.JS 3.15.6</h1>
+    <h1>Welcome to SVR.JS 3.15.7</h1>
     <br />
     <img src="/logo.png" style="width: 224px; max-width: 100%;" />
     <br />
@@ -149,8 +149,16 @@
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
-      <li>Added new config.json property - optOutOfStatisticsServer.</li>
-      <li>Implemented sending data to the statistics server, so that SVR.JS can measure the popularity of the web server.</li>
+      <li>Fix bug in getting public IP address without crypto support.</li>
+      <li>Fix bug in partial content serving functionality.</li>
+      <li>Fix bug in the factory reset function.</li>
+      <li>Fix bug in the IP address match function.</li>
+      <li>Fix bug in the URL parser with href attribute of a parsed URL missing a port number.</li>
+      <li>Fix bug with config.json read errors being undefined.</li>
+      <li>Fix bugs in the block list.</li>
+      <li>Main process crashes no longer display as worker crashes.</li>
+      <li>Server crashes now results in exit code of 1 if no exit code is not specified.</li>
+      <li>Updated dependencies.</li>
     </ul>
     <p>
       <a href="/tests.html">Tests</a><br />

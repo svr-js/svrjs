@@ -49,7 +49,7 @@ function factoryReset() {
   deleteFolderRecursive(__dirname + "/temp");
   fs.mkdirSync(__dirname + "/temp");
   console.log("Removing configuration file...");
-  fs.unlinkSync("config.json");
+  fs.unlinkSync(__dirname + "/config.json");
   console.log("Done!");
   process.exit(0);
 }
@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.15.6";
+var version = "3.15.7";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -547,7 +547,7 @@ function ipMatch(IP1, IP2) {
 
   // Function to normalize IPv4 address (remove leading zeros)
   function normalizeIPv4Address(address) {
-    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "");
+    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
   }
 
   // Function to expand IPv6 address to full format
@@ -730,7 +730,7 @@ function ipBlockList(rawBlockList) {
     var ips = ip.split(":");
     var ip2s = [];
     ips.forEach(function (ipe) {
-      ip2s.push(parseInt(ipe));
+      ip2s.push(parseInt(ipe, 16));
     });
     return ip2s;
   }
@@ -764,9 +764,9 @@ function ipBlockList(rawBlockList) {
   function checkIfIPv6CIDRMatches(ipBlock, cidrObject) {
     if (!cidrObject.v6) return false;
     for (var i = 0; i < 8; i++) {
-      if (ipBlock[i] < cidrObject.min[i] || ipBlock[i] > cidrObject.max[i]) return true;
+      if (ipBlock[i] < cidrObject.min[i] || ipBlock[i] > cidrObject.max[i]) return false;
     }
-    return false;
+    return true;
   }
 
   // Function to add an IP or CIDR block to the block list
@@ -1082,7 +1082,7 @@ if (host != "[offline]" || ifaceEx) {
     }
   });
 
-  if (!crypto.__disabled) {
+  if (crypto.__disabled__ === undefined) {
     var ipRequest2 = https.get({
       host: "api.seeip.org",
       port: 443,
@@ -1171,7 +1171,7 @@ if (fs.existsSync(__dirname + "/config.json")) {
       configJSONPErr = err2;
     }
   } catch (err) {
-    configJSONRErr = err2;
+    configJSONRErr = err;
   }
 }
 
@@ -1418,7 +1418,7 @@ function parseURL(uri, prepend) {
   }
   if (parsedURI[8]) uobject.hash = parsedURI[8];
   if (uobject.pathname) uobject.path = uobject.pathname + (uobject.search ? uobject.search : "");
-  uobject.href = (uobject.protocol ? (uobject.protocol + (uobject.slashes ? "//" : "")) : "") + (uobject.auth ? (uobject.auth + "@") : "") + (uobject.hostname ? uobject.hostname : "") + (uobject.path ? uobject.path : "") + (uobject.hash ? uobject.hash : "");
+  uobject.href = (uobject.protocol ? (uobject.protocol + (uobject.slashes ? "//" : "")) : "") + (uobject.auth ? (uobject.auth + "@") : "") + (uobject.hostname ? uobject.hostname : "") + (uobject.port ? ":" + uobject.port : "") + (uobject.path ? uobject.path : "") + (uobject.hash ? uobject.hash : "");
 
   return uobject;
 }
@@ -3693,11 +3693,11 @@ if (!cluster.isPrimary) {
 
                   if (req.method != "HEAD") {
                     if (ext == "html" && begin < head.length && (end - begin) < head.length) {
-                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.writeHead(206, http.STATUS_CODES[206], rhd);
                       res.end(head.substring(begin, end + 1));
                       return;
                     } else if (ext == "html" && begin >= head.length + filelen){
-                      res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                      res.writeHead(206, http.STATUS_CODES[206], rhd);
                       res.end(foot.substring(begin - head.length - filelen, end - head.length - filelen + 1));
                       return;
                     }
@@ -3738,7 +3738,7 @@ if (!cluster.isPrimary) {
                               end: !(foot.length > 0 && end > head.length + filelen)
                             });
                           }
-                          res.writeHead(206, http.STATUS_CODES[206], hdhds);
+                          res.writeHead(206, http.STATUS_CODES[206], rhd);
                           if (head.length == 0 || begin > head.length) {
                             afterWriteCallback();
                           } else if (!res.write(head.substring(begin, head.length - begin))) {
@@ -5856,10 +5856,10 @@ function saveConfig() {
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   // Crash handler
   function crashHandlerMaster(err) {
-    serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
+    serverconsole.locerrmessage("SVR.JS main process just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
-    process.exit(err.errno);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }
 
   process.on("uncaughtException", crashHandlerMaster);
@@ -5923,7 +5923,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     serverconsole.locerrmessage("SVR.JS worker just crashed!!!");
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(err.stack ? generateErrorStack(err) : String(err));
-    process.exit(err.errno);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }
 
   process.on("uncaughtException", crashHandler);
@@ -5947,6 +5947,6 @@ try {
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
   setTimeout(function () {
-    process.exit(err.errno ? err.errno : 1);
+    process.exit(err.errno !== undefined ? err.errno : 1);
   }, 10);
 }
