@@ -1008,13 +1008,13 @@ function listeningMessage() {
               "Content-Length": Buffer.byteLength(statisticsToSend),
             },
           },
-          function (res) {
+          (res) => {
             const statusCode = res.statusCode;
             let data = "";
-            res.on("data", function (chunk) {
+            res.on("data", (chunk) => {
               data += chunk.toString();
             });
-            res.on("end", function () {
+            res.on("end", () => {
               try {
                 let parsedJson = {};
                 try {
@@ -1036,7 +1036,7 @@ function listeningMessage() {
             });
           },
         );
-        statisticsRequest.on("error", function (err) {
+        statisticsRequest.on("error", (err) => {
           serverconsole.locwarnmessage(
             "There was a problem, when sending data to statistics server! Reason: " +
               err.message,
