@@ -67,11 +67,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     hostname = hostname.join(":");
     if (hostname == config.domain && hostname.indexOf("www.") != 0) {
       res.redirect(
-        (req.socket.encrypted ? "https" : "http") +
-          "://www." +
-          hostname +
-          (hostport ? ":" + hostport : "") +
-          req.url.replace(/\/+/g, "/"),
+        `${req.socket.encrypted ? "https" : "http"}://www.${hostname}${hostport ? ":" + hostport : ""}${req.url.replace(/\/+/g, "/")}`,
       );
       return;
     }

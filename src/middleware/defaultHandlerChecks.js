@@ -9,29 +9,21 @@ module.exports = (req, res, logFacilities, config, next) => {
     eheaders["Content-Type"] = "text/html; charset=utf-8";
     res.writeHead(501, http.STATUS_CODES[501], eheaders);
     res.write(
-      '<!DOCTYPE html><html><head><title>Proxy not implemented</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>' +
-        defaultPageCSS +
-        "</style></head><body><h1>Proxy not implemented</h1><p>" +
-        name
+      `<!DOCTYPE html><html><head><title>Proxy not implemented</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>Proxy not implemented</h1><p>${name
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")} doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use ${name
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;") +
-        " doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use " +
-        name
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;") +
-        " as a proxy.</p><p><i>" +
-        config
-          .generateServerString()
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;") +
-        "</i></p></body></html>",
+          .replace(/>/g, "&gt;")} as a proxy.</p><p><i>${config
+            .generateServerString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")}</i></p></body></html>`,
     );
     res.end();
     logFacilities.errmessage(
-      name + " doesn't support proxy without proxy mod.",
+      `${name} doesn't support proxy without proxy mod.`,
     );
     return;
   }

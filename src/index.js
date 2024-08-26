@@ -658,9 +658,7 @@ if (!disableMods) {
           else {
             modInfos.push({
               name:
-                "Unknown mod (" +
-                modFileRaw +
-                "; module.exports.modInfo not set)",
+                `Unknown mod (${modFileRaw}; module.exports.modInfo not set)`,
               version: "ERROR",
             });
           }
@@ -736,7 +734,7 @@ if (!disableMods) {
           } catch (err) {
             // If failed to read info file, add a placeholder entry to modInfos with an error message
             modInfos.push({
-              name: "Unknown mod (" + modFileRaw + ";" + err.message + ")",
+              name: `Unknown mod (${modFileRaw}; ${err.message})`,
               version: "ERROR",
             });
           }
@@ -775,14 +773,11 @@ if (!disableMods) {
     try {
       // Prepend necessary modules and variables to the custom server side script
       const modhead =
-        "var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n" +
-        (hexstrbase64 === undefined
+        `var readline = require('readline');\r\nvar os = require('os');\r\nvar http = require('http');\r\nvar url = require('url');\r\nvar fs = require('fs');\r\nvar path = require('path');\r\n${hexstrbase64 === undefined
           ? ""
-          : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n") +
-        (crypto.__disabled__ === undefined
-          ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n"
-          : "") +
-        'var stream = require(\'stream\');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n';
+          : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n"}${crypto.__disabled__ === undefined
+            ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n"
+            : ""}var stream = require(\'stream\');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
       const modfoot =
         "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
@@ -877,10 +872,9 @@ function listeningMessage() {
   if (process.serverConfig.secure && (sListenToLocalhost || sListenToAny)) {
     if (typeof process.serverConfig.sport === "number") {
       serverconsole.locmessage(
-        "* https://localhost" +
-          (process.serverConfig.sport == 443
-            ? ""
-            : ":" + process.serverConfig.sport),
+        `* https://localhost${process.serverConfig.sport == 443
+          ? ""
+          : ":" + process.serverConfig.sport}`,
       );
     } else {
       serverconsole.locmessage("* " + process.serverConfig.sport); // Unix socket or Windows named pipe
@@ -895,10 +889,9 @@ function listeningMessage() {
   ) {
     if (typeof process.serverConfig.port === "number") {
       serverconsole.locmessage(
-        "* http://localhost" +
-          (process.serverConfig.port == 80
-            ? ""
-            : ":" + process.serverConfig.port),
+        `* http://localhost${process.serverConfig.port == 80
+          ? ""
+          : ":" + process.serverConfig.port}`,
       );
     } else {
       serverconsole.locmessage("* " + process.serverConfig.port); // Unix socket or Windows named pipe
@@ -911,11 +904,9 @@ function listeningMessage() {
     (!sListenToAny || (host != "" && host != "[offline]"))
   )
     serverconsole.locmessage(
-      "* https://" +
-        (sAccHost.indexOf(":") > -1 ? "[" + sAccHost + "]" : sAccHost) +
-        (process.serverConfig.sport == 443
-          ? ""
-          : ":" + process.serverConfig.sport),
+      `* https://${sAccHost.indexOf(":") > -1 ? "[" + sAccHost + "]" : sAccHost}${process.serverConfig.sport == 443
+        ? ""
+        : ":" + process.serverConfig.sport}`,
     );
   if (
     !(
@@ -927,21 +918,17 @@ function listeningMessage() {
     typeof process.serverConfig.port === "number"
   )
     serverconsole.locmessage(
-      "* http://" +
-        (accHost.indexOf(":") > -1 ? "[" + accHost + "]" : accHost) +
-        (process.serverConfig.port == 80
-          ? ""
-          : ":" + process.serverConfig.port),
+      `* http://${accHost.indexOf(":") > -1 ? "[" + accHost + "]" : accHost}${process.serverConfig.port == 80
+        ? ""
+        : ":" + process.serverConfig.port}`,
     );
   ipStatusCallback(() => {
     if (pubip != "") {
       if (process.serverConfig.secure && !sListenToLocalhost)
         serverconsole.locmessage(
-          "* https://" +
-            (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) +
-            (process.serverConfig.spubport == 443
-              ? ""
-              : ":" + process.serverConfig.spubport),
+          `* https://${pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip}${process.serverConfig.spubport == 443
+            ? ""
+            : ":" + process.serverConfig.spubport}`,
         );
       if (
         !(
@@ -951,21 +938,17 @@ function listeningMessage() {
         !listenToLocalhost
       )
         serverconsole.locmessage(
-          "* http://" +
-            (pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip) +
-            (process.serverConfig.pubport == 80
-              ? ""
-              : ":" + process.serverConfig.pubport),
+          `* http://${pubip.indexOf(":") > -1 ? "[" + pubip + "]" : pubip}${process.serverConfig.pubport == 80
+            ? ""
+            : ":" + process.serverConfig.pubport}`,
         );
     }
     if (domain != "") {
       if (process.serverConfig.secure && !sListenToLocalhost)
         serverconsole.locmessage(
-          "* https://" +
-            domain +
-            (process.serverConfig.spubport == 443
-              ? ""
-              : ":" + process.serverConfig.spubport),
+          `* https://${domain}${process.serverConfig.spubport == 443
+            ? ""
+            : ":" + process.serverConfig.spubport}`,
         );
       if (
         !(
@@ -975,11 +958,9 @@ function listeningMessage() {
         !listenToLocalhost
       )
         serverconsole.locmessage(
-          "* http://" +
-            domain +
-            (process.serverConfig.pubport == 80
-              ? ""
-              : ":" + process.serverConfig.pubport),
+          `* http://${domain}${process.serverConfig.pubport == 80
+            ? ""
+            : ":" + process.serverConfig.pubport}`,
         );
     }
     serverconsole.locmessage('For CLI help, you can type "help"');
@@ -994,8 +975,7 @@ function listeningMessage() {
         sendStatistics(modInfos, (err) => {
           if (err)
             serverconsole.locwarnmessage(
-              "There was a problem, when sending data to statistics server! Reason: " +
-                err.message,
+              `There was a problem, when sending data to statistics server! Reason: ${err.message}`,
             );
         });
       }
@@ -1223,7 +1203,7 @@ let commands = {
       log("Server closed.");
       if (cluster.isPrimary !== undefined) process.send("\x12CLOSE");
     } catch (err) {
-      log("Cannot close server! Reason: " + err.message);
+      log(`Cannot close server! Reason: ${err.message}`);
     }
   },
   open: (args, log) => {
@@ -1259,21 +1239,17 @@ let commands = {
       }
       log("Server opened.");
     } catch (err) {
-      log("Cannot open server! Reason: " + err.message);
+      log(`Cannot open server! Reason: ${err.message}`);
     }
   },
   help: (args, log) => {
-    log("Server commands:\n" + Object.keys(commands).join(" "));
+    log(`Server commands:\n${Object.keys(commands).join(" ")}`);
   },
   mods: (args, log) => {
     log("Mods:");
     for (let i = 0; i < modInfos.length; i++) {
       log(
-        (i + 1).toString() +
-          ". " +
-          modInfos[i].name +
-          " " +
-          modInfos[i].version,
+        `${(i + 1).toString()}. ${modInfos[i].name} ${modInfos[i].version}`,
       );
     }
     if (modInfos.length == 0) {
@@ -1340,8 +1316,8 @@ let commands = {
   },
   restart: (args, log) => {
     if (cluster.isPrimary === undefined)
-      log("This command is not supported on single-threaded " + name + ".");
-    else log("This command need to be run in " + name + " master.");
+      log(`This command is not supported on single-threaded ${name}.`);
+    else log(`This command need to be run in ${name} master.`);
   },
 };
 
@@ -1385,8 +1361,7 @@ function SVRJSFork() {
     ) {
       threadLimitWarned = true;
       serverconsole.locwarnmessage(
-        name +
-          " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+        `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
       );
     }
     if (
@@ -1402,8 +1377,7 @@ function SVRJSFork() {
     } else {
       if (SVRJSInitialized)
         serverconsole.locwarnmessage(
-          name +
-            " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
         );
     }
   } catch (err) {
@@ -1419,8 +1393,7 @@ function SVRJSFork() {
       ) {
         threadLimitWarned = true;
         serverconsole.locwarnmessage(
-          name +
-            " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
         );
       }
       if (
@@ -1436,8 +1409,7 @@ function SVRJSFork() {
       } else {
         if (SVRJSInitialized)
           serverconsole.locwarnmessage(
-            name +
-              " limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.",
+            `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
           );
       }
     } else {
@@ -1533,8 +1505,7 @@ function msgListener(message) {
     serverconsole.locmessage("Configuration saved.");
   } else if (message.indexOf("\x12SAVEERR") == 0) {
     serverconsole.locwarnmessage(
-      "There was a problem while saving configuration file. Reason: " +
-        message.substring(8),
+      `There was a problem while saving configuration file. Reason: ${message.substring(8)}`,
     );
   } else if (message[0] == "\x12") {
     // Discard unrecognized control messages
@@ -1656,9 +1627,7 @@ function start(init) {
       for (let i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
       console.log(
-        "Welcome to \x1b[1m" +
-          name +
-          " - a web server running on Node.JS\x1b[0m",
+        `Welcome to \x1b[1m${name} - a web server running on Node.JS\x1b[0m`,
       );
 
       // Print warnings
@@ -1672,13 +1641,7 @@ function start(init) {
         );
       if (process.isBun) {
         serverconsole.locwarnmessage(
-          "Bun support is experimental. Some features of " +
-            name +
-            ", " +
-            name +
-            " mods and " +
-            name +
-            " server-side JavaScript may not work as expected.",
+          `Bun support is experimental. Some features of ${name}, ${name} mods and ${name} server-side JavaScript may not work as expected.`,
         );
         if (
           process.isBun &&
@@ -1698,9 +1661,7 @@ function start(init) {
       }
       if (cluster.isPrimary === undefined)
         serverconsole.locwarnmessage(
-          "You're running " +
-            name +
-            " on single thread. Reliability may suffer, as the server is stopped after crash.",
+          `You're running ${name} on single thread. Reliability may suffer, as the server is stopped after crash.`,
         );
       if (crypto.__disabled__ !== undefined)
         serverconsole.locwarnmessage(
@@ -1730,13 +1691,7 @@ function start(init) {
         );
       if (process.getuid && process.getuid() == 0)
         serverconsole.locwarnmessage(
-          "You're running " +
-            name +
-            " as root. It's recommended to run " +
-            name +
-            " as an non-root user. Running " +
-            name +
-            " as root may increase the risks of OS command execution vulnerabilities.",
+          `You're running ${name} as root. It's recommended to run ${name} as an non-root user. Running ${name} as root may increase the risks of OS command execution vulnerabilities.`,
         );
       if (
         !process.isBun &&
@@ -1765,15 +1720,11 @@ function start(init) {
         );
       if (process.serverConfig.disableMods)
         serverconsole.locwarnmessage(
-          "" +
-            name +
-            " is running without mods and server-side JavaScript enabled. Web applications may not work as expected",
+          `${name} is running without mods and server-side JavaScript enabled. Web applications may not work as expected`,
         );
       if (process.serverConfig.optOutOfStatisticsServer)
         serverconsole.locmessage(
-          "" +
-            name +
-            " is configured to opt out of sending data to the statistics server.",
+          `${name} is configured to opt out of sending data to the statistics server.`,
         );
       console.log();
 
@@ -1781,9 +1732,7 @@ function start(init) {
       if (process.isPrimary || process.isPrimary === undefined) {
         modLoadingErrors.forEach(function (modLoadingError) {
           serverconsole.locwarnmessage(
-            'There was a problem while loading a "' +
-              String(modLoadingError.modName).replace(/[\r\n]/g, "") +
-              '" mod.',
+            `There was a problem while loading a "${String(modLoadingError.modName).replace(/[\r\n]/g, "")}" mod.`,
           );
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(
@@ -1808,28 +1757,21 @@ function start(init) {
       const CPUs = os.cpus();
       if (CPUs.length > 0)
         serverconsole.locmessage(
-          "CPU: " + (CPUs.length > 1 ? CPUs.length + "x " : "") + CPUs[0].model,
+          `CPU: ${CPUs.length > 1 ? CPUs.length + "x " : ""}${CPUs[0].model}`,
         );
 
       // Throw errors
       if (vnum < 64)
         throw new Error(
-          "" +
-            name +
-            " requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by " +
-            name +
-            ".",
+          `${name} requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by ${name}.`,
         );
       if (configJSONRErr)
         throw new Error(
-          "Can't read " +
-            name +
-            " configuration file: " +
-            configJSONRErr.message,
+          `Can't read ${name} configuration file: ${configJSONRErr.message}`,
         );
       if (configJSONPErr)
         throw new Error(
-          "" + name + " configuration parse error: " + configJSONPErr.message,
+          `${name} configuration parse error: ${configJSONPErr.message}`,
         );
       if (
         process.serverConfig.enableHTTP2 &&
@@ -1837,15 +1779,11 @@ function start(init) {
         typeof process.serverConfig.port != "number"
       )
         throw new Error(
-          "HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by " +
-            name +
-            ".",
+          `HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by ${name}.`,
         );
       if (process.serverConfig.enableHTTP2 && http2.__disabled__ !== undefined)
         throw new Error(
-          "HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with " +
-            name +
-            "",
+          `HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with ${name}`,
         );
       if (listenAddress) {
         if (listenAddress.match(/^[0-9]+$/))
@@ -1857,20 +1795,19 @@ function start(init) {
             /^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i,
           )
         )
-          throw new Error("" + name + " can't listen on multicast address.");
+          throw new Error(`${name} can't listen on multicast address.`);
         if (brdIPs.indexOf(listenAddress) > -1)
-          throw new Error("" + name + " can't listen on broadcast address.");
+          throw new Error(`${name} can't listen on broadcast address.`);
         if (netIPs.indexOf(listenAddress) > -1)
-          throw new Error("" + name + " can't listen on subnet address.");
+          throw new Error(`${name} can't listen on subnet address.`);
       }
       if (certificateError)
         throw new Error(
-          "There was a problem with SSL certificate/private key: " +
-            certificateError.message,
+          `There was a problem with SSL certificate/private key: ${certificateError.message}`,
         );
       if (wwwrootError)
         throw new Error(
-          "There was a problem with your web root: " + wwwrootError.message,
+          `There was a problem with your web root: ${wwwrootError.message}`,
         );
       if (sniReDos)
         throw new Error(
@@ -1886,29 +1823,23 @@ function start(init) {
       )
     )
       serverconsole.locmessage(
-        "Starting HTTP server at " +
-          (typeof process.serverConfig.port == "number"
-            ? listenAddress
-              ? (listenAddress.indexOf(":") > -1
-                  ? "[" + listenAddress + "]"
-                  : listenAddress) + ":"
-              : "port "
-            : "") +
-          process.serverConfig.port.toString() +
-          "...",
+        `Starting HTTP server at ${typeof process.serverConfig.port == "number"
+          ? listenAddress
+            ? (listenAddress.indexOf(":") > -1
+              ? "[" + listenAddress + "]"
+              : listenAddress) + ":"
+            : "port "
+          : ""}${process.serverConfig.port.toString()}...`,
       );
     if (process.serverConfig.secure)
       serverconsole.locmessage(
-        "Starting HTTPS server at " +
-          (typeof process.serverConfig.sport == "number"
-            ? sListenAddress
-              ? (sListenAddress.indexOf(":") > -1
-                  ? "[" + sListenAddress + "]"
-                  : sListenAddress) + ":"
-              : "port "
-            : "") +
-          process.serverConfig.sport.toString() +
-          "...",
+        `Starting HTTPS server at ${typeof process.serverConfig.sport == "number"
+          ? sListenAddress
+            ? (sListenAddress.indexOf(":") > -1
+              ? "[" + sListenAddress + "]"
+              : sListenAddress) + ":"
+            : "port "
+          : ""}${process.serverConfig.sport.toString()}...`,
       );
   }
 
@@ -2013,8 +1944,7 @@ function start(init) {
               addListenersToWorker(cluster.workers[goodWorkers[wN]]);
             }
             serverconsole.locwarnmessage(
-              "There was a problem while saving configuration file. Reason: " +
-                err.message,
+              `There was a problem while saving configuration file. Reason: ${err.message}`,
             );
           }
         });
@@ -2062,13 +1992,13 @@ function start(init) {
             commands[command](argss, (msg) => process.send(msg));
             process.send("\x12END");
           } else {
-            process.send('Unrecognized command "' + line.split(" ")[0] + '".');
+            process.send(`Unrecognized command "${line.split(" ")[0]}".`);
             process.send("\x12END");
           }
         } catch (err) {
           if (line != "") {
             process.send(
-              "Can't execute command \"" + line.split(" ")[0] + '".',
+              `Can't execute command \"${line.split(" ")[0]}".`,
             );
             process.send("\x12END");
           }
@@ -2106,7 +2036,7 @@ function start(init) {
               }
               if (stopError)
                 serverconsole.climessage(
-                  "Some " + name + " workers might not be stopped.",
+                  `Some ${name} workers might not be stopped.`,
                 );
               SVRJSInitialized = false;
               closedMaster = true;
@@ -2115,7 +2045,7 @@ function start(init) {
               forkWorkers(workersToFork, function () {
                 SVRJSInitialized = true;
                 exiting = false;
-                serverconsole.climessage("" + name + " workers restarted.");
+                serverconsole.climessage(`${name} workers restarted.`);
               });
 
               return;
@@ -2136,7 +2066,7 @@ function start(init) {
                   addListenersToWorker(cluster.workers[clusterID]);
                 }
                 serverconsole.climessage(
-                  "Can't run command \"" + command + '".',
+                  `Can't run command "${command}".`,
                 );
               }
             });
@@ -2380,8 +2310,7 @@ function start(init) {
                         addListenersToWorker(cluster.workers[goodWorkers[wN]]);
                       }
                       serverconsole.locwarnmessage(
-                        "There was a problem while terminating unused worker process. Reason: " +
-                          err.message,
+                        `There was a problem while terminating unused worker process. Reason: ${err.message}`,
                       );
                     }
                   }
@@ -2399,7 +2328,7 @@ function start(init) {
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   // Crash handler
   function crashHandlerMaster(err) {
-    serverconsole.locerrmessage(name + " main process just crashed!!!");
+    serverconsole.locerrmessage(`${name} main process just crashed!!!`);
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
       err.stack ? generateErrorStack(err) : String(err),
@@ -2417,8 +2346,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
       }
     } catch (err) {
       serverconsole.locwarnmessage(
-        "There was a problem while saving configuration file. Reason: " +
-          err.message,
+        `There was a problem while saving configuration file. Reason: ${err.message}`,
       );
     }
     try {
@@ -2474,7 +2402,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
 } else {
   // Crash handler
   function crashHandler(err) {
-    serverconsole.locerrmessage(name + " worker just crashed!!!");
+    serverconsole.locerrmessage(`${name} worker just crashed!!!`);
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
       err.stack ? generateErrorStack(err) : String(err),
@@ -2499,7 +2427,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
 try {
   start(true);
 } catch (err) {
-  serverconsole.locerrmessage("There was a problem starting " + name + "!!!");
+  serverconsole.locerrmessage(`There was a problem starting ${name}!!!`);
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
   setTimeout(function () {

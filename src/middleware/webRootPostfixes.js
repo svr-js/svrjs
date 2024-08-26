@@ -80,14 +80,11 @@ module.exports = (req, res, logFacilities, config, next) => {
       try {
         req.parsedURL = new URL(
           req.url,
-          "http" +
-            (req.socket.encrypted ? "s" : "") +
-            "://" +
-            (req.headers.host
-              ? req.headers.host
-              : config.domain
-                ? config.domain
-                : "unknown.invalid"),
+          `http${req.socket.encrypted ? "s" : ""}://${req.headers.host
+            ? req.headers.host
+            : config.domain
+              ? config.domain
+              : "unknown.invalid"}`,
         );
       } catch (err) {
         res.error(400, err);
@@ -115,20 +112,17 @@ module.exports = (req, res, logFacilities, config, next) => {
         let rewrittenAgainURL =
           sHref + req.parsedURL.search + req.parsedURL.hash;
         logFacilities.resmessage(
-          "URL sanitized: " + req.url + " => " + rewrittenAgainURL,
+          `URL sanitized: ${req.url} => ${rewrittenAgainURL}`,
         );
         req.url = rewrittenAgainURL;
         try {
           req.parsedURL = new URL(
             req.url,
-            "http" +
-              (req.socket.encrypted ? "s" : "") +
-              "://" +
-              (req.headers.host
-                ? req.headers.host
-                : config.domain
-                  ? config.domain
-                  : "unknown.invalid"),
+            `http${req.socket.encrypted ? "s" : ""}://${req.headers.host
+              ? req.headers.host
+              : config.domain
+                ? config.domain
+                : "unknown.invalid"}`,
           );
         } catch (err) {
           res.error(400, err);

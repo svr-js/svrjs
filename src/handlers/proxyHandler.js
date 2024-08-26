@@ -39,22 +39,16 @@ function proxyHandler(req, socket, head) {
   var reqport = socket.remotePort;
   process.reqcounter++;
   logFacilities.locmessage(
-    "Somebody connected to " +
-      (config.secure
-        ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
-        : (typeof config.port == "number" ? "port " : "socket ") +
-          config.port) +
-      "...",
+    `Somebody connected to ${config.secure
+      ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
+      : (typeof config.port == "number" ? "port " : "socket ") +
+      config.port}...`,
   );
   logFacilities.reqmessage(
-    "Client " +
-      (!reqip || reqip == ""
-        ? "[unknown client]"
-        : reqip +
-          (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")) +
-      " wants to proxy " +
-      req.url +
-      " through this server",
+    `Client ${!reqip || reqip == ""
+      ? "[unknown client]"
+      : reqip +
+      (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")} wants to proxy ${req.url} through this server`,
   );
   if (req.headers["user-agent"] != undefined)
     logFacilities.reqmessage("Client uses " + req.headers["user-agent"]);
@@ -81,7 +75,7 @@ function proxyHandler(req, socket, head) {
       }
     } else {
       logFacilities.errmessage(
-        name + " doesn't support proxy without proxy mod.",
+        `${name} doesn't support proxy without proxy mod.`,
       );
       if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
     }

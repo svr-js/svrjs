@@ -155,7 +155,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       } else if (nonscode.scode == 410) {
         logFacilities.errmessage("Content is gone.");
       } else if (nonscode.scode == 418) {
-        logFacilities.errmessage(name + " is always a teapot ;)");
+        logFacilities.errmessage(`${name} is always a teapot ;)`);
       } else {
         logFacilities.errmessage("Client fails receiving content.");
       }
@@ -186,8 +186,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              name +
-                " doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.",
+              `${name} doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.`,
             ),
           );
           return;
@@ -226,8 +225,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              name +
-                " doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.",
+              `${name} doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.`,
             ),
           );
           return;
@@ -272,11 +270,9 @@ module.exports = (req, res, logFacilities, config, next) => {
       try {
         const ha = config.getCustomHeaders();
         ha["WWW-Authenticate"] =
-          'Basic realm="' +
-          (authcode.realm
+          `Basic realm="${authcode.realm
             ? authcode.realm.replace(/(\\|")/g, "\\$1")
-            : name + " HTTP Basic Authorization") +
-          '", charset="UTF-8"';
+            : name + " HTTP Basic Authorization"}", charset="UTF-8"`;
         const credentials = req.headers["authorization"];
         if (!credentials) {
           res.error(401, ha);
@@ -353,9 +349,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               }
               res.error(401, ha);
               logFacilities.errmessage(
-                'User "' +
-                  String(username).replace(/[\r\n]/g, "") +
-                  '" failed to log in.',
+                `User "${String(username).replace(/[\r\n]/g, "")}" failed to log in.`,
               );
             } else {
               if (bruteProtection) {
@@ -369,9 +363,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 }
               }
               logFacilities.reqmessage(
-                'Client is logged in as "' +
-                  String(username).replace(/[\r\n]/g, "") +
-                  '".',
+                `Client is logged in as "${String(username).replace(/[\r\n]/g, "")}".`,
               );
               req.authUser = username;
               next();

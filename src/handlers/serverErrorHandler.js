@@ -15,7 +15,7 @@ function serverErrorHandler(err, isRedirect, server, start) {
         : serverErrorDescs["UNKNOWN"],
     );
     serverconsole.locmessage(
-      (isRedirect ? attmtsRedir : attmts) + " attempts left.",
+      `${isRedirect ? attmtsRedir : attmts} attempts left.`,
     );
   } else {
     try {
@@ -59,7 +59,7 @@ process.messageEventListeners.push((worker, serverconsole) => {
             ? serverErrorDescs[errCode]
             : serverErrorDescs["UNKNOWN"],
         );
-        serverconsole.locmessage(tries + " attempts left.");
+        serverconsole.locmessage(`${tries} attempts left.`);
       }
       if (message.length >= 9 && message.indexOf("\x12ERRCRASH") == 0) {
         const errno = os.constants.errno[message.substring(9)];

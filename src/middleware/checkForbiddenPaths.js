@@ -90,7 +90,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     !config.exposeServerVersion
   ) {
     res.error(403);
-    logFacilities.errmessage("Access to " + name + " script is denied.");
+    logFacilities.errmessage(`Access to ${name} script is denied.`);
     return;
   } else if (
     (isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") ||

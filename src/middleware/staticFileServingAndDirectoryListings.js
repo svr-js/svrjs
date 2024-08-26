@@ -581,66 +581,57 @@ module.exports = (req, res, logFacilities, config, next) => {
 
               // Generate HTML head and footer based on configuration and custom content
               let htmlHead =
-                (!config.enableDirectoryListingWithDefaultHead || res.head == ""
+                `${(!config.enableDirectoryListingWithDefaultHead || res.head == ""
                   ? !headerHasHTMLTag
                     ? "<!DOCTYPE html><html><head><title>Directory: " +
+                    decodeURIComponent(origHref)
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;") +
+                    '</title><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>' +
+                    defaultPageCSS +
+                    "</style></head><body>"
+                    : customDirListingHeader.replace(
+                      /<head>/i,
+                      "<head><title>Directory: " +
                       decodeURIComponent(origHref)
                         .replace(/&/g, "&amp;")
                         .replace(/</g, "&lt;")
                         .replace(/>/g, "&gt;") +
-                      '</title><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>' +
-                      defaultPageCSS +
-                      "</style></head><body>"
-                    : customDirListingHeader.replace(
-                        /<head>/i,
-                        "<head><title>Directory: " +
-                          decodeURIComponent(origHref)
-                            .replace(/&/g, "&amp;")
-                            .replace(/</g, "&lt;")
-                            .replace(/>/g, "&gt;") +
-                          "</title>",
-                      )
+                      "</title>"
+                    )
                   : res.head.replace(
-                      /<head>/i,
-                      "<head><title>Directory: " +
-                        decodeURIComponent(origHref)
-                          .replace(/&/g, "&amp;")
-                          .replace(/</g, "&lt;")
-                          .replace(/>/g, "&gt;") +
-                        "</title>",
-                    )) +
-                (!headerHasHTMLTag ? customDirListingHeader : "") +
-                "<h1>Directory: " +
-                decodeURIComponent(origHref)
+                    /<head>/i,
+                    "<head><title>Directory: " +
+                    decodeURIComponent(origHref)
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;") +
+                    "</title>"
+                  )) +
+                (!headerHasHTMLTag ? customDirListingHeader : "")}<h1>Directory: ${decodeURIComponent(origHref)
                   .replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
-                  .replace(/>/g, "&gt;") +
-                '</h1><table id="directoryListing"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>' +
-                (checkPathLevel(decodeURIComponent(origHref)) < 1
-                  ? ""
-                  : '<tr><td style="width: 24px;"><img src="/.dirimages/return.png" width="24px" height="24px" alt="[RET]" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="' +
+                  .replace(/>/g, "&gt;")}</h1><table id="directoryListing"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>${checkPathLevel(decodeURIComponent(origHref)) < 1
+                    ? ""
+                    : '<tr><td style="width: 24px;"><img src="/.dirimages/return.png" width="24px" height="24px" alt="[RET]" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="' +
                     origHref.replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") +
-                    '">Return</a></td><td></td><td></td></tr>');
+                    '">Return</a></td><td></td><td></td></tr>'}`;
 
               let htmlFoot =
-                "</table><p><i>" +
-                config
+                `</table><p><i>${config
                   .generateServerString()
                   .replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
-                  .replace(/>/g, "&gt;") +
-                (req.headers.host == undefined
-                  ? ""
-                  : " on " +
+                  .replace(/>/g, "&gt;")}${req.headers.host == undefined
+                    ? ""
+                    : " on " +
                     String(req.headers.host)
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
-                      .replace(/>/g, "&gt;")) +
-                "</i></p>" +
-                customDirListingFooter +
-                (!config.enableDirectoryListingWithDefaultHead || res.foot == ""
-                  ? "</body></html>"
-                  : res.foot);
+                      .replace(/>/g, "&gt;")}</i></p>${customDirListingFooter}${!config.enableDirectoryListingWithDefaultHead || res.foot == ""
+                        ? "</body></html>"
+                        : res.foot}`;
 
               if (
                 fs.existsSync(
@@ -745,41 +736,26 @@ module.exports = (req, res, logFacilities, config, next) => {
                         const emime = eext ? mime.contentType(eext) : false;
                         if (filelist[i].errored) {
                           directoryListingRows.push(
-                            '<tr><td style="width: 24px;"><img src="/.dirimages/bad.png" alt="[BAD]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="' +
-                              (href + "/" + encodeURI(ename)).replace(
-                                /\/+/g,
-                                "/",
-                              ) +
-                              '">' +
-                              ename
-                                .replace(/&/g, "&amp;")
-                                .replace(/</g, "&lt;")
-                                .replace(/>/g, "&gt;") +
-                              "</a></td><td>-</td><td>" +
-                              (estats ? estats.mtime.toDateString() : "-") +
-                              "</td></tr>\r\n",
+                            `<tr><td style="width: 24px;"><img src="/.dirimages/bad.png" alt="[BAD]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="${(href + "/" + encodeURI(ename)).replace(
+                              /\/+/g,
+                              "/"
+                            )}">${ename
+                              .replace(/&/g, "&amp;")
+                              .replace(/</g, "&lt;")
+                              .replace(/>/g, "&gt;")}</a></td><td>-</td><td>${estats ? estats.mtime.toDateString() : "-"}</td></tr>\r\n`,
                           );
                         } else {
                           let entry =
-                            '<tr><td style="width: 24px;"><img src="[img]" alt="[alt]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="' +
-                            (
+                            `<tr><td style="width: 24px;"><img src="[img]" alt="[alt]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="${(
                               origHref +
                               "/" +
                               encodeURIComponent(ename)
-                            ).replace(/\/+/g, "/") +
-                            (estats.isDirectory() ? "/" : "") +
-                            '">' +
-                            ename
+                            ).replace(/\/+/g, "/")}${estats.isDirectory() ? "/" : ""}">${ename
                               .replace(/&/g, "&amp;")
                               .replace(/</g, "&lt;")
-                              .replace(/>/g, "&gt;") +
-                            "</a></td><td>" +
-                            (estats.isDirectory()
-                              ? "-"
-                              : sizify(estats.size.toString())) +
-                            "</td><td>" +
-                            estats.mtime.toDateString() +
-                            "</td></tr>\r\n";
+                              .replace(/>/g, "&gt;")}</a></td><td>${estats.isDirectory()
+                                ? "-"
+                                : sizify(estats.size.toString())}</td><td>${estats.mtime.toDateString()}</td></tr>\r\n`;
 
                           // Determine the file type and set the appropriate image and alt text
                           if (estats.isDirectory()) {
@@ -788,20 +764,14 @@ module.exports = (req, res, logFacilities, config, next) => {
                               .replace("[alt]", "[DIR]");
                           } else if (!estats.isFile()) {
                             entry =
-                              '<tr><td style="width: 24px;"><img src="[img]" alt="[alt]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="' +
-                              (
+                              `<tr><td style="width: 24px;"><img src="[img]" alt="[alt]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="${(
                                 origHref +
                                 "/" +
                                 encodeURIComponent(ename)
-                              ).replace(/\/+/g, "/") +
-                              '">' +
-                              ename
+                              ).replace(/\/+/g, "/")}">${ename
                                 .replace(/&/g, "&amp;")
                                 .replace(/</g, "&lt;")
-                                .replace(/>/g, "&gt;") +
-                              "</a></td><td>-</td><td>" +
-                              estats.mtime.toDateString() +
-                              "</td></tr>\r\n";
+                                .replace(/>/g, "&gt;")}</a></td><td>-</td><td>${estats.mtime.toDateString()}</td></tr>\r\n`;
 
                             // Determine the special file types (block device, character device, etc.)
                             if (estats.isBlockDevice()) {
@@ -943,8 +913,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       } else {
         res.error(501);
         logFacilities.errmessage(
-          name +
-            " doesn't support block devices, character devices, FIFOs nor sockets.",
+          `${name} doesn't support block devices, character devices, FIFOs nor sockets.`,
         );
         return;
       }
