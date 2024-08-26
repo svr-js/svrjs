@@ -1467,7 +1467,7 @@ function msgListener(message) {
         message.substring(8),
     );
   } else if (message[0] == "\x12") {
-    console.log("RECEIVED CONTROL MESSAGE: " + message.substr(1));
+    // Discard unrecognized control messages
   } else {
     serverconsole.climessage(message);
   }
