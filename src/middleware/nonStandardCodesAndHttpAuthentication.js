@@ -8,6 +8,15 @@ const cluster = require("../utils/clusterBunShim.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
+let crypto = {
+  __disabled__: null,
+};
+try {
+  crypto = require("crypto");
+} catch (err) {
+  // Crypto is disabled
+}
+
 // Brute force protection-related
 let bruteForceDb = {};
 
