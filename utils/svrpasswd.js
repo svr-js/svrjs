@@ -255,10 +255,10 @@ if (!crypto.randomInt) {
 }
 
 let configJSON = {};
-if (fs.existsSync("config.json")) {
+if (fs.existsSync(__dirname + "/config.json")) {
   let configJSONf = "";
   try {
-    configJSONf = fs.readFileSync("config.json"); //Read JSON File
+    configJSONf = fs.readFileSync(__dirname + "/config.json"); //Read JSON File
   } catch (ex) {
     throw new Error("Cannot read JSON file.");
   }
@@ -274,11 +274,11 @@ if (configJSON.users != undefined) users = configJSON.users;
 
 function saveConfig() {
   let configJSONobj = {};
-  if (fs.existsSync("./config.json"))
-    configJSONobj = JSON.parse(fs.readFileSync("./config.json").toString());
+  if (fs.existsSync(__dirname + "/config.json"))
+    configJSONobj = JSON.parse(fs.readFileSync(__dirname + "/config.json").toString());
   configJSONobj.users = users;
   const configString = JSON.stringify(configJSONobj, null, 2);
-  fs.writeFileSync("config.json", configString);
+  fs.writeFileSync(__dirname + "/config.json", configString);
 }
 
 const args = process.argv;
