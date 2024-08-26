@@ -960,7 +960,11 @@ function listeningMessage() {
     if (domain != "") {
       if (process.serverConfig.secure && !sListenToLocalhost)
         serverconsole.locmessage(
-          "* https://" + domain + (spubport == 443 ? "" : ":" + spubport),
+          "* https://" +
+            domain +
+            (process.serverConfig.spubport == 443
+              ? ""
+              : ":" + process.serverConfig.spubport),
         );
       if (
         !(
@@ -1548,6 +1552,7 @@ process.messageEventListeners.push((worker, serverconsole) => {
   };
 });
 
+let isWorkerHungUpBuff = true;
 let isWorkerHungUpBuff2 = true;
 
 function msgListener(message) {
