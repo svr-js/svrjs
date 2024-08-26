@@ -1606,12 +1606,9 @@ function start(init) {
     }
   }
 
-  // TODO: implement clustering and commands
-
   if (init) {
     let workersToFork = 1;
 
-    // TODO: saveConfig
     if (cluster.isPrimary === undefined) {
       setInterval(function () {
         try {
