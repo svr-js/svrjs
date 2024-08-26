@@ -1262,7 +1262,7 @@ process.messageEventListeners.push((worker, serverconsole) => {
   };
 });
 
-let isWorkerHungUpBuff = true;
+let isWorkerHungUpBuff2 = true;
 
 function msgListener(message) {
   if (message == "\x12END") {
@@ -1279,13 +1279,24 @@ function msgListener(message) {
     closedMaster = true;
   } else if (message == "\x12KILLOK") {
     if (typeof isWorkerHungUpBuff != "undefined") isWorkerHungUpBuff = false;
+  } else if (message == "\x12PINGOK") {
+    if (typeof isWorkerHungUpBuff2 != "undefined") isWorkerHungUpBuff2 = false;
   } else if (message == "\x12KILLTERMMSG") {
     serverconsole.locmessage("Terminating unused worker process...");
+  } else if (message == "\x12SAVEGOOD") {
+    serverconsole.locmessage("Configuration saved.");
+  } else if (message.indexOf("\x12SAVEERR") == 0) {
+    serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + message.substring(8));
   } else if (message[0] == "\x12") {
     console.log("RECEIVED CONTROL MESSAGE: " + message.substr(1));
   } else {
     serverconsole.climessage(message);
   }
+}
+
+function saveConfig() {
+  // TODO: saveConfig() function
+  throw new Error("Configuration saving not yet implemented.");
 }
 
 // Starting function
@@ -1598,7 +1609,7 @@ function start(init) {
     let workersToFork = 1;
 
     // TODO: saveConfig
-    /*if (cluster.isPrimary === undefined) {
+    if (cluster.isPrimary === undefined) {
       setInterval(function () {
         try {
           saveConfig();
@@ -1612,7 +1623,7 @@ function start(init) {
         var allWorkers = Object.keys(cluster.workers);
         var goodWorkers = [];
 
-        function checkWorker(callback, _id) {
+        const checkWorker = (callback, _id) => {
           if (typeof _id === "undefined") _id = 0;
           if (_id >= allWorkers.length) {
             callback();
@@ -1637,14 +1648,13 @@ function start(init) {
           } catch (err) {
             if (cluster.workers[allWorkers[_id]]) {
               cluster.workers[allWorkers[_id]].removeAllListeners("message");
-              cluster.workers[allWorkers[_id]].on("message", bruteForceListenerWrapper(cluster.workers[allWorkers[_id]]));
-              cluster.workers[allWorkers[_id]].on("message", listenConnListener);
+              addListenersToWorker(cluster.workers[allWorkers[_id]]);
             }
             checkWorker(callback, _id + 1);
           }
         }
         checkWorker(function () {
-          var wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
+          const wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
           try {
             if (cluster.workers[goodWorkers[wN]]) {
               isWorkerHungUpBuff2 = true;
@@ -1654,14 +1664,13 @@ function start(init) {
           } catch (err) {
             if (cluster.workers[goodWorkers[wN]]) {
               cluster.workers[goodWorkers[wN]].removeAllListeners("message");
-              cluster.workers[goodWorkers[wN]].on("message", bruteForceListenerWrapper(cluster.workers[goodWorkers[wN]]));
-              cluster.workers[goodWorkers[wN]].on("message", listenConnListener);
+              addListenersToWorker(cluster.workers[goodWorkers[wN]]);
             }
             serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
           }
         });
       }, 300000);
-    }*/
+    }
 
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
       process.on("message", function (line) {
@@ -1669,7 +1678,7 @@ function start(init) {
           if (line == "") {
             // Does Nothing
             process.send("\x12END");
-          } /*else if (line == "\x14SAVECONF") {
+          } else if (line == "\x14SAVECONF") {
             // Save configuration file
             try {
               saveConfig();
@@ -1678,19 +1687,13 @@ function start(init) {
               process.send("\x12SAVEERR" + err.message);
             }
             process.send("\x12END");
-          }*/ else if (line == "\x14KILLPING") {
-            //if (!reallyExiting) {
+          } else if (line == "\x14KILLPING") {
             process.send("\x12KILLOK");
             process.send("\x12END");
-            //}
-            // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
-          } /* else if (line == "\x14PINGPING") {
-            if (!reallyExiting) {
-              process.send("\x12PINGOK");
-              process.send("\x12END");
-            }
-            // Refuse to send, when it's really exiting. Main process will treat the worker as hung up anyway...
-          }*/ else if (line == "\x14KILLREQ") {
+          } else if (line == "\x14PINGPING") {
+            process.send("\x12PINGOK");
+            process.send("\x12END");
+          } else if (line == "\x14KILLREQ") {
             if (process.reqcounter - reqcounterKillReq < 2) {
               process.send("\x12KILLTERMMSG");
               process.nextTick(() => {
