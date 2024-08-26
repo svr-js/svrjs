@@ -133,7 +133,7 @@ esbuild.build({
     esbuildCopyPlugin.copy({
       resolveFrom: __dirname,
       assets: {
-        from: ["./utilities/**/*"],
+        from: ["./utils/**/*"],
         to: ["./dist"],
       }
     }),
