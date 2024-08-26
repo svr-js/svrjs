@@ -1214,9 +1214,6 @@ function SVRJSFork() {
         SVRJSFork();
       }
     });
-    // TODO: add listeners to workers
-    // newWorker.on("message", bruteForceListenerWrapper(newWorker));
-    // newWorker.on("message", listenConnListener);
     addListenersToWorker(newWorker);
   }
 }
@@ -1253,7 +1250,7 @@ function forkWorkers(workersToFork, callback) {
   }
 }
 
-// TODO: main message event listener
+// Listening message event listener
 process.messageEventListeners.push((worker, serverconsole) => {
   return (message) => {
     if (message == "\x12LISTEN") {
