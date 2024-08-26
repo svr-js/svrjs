@@ -275,7 +275,9 @@ if (configJSON.users != undefined) users = configJSON.users;
 function saveConfig() {
   let configJSONobj = {};
   if (fs.existsSync(__dirname + "/config.json"))
-    configJSONobj = JSON.parse(fs.readFileSync(__dirname + "/config.json").toString());
+    configJSONobj = JSON.parse(
+      fs.readFileSync(__dirname + "/config.json").toString(),
+    );
   configJSONobj.users = users;
   const configString = JSON.stringify(configJSONobj, null, 2);
   fs.writeFileSync(__dirname + "/config.json", configString);
