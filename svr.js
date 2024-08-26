@@ -1082,7 +1082,7 @@ if (host != "[offline]" || ifaceEx) {
     }
   });
 
-  if (crypto.__disabled__ !== undefined) {
+  if (crypto.__disabled__ === undefined) {
     var ipRequest2 = https.get({
       host: "api.seeip.org",
       port: 443,
