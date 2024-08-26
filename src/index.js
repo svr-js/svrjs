@@ -1813,19 +1813,6 @@ function start(init) {
           SVRJSInitialized = true;
         });
 
-        /*cluster.workers[Object.keys(cluster.workers)[0]].on("message", function (msg) {
-          if (msg.length >= 8 && msg.indexOf("\x12ERRLIST") == 0) {
-            var tries = parseInt(msg.substring(8, 9));
-            var errCode = msg.substring(9);
-            serverconsole.locerrmessage(serverErrorDescs[errCode] ? serverErrorDescs[errCode] : serverErrorDescs["UNKNOWN"]);
-            serverconsole.locmessage(tries + " attempts left.");
-          }
-          if (msg.length >= 9 && msg.indexOf("\x12ERRCRASH") == 0) {
-            var errno = errors[msg.substring(9)];
-            process.exit(errno ? errno : 1);
-          }
-        });*/
-
         // Hangup check and restart
         setInterval(function () {
           if (!closedMaster && !exiting) {
