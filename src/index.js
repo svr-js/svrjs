@@ -1286,7 +1286,10 @@ function msgListener(message) {
   } else if (message == "\x12SAVEGOOD") {
     serverconsole.locmessage("Configuration saved.");
   } else if (message.indexOf("\x12SAVEERR") == 0) {
-    serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + message.substring(8));
+    serverconsole.locwarnmessage(
+      "There was a problem while saving configuration file. Reason: " +
+        message.substring(8),
+    );
   } else if (message[0] == "\x12") {
     console.log("RECEIVED CONTROL MESSAGE: " + message.substr(1));
   } else {
@@ -1652,7 +1655,7 @@ function start(init) {
             }
             checkWorker(callback, _id + 1);
           }
-        }
+        };
         checkWorker(function () {
           const wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
           try {
@@ -1666,7 +1669,10 @@ function start(init) {
               cluster.workers[goodWorkers[wN]].removeAllListeners("message");
               addListenersToWorker(cluster.workers[goodWorkers[wN]]);
             }
-            serverconsole.locwarnmessage("There was a problem while saving configuration file. Reason: " + err.message);
+            serverconsole.locwarnmessage(
+              "There was a problem while saving configuration file. Reason: " +
+                err.message,
+            );
           }
         });
       }, 300000);
