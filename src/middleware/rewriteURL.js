@@ -86,18 +86,18 @@ module.exports = (req, res, logFacilities, config, next) => {
       return;
     }
     if (rewrittenURL != req.url) {
-      logFacilities.resmessage(
-        `URL rewritten: ${req.url} => ${rewrittenURL}`,
-      );
+      logFacilities.resmessage(`URL rewritten: ${req.url} => ${rewrittenURL}`);
       req.url = rewrittenURL;
       try {
         req.parsedURL = new URL(
           req.url,
-          `http${req.socket.encrypted ? "s" : ""}://${req.headers.host
-            ? req.headers.host
-            : config.domain
-              ? config.domain
-              : "unknown.invalid"}`,
+          `http${req.socket.encrypted ? "s" : ""}://${
+            req.headers.host
+              ? req.headers.host
+              : config.domain
+                ? config.domain
+                : "unknown.invalid"
+          }`,
         );
       } catch (err) {
         res.error(400, err);
@@ -131,11 +131,13 @@ module.exports = (req, res, logFacilities, config, next) => {
         try {
           req.parsedURL = new URL(
             req.url,
-            `http${req.socket.encrypted ? "s" : ""}://${req.headers.host
-              ? req.headers.host
-              : config.domain
-                ? config.domain
-                : "unknown.invalid"}`,
+            `http${req.socket.encrypted ? "s" : ""}://${
+              req.headers.host
+                ? req.headers.host
+                : config.domain
+                  ? config.domain
+                  : "unknown.invalid"
+            }`,
           );
         } catch (err) {
           res.error(400, err);

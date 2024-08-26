@@ -269,10 +269,11 @@ module.exports = (req, res, logFacilities, config, next) => {
     const authorizedCallback = (bruteProtection) => {
       try {
         const ha = config.getCustomHeaders();
-        ha["WWW-Authenticate"] =
-          `Basic realm="${authcode.realm
+        ha["WWW-Authenticate"] = `Basic realm="${
+          authcode.realm
             ? authcode.realm.replace(/(\\|")/g, "\\$1")
-            : name + " HTTP Basic Authorization"}", charset="UTF-8"`;
+            : name + " HTTP Basic Authorization"
+        }", charset="UTF-8"`;
         const credentials = req.headers["authorization"];
         if (!credentials) {
           res.error(401, ha);

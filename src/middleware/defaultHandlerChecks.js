@@ -12,14 +12,17 @@ module.exports = (req, res, logFacilities, config, next) => {
       `<!DOCTYPE html><html><head><title>Proxy not implemented</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>Proxy not implemented</h1><p>${name
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")} doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use ${name
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")} as a proxy.</p><p><i>${config
-            .generateServerString()
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")}</i></p></body></html>`,
+        .replace(
+          />/g,
+          "&gt;",
+        )} doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use ${name
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")} as a proxy.</p><p><i>${config
+        .generateServerString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")}</i></p></body></html>`,
     );
     res.end();
     logFacilities.errmessage(

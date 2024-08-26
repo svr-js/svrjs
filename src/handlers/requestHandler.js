@@ -134,9 +134,7 @@ function requestHandler(req, res) {
       req.socket.remoteAddress == "::1" ||
       req.socket.remoteAddress == "::ffff:127.0.0.1" ||
       req.socket.remoteAddress == "127.0.0.1" ||
-      req.socket.remoteAddress == "localhost" ||
-      req.socket.remoteAddress == host ||
-      req.socket.remoteAddress == "::ffff:" + host)
+      req.socket.remoteAddress == "localhost")
   ) {
     let headers = config.getCustomHeaders();
     res.writeHead(204, http.STATUS_CODES[204], headers);
@@ -204,10 +202,11 @@ function requestHandler(req, res) {
   req.isProxy = false;
   if (req.url[0] != "/" && req.url != "*") req.isProxy = true;
   logFacilities.locmessage(
-    `Somebody connected to ${config.secure && fromMain
-      ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
-      : (typeof config.port == "number" ? "port " : "socket ") +
-      config.port}...`,
+    `Somebody connected to ${
+      config.secure && fromMain
+        ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
+        : (typeof config.port == "number" ? "port " : "socket ") + config.port
+    }...`,
   );
 
   if (req.socket == null) {
@@ -267,10 +266,13 @@ function requestHandler(req, res) {
   }
 
   logFacilities.reqmessage(
-    `Client ${!reqip || reqip == ""
-      ? "[unknown client]"
-      : reqip +
-      (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")} wants ${req.method == "GET"
+    `Client ${
+      !reqip || reqip == ""
+        ? "[unknown client]"
+        : reqip +
+          (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")
+    } wants ${
+      req.method == "GET"
         ? "content in "
         : req.method == "POST"
           ? "to post content in "
@@ -280,7 +282,8 @@ function requestHandler(req, res) {
               ? "to delete content in "
               : req.method == "PATCH"
                 ? "to patch content in "
-                : "to access content using " + req.method + " method in "}${req.headers.host == undefined || req.isProxy ? "" : req.headers.host}${req.url}`,
+                : "to access content using " + req.method + " method in "
+    }${req.headers.host == undefined || req.isProxy ? "" : req.headers.host}${req.url}`,
   );
   if (req.headers["user-agent"] != undefined)
     logFacilities.reqmessage("Client uses " + req.headers["user-agent"]);
@@ -528,11 +531,11 @@ function requestHandler(req, res) {
 
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
             res.write(
-              (
-                `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${additionalError == 404
+              `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${
+                additionalError == 404
                   ? ""
-                  : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>"}<p><i>{server}</i></p></body></html>`
-              )
+                  : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>"
+              }<p><i>{server}</i></p></body></html>`
                 .replace(
                   /{errorMessage}/g,
                   errorCode.toString() +

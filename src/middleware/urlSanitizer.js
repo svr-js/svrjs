@@ -13,19 +13,19 @@ module.exports = (req, res, logFacilities, config, next) => {
   if (req.parsedURL.pathname != sanitizedHref && !req.isProxy) {
     let sanitizedURL =
       sanitizedHref + req.parsedURL.search + req.parsedURL.hash;
-    logFacilities.resmessage(
-      `URL sanitized: ${req.url} => ${sanitizedURL}`,
-    );
+    logFacilities.resmessage(`URL sanitized: ${req.url} => ${sanitizedURL}`);
     if (config.rewriteDirtyURLs) {
       req.url = sanitizedURL;
       try {
         req.parsedURL = new URL(
           req.url,
-          `http${req.socket.encrypted ? "s" : ""}://${req.headers.host
-            ? req.headers.host
-            : config.domain
-              ? config.domain
-              : "unknown.invalid"}`,
+          `http${req.socket.encrypted ? "s" : ""}://${
+            req.headers.host
+              ? req.headers.host
+              : config.domain
+                ? config.domain
+                : "unknown.invalid"
+          }`,
         );
       } catch (err) {
         res.error(400, err);
@@ -36,9 +36,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       return;
     }
   } else if (req.url != preparedReqUrl && !req.isProxy) {
-    logFacilities.resmessage(
-      `URL sanitized: ${req.url} => ${preparedReqUrl}`,
-    );
+    logFacilities.resmessage(`URL sanitized: ${req.url} => ${preparedReqUrl}`);
     if (config.rewriteDirtyURLs) {
       req.url = preparedReqUrl;
     } else {

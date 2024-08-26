@@ -268,11 +268,11 @@ function clientErrorHandler(err, socket) {
               .replace(
                 /{errorMessage}/g,
                 errorCode.toString() +
-                " " +
-                http.STATUS_CODES[errorCode]
-                  .replace(/&/g, "&amp;")
-                  .replace(/</g, "&lt;")
-                  .replace(/>/g, "&gt;")
+                  " " +
+                  http.STATUS_CODES[errorCode]
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;"),
               )
               .replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode])
               .replace(
@@ -284,7 +284,7 @@ function clientErrorHandler(err, socket) {
                   .replace(/\r\n/g, "<br/>")
                   .replace(/\n/g, "<br/>")
                   .replace(/\r/g, "<br/>")
-                  .replace(/ {2}/g, "&nbsp;&nbsp;")
+                  .replace(/ {2}/g, "&nbsp;&nbsp;"),
               )
               .replace(
                 /{server}/g,
@@ -296,7 +296,7 @@ function clientErrorHandler(err, socket) {
                 )
                   .replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
-                  .replace(/>/g, "&gt;")
+                  .replace(/>/g, "&gt;"),
               )
               .replace(
                 /{contact}/g,
@@ -305,7 +305,7 @@ function clientErrorHandler(err, socket) {
                   .replace(/</g, "&lt;")
                   .replace(/>/g, "&gt;")
                   .replace(/\./g, "[dot]")
-                  .replace(/@/g, "[at]")
+                  .replace(/@/g, "[at]"),
               )}`,
           );
           res.end();
@@ -377,11 +377,11 @@ function clientErrorHandler(err, socket) {
               }
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
               res.write(
-                (
-                  `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${additionalError == 404
+                `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${
+                  additionalError == 404
                     ? ""
-                    : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>"}<p><i>{server}</i></p></body></html>`
-                )
+                    : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>"
+                }<p><i>{server}</i></p></body></html>`
                   .replace(
                     /{errorMessage}/g,
                     errorCode.toString() +
@@ -438,16 +438,19 @@ function clientErrorHandler(err, socket) {
   process.reqcounter++;
   process.malformedcounter++;
   logFacilities.locmessage(
-    `Somebody connected to ${config.secure && fromMain
-      ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
-      : (typeof config.port == "number" ? "port " : "socket ") +
-      config.port}...`,
+    `Somebody connected to ${
+      config.secure && fromMain
+        ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
+        : (typeof config.port == "number" ? "port " : "socket ") + config.port
+    }...`,
   );
   logFacilities.reqmessage(
-    `Client ${!reqip || reqip == ""
-      ? "[unknown client]"
-      : reqip +
-      (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")} sent invalid request.`,
+    `Client ${
+      !reqip || reqip == ""
+        ? "[unknown client]"
+        : reqip +
+          (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")
+    } sent invalid request.`,
   );
   try {
     head = fs.existsSync("./.head")
