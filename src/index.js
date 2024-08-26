@@ -1299,52 +1299,94 @@ function saveConfig() {
   for (var i = 0; i < 3; i++) {
     try {
       var configJSONobj = {};
-      if (fs.existsSync(process.dirname + "/config.json")) configJSONobj = JSON.parse(fs.readFileSync(process.dirname + "/config.json").toString());
+      if (fs.existsSync(process.dirname + "/config.json"))
+        configJSONobj = JSON.parse(
+          fs.readFileSync(process.dirname + "/config.json").toString(),
+        );
       if (configJSONobj.users === undefined) configJSONobj.users = [];
       if (process.serverConfig.secure) {
         if (configJSONobj.key === undefined) configJSONobj.key = "cert/key.key";
-        if (configJSONobj.cert === undefined) configJSONobj.cert = "cert/cert.crt";
+        if (configJSONobj.cert === undefined)
+          configJSONobj.cert = "cert/cert.crt";
         if (configJSONobj.sport === undefined) configJSONobj.sport = 443;
         if (configJSONobj.spubport === undefined) configJSONobj.spubport = 443;
         if (configJSONobj.sni === undefined) configJSONobj.sni = {};
-        if (configJSONobj.enableOCSPStapling === undefined) configJSONobj.enableOCSPStapling = false;
+        if (configJSONobj.enableOCSPStapling === undefined)
+          configJSONobj.enableOCSPStapling = false;
       }
       if (configJSONobj.port === undefined) configJSONobj.port = 80;
       if (configJSONobj.pubport === undefined) configJSONobj.pubport = 80;
-      if (configJSONobj.domain === undefined && configJSONobj.domian !== undefined) configJSONobj.domain = configJSONobj.domian;
+      if (
+        configJSONobj.domain === undefined &&
+        configJSONobj.domian !== undefined
+      )
+        configJSONobj.domain = configJSONobj.domian;
       delete configJSONobj.domian;
-      if (configJSONobj.page404 === undefined) configJSONobj.page404 = "404.html";
+      if (configJSONobj.page404 === undefined)
+        configJSONobj.page404 = "404.html";
       configJSONobj.timestamp = process.serverConfig.timestamp;
       configJSONobj.blacklist = process.serverConfig.blacklist;
-      if (configJSONobj.nonStandardCodes === undefined) configJSONobj.nonStandardCodes = [];
-      if (configJSONobj.enableCompression === undefined) configJSONobj.enableCompression = true;
-      if (configJSONobj.customHeaders === undefined) configJSONobj.customHeaders = {};
-      if (configJSONobj.enableHTTP2 === undefined) configJSONobj.enableHTTP2 = false;
-      if (configJSONobj.enableLogging === undefined) configJSONobj.enableLogging = true;
-      if (configJSONobj.enableDirectoryListing === undefined) configJSONobj.enableDirectoryListing = true;
-      if (configJSONobj.enableDirectoryListingWithDefaultHead === undefined) configJSONobj.enableDirectoryListingWithDefaultHead = false;
-      if (configJSONobj.serverAdministratorEmail === undefined) configJSONobj.serverAdministratorEmail = "[no contact information]";
-      if (configJSONobj.stackHidden === undefined) configJSONobj.stackHidden = false;
-      if (configJSONobj.enableRemoteLogBrowsing === undefined) configJSONobj.enableRemoteLogBrowsing = false;
-      if (configJSONobj.exposeServerVersion === undefined) configJSONobj.exposeServerVersion = true;
-      if (configJSONobj.disableServerSideScriptExpose === undefined) configJSONobj.disableServerSideScriptExpose = true;
-      if (configJSONobj.allowStatus === undefined) configJSONobj.allowStatus = true;
+      if (configJSONobj.nonStandardCodes === undefined)
+        configJSONobj.nonStandardCodes = [];
+      if (configJSONobj.enableCompression === undefined)
+        configJSONobj.enableCompression = true;
+      if (configJSONobj.customHeaders === undefined)
+        configJSONobj.customHeaders = {};
+      if (configJSONobj.enableHTTP2 === undefined)
+        configJSONobj.enableHTTP2 = false;
+      if (configJSONobj.enableLogging === undefined)
+        configJSONobj.enableLogging = true;
+      if (configJSONobj.enableDirectoryListing === undefined)
+        configJSONobj.enableDirectoryListing = true;
+      if (configJSONobj.enableDirectoryListingWithDefaultHead === undefined)
+        configJSONobj.enableDirectoryListingWithDefaultHead = false;
+      if (configJSONobj.serverAdministratorEmail === undefined)
+        configJSONobj.serverAdministratorEmail = "[no contact information]";
+      if (configJSONobj.stackHidden === undefined)
+        configJSONobj.stackHidden = false;
+      if (configJSONobj.enableRemoteLogBrowsing === undefined)
+        configJSONobj.enableRemoteLogBrowsing = false;
+      if (configJSONobj.exposeServerVersion === undefined)
+        configJSONobj.exposeServerVersion = true;
+      if (configJSONobj.disableServerSideScriptExpose === undefined)
+        configJSONobj.disableServerSideScriptExpose = true;
+      if (configJSONobj.allowStatus === undefined)
+        configJSONobj.allowStatus = true;
       if (configJSONobj.rewriteMap === undefined) configJSONobj.rewriteMap = [];
-      if (configJSONobj.dontCompress === undefined) configJSONobj.dontCompress = ["/.*\\.ipxe$/", "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/", "/.*\\.(?:[id]mg|iso|flp)$/", "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/", "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"];
-      if (configJSONobj.enableIPSpoofing === undefined) configJSONobj.enableIPSpoofing = false;
+      if (configJSONobj.dontCompress === undefined)
+        configJSONobj.dontCompress = [
+          "/.*\\.ipxe$/",
+          "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
+          "/.*\\.(?:[id]mg|iso|flp)$/",
+          "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
+          "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/",
+        ];
+      if (configJSONobj.enableIPSpoofing === undefined)
+        configJSONobj.enableIPSpoofing = false;
       if (configJSONobj.secure === undefined) configJSONobj.secure = false;
-      if (configJSONobj.disableNonEncryptedServer === undefined) configJSONobj.disableNonEncryptedServer = false;
-      if (configJSONobj.disableToHTTPSRedirect === undefined) configJSONobj.disableToHTTPSRedirect = false;
-      if (configJSONobj.enableETag === undefined) configJSONobj.enableETag = true;
-      if (configJSONobj.disableUnusedWorkerTermination === undefined) configJSONobj.disableUnusedWorkerTermination = false;
-      if (configJSONobj.rewriteDirtyURLs === undefined) configJSONobj.rewriteDirtyURLs = false;
+      if (configJSONobj.disableNonEncryptedServer === undefined)
+        configJSONobj.disableNonEncryptedServer = false;
+      if (configJSONobj.disableToHTTPSRedirect === undefined)
+        configJSONobj.disableToHTTPSRedirect = false;
+      if (configJSONobj.enableETag === undefined)
+        configJSONobj.enableETag = true;
+      if (configJSONobj.disableUnusedWorkerTermination === undefined)
+        configJSONobj.disableUnusedWorkerTermination = false;
+      if (configJSONobj.rewriteDirtyURLs === undefined)
+        configJSONobj.rewriteDirtyURLs = false;
       if (configJSONobj.errorPages === undefined) configJSONobj.errorPages = [];
-      if (configJSONobj.useWebRootServerSideScript === undefined) configJSONobj.useWebRootServerSideScript = true;
-      if (configJSONobj.exposeModsInErrorPages === undefined) configJSONobj.exposeModsInErrorPages = true;
-      if (configJSONobj.disableTrailingSlashRedirects === undefined) configJSONobj.disableTrailingSlashRedirects = false;
-      if (configJSONobj.environmentVariables === undefined) configJSONobj.environmentVariables = {};
-      if (configJSONobj.allowDoubleSlashes === undefined) configJSONobj.allowDoubleSlashes = false;
-      if (configJSONobj.optOutOfStatisticsServer === undefined) configJSONobj.optOutOfStatisticsServer = false;
+      if (configJSONobj.useWebRootServerSideScript === undefined)
+        configJSONobj.useWebRootServerSideScript = true;
+      if (configJSONobj.exposeModsInErrorPages === undefined)
+        configJSONobj.exposeModsInErrorPages = true;
+      if (configJSONobj.disableTrailingSlashRedirects === undefined)
+        configJSONobj.disableTrailingSlashRedirects = false;
+      if (configJSONobj.environmentVariables === undefined)
+        configJSONobj.environmentVariables = {};
+      if (configJSONobj.allowDoubleSlashes === undefined)
+        configJSONobj.allowDoubleSlashes = false;
+      if (configJSONobj.optOutOfStatisticsServer === undefined)
+        configJSONobj.optOutOfStatisticsServer = false;
 
       var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
       fs.writeFileSync(__dirname + "/config.json", configString);
@@ -1760,7 +1802,7 @@ function start(init) {
             } else {
               reqcounterKillReq = process.reqcounter;
             }
-          } else if (message[0] == "\x14") {
+          } else if (line[0] == "\x14") {
             // Discard unrecognized control messages
           } else if (
             commands[line.split(" ")[0]] !== undefined &&
