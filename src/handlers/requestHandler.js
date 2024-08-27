@@ -292,7 +292,7 @@ function requestHandler(req, res) {
     logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);
   if (oldHostHeader && oldHostHeader != req.headers.host)
     logFacilities.resmessage(
-      "Host name rewritten: " + oldHostHeader + " => " + req.headers.host,
+      `Host name rewritten: ${oldHostHeader} => ${req.headers.host}`,
     );
 
   // Header and footer placeholders
