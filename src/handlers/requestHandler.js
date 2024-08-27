@@ -287,7 +287,7 @@ function requestHandler(req, res) {
     }${req.headers.host == undefined || req.isProxy ? "" : req.headers.host}${req.url}`,
   );
   if (req.headers["user-agent"] != undefined)
-    logFacilities.reqmessage("Client uses " + req.headers["user-agent"]);
+    logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);
   if (oldHostHeader && oldHostHeader != req.headers.host)
     logFacilities.resmessage(
       "Host name rewritten: " + oldHostHeader + " => " + req.headers.host,

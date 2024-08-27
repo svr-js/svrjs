@@ -54,7 +54,7 @@ function proxyHandler(req, socket, head) {
     } wants to proxy ${req.url} through this server`,
   );
   if (req.headers["user-agent"] != undefined)
-    logFacilities.reqmessage("Client uses " + req.headers["user-agent"]);
+    logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);
 
   let index = 0;
 

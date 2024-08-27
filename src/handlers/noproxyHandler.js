@@ -49,7 +49,7 @@ function noproxyHandler(req, socket, head) {
     } wants to proxy ${req.url} through this server`,
   );
   if (req.headers["user-agent"] != undefined)
-    logFacilities.reqmessage("Client uses " + req.headers["user-agent"]);
+    logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);
 
   logFacilities.errmessage("This server will never be a proxy.");
   if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
