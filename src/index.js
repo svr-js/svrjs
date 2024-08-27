@@ -677,6 +677,33 @@ if (!disableMods) {
               ".modloader_w" + Math.floor(Math.random() * 65536);
           }
 
+          try {
+            // Try creating the modloader folder (if not already exists)
+            try {
+              fs.mkdirSync(process.dirname + "/temp/" + modloaderFolderName);
+            } catch (err) {
+              // If the folder already exists, continue to the next step
+              if (err.code != "EEXIST") {
+                // If there was another error, try creating the temp folder and then the modloader folder again
+                fs.mkdirSync(process.dirname + "/temp");
+                try {
+                  fs.mkdirSync(process.dirname + "/temp/" + modloaderFolderName);
+                } catch (err) {
+                  // If there was another error, throw it
+                  if (err.code != "EEXIST") throw err;
+                }
+              }
+            }
+      
+            // Create a subfolder for the current mod within the modloader folder
+            fs.mkdirSync(process.dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
+            
+          } catch (err) {
+            // If there was an error creating the folder, ignore it if it's a known error
+            if (err.code != "EEXIST" && err.code != "ENOENT") throw err;
+            // Some other SVR.JS process may have created the files.
+          }
+
           // Determine if the mod file is a ".tar.gz" file or not
           if (modFile.indexOf(".tar.gz") == modFile.length - 7) {
             // If it's a ".tar.gz" file, extract its contents using `tar`
