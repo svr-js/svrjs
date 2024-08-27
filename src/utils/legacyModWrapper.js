@@ -49,7 +49,7 @@ module.exports = (legacyMod) => {
       const form = formidable(formidableOptions);
 
       // Parse the request and process the fields and files
-      form.parse(req, function (err, fields, files) {
+      form.parse(req, (err, fields, files) => {
         // If there was an error, call the server error function with status code determined by error
         if (err) {
           if (err.httpCode) res.error(err.httpCode);

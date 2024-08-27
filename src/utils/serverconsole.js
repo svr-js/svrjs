@@ -43,7 +43,7 @@ function LOG(s) {
               autoClose: false,
             },
           );
-          logFile.on("error", function (err) {
+          logFile.on("error", (err) => {
             if (
               !s.match(
                 /^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /,
@@ -238,16 +238,16 @@ var serverconsole = {
 
 // Wrap around process.exit, so that log contents can be flushed.
 process.unsafeExit = process.exit;
-process.exit = function (code) {
+process.exit = (code) => {
   if (logFile && logFile.writable && !logFile.pending) {
     try {
-      logFile.close(function () {
+      logFile.close(() => {
         logFile = undefined;
         logSync = true;
         process.unsafeExit(code);
       });
       if (process.isBun) {
-        setInterval(function () {
+        setInterval(() => {
           if (!logFile.writable) {
             logFile = undefined;
             logSync = true;
@@ -255,7 +255,7 @@ process.exit = function (code) {
           }
         }, 50); // Interval
       }
-      setTimeout(function () {
+      setTimeout(() => {
         logFile = undefined;
         logSync = true;
         process.unsafeExit(code);

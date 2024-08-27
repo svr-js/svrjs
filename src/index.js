@@ -41,16 +41,16 @@ try {
   }
 } catch (err) {
   http2.__disabled__ = null;
-  http2.createServer = function () {
+  http2.createServer = () => {
     throw new Error("HTTP/2 support is not present");
   };
-  http2.createSecureServer = function () {
+  http2.createSecureServer = () => {
     throw new Error("HTTP/2 support is not present");
   };
-  http2.connect = function () {
+  http2.connect = () => {
     throw new Error("HTTP/2 support is not present");
   };
-  http2.get = function () {
+  http2.get = () => {
     throw new Error("HTTP/2 support is not present");
   };
 }
@@ -58,13 +58,13 @@ let crypto = {
   __disabled__: null,
 };
 let https = {
-  createServer: function () {
+  createServer: () => {
     throw new Error("Crypto support is not present");
   },
-  connect: function () {
+  connect: () => {
     throw new Error("Crypto support is not present");
   },
-  get: function () {
+  get: () => {
     throw new Error("Crypto support is not present");
   },
 };
@@ -72,7 +72,7 @@ try {
   crypto = require("crypto");
   https = require("https");
 } catch (err) {
-  http2.createSecureServer = function () {
+  http2.createSecureServer = () => {
     throw new Error("Crypto support is not present");
   };
 }
@@ -390,10 +390,10 @@ try {
 
 if (!process.stdout.isTTY && !inspectorURL) {
   // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
-  console.log = function () {};
-  process.stdout.write = function () {};
-  process.stdout._write = function () {};
-  process.stdout._writev = function () {};
+  console.log = () => {};
+  process.stdout.write = () => {};
+  process.stdout._write = () => {};
+  process.stdout._writev = () => {};
 }
 
 let wwwrootError = null;
@@ -467,7 +467,7 @@ let pubip = "";
 function doIpRequest(isHTTPS, options) {
   const ipRequest = (isHTTPS ? https : http).get(options, (res) => {
     ipRequest.removeAllListeners("timeout");
-    res.on("data", function (d) {
+    res.on("data", (d) => {
       if (res.statusCode != 200) {
         ipRequestCompleted = true;
         process.emit("ipRequestCompleted");
@@ -480,14 +480,14 @@ function doIpRequest(isHTTPS, options) {
       } else {
         let callbackDone = false;
 
-        const dnsTimeout = setTimeout(function () {
+        const dnsTimeout = setTimeout(() => {
           callbackDone = true;
           ipRequestCompleted = true;
           process.emit("ipRequestCompleted");
         }, 3000);
 
         try {
-          dns.reverse(pubip, function (err, hostnames) {
+          dns.reverse(pubip, (err, hostnames) => {
             if (callbackDone) return;
             clearTimeout(dnsTimeout);
             if (!err && hostnames.length > 0) domain = hostnames[0];
@@ -503,7 +503,7 @@ function doIpRequest(isHTTPS, options) {
       }
     });
   });
-  ipRequest.on("error", function () {
+  ipRequest.on("error", () => {
     if (crypto.__disabled__ || ipRequestGotError) {
       ipRequestCompleted = true;
       process.emit("ipRequestCompleted");
@@ -511,7 +511,7 @@ function doIpRequest(isHTTPS, options) {
       ipRequestGotError = true;
     }
   });
-  ipRequest.on("timeout", function () {
+  ipRequest.on("timeout", () => {
     if (crypto.__disabled__ || ipRequestGotError) {
       ipRequestCompleted = true;
       process.emit("ipRequestCompleted");
@@ -594,7 +594,7 @@ if (process.serverConfig.secure) {
       )
       .toString();
     const sniNames = Object.keys(process.serverConfig.sni);
-    sniNames.forEach(function (sniName) {
+    sniNames.forEach((sniName) => {
       if (
         typeof sniName === "string" &&
         sniName.match(/\*[^*.:]*\*[^*.:]*(?:\.|:|$)/)
@@ -697,7 +697,7 @@ if (!disableMods) {
       
             // Create a subfolder for the current mod within the modloader folder
             fs.mkdirSync(process.dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
-            
+
           } catch (err) {
             // If there was an error creating the folder, ignore it if it's a known error
             if (err.code != "EEXIST" && err.code != "ENOENT") throw err;
@@ -806,7 +806,7 @@ if (!disableMods) {
         crypto.__disabled__ === undefined
           ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n"
           : ""
-      }var stream = require(\'stream\');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function () {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
+      }var stream = require(\'stream\');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn () => {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach(((t) => {null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
       const modfoot =
         "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
@@ -1109,7 +1109,7 @@ if (process.serverConfig.enableHTTP2 == true) {
 // Load SNI contexts into HTTP server
 if (process.serverConfig.secure) {
   try {
-    sniCredentials.forEach(function (sniCredentialsSingle) {
+    sniCredentials.forEach((sniCredentialsSingle) => {
       server.addContext(sniCredentialsSingle.name, {
         cert: sniCredentialsSingle.cert,
         key: sniCredentialsSingle.key,
@@ -1151,7 +1151,7 @@ server.on("request", requestHandler);
 server.on("checkExpectation", requestHandler);
 server.on("connect", proxyHandler);
 server.on("clientError", clientErrorHandler);
-server.on("error", function (err) {
+server.on("error", (err) => {
   serverErrorHandler(err, false, server, start);
 });
 server.on("listening", () => {
@@ -1160,14 +1160,14 @@ server.on("listening", () => {
 });
 
 if (process.serverConfig.secure) {
-  server.prependListener("connection", function (sock) {
+  server.prependListener("connection", (sock) => {
     sock.reallyDestroy = sock.destroy;
-    sock.destroy = function () {
+    sock.destroy = () => {
       sock.toDestroy = true;
     };
   });
 
-  server.prependListener("tlsClientError", function (err, sock) {
+  server.prependListener("tlsClientError", (err, sock) => {
     if (
       err.code == "ERR_SSL_HTTP_REQUEST" ||
       err.message.indexOf("http request") != -1
@@ -1176,13 +1176,13 @@ if (process.serverConfig.secure) {
       sock._readableState = sock._parent._readableState;
       sock._writableState = sock._parent._writableState;
       sock._parent.toDestroy = false;
-      sock.pipe = function (a, b, c) {
+      sock.pipe = (a, b, c) => {
         sock._parent.pipe(a, b, c);
       };
-      sock.write = function (a, b, c) {
+      sock.write = (a, b, c) => {
         sock._parent.write(a, b, c);
       };
-      sock.end = function (a, b, c) {
+      sock.end = (a, b, c) => {
         sock._parent.end(a, b, c);
       };
       sock.destroyed = sock._parent.destroyed;
@@ -1190,7 +1190,7 @@ if (process.serverConfig.secure) {
       sock.writable = sock._parent.writable;
       sock.remoteAddress = sock._parent.remoteAddress;
       sock.remotePort = sock._parent.remoteAddress;
-      sock.destroy = function (a, b, c) {
+      sock.destroy = (a, b, c) => {
         try {
           sock._parent.destroy(a, b, c);
           sock.destroyed = sock._parent.destroyed;
@@ -1208,14 +1208,14 @@ if (process.serverConfig.secure) {
     }
   });
 
-  server.prependListener("secureConnection", function (sock) {
+  server.prependListener("secureConnection", (sock) => {
     sock._parent.destroy = sock._parent.reallyDestroy;
     delete sock._parent.reallyDestroy;
   });
 
   if (process.serverConfig.enableOCSPStapling && !ocsp._errored) {
-    server.on("OCSPRequest", function (cert, issuer, callback) {
-      ocsp.getOCSPURI(cert, function (err, uri) {
+    server.on("OCSPRequest", (cert, issuer, callback) => {
+      ocsp.getOCSPURI(cert, (err, uri) => {
         if (err) return callback(err);
 
         const req = ocsp.request.generate(cert, issuer);
@@ -1306,10 +1306,10 @@ let commands = {
       server.listening
     ) {
       try {
-        server.close(function () {
+        server.close(() => {
           if (server2.listening) {
             try {
-              server2.close(function () {
+              server2.close(() => {
                 if (!process.removeFakeIPC) {
                   if (typeof retcode == "number") {
                     process.exit(retcode);
@@ -1458,7 +1458,7 @@ function SVRJSFork() {
 
   // Add event listeners
   if (newWorker.on) {
-    newWorker.on("error", function (err) {
+    newWorker.on("error", (err) => {
       if (!exiting)
         serverconsole.locwarnmessage(
           "There was a problem when handling " +
@@ -1467,7 +1467,7 @@ function SVRJSFork() {
             err.message,
         );
     });
-    newWorker.on("exit", function () {
+    newWorker.on("exit", () => {
       if (!exiting && Object.keys(cluster.workers).length == 0) {
         crashed = true;
         SVRJSFork();
@@ -1497,8 +1497,8 @@ function forkWorkers(workersToFork, callback) {
       SVRJSFork();
     } else {
       setTimeout(
-        (function (i) {
-          return function () {
+        ((i) => {
+          return () => {
             SVRJSFork();
             if (i >= workersToFork - 1) callback();
           };
@@ -1690,7 +1690,7 @@ function start(init) {
               /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/,
             )
           ) &&
-          process.serverConfig.users.some(function (entry) {
+          process.serverConfig.users.some((entry) => {
             return entry.pbkdf2;
           })
         )
@@ -1769,7 +1769,7 @@ function start(init) {
 
       // Display mod and server-side JavaScript errors
       if (process.isPrimary || process.isPrimary === undefined) {
-        modLoadingErrors.forEach(function (modLoadingError) {
+        modLoadingErrors.forEach((modLoadingError) => {
           serverconsole.locwarnmessage(
             `There was a problem while loading a "${String(modLoadingError.modName).replace(/[\r\n]/g, "")}" mod.`,
           );
@@ -1930,7 +1930,7 @@ function start(init) {
     let workersToFork = 1;
 
     if (cluster.isPrimary === undefined) {
-      setInterval(function () {
+      setInterval(() => {
         try {
           saveConfig();
           serverconsole.locmessage("Configuration saved.");
@@ -1939,7 +1939,7 @@ function start(init) {
         }
       }, 300000);
     } else if (cluster.isPrimary) {
-      setInterval(function () {
+      setInterval(() => {
         var allWorkers = Object.keys(cluster.workers);
         var goodWorkers = [];
 
@@ -1954,7 +1954,7 @@ function start(init) {
               isWorkerHungUpBuff2 = true;
               cluster.workers[allWorkers[_id]].on("message", msgListener);
               cluster.workers[allWorkers[_id]].send("\x14PINGPING");
-              setTimeout(function () {
+              setTimeout(() => {
                 if (isWorkerHungUpBuff2) {
                   checkWorker(callback, _id + 1);
                 } else {
@@ -1973,7 +1973,7 @@ function start(init) {
             checkWorker(callback, _id + 1);
           }
         };
-        checkWorker(function () {
+        checkWorker(() => {
           const wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
           try {
             if (cluster.workers[goodWorkers[wN]]) {
@@ -1995,7 +1995,7 @@ function start(init) {
     }
 
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
-      process.on("message", function (line) {
+      process.on("message", (line) => {
         try {
           if (line == "") {
             // Does Nothing
@@ -2052,7 +2052,7 @@ function start(init) {
         prompt: "",
       });
       rla.prompt();
-      rla.on("line", function (line) {
+      rla.on("line", (line) => {
         line = line.trim();
         const argss = line.split(" ");
         const command = argss.shift();
@@ -2083,7 +2083,7 @@ function start(init) {
               closedMaster = true;
 
               workersToFork = getWorkerCountToFork();
-              forkWorkers(workersToFork, function () {
+              forkWorkers(workersToFork, () => {
                 SVRJSInitialized = true;
                 exiting = false;
                 serverconsole.climessage(`${name} workers restarted.`);
@@ -2110,7 +2110,7 @@ function start(init) {
               }
             });
             if (command == "stop") {
-              setTimeout(function () {
+              setTimeout(() => {
                 commands[command](argss, serverconsole.climessage);
               }, 50);
             }
@@ -2132,12 +2132,12 @@ function start(init) {
       // Cluster forking code
       if (cluster.isPrimary !== undefined && init) {
         workersToFork = getWorkerCountToFork();
-        forkWorkers(workersToFork, function () {
+        forkWorkers(workersToFork, () => {
           SVRJSInitialized = true;
         });
 
         // Hangup check and restart
-        setInterval(function () {
+        setInterval(() => {
           if (!closedMaster && !exiting) {
             let chksocket = {};
             if (
@@ -2167,21 +2167,21 @@ function start(init) {
                     timeout: 1620,
                     rejectUnauthorized: false,
                   },
-                  function (res) {
+                  (res) => {
                     chksocket.removeAllListeners("timeout");
                     res.destroy();
-                    res.on("data", function () {});
-                    res.on("end", function () {});
+                    res.on("data", () => {});
+                    res.on("end", () => {});
                     crashed = false;
                   },
                 )
-                .on("error", function () {
+                .on("error", () => {
                   if (!exiting) {
                     if (!crashed) SVRJSFork();
                     else crashed = false;
                   }
                 })
-                .on("timeout", function () {
+                .on("timeout", () => {
                   if (!exiting) SVRJSFork();
                   crashed = true;
                 });
@@ -2206,13 +2206,13 @@ function start(init) {
                   ":" +
                   process.serverConfig.port.toString(),
               );
-              connection.on("error", function () {
+              connection.on("error", () => {
                 if (!exiting) {
                   if (!crashed) SVRJSFork();
                   else crashed = false;
                 }
               });
-              connection.setTimeout(1620, function () {
+              connection.setTimeout(1620, () => {
                 if (!exiting) SVRJSFork();
                 crashed = true;
               });
@@ -2221,11 +2221,11 @@ function start(init) {
                 "x-svr-js-from-main-thread": "true",
                 "user-agent": generateServerString(true),
               });
-              chksocket.on("response", function () {
+              chksocket.on("response", () => {
                 connection.close();
                 crashed = false;
               });
-              chksocket.on("error", function () {
+              chksocket.on("error", () => {
                 if (!exiting) {
                   if (!crashed) SVRJSFork();
                   else crashed = false;
@@ -2254,21 +2254,21 @@ function start(init) {
                     },
                     timeout: 1620,
                   },
-                  function (res) {
+                  (res) => {
                     chksocket.removeAllListeners("timeout");
                     res.destroy();
-                    res.on("data", function () {});
-                    res.on("end", function () {});
+                    res.on("data", () => {});
+                    res.on("end", () => {});
                     crashed = false;
                   },
                 )
-                .on("error", function () {
+                .on("error", () => {
                   if (!exiting) {
                     if (!crashed) SVRJSFork();
                     else crashed = false;
                   }
                 })
-                .on("timeout", function () {
+                .on("timeout", () => {
                   if (!exiting) SVRJSFork();
                   crashed = true;
                 });
@@ -2281,8 +2281,8 @@ function start(init) {
           !process.serverConfig.disableUnusedWorkerTermination &&
           cluster.isPrimary !== undefined
         ) {
-          setTimeout(function () {
-            setInterval(function () {
+          setTimeout(() => {
+            setInterval(() => {
               if (!closedMaster && !exiting) {
                 const allWorkers = Object.keys(cluster.workers);
 
@@ -2307,7 +2307,7 @@ function start(init) {
                         msgListener,
                       );
                       cluster.workers[allWorkers[_id]].send("\x14KILLPING");
-                      setTimeout(function () {
+                      setTimeout(() => {
                         if (isWorkerHungUpBuff) {
                           checkWorker(callback, _id + 1);
                         } else {
@@ -2378,7 +2378,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   process.on("uncaughtException", crashHandlerMaster);
   process.on("unhandledRejection", crashHandlerMaster);
 
-  process.on("exit", function (code) {
+  process.on("exit", (code) => {
     try {
       if (!configJSONRErr && !configJSONPErr) {
         saveConfig();
@@ -2414,14 +2414,14 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     }
     serverconsole.locmessage("Server closed with exit code: " + code);
   });
-  process.on("warning", function (warning) {
+  process.on("warning", (warning) => {
     serverconsole.locwarnmessage(warning.message);
     if (generateErrorStack(warning)) {
       serverconsole.locwarnmessage("Stack:");
       serverconsole.locwarnmessage(generateErrorStack(warning));
     }
   });
-  process.on("SIGINT", function () {
+  process.on("SIGINT", () => {
     if (cluster.isPrimary !== undefined) {
       exiting = true;
       const allWorkers = Object.keys(cluster.workers);
@@ -2453,7 +2453,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   process.on("unhandledRejection", crashHandler);
 
   // Warning handler
-  process.on("warning", function (warning) {
+  process.on("warning", (warning) => {
     serverconsole.locwarnmessage(warning.message);
     if (warning.stack) {
       serverconsole.locwarnmessage("Stack:");
@@ -2469,7 +2469,7 @@ try {
   serverconsole.locerrmessage(`There was a problem starting ${name}!!!`);
   serverconsole.locerrmessage("Stack:");
   serverconsole.locerrmessage(generateErrorStack(err));
-  setTimeout(function () {
+  setTimeout(() => {
     process.exit(err.errno !== undefined ? err.errno : 1);
   }, 10);
 }

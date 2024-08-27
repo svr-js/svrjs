@@ -57,7 +57,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       config.enableDirectoryListing === undefined;
     if (!config.enableDirectoryListingVHost) return main;
     let vhostP = null;
-    config.enableDirectoryListingVHost.every(function (vhost) {
+    config.enableDirectoryListingVHost.every((vhost) => {
       if (
         matchHostname(vhost.host, hostname) &&
         ipMatch(vhost.ip, localAddress)

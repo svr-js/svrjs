@@ -61,7 +61,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         ) {
           rewrittenURL = tempRewrittenURL;
           try {
-            mapEntry.replacements.forEach(function (replacement) {
+            mapEntry.replacements.forEach((replacement) => {
               rewrittenURL = rewrittenURL.replace(
                 createRegex(replacement.regex),
                 replacement.replacement,
@@ -80,7 +80,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   };
 
   // Rewrite URLs
-  rewriteURL(req.url, config.rewriteMap, function (err, rewrittenURL) {
+  rewriteURL(req.url, config.rewriteMap, (err, rewrittenURL) => {
     if (err) {
       res.error(500, err);
       return;

@@ -35,7 +35,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       : req.url;
     let urlWithPostfix = preparedReqUrl3;
     let postfixPrefix = "";
-    config.wwwrootPostfixPrefixesVHost.every(function (currentPostfixPrefix) {
+    config.wwwrootPostfixPrefixesVHost.every((currentPostfixPrefix) => {
       if (preparedReqUrl3.indexOf(currentPostfixPrefix) == 0) {
         if (currentPostfixPrefix.match(/\/+$/))
           postfixPrefix = currentPostfixPrefix.replace(/\/+$/, "");
@@ -53,7 +53,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         return true;
       }
     });
-    config.wwwrootPostfixesVHost.every(function (postfixEntry) {
+    config.wwwrootPostfixesVHost.every((postfixEntry) => {
       if (
         matchHostname(postfixEntry.host) &&
         ipMatch(

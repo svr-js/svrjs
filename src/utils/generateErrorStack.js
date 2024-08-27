@@ -5,7 +5,7 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (
-    errorStack.some(function (errorStackLine) {
+    errorStack.some((errorStackLine) => {
       return errorStackLine.indexOf(errorObject.name) == 0;
     })
   ) {
@@ -20,7 +20,7 @@ function generateErrorStack(errorObject) {
   ];
 
   // Process each line of the original error stack.
-  errorStack.forEach(function (errorStackLine) {
+  errorStack.forEach((errorStackLine) => {
     if (errorStackLine != "") {
       // Split the line into function and location parts (if available).
       var errorFrame = errorStackLine.split("@");

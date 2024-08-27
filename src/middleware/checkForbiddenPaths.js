@@ -16,7 +16,7 @@ if (process.serverConfig.secure) {
     getInitializePath(process.serverConfig.cert),
   );
   forbiddenPaths.certificates.push(getInitializePath(process.serverConfig.key));
-  Object.keys(process.serverConfig.sni).forEach(function (sniHostname) {
+  Object.keys(process.serverConfig.sni).forEach((sniHostname) => {
     forbiddenPaths.certificates.push(
       getInitializePath(process.serverConfig.sni[sniHostname].cert),
     );

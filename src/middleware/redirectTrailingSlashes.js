@@ -11,7 +11,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   ) {
     fs.stat(
       "." + decodeURIComponent(req.parsedURL.pathname),
-      function (err, stats) {
+      (err, stats) => {
         if (err || !stats.isDirectory()) {
           try {
             next();

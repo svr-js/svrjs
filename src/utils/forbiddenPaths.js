@@ -34,7 +34,7 @@ function isForbiddenPath(decodedHref, match) {
     );
   }
   if (typeof forbiddenPath === "object") {
-    return forbiddenPath.some(function (forbiddenPathSingle) {
+    return forbiddenPath.some((forbiddenPathSingle) => {
       return (
         decodedHref === forbiddenPathSingle ||
         (os.platform() === "win32" &&
@@ -61,7 +61,7 @@ function isIndexOfForbiddenPath(decodedHref, match) {
     );
   }
   if (typeof forbiddenPath === "object") {
-    return forbiddenPath.some(function (forbiddenPathSingle) {
+    return forbiddenPath.some((forbiddenPathSingle) => {
       return (
         decodedHref === forbiddenPathSingle ||
         decodedHref.indexOf(forbiddenPathSingle + "/") === 0 ||

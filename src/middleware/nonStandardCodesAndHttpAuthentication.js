@@ -40,11 +40,11 @@ process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
 });
 
 if (!cluster.isPrimary) {
-  passwordHashCacheIntervalId = setInterval(function () {
-    pbkdf2Cache = pbkdf2Cache.filter(function (entry) {
+  passwordHashCacheIntervalId = setInterval(() => {
+    pbkdf2Cache = pbkdf2Cache.filter((entry) => {
       return entry.addDate > new Date() - 3600000;
     });
-    scryptCache = scryptCache.filter(function (entry) {
+    scryptCache = scryptCache.filter((entry) => {
       return entry.addDate > new Date() - 3600000;
     });
   }, 1800000);
@@ -170,7 +170,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     // Function to check if passwords match
     const checkIfPasswordMatches = (list, password, callback, _i) => {
       if (!_i) _i = 0;
-      const cb = function (hash) {
+      const cb = (hash) => {
         if (hash == list[_i].pass) {
           callback(true);
         } else if (_i >= list.length - 1) {
@@ -191,7 +191,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           );
           return;
         } else {
-          cacheEntry = scryptCache.find(function (entry) {
+          cacheEntry = scryptCache.find((entry) => {
             return (
               entry.password == hashedPassword && entry.salt == list[_i].salt
             );
@@ -203,7 +203,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               password,
               list[_i].salt,
               64,
-              function (err, derivedKey) {
+              (err, derivedKey) => {
                 if (err) {
                   res.error(500, err);
                 } else {
@@ -230,7 +230,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           );
           return;
         } else {
-          cacheEntry = pbkdf2Cache.find(function (entry) {
+          cacheEntry = pbkdf2Cache.find((entry) => {
             return (
               entry.password == hashedPassword && entry.salt == list[_i].salt
             );
@@ -244,7 +244,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               36250,
               64,
               "sha512",
-              function (err, derivedKey) {
+              (err, derivedKey) => {
                 if (err) {
                   res.error(500, err);
                 } else {
@@ -304,7 +304,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         let pbkdf2Count = 0;
         let scryptCount = 0;
         if (!authcode.userList || authcode.userList.indexOf(username) > -1) {
-          usernameMatch = config.users.filter(function (entry) {
+          usernameMatch = config.users.filter((entry) => {
             if (entry.scrypt) {
               scryptCount++;
             } else if (entry.pbkdf2) {
@@ -331,7 +331,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           }
           usernameMatch.push(fakeCredentials);
         }
-        checkIfPasswordMatches(usernameMatch, password, function (authorized) {
+        checkIfPasswordMatches(usernameMatch, password, (authorized) => {
           try {
             if (!authorized) {
               if (bruteProtection) {

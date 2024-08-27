@@ -6,13 +6,13 @@ let crypto = {
   __disabled__: null,
 };
 let https = {
-  createServer: function () {
+  createServer: () => {
     throw new Error("Crypto support is not present");
   },
-  connect: function () {
+  connect: () => {
     throw new Error("Crypto support is not present");
   },
-  get: function () {
+  get: () => {
     throw new Error("Crypto support is not present");
   },
 };

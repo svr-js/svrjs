@@ -61,7 +61,7 @@ function parseURL(uri, prepend) {
     const parsedQuery = parsedURI[7]
       .substring(1)
       .match(/([^&=]*)(?:=([^&]*))?/g);
-    parsedQuery.forEach(function (qp) {
+    parsedQuery.forEach((qp) => {
       if (qp.length > 0) {
         let parsedQP = qp.match(/([^&=]*)(?:=([^&]*))?/);
         if (parsedQP) {
