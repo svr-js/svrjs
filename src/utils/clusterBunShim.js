@@ -14,7 +14,7 @@ if (!process.singleThreaded) {
 
   // Cluster & IPC shim for Bun
 
-  cluster.bunShim = function () {
+  cluster.bunShim = () => {
     cluster.isMaster = !process.env.NODE_UNIQUE_ID;
     cluster.isPrimary = cluster.isMaster;
     cluster.isWorker = !cluster.isMaster;
@@ -25,11 +25,11 @@ if (!process.singleThreaded) {
       cluster.worker = {
         id: parseInt(process.env.NODE_UNIQUE_ID),
         process: process,
-        isDead: function () {
+        isDead: () => {
           return false;
         },
-        send: function (message, b, c, d) {
-          process.send(message, b, c, d);
+        send: (message, ...params) => {
+          process.send(message, ...params);
         },
       };
 
@@ -37,14 +37,14 @@ if (!process.singleThreaded) {
         // Shim the process.send function for worker processes
 
         // Create a fake IPC server to receive messages
-        let fakeIPCServer = net.createServer(function (socket) {
+        let fakeIPCServer = net.createServer((socket) => {
           let receivedData = "";
 
-          socket.on("data", function (data) {
+          socket.on("data", (data) => {
             receivedData += data.toString();
           });
 
-          socket.on("end", function () {
+          socket.on("end", () => {
             process.emit("message", receivedData);
           });
         });
@@ -58,7 +58,7 @@ if (!process.singleThreaded) {
             : process.dirname + "/temp/.W" + process.pid + ".ipc",
         );
 
-        process.send = function (message) {
+        process.send = (message) => {
           // Create a fake IPC connection to send messages
           let fakeIPCConnection = net.createConnection(
             os.platform() === "win32"
@@ -68,15 +68,15 @@ if (!process.singleThreaded) {
                   "temp/.P" + process.pid + ".ipc",
                 )
               : process.dirname + "/temp/.P" + process.pid + ".ipc",
-            function () {
+            () => {
               fakeIPCConnection.end(message);
             },
           );
         };
 
-        process.removeFakeIPC = function () {
+        process.removeFakeIPC = () => {
           // Close IPC server
-          process.send = function () {};
+          process.send = () => {};
           fakeIPCServer.close();
         };
       }
@@ -85,7 +85,7 @@ if (!process.singleThreaded) {
     // Custom implementation for cluster.fork()
     cluster._workersCounter = 1;
     cluster.workers = {};
-    cluster.fork = function (env) {
+    cluster.fork = (env) => {
       const child_process = require("child_process");
       let newEnvironment = Object.assign({}, env ? env : process.env);
       newEnvironment.NODE_UNIQUE_ID = cluster._workersCounter;
@@ -97,7 +97,7 @@ if (!process.singleThreaded) {
       });
 
       newWorker.process = newWorker;
-      newWorker.isDead = function () {
+      newWorker.isDead = () => {
         return newWorker.exitCode !== null || newWorker.killed;
       };
       newWorker.id = newEnvironment.NODE_UNIQUE_ID;
@@ -117,13 +117,13 @@ if (!process.singleThreaded) {
           }
 
           let oldLog = console.log;
-          console.log = function (a, b, c, d, e, f) {
+          console.log = (...params) => {
             if (
               a == "ChildProcess.prototype.send() - Sorry! Not implemented yet"
             ) {
               throw new Error("NOT IMPLEMENTED");
             } else {
-              oldLog(a, b, c, d, e, f);
+              oldLog(...params);
             }
           };
 
@@ -144,14 +144,14 @@ if (!process.singleThreaded) {
 
       if (!checkSendImplementation(newWorker)) {
         // Create a fake IPC server for worker process to receive messages
-        let fakeWorkerIPCServer = net.createServer(function (socket) {
+        let fakeWorkerIPCServer = net.createServer((socket) => {
           let receivedData = "";
 
-          socket.on("data", function (data) {
+          socket.on("data", (data) => {
             receivedData += data.toString();
           });
 
-          socket.on("end", function () {
+          socket.on("end", () => {
             newWorker.emit("message", receivedData);
           });
         });
@@ -166,7 +166,7 @@ if (!process.singleThreaded) {
         );
 
         // Cleanup when worker process exits
-        newWorker.on("exit", function () {
+        newWorker.on("exit", () => {
           fakeWorkerIPCServer.close();
           delete cluster.workers[newWorker.id];
         });
@@ -190,7 +190,7 @@ if (!process.singleThreaded) {
                     "temp/.W" + newWorker.process.pid + ".ipc",
                   )
                 : process.dirname + "/temp/.W" + newWorker.process.pid + ".ipc",
-              function () {
+              () => {
                 fakeWorkerIPCConnection.end(message);
               },
             );
@@ -206,7 +206,7 @@ if (!process.singleThreaded) {
           }
         };
       } else {
-        newWorker.on("exit", function () {
+        newWorker.on("exit", () => {
           delete cluster.workers[newWorker.id];
         });
       }
