@@ -40,7 +40,7 @@ function requestHandler(req, res) {
 
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
-    let ph = deepClone(config.customHeaders);
+    let ph = Object.assign({}, config.customHeaders);
     if (config.customHeadersVHost) {
       let vhostP = null;
       config.customHeadersVHost.every((vhost) => {

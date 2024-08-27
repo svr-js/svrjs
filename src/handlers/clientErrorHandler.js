@@ -15,7 +15,7 @@ function clientErrorHandler(err, socket) {
     generateServerString(config.exposeServerVersion);
 
   // getCustomHeaders() in SVR.JS 3.x
-  config.getCustomHeaders = () => deepClone(config.customHeaders);
+  config.getCustomHeaders = () => Object.assign({}, config.customHeaders);
 
   // Prevent multiple error handlers from one request
   if (socket.__assigned__) {
