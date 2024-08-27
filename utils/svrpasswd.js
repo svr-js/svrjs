@@ -4,6 +4,7 @@ const fs = require("fs");
 let crypto = {};
 try {
   crypto = require("crypto");
+  // eslint-disable-next-line no-unused-vars
 } catch (ex) {
   crypto = {};
   crypto.__disabled__ = null;
@@ -259,11 +260,13 @@ if (fs.existsSync(__dirname + "/config.json")) {
   let configJSONf = "";
   try {
     configJSONf = fs.readFileSync(__dirname + "/config.json"); //Read JSON File
+    // eslint-disable-next-line no-unused-vars
   } catch (ex) {
     throw new Error("Cannot read JSON file.");
   }
   try {
     configJSON = JSON.parse(configJSONf); //Parse JSON
+    // eslint-disable-next-line no-unused-vars
   } catch (ex) {
     throw new Error("JSON Parse error.");
   }

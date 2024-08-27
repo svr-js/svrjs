@@ -1,7 +1,9 @@
+// eslint-disable-next-line no-unused-vars
 const svrjsInfo = require("../../svrjs.json");
 
 let serverconsole = {};
 
+// eslint-disable-next-line no-unused-vars
 function noproxyHandler(req, socket, head) {
   let reqIdInt = Math.floor(Math.random() * 16777216);
   if (reqIdInt == 16777216) reqIdInt = 0;

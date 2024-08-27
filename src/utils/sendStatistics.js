@@ -17,8 +17,10 @@ let https = {
   },
 };
 try {
+  // eslint-disable-next-line no-unused-vars
   crypto = require("crypto");
   https = require("https");
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   // Can't load HTTPS
 }
@@ -51,6 +53,7 @@ function sendStatistics(modInfos, callback) {
           let parsedJson = {};
           try {
             parsedJson = JSON.parse(data);
+            // eslint-disable-next-line no-unused-vars
           } catch (err) {
             throw new Error("JSON parse error (response parsing failed).");
           }

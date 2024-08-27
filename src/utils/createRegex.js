@@ -1,7 +1,7 @@
 const os = require("os");
 
 function createRegex(regex, isPath) {
-  const regexStrMatch = regex.match(/^\/((?:\\.|[^\/\\])*)\/([a-zA-Z0-9]*)$/);
+  const regexStrMatch = regex.match(/^\/((?:\\.|[^/\\])*)\/([a-zA-Z0-9]*)$/);
   if (!regexStrMatch) throw new Error("Invalid regular expression: " + regex);
   const searchString = regexStrMatch[1];
   let modifiers = regexStrMatch[2];

@@ -13,6 +13,7 @@ let crypto = {
 };
 try {
   crypto = require("crypto");
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   // Crypto is disabled
 }
@@ -415,6 +416,8 @@ module.exports = (req, res, logFacilities, config, next) => {
 };
 
 // IPC listener for brute force protection
+
+// eslint-disable-next-line no-unused-vars
 process.messageEventListeners.push((worker, serverconsole) => {
   return (message) => {
     let ip = "";

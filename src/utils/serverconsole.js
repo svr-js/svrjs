@@ -260,6 +260,7 @@ process.exit = (code) => {
         logSync = true;
         process.unsafeExit(code);
       }, 10000); // timeout
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       logFile = undefined;
       logSync = true;

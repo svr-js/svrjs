@@ -8,6 +8,7 @@ if (!process.singleThreaded) {
   try {
     // Import cluster module
     cluster = require("cluster");
+    // eslint-disable-next-line no-unused-vars
   } catch (err) {
     // Clustering is not supported!
   }

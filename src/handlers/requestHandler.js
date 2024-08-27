@@ -246,6 +246,7 @@ function requestHandler(req, res) {
           res.socket.realRemoteAddress = reqip;
           res.socket.originalRemotePort = oldport;
           res.socket.originalRemoteAddress = oldip;
+          // eslint-disable-next-line no-unused-vars
         } catch (err) {
           // Address setting failed
         }

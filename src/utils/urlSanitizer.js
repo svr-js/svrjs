@@ -28,10 +28,10 @@ function sanitizeURL(resource, allowDoubleSlashes) {
   // Handle relative navigation (e.g., "/./", "/../", "../", "./"), also remove trailing dots in paths
   sanitizedResource = sanitizedResource
     .replace(/\/\.(?:\.{2,})?(?=\/|$)/g, "")
-    .replace(/([^.\/])\.+(?=\/|$)/g, "$1");
-  while (sanitizedResource.match(/\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/)) {
+    .replace(/([^./])\.+(?=\/|$)/g, "$1");
+  while (sanitizedResource.match(/\/(?!\.\.\/)[^/]+\/\.\.(?=\/|$)/)) {
     sanitizedResource = sanitizedResource.replace(
-      /\/(?!\.\.\/)[^\/]+\/\.\.(?=\/|$)/g,
+      /\/(?!\.\.\/)[^/]+\/\.\.(?=\/|$)/g,
       "",
     );
   }

@@ -45,6 +45,7 @@ function clientErrorHandler(err, socket) {
       socket.end(x, function () {
         try {
           socket.destroy();
+          // eslint-disable-next-line no-unused-vars
         } catch (err) {
           // Socket is probably already destroyed
         }
@@ -61,7 +62,9 @@ function clientErrorHandler(err, socket) {
         if (headername.toLowerCase() == "set-cookie") {
           headers[headername].forEach(function (headerValueS) {
             if (
+              // eslint-disable-next-line no-control-regex
               headername.match(/[^\x09\x20-\x7e\x80-\xff]|.:/) ||
+              // eslint-disable-next-line no-control-regex
               headerValueS.match(/[^\x09\x20-\x7e\x80-\xff]/)
             )
               throw new Error(`Invalid header!!! (${headername})`);
@@ -69,7 +72,9 @@ function clientErrorHandler(err, socket) {
           });
         } else {
           if (
+            // eslint-disable-next-line no-control-regex
             headername.match(/[^\x09\x20-\x7e\x80-\xff]|.:/) ||
+            // eslint-disable-next-line no-control-regex
             headers[headername].match(/[^\x09\x20-\x7e\x80-\xff]/)
           )
             throw new Error(`Invalid header!!! (${headername})`);
@@ -546,7 +551,7 @@ function clientErrorHandler(err, socket) {
     if (packetLine1.length != 1) {
       logFacilities.errmessage("The head of request is invalid.");
       callServerError(400); // Malformed Packet
-    } else if (!httpVersion.toString().match(/^HTTP[\/]/i)) {
+    } else if (!httpVersion.toString().match(/^HTTP[/]/i)) {
       logFacilities.errmessage("Invalid protocol.");
       callServerError(400); // bad protocol version
     } else if (http.METHODS.indexOf(method) == -1) {
@@ -562,6 +567,7 @@ function clientErrorHandler(err, socket) {
         callServerError(400); // Also malformed Packet
       }
     }
+    // eslint-disable-next-line no-unused-vars
   } catch (err) {
     logFacilities.errmessage(
       "There was an error while determining type of malformed request.",

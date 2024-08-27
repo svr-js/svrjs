@@ -22,6 +22,7 @@ function serverErrorHandler(err, isRedirect, server, start) {
       process.send(
         "\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code,
       );
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Probably main process exited
     }
@@ -33,6 +34,7 @@ function serverErrorHandler(err, isRedirect, server, start) {
     try {
       if (cluster.isPrimary !== undefined)
         process.send("\x12ERRCRASH" + err.code);
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Probably main process exited
     }

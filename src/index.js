@@ -12,6 +12,7 @@ const { name, version } = svrjsInfo;
 let inspector = undefined;
 try {
   inspector = require("inspector");
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   // Don't use inspector
 }
@@ -39,6 +40,7 @@ try {
         throw err;
     }
   }
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   http2.__disabled__ = null;
   http2.createServer = () => {
@@ -71,6 +73,7 @@ let https = {
 try {
   crypto = require("crypto");
   https = require("https");
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   http2.createSecureServer = () => {
     throw new Error("Crypto support is not present");
@@ -94,6 +97,7 @@ process.filename = __filename;
 let hexstrbase64 = undefined;
 try {
   hexstrbase64 = require(process.dirname + "/hexstrbase64/index.js");
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   // Don't use hexstrbase64
 }
@@ -345,7 +349,7 @@ if (typeof process.serverConfig.port === "string") {
     process.serverConfig.port = parseInt(process.serverConfig.port);
   } else {
     const portLMatch = process.serverConfig.port.match(
-      /^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/,
+      /^(\[[^ \]@/\\]+\]|[^ \][:@/\\]+):([0-9]+)$/,
     );
     if (portLMatch) {
       listenAddress = portLMatch[1]
@@ -360,7 +364,7 @@ if (typeof process.serverConfig.sport === "string") {
     process.serverConfig.sport = parseInt(process.serverConfig.sport);
   } else {
     const sportLMatch = process.serverConfig.sport.match(
-      /^(\[[^ \]@\/\\]+\]|[^ \]\[:@\/\\]+):([0-9]+)$/,
+      /^(\[[^ \]@/\\]+\]|[^ \][:@/\\]+):([0-9]+)$/,
     );
     if (sportLMatch) {
       sListenAddress = sportLMatch[1]
@@ -384,6 +388,7 @@ try {
   if (inspector) {
     inspectorURL = inspector.url();
   }
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   // Failed to get inspector URL
 }
@@ -494,6 +499,7 @@ function doIpRequest(isHTTPS, options) {
             ipRequestCompleted = true;
             process.emit("ipRequestCompleted");
           });
+          // eslint-disable-next-line no-unused-vars
         } catch (err) {
           clearTimeout(dnsTimeout);
           callbackDone = true;
@@ -629,6 +635,7 @@ if (process.serverConfig.secure) {
 let vnum = 0;
 try {
   vnum = process.config.variables.node_module_version;
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   // Version number not retrieved
 }
@@ -813,7 +820,7 @@ if (!disableMods) {
         crypto.__disabled__ === undefined
           ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n"
           : ""
-      }var stream = require(\'stream\');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn () => {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach(((t) => {null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
+      }var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn () => {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach(((t) => {null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
       const modfoot =
         "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
@@ -1042,6 +1049,7 @@ try {
   server2 = http.createServer({
     requireHostHeader: false,
   });
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   server2 = http.createServer();
 }
@@ -1107,6 +1115,7 @@ if (process.serverConfig.enableHTTP2 == true) {
       server = http.createServer({
         requireHostHeader: false,
       });
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       server = http.createServer();
     }
@@ -1144,10 +1153,12 @@ if (process.serverConfig.secure) {
             "$",
           "i",
         );
+        // eslint-disable-next-line no-unused-vars
       } catch (err) {
         // Can't replace regex, ignoring...
       }
     });
+    // eslint-disable-next-line no-unused-vars
   } catch (err) {
     // SNI error
   }
@@ -1201,6 +1212,7 @@ if (process.serverConfig.secure) {
         try {
           sock._parent.destroy(a, b, c);
           sock.destroyed = sock._parent.destroyed;
+          // eslint-disable-next-line no-unused-vars
         } catch (err) {
           // Socket is probably already destroyed.
         }
@@ -1209,6 +1221,7 @@ if (process.serverConfig.secure) {
       sock._parent.destroy = sock._parent.reallyDestroy;
       try {
         if (sock._parent.toDestroy) sock._parent.destroy();
+        // eslint-disable-next-line no-unused-vars
       } catch (err) {
         // Socket is probably already destroyed.
       }
@@ -1302,9 +1315,13 @@ let commands = {
       log("No mods installed.");
     }
   },
+
+  // eslint-disable-next-line no-unused-vars
   clear: (args, log) => {
     console.clear();
   },
+
+  // eslint-disable-next-line no-unused-vars
   stop: (args, log) => {
     let retcode = args[0];
     if (
@@ -1325,6 +1342,7 @@ let commands = {
                   }
                 }
               });
+              // eslint-disable-next-line no-unused-vars
             } catch (err) {
               if (!process.removeFakeIPC) {
                 if (typeof retcode == "number") {
@@ -1344,6 +1362,7 @@ let commands = {
             }
           }
         });
+        // eslint-disable-next-line no-unused-vars
       } catch (err) {
         if (typeof retcode == "number") {
           process.exit(retcode);
@@ -1491,6 +1510,7 @@ function getWorkerCountToFork() {
   try {
     const useAvailableCores = Math.round(os.freemem() / 50000000) - 1; // 1 core deleted for safety...
     if (workersToFork > useAvailableCores) workersToFork = useAvailableCores;
+    // eslint-disable-next-line no-unused-vars
   } catch (err) {
     // Nevermind... Don't want SVR.JS to fail starting, because os.freemem function is not working.
   }
@@ -1517,6 +1537,8 @@ function forkWorkers(workersToFork, callback) {
 }
 
 // Listening message event listener
+
+// eslint-disable-next-line no-unused-vars
 process.messageEventListeners.push((worker, serverconsole) => {
   return (message) => {
     if (message == "\x12LISTEN") {
@@ -1972,6 +1994,7 @@ function start(init) {
             } else {
               checkWorker(callback, _id + 1);
             }
+            // eslint-disable-next-line no-unused-vars
           } catch (err) {
             if (cluster.workers[allWorkers[_id]]) {
               cluster.workers[allWorkers[_id]].removeAllListeners("message");
@@ -2045,9 +2068,10 @@ function start(init) {
             process.send(`Unrecognized command "${line.split(" ")[0]}".`);
             process.send("\x12END");
           }
+          // eslint-disable-next-line no-unused-vars
         } catch (err) {
           if (line != "") {
-            process.send(`Can't execute command \"${line.split(" ")[0]}".`);
+            process.send(`Can't execute command "${line.split(" ")[0]}".`);
             process.send("\x12END");
           }
         }
@@ -2078,6 +2102,7 @@ function start(init) {
                   if (cluster.workers[allWorkers[i]]) {
                     cluster.workers[allWorkers[i]].kill();
                   }
+                  // eslint-disable-next-line no-unused-vars
                 } catch (err) {
                   stopError = true;
                 }
@@ -2108,6 +2133,7 @@ function start(init) {
                   cluster.workers[clusterID].on("message", msgListener);
                   cluster.workers[clusterID].send(line);
                 }
+                // eslint-disable-next-line no-unused-vars
               } catch (err) {
                 if (cluster.workers[clusterID]) {
                   cluster.workers[clusterID].removeAllListeners("message");
@@ -2124,6 +2150,7 @@ function start(init) {
           } else {
             try {
               commands[command](argss, serverconsole.climessage);
+              // eslint-disable-next-line no-unused-vars
             } catch (err) {
               serverconsole.climessage(
                 'Unrecognized command "' + command + '".',
@@ -2325,6 +2352,7 @@ function start(init) {
                     } else {
                       checkWorker(callback, _id + 1);
                     }
+                    // eslint-disable-next-line no-unused-vars
                   } catch (err) {
                     if (cluster.workers[allWorkers[_id]]) {
                       cluster.workers[allWorkers[_id]].removeAllListeners(
@@ -2397,11 +2425,13 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     }
     try {
       deleteFolderRecursive(process.dirname + "/temp");
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Error!
     }
     try {
       fs.mkdirSync(process.dirname + "/temp");
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Error!
     }
@@ -2415,6 +2445,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
           process.dirname + "/temp/serverSideScript.js",
           "// Placeholder server-side JavaScript to workaround Bun bug.\r\n",
         );
+        // eslint-disable-next-line no-unused-vars
       } catch (err) {
         // Error!
       }
@@ -2437,6 +2468,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
           if (cluster.workers[allWorkers[i]]) {
             cluster.workers[allWorkers[i]].send("stop");
           }
+          // eslint-disable-next-line no-unused-vars
         } catch (err) {
           // Worker will crash with EPIPE anyway.
         }

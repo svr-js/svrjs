@@ -53,6 +53,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     decodedHrefWithoutDuplicateSlashes = decodeURIComponent(
       req.parsedURL.pathname,
     ).replace(/\/+/g, "/");
+    // eslint-disable-next-line no-unused-vars
   } catch (err) {
     res.error(400);
   }

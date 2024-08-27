@@ -13,7 +13,7 @@ function parseURL(uri, prepend) {
 
   // Parse the URL using regular expression
   let parsedURI = uri.match(
-    /^(?:([^:]+:)(\/\/)?)?(?:([^@\/?#\*]+)@)?([^:\/?#\*]+|\[[^\*]\/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/,
+    /^(?:([^:]+:)(\/\/)?)?(?:([^@/?#*]+)@)?([^:/?#*]+|\[[^*]\/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/,
   );
   // Match 1: protocol
   // Match 2: slashes after protocol
@@ -34,7 +34,7 @@ function parseURL(uri, prepend) {
   if (hasSlashes && !parsedURI[6]) parsedURI[6] = "/";
 
   // If match 4 contains Unicode characters, convert it to Punycode. If the result is an empty string, throw an error
-  if (parsedURI[4] && !parsedURI[4].match(/^[a-zA-Z0-9\.\-]+$/)) {
+  if (parsedURI[4] && !parsedURI[4].match(/^[a-zA-Z0-9.-]+$/)) {
     parsedURI[4] = url.domainToASCII(parsedURI[4]);
     if (!parsedURI[4]) throw new Error("Invalid URL: " + uri);
   }

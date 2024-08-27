@@ -1,6 +1,7 @@
 let crypto = { __disabled__: null };
 try {
   crypto = require("crypto");
+  // eslint-disable-next-line no-unused-vars
 } catch (err) {
   // Crypto support is disabled.
 }

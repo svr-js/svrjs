@@ -7,6 +7,7 @@ const matchHostname = require("../utils/matchHostname.js");
 module.exports = (req, res, logFacilities, config, next) => {
   try {
     decodeURIComponent(req.parsedURL.pathname);
+    // eslint-disable-next-line no-unused-vars
   } catch (err) {
     res.error(400);
   }

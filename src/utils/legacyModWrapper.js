@@ -17,7 +17,7 @@ module.exports = (legacyMod) => {
     if (!req[legacyParsedURLSymbol])
       req[legacyParsedURLSymbol] = parseURL(req.url);
 
-    let ext = req[legacyParsedURLSymbol].pathname.match(/[^\/]\.([^.]+)$/);
+    let ext = req[legacyParsedURLSymbol].pathname.match(/[^/]\.([^.]+)$/);
     if (!ext) ext = "";
 
     // Function to parse incoming POST data from the request

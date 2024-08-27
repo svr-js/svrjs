@@ -23,6 +23,7 @@ const generateETag = (filePath, stat) => {
   return ETagDB[filePath + "-" + stat.size + "-" + stat.mtime];
 };
 
+// eslint-disable-next-line no-unused-vars
 module.exports = (req, res, logFacilities, config, next) => {
   const checkPathLevel = (path) => {
     // Split the path into an array of components based on "/"
@@ -74,12 +75,13 @@ module.exports = (req, res, logFacilities, config, next) => {
 
   let href = req.parsedURL.pathname;
   let origHref = req.originalParsedURL.pathname;
-  let ext = href.match(/[^\/]\.([^.]+)$/);
+  let ext = href.match(/[^/]\.([^.]+)$/);
   if (!ext) ext = "";
   else ext = ext[1].toLowerCase();
   let dHref = "";
   try {
     dHref = decodeURIComponent(href);
+    // eslint-disable-next-line no-unused-vars
   } catch (err) {
     res.error(400);
     return;
@@ -381,6 +383,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           if (process.isBun && useBrotli && isCompressable) {
             try {
               zlib.createBrotliCompress();
+              // eslint-disable-next-line no-unused-vars
             } catch (err) {
               useBrotli = false;
             }
@@ -574,7 +577,7 @@ module.exports = (req, res, logFacilities, config, next) => {
             getCustomDirListingFooter(() => {
               // Check if custom header has HTML tag
               const headerHasHTMLTag = customDirListingHeader
-                .replace(/<!--(?:(?:(?!--\>)[\s\S])*|)(?:-->|$)/g, "")
+                .replace(/<!--(?:(?:(?!-->)[\s\S])*|)(?:-->|$)/g, "")
                 .match(
                   /<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i,
                 );
@@ -619,7 +622,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 checkPathLevel(decodeURIComponent(origHref)) < 1
                   ? ""
                   : '<tr><td style="width: 24px;"><img src="/.dirimages/return.png" width="24px" height="24px" alt="[RET]" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="' +
-                    origHref.replace(/\/+/g, "/").replace(/\/[^\/]*\/?$/, "/") +
+                    origHref.replace(/\/+/g, "/").replace(/\/[^/]*\/?$/, "/") +
                     '">Return</a></td><td></td><td></td></tr>'
               }`;
 
