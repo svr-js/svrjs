@@ -1,5 +1,4 @@
 const svrjsInfo = require("../../svrjs.json");
-const { name } = svrjsInfo;
 
 let serverconsole = {};
 
