@@ -87,9 +87,9 @@ if (!process.singleThreaded) {
     cluster.workers = {};
     cluster.fork = function (env) {
       const child_process = require("child_process");
-      let newEnvironment = Object.assign(env ? env : process.env);
+      let newEnvironment = Object.assign({}, env ? env : process.env);
       newEnvironment.NODE_UNIQUE_ID = cluster._workersCounter;
-      let newArguments = Object.assign(process.argv);
+      let newArguments = Object.assign({}, process.argv);
       let command = newArguments.shift();
       let newWorker = child_process.spawn(command, newArguments, {
         env: newEnvironment,

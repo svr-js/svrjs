@@ -7,13 +7,13 @@ const generateServerString = require("../utils/generateServerString.js");
 let serverconsole = {};
 
 function clientErrorHandler(err, socket) {
-  const config = Object.assign(process.serverConfig);
+  const config = Object.assign({}, process.serverConfig);
 
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
 
   // getCustomHeaders() in SVR.JS 3.x
-  config.getCustomHeaders = () => Object.assign(config.customHeaders);
+  config.getCustomHeaders = () => Object.assign({}, config.customHeaders);
 
   // Prevent multiple error handlers from one request
   if (socket.__assigned__) {
@@ -54,7 +54,7 @@ function clientErrorHandler(err, socket) {
       if (code >= 400 && code <= 499) process.err4xxcounter++;
       if (code >= 500 && code <= 599) process.err5xxcounter++;
       let head = "HTTP/1.1 " + code.toString() + " " + name + "\r\n";
-      headers = Object.assign(headers);
+      headers = Object.assign({}, headers);
       headers["Date"] = new Date().toGMTString();
       headers["Connection"] = "close";
       Object.keys(headers).forEach(function (headername) {

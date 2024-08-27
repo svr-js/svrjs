@@ -29,7 +29,7 @@ function requestHandler(req, res) {
   };
 
   // SVR.JS configuration object (modified)
-  const config = Object.assign(process.serverConfig);
+  const config = Object.assign({}, process.serverConfig);
 
   config.generateServerString = () => {
     return generateServerString(config.exposeServerVersion);
@@ -37,7 +37,7 @@ function requestHandler(req, res) {
 
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
-    let ph = Object.assign(config.customHeaders);
+    let ph = Object.assign({}, config.customHeaders);
     if (config.customHeadersVHost) {
       let vhostP = null;
       config.customHeadersVHost.every(function (vhost) {
@@ -52,7 +52,7 @@ function requestHandler(req, res) {
         }
       });
       if (vhostP && vhostP.headers) {
-        const phNu = Object.assign(vhostP.headers);
+        const phNu = Object.assign({}, vhostP.headers);
         Object.keys(phNu).forEach(function (phNuK) {
           ph[phNuK] = phNu[phNuK];
         });
@@ -80,7 +80,7 @@ function requestHandler(req, res) {
       if (typeof b == "object") table = b;
       if (table == undefined) table = this.tHeaders;
       if (table == undefined) table = {};
-      table = Object.assign(table);
+      table = Object.assign({}, table);
       Object.keys(table).forEach(function (key) {
         const al = key.toLowerCase();
         if (

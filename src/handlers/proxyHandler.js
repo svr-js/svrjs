@@ -29,7 +29,7 @@ function proxyHandler(req, socket, head) {
   socket.on("error", () => {});
 
   // SVR.JS configuration object (modified)
-  const config = Object.assign(process.serverConfig);
+  const config = Object.assign({}, process.serverConfig);
 
   config.generateServerString = () => {
     return generateServerString(config.exposeServerVersion);
