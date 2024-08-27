@@ -4,16 +4,18 @@ const defaultPageCSS = require("../res/defaultPageCSS.js");
 const generateErrorStack = require("../utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const generateServerString = require("../utils/generateServerString.js");
+const deepClone = require("../utils/deepClone.js");
+
 let serverconsole = {};
 
 function clientErrorHandler(err, socket) {
-  const config = Object.assign({}, process.serverConfig);
+  const config = deepClone(process.serverConfig);
 
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
 
   // getCustomHeaders() in SVR.JS 3.x
-  config.getCustomHeaders = () => Object.assign({}, config.customHeaders);
+  config.getCustomHeaders = () => deepClone(config.customHeaders);
 
   // Prevent multiple error handlers from one request
   if (socket.__assigned__) {

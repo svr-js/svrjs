@@ -9,6 +9,7 @@ const ipMatch = require("../utils/ipMatch.js");
 const matchHostname = require("../utils/matchHostname.js");
 const generateServerString = require("../utils/generateServerString.js");
 const parseURL = require("../utils/urlParser.js");
+const deepClone = require("../utils/deepClone.js");
 
 let serverconsole = {};
 let middleware = [];
@@ -31,7 +32,7 @@ function requestHandler(req, res) {
   };
 
   // SVR.JS configuration object (modified)
-  const config = Object.assign({}, process.serverConfig);
+  const config = deepClone(process.serverConfig);
 
   config.generateServerString = () => {
     return generateServerString(config.exposeServerVersion);
@@ -39,7 +40,7 @@ function requestHandler(req, res) {
 
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
-    let ph = Object.assign({}, config.customHeaders);
+    let ph = deepClone(config.customHeaders);
     if (config.customHeadersVHost) {
       let vhostP = null;
       config.customHeadersVHost.every((vhost) => {

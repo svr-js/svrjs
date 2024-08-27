@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-unused-vars
-const svrjsInfo = require("../../svrjs.json");
+const deepClone = require("../utils/deepClone.js");
 
 let serverconsole = {};
 
@@ -28,7 +27,7 @@ function noproxyHandler(req, socket, head) {
   socket.on("error", () => {});
 
   // SVR.JS configuration object (modified)
-  const config = Object.assign({}, process.serverConfig);
+  const config = deepClone(process.serverConfig);
 
   var reqip = socket.remoteAddress;
   var reqport = socket.remotePort;

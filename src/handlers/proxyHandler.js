@@ -1,4 +1,5 @@
 const generateServerString = require("../utils/generateServerString");
+const deepClone = require("../utils/deepClone.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
@@ -29,7 +30,7 @@ function proxyHandler(req, socket, head) {
   socket.on("error", () => {});
 
   // SVR.JS configuration object (modified)
-  const config = Object.assign({}, process.serverConfig);
+  const config = deepClone(process.serverConfig);
 
   config.generateServerString = () => {
     return generateServerString(config.exposeServerVersion);
