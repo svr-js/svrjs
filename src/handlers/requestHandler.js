@@ -54,12 +54,7 @@ function requestHandler(req, res) {
           return true;
         }
       });
-      if (vhostP && vhostP.headers) {
-        const phNu = Object.assign({}, vhostP.headers);
-        Object.keys(phNu).forEach((phNuK) => {
-          ph[phNuK] = phNu[phNuK];
-        });
-      }
+      if (vhostP && vhostP.headers) ph = {...ph, ...vhostP.headers};
     }
     Object.keys(ph).forEach((phk) => {
       if (typeof ph[phk] == "string")
