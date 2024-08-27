@@ -1786,7 +1786,7 @@ function start(init) {
         serverconsole.locwarnmessage(
           "Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.",
         );
-      if (process.serverConfig.disableMods)
+      if (disableMods)
         serverconsole.locwarnmessage(
           `${name} is running without mods and server-side JavaScript enabled. Web applications may not work as expected`,
         );
