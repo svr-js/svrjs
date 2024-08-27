@@ -1315,12 +1315,10 @@ let commands = {
       log("No mods installed.");
     }
   },
-
   // eslint-disable-next-line no-unused-vars
   clear: (args, log) => {
     console.clear();
   },
-
   // eslint-disable-next-line no-unused-vars
   stop: (args, log) => {
     let retcode = args[0];
@@ -1537,7 +1535,6 @@ function forkWorkers(workersToFork, callback) {
 }
 
 // Listening message event listener
-
 // eslint-disable-next-line no-unused-vars
 process.messageEventListeners.push((worker, serverconsole) => {
   return (message) => {
