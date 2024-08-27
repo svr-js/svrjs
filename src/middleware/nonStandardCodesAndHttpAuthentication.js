@@ -199,25 +199,20 @@ module.exports = (req, res, logFacilities, config, next) => {
           if (cacheEntry) {
             cb(cacheEntry.hash);
           } else {
-            crypto.scrypt(
-              password,
-              list[_i].salt,
-              64,
-              (err, derivedKey) => {
-                if (err) {
-                  res.error(500, err);
-                } else {
-                  const key = derivedKey.toString("hex");
-                  scryptCache.push({
-                    hash: key,
-                    password: hashedPassword,
-                    salt: list[_i].salt,
-                    addDate: new Date(),
-                  });
-                  cb(key);
-                }
-              },
-            );
+            crypto.scrypt(password, list[_i].salt, 64, (err, derivedKey) => {
+              if (err) {
+                res.error(500, err);
+              } else {
+                const key = derivedKey.toString("hex");
+                scryptCache.push({
+                  hash: key,
+                  password: hashedPassword,
+                  salt: list[_i].salt,
+                  addDate: new Date(),
+                });
+                cb(key);
+              }
+            });
           }
         }
       } else if (list[_i].pbkdf2) {

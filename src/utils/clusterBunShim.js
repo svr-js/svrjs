@@ -119,7 +119,7 @@ if (!process.singleThreaded) {
           let oldLog = console.log;
           console.log = (...params) => {
             if (
-              a == "ChildProcess.prototype.send() - Sorry! Not implemented yet"
+              params[0] == "ChildProcess.prototype.send() - Sorry! Not implemented yet"
             ) {
               throw new Error("NOT IMPLEMENTED");
             } else {

@@ -687,17 +687,24 @@ if (!disableMods) {
                 // If there was another error, try creating the temp folder and then the modloader folder again
                 fs.mkdirSync(process.dirname + "/temp");
                 try {
-                  fs.mkdirSync(process.dirname + "/temp/" + modloaderFolderName);
+                  fs.mkdirSync(
+                    process.dirname + "/temp/" + modloaderFolderName,
+                  );
                 } catch (err) {
                   // If there was another error, throw it
                   if (err.code != "EEXIST") throw err;
                 }
               }
             }
-      
-            // Create a subfolder for the current mod within the modloader folder
-            fs.mkdirSync(process.dirname + "/temp/" + modloaderFolderName + "/" + modFileRaw);
 
+            // Create a subfolder for the current mod within the modloader folder
+            fs.mkdirSync(
+              process.dirname +
+                "/temp/" +
+                modloaderFolderName +
+                "/" +
+                modFileRaw,
+            );
           } catch (err) {
             // If there was an error creating the folder, ignore it if it's a known error
             if (err.code != "EEXIST" && err.code != "ENOENT") throw err;
