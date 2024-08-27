@@ -54,7 +54,7 @@ function requestHandler(req, res) {
           return true;
         }
       });
-      if (vhostP && vhostP.headers) ph = {...ph, ...vhostP.headers};
+      if (vhostP && vhostP.headers) ph = { ...ph, ...vhostP.headers };
     }
     Object.keys(ph).forEach((phk) => {
       if (typeof ph[phk] == "string")
@@ -369,24 +369,20 @@ function requestHandler(req, res) {
               }
             });
           } else {
-            fs.access(
-              "." + errorCode.toString(),
-              fs.constants.F_OK,
-              (err) => {
-                try {
-                  if (err) {
-                    callback(errorCode.toString() + ".html");
-                  } else {
-                    callback("." + errorCode.toString());
-                  }
-                } catch (err2) {
-                  res.error(500, err2);
+            fs.access("." + errorCode.toString(), fs.constants.F_OK, (err) => {
+              try {
+                if (err) {
+                  callback(errorCode.toString() + ".html");
+                } else {
+                  callback("." + errorCode.toString());
                 }
-              },
-            );
+              } catch (err2) {
+                res.error(500, err2);
+              }
+            });
           }
         }
-      }
+      };
 
       if (!_i) _i = 0;
       if (_i >= list.length) {
@@ -412,7 +408,7 @@ function requestHandler(req, res) {
           }
         });
       }
-    }
+    };
 
     getErrorFileName(config.errorPages, function (errorFile) {
       // Generate error stack if not provided

@@ -204,21 +204,17 @@ function clientErrorHandler(err, socket) {
               }
             });
           } else {
-            fs.access(
-              "." + errorCode.toString(),
-              fs.constants.F_OK,
-              (err) => {
-                try {
-                  if (err) {
-                    callback(errorCode.toString() + ".html");
-                  } else {
-                    callback("." + errorCode.toString());
-                  }
-                } catch (err2) {
-                  callServerError(500, err2);
+            fs.access("." + errorCode.toString(), fs.constants.F_OK, (err) => {
+              try {
+                if (err) {
+                  callback(errorCode.toString() + ".html");
+                } else {
+                  callback("." + errorCode.toString());
                 }
-              },
-            );
+              } catch (err2) {
+                callServerError(500, err2);
+              }
+            });
           }
         }
       };
