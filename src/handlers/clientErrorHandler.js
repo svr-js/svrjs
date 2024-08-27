@@ -183,7 +183,7 @@ function clientErrorHandler(err, socket) {
                 fs.access(
                   "." + errorCode.toString(),
                   fs.constants.F_OK,
-                  function (err) {
+                  (err) => {
                     try {
                       if (err) {
                         callback(errorCode.toString() + ".html");
@@ -207,7 +207,7 @@ function clientErrorHandler(err, socket) {
             fs.access(
               "." + errorCode.toString(),
               fs.constants.F_OK,
-              function (err) {
+              (err) => {
                 try {
                   if (err) {
                     callback(errorCode.toString() + ".html");

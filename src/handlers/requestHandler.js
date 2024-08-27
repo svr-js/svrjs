@@ -343,8 +343,8 @@ function requestHandler(req, res) {
     }
 
     // Determine error file
-    function getErrorFileName(list, callback, _i) {
-      function medCallback(p) {
+    const getErrorFileName = (list, callback, _i) => {
+      const medCallback = (p) => {
         if (p) callback(p);
         else {
           if (errorCode == 404) {
@@ -353,7 +353,7 @@ function requestHandler(req, res) {
                 fs.access(
                   "." + errorCode.toString(),
                   fs.constants.F_OK,
-                  function (err) {
+                  (err) => {
                     try {
                       if (err) {
                         callback(errorCode.toString() + ".html");
@@ -377,7 +377,7 @@ function requestHandler(req, res) {
             fs.access(
               "." + errorCode.toString(),
               fs.constants.F_OK,
-              function (err) {
+              (err) => {
                 try {
                   if (err) {
                     callback(errorCode.toString() + ".html");
