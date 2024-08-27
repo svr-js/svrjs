@@ -1,6 +1,7 @@
 const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
+const parseURL = require("../utils/urlParser.js");
 
 module.exports = (req, res, logFacilities, config, next) => {
   const matchHostname = (hostname) => {
@@ -30,8 +31,8 @@ module.exports = (req, res, logFacilities, config, next) => {
   if (!req.isProxy) {
     let preparedReqUrl3 = config.allowPostfixDoubleSlashes
       ? req.parsedURL.pathname.replace(/\/+/, "/") +
-        req.parsedURL.search +
-        req.parsedURL.hash
+        (req.parsedURL.search ? req.parsedURL.search : "") +
+        (req.parsedURL.hash ? req.parsedURL.hash : "")
       : req.url;
     let urlWithPostfix = preparedReqUrl3;
     let postfixPrefix = "";
@@ -78,7 +79,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       );
       req.url = urlWithPostfix;
       try {
-        req.parsedURL = new URL(
+        req.parsedURL = parseURL(
           req.url,
           `http${req.socket.encrypted ? "s" : ""}://${
             req.headers.host
@@ -98,7 +99,9 @@ module.exports = (req, res, logFacilities, config, next) => {
         config.allowDoubleSlashes,
       );
       const preparedReqUrl2 =
-        req.parsedURL.pathname + req.parsedURL.search + req.parsedURL.hash;
+        req.parsedURL.pathname +
+        (req.parsedURL.search ? req.parsedURL.search : "") +
+        (req.parsedURL.hash ? req.parsedURL.hash : "");
 
       if (
         req.url != preparedReqUrl2 ||
@@ -112,13 +115,15 @@ module.exports = (req, res, logFacilities, config, next) => {
         return;
       } else if (sHref != req.parsedURL.pathname) {
         let rewrittenAgainURL =
-          sHref + req.parsedURL.search + req.parsedURL.hash;
+          sHref +
+          (req.parsedURL.search ? req.parsedURL.search : "") +
+          (req.parsedURL.hash ? req.parsedURL.hash : "");
         logFacilities.resmessage(
           `URL sanitized: ${req.url} => ${rewrittenAgainURL}`,
         );
         req.url = rewrittenAgainURL;
         try {
-          req.parsedURL = new URL(
+          req.parsedURL = parseURL(
             req.url,
             `http${req.socket.encrypted ? "s" : ""}://${
               req.headers.host

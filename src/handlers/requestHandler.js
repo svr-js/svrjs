@@ -8,6 +8,8 @@ const fixNodeMojibakeURL = require("../utils/urlMojibakeFixer.js");
 const ipMatch = require("../utils/ipMatch.js");
 const matchHostname = require("../utils/matchHostname.js");
 const generateServerString = require("../utils/generateServerString.js");
+const parseURL = require("../utils/urlParser.js");
+
 let serverconsole = {};
 let middleware = [];
 
@@ -695,7 +697,7 @@ function requestHandler(req, res) {
   }
 
   try {
-    req.parsedURL = new URL(
+    req.parsedURL = parseURL(
       req.url,
       "http" +
         (req.socket.encrypted ? "s" : "") +

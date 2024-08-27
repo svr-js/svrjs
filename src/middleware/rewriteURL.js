@@ -3,6 +3,7 @@ const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
 const matchHostname = require("../utils/matchHostname.js");
+const parseURL = require("../utils/urlParser.js");
 
 module.exports = (req, res, logFacilities, config, next) => {
   try {
@@ -90,7 +91,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       logFacilities.resmessage(`URL rewritten: ${req.url} => ${rewrittenURL}`);
       req.url = rewrittenURL;
       try {
-        req.parsedURL = new URL(
+        req.parsedURL = parseURL(
           req.url,
           `http${req.socket.encrypted ? "s" : ""}://${
             req.headers.host
@@ -110,7 +111,9 @@ module.exports = (req, res, logFacilities, config, next) => {
         config.allowDoubleSlashes,
       );
       const preparedReqUrl2 =
-        req.parsedURL.pathname + req.parsedURL.search + req.parsedURL.hash;
+        req.parsedURL.pathname +
+        (req.parsedURL.search ? req.parsedURL.search : "") +
+        (req.parsedURL.hash ? req.parsedURL.hash : "");
 
       if (
         req.url != preparedReqUrl2 ||
@@ -124,13 +127,15 @@ module.exports = (req, res, logFacilities, config, next) => {
         return;
       } else if (sHref != req.parsedURL.pathname) {
         var rewrittenAgainURL =
-          sHref + req.parsedURL.search + req.parsedURL.hash;
+          sHref +
+          (req.parsedURL.search ? req.parsedURL.search : "") +
+          (req.parsedURL.hash ? req.parsedURL.hash : "");
         logFacilities.resmessage(
           "URL sanitized: " + req.url + " => " + rewrittenAgainURL,
         );
         req.url = rewrittenAgainURL;
         try {
-          req.parsedURL = new URL(
+          req.parsedURL = parseURL(
             req.url,
             `http${req.socket.encrypted ? "s" : ""}://${
               req.headers.host

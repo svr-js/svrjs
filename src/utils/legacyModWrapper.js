@@ -1,4 +1,3 @@
-const parseURL = require("../utils/urlParserLegacy.js");
 let formidable = undefined;
 try {
   formidable = require("formidable");
@@ -8,16 +7,11 @@ try {
   };
 }
 
-const legacyParsedURLSymbol = Symbol("legacyParsedURL");
-
 module.exports = (legacyMod) => {
   const legacyModHandler = new legacyMod();
 
   let middleware = (req, res, logFacilities, config, next) => {
-    if (!req[legacyParsedURLSymbol])
-      req[legacyParsedURLSymbol] = parseURL(req.url);
-
-    let ext = req[legacyParsedURLSymbol].pathname.match(/[^/]\.([^.]+)$/);
+    let ext = req.parsedURL.pathname.match(/[^/]\.([^.]+)$/);
     if (!ext) ext = "";
 
     // Function to parse incoming POST data from the request
@@ -66,10 +60,10 @@ module.exports = (legacyMod) => {
       res, // res
       logFacilities, // serverconsole
       res.responseEnd, // responseEnd
-      req[legacyParsedURLSymbol].pathname, // href
+      req.parsedURL.pathname, // href
       ext, // ext
-      req[legacyParsedURLSymbol], // uobject
-      req[legacyParsedURLSymbol].search, // search
+      req.parsedURL, // uobject
+      req.parsedURL.search, // search
       "index.html", // defaultpage
       config.users, // users
       config.page404, // page404

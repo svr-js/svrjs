@@ -20,8 +20,8 @@ module.exports = (req, res, logFacilities, config, next) => {
         res.redirect(
           req.originalParsedURL.pathname +
             "/" +
-            req.parsedURL.search +
-            req.parsedURL.hash,
+            (req.parsedURL.search ? req.parsedURL.search : "") +
+            (req.parsedURL.hash ? req.parsedURL.hash : ""),
         );
       }
     });
