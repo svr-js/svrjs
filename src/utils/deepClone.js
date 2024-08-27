@@ -27,12 +27,10 @@ function deepClone(obj) {
       _objectsArray.push(obj);
       _clonesArray.push(clone);
       Object.keys(obj).forEach((key) => {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          clone[key] =
-            typeof obj[key] !== "object" || obj[key] === null
-              ? obj[key]
-              : recurse(obj[key], _objectsArray, _clonesArray);
-        }
+        clone[key] =
+          typeof obj[key] !== "object" || obj[key] === null
+            ? obj[key]
+            : recurse(obj[key], _objectsArray, _clonesArray);
       });
     }
     return clone;
