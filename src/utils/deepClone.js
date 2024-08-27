@@ -20,7 +20,10 @@ function deepClone(obj) {
       _objectsArray.push(obj);
       _clonesArray.push(clone);
       obj.forEach((item, index) => {
-        clone[index] = recurse(item, _objectsArray, _clonesArray);
+        clone[index] =
+          typeof item !== "object" || item === null
+            ? item
+            : recurse(item, _objectsArray, _clonesArray);
       });
     } else {
       clone = {};
