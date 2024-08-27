@@ -162,7 +162,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           try {
             let rhd = config.getCustomHeaders();
             rhd["Accept-Ranges"] = "bytes";
-            rhd["Content-Range"] = "bytes */" + filelen;
+            rhd["Content-Range"] = `bytes */${filelen}`;
             const regexmatch = req.headers["range"].match(
               /bytes=([0-9]*)-([0-9]*)/,
             );
