@@ -42,7 +42,7 @@ function requestHandler(req, res) {
     let ph = Object.assign({}, config.customHeaders);
     if (config.customHeadersVHost) {
       let vhostP = null;
-      config.customHeadersVHost.every(function (vhost) {
+      config.customHeadersVHost.every((vhost) => {
         if (
           matchHostname(vhost.host, req.headers.host) &&
           ipMatch(vhost.ip, req.socket ? req.socket.localAddress : undefined)
@@ -55,12 +55,12 @@ function requestHandler(req, res) {
       });
       if (vhostP && vhostP.headers) {
         const phNu = Object.assign({}, vhostP.headers);
-        Object.keys(phNu).forEach(function (phNuK) {
+        Object.keys(phNu).forEach((phNuK) => {
           ph[phNuK] = phNu[phNuK];
         });
       }
     }
-    Object.keys(ph).forEach(function (phk) {
+    Object.keys(ph).forEach((phk) => {
       if (typeof ph[phk] == "string")
         ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
     });
@@ -77,7 +77,7 @@ function requestHandler(req, res) {
     res.writeHeadNodeApi = res.writeHead;
     res.setHeaderNodeApi = res.setHeader;
 
-    res.writeHead = function (a, b, c) {
+    res.writeHead = (a, b, c) => {
       let table = c;
       if (typeof b == "object") table = b;
       if (table == undefined) table = this.tHeaders;
@@ -99,7 +99,7 @@ function requestHandler(req, res) {
         return res.writeHeadNodeApi(a, table);
       }
     };
-    res.setHeader = function (headerName, headerValue) {
+    res.setHeader = (headerName, headerValue) => {
       const al = headerName.toLowerCase();
       if (
         al != "transfer-encoding" &&
