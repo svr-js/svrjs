@@ -78,7 +78,9 @@
     </code>
     <p>Changes:</p>
     <ul style="display: inline-block; margin: 0;">
-      <li><i>INSERT CHANGES THERE</i></li>
+      <% changes.forEach((change) => {%>
+        <li><%= change %></li>
+      <% }); %>
     </ul>
     <p>
       <a href="/tests.html">Tests</a><br />

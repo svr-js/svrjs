@@ -9,7 +9,7 @@ const dependencies =
 const requiredDependencyList = Object.keys(dependencies);
 let dependencyList = Object.keys(dependencies);
 const svrjsInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.json"));
-const { name, version, documentationURL } = svrjsInfo;
+const { name, version, documentationURL, changes } = svrjsInfo;
 
 // Function to find and add all dependencies into the dependencyList array.
 function findAllDependencies(curList) {
@@ -119,6 +119,7 @@ const indexPage = layoutTemplate({
     name: name,
     version: version,
     documentationURL: documentationURL,
+    changes: changes,
   }),
 });
 
