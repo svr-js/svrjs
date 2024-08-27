@@ -266,7 +266,7 @@ function requestHandler(req, res) {
   if (typeof req.headers.host == "string") {
     req.headers.host = req.headers.host.toLowerCase();
     if (!req.headers.host.match(/^\.+$/))
-      req.headers.host = req.headers.host.replace(/\.$/g, "");
+      req.headers.host = req.headers.host.replace(/\.$/, "");
   }
 
   logFacilities.reqmessage(
