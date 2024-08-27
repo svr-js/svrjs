@@ -730,27 +730,10 @@ function requestHandler(req, res) {
       try {
         currentMiddleware(req, res, logFacilities, config, next);
       } catch (err) {
-        if (res.error) res.error(500, err);
-        else {
-          logFacilities.errmessage(
-            "There was an error while processing the request!",
-          );
-          logFacilities.errmessage("Stack:");
-          logFacilities.errmessage(err.stack);
-          res.writeHead(500, "Internal Server Error", {
-            Server: generateServerString(config.exposeServerVersion),
-          });
-          res.end("Error while executing the request handler");
-        }
+        res.error(500, err);
       }
     } else {
-      if (res.error) res.error(404);
-      else {
-        res.writeHead(404, "Not Found", {
-          Server: generateServerString(config.exposeServerVersion),
-        });
-        res.end("Request handler missing");
-      }
+      res.error(404);
     }
   };
 
