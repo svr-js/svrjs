@@ -26,7 +26,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           !_fileState
         ) {
           fs.stat(
-            "." + decodeURIComponent(req.parsedUrl.pathname),
+            "." + decodeURIComponent(req.parsedURL.pathname),
             (err, stats) => {
               var _fileState = 3;
               if (err) {
