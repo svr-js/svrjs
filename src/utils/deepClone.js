@@ -4,41 +4,46 @@ function deepClone(obj) {
     return obj;
   }
 
-  const recurse = (obj, _objectsArray, _clonesArray) => {
-    if (!_objectsArray) _objectsArray = [];
-    if (!_clonesArray) _clonesArray = [];
+  const objectsArray = [];
+  const clonesArray = [];
 
-    let objectsArrayIndex = _objectsArray.indexOf(obj);
-    if (objectsArrayIndex != -1) {
-      return _clonesArray[objectsArrayIndex];
+  const recurse = (obj) => {
+    let objectsArrayIndex = -1;
+
+    for (let i = 0; i < objectsArray.length; i++) {
+      if (objectsArray[i] == obj) {
+        objectsArrayIndex = i;
+        break;
+      }
     }
 
-    let clone;
+    if (objectsArrayIndex != -1) {
+      return clonesArray[objectsArrayIndex];
+    }
 
     if (Array.isArray(obj)) {
-      clone = [];
-      _objectsArray.push(obj);
-      _clonesArray.push(clone);
+      const clone = [];
+      objectsArray.push(obj);
+      clonesArray.push(clone);
       obj.forEach((item, index) => {
         clone[index] =
-          typeof item !== "object" || item === null
-            ? item
-            : recurse(item, _objectsArray, _clonesArray);
+          typeof item !== "object" || item === null ? item : recurse(item);
       });
+      return clone;
     } else {
-      clone = {};
-      _objectsArray.push(obj);
-      _clonesArray.push(clone);
+      const clone = {};
+      objectsArray.push(obj);
+      clonesArray.push(clone);
       Object.keys(obj).forEach((key) => {
         clone[key] =
           typeof obj[key] !== "object" || obj[key] === null
             ? obj[key]
-            : recurse(obj[key], _objectsArray, _clonesArray);
+            : recurse(obj[key]);
       });
+      return clone;
     }
-    return clone;
   };
-  return recurse(obj);
+  return recurse(obj, objectsArray, clonesArray);
 }
 
 module.exports = deepClone;
