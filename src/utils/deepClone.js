@@ -1,5 +1,5 @@
 // Function to deep clone an object or array
-function deepClone(obj) {
+function deepClone(obj, isFullObject) {
   if (typeof obj !== "object" || obj === null) {
     return obj;
   }
@@ -31,7 +31,7 @@ function deepClone(obj) {
       });
       return clone;
     } else {
-      const clone = {};
+      const clone = isFullObject ? {} : Object.create(null);
       objectsArray.push(obj);
       clonesArray.push(clone);
       Object.keys(obj).forEach((key) => {

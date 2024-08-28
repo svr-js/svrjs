@@ -225,7 +225,7 @@ if (fs.existsSync(process.dirname + "/config.json")) {
   try {
     configJSONf = fs.readFileSync(process.dirname + "/config.json"); // Read JSON File
     try {
-      process.serverConfig = JSON.parse(configJSONf); // Parse JSON
+      process.serverConfig = Object.assign(Object.create(null), JSON.parse(configJSONf)); // Parse JSON and assign it to null prototype object
     } catch (err2) {
       configJSONPErr = err2;
     }
