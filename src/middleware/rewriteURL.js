@@ -131,7 +131,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           (req.parsedURL.search ? req.parsedURL.search : "") +
           (req.parsedURL.hash ? req.parsedURL.hash : "");
         logFacilities.resmessage(
-          "URL sanitized: " + req.url + " => " + rewrittenAgainURL,
+          `URL sanitized: ${req.url} => ${rewrittenAgainURL}`,
         );
         req.url = rewrittenAgainURL;
         try {
