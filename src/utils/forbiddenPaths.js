@@ -22,57 +22,50 @@ function getInitializePath(to) {
   }
 }
 
-// Function to check if URL path name is a forbidden path.
 function isForbiddenPath(decodedHref, match) {
   const forbiddenPath = forbiddenPaths[match];
   if (!forbiddenPath) return false;
+
+  const isWin32 = os.platform() === "win32";
+  const decodedHrefLower = isWin32 ? decodedHref.toLowerCase() : null;
+
   if (typeof forbiddenPath === "string") {
-    return (
-      decodedHref === forbiddenPath ||
-      (os.platform() === "win32" &&
-        decodedHref.toLowerCase() === forbiddenPath.toLowerCase())
-    );
+    return isWin32
+      ? decodedHrefLower === forbiddenPath.toLowerCase()
+      : decodedHref === forbiddenPath;
   }
+
   if (typeof forbiddenPath === "object") {
-    return forbiddenPath.some((forbiddenPathSingle) => {
-      return (
-        decodedHref === forbiddenPathSingle ||
-        (os.platform() === "win32" &&
-          decodedHref.toLowerCase() === forbiddenPathSingle.toLowerCase())
-      );
-    });
+    return isWin32
+      ? forbiddenPath.some((path) => decodedHrefLower === path.toLowerCase())
+      : forbiddenPath.includes(decodedHref);
   }
+
   return false;
 }
 
-// Function to check if URL path name is index of one of defined forbidden paths.
 function isIndexOfForbiddenPath(decodedHref, match) {
   const forbiddenPath = forbiddenPaths[match];
   if (!forbiddenPath) return false;
+
+  const isWin32 = os.platform() === "win32";
+  const decodedHrefLower = isWin32 ? decodedHref.toLowerCase() : null;
+
   if (typeof forbiddenPath === "string") {
-    return (
-      decodedHref === forbiddenPath ||
-      decodedHref.indexOf(forbiddenPath + "/") === 0 ||
-      (os.platform() === "win32" &&
-        (decodedHref.toLowerCase() === forbiddenPath.toLowerCase() ||
-          decodedHref
-            .toLowerCase()
-            .indexOf(forbiddenPath.toLowerCase() + "/") === 0))
-    );
+    const forbiddenPathLower = isWin32 ? forbiddenPath.toLowerCase() : null;
+    return isWin32
+      ? decodedHrefLower.indexOf(forbiddenPathLower) == 0
+      : decodedHref.indexOf(forbiddenPath) == 0;
   }
+
   if (typeof forbiddenPath === "object") {
-    return forbiddenPath.some((forbiddenPathSingle) => {
-      return (
-        decodedHref === forbiddenPathSingle ||
-        decodedHref.indexOf(forbiddenPathSingle + "/") === 0 ||
-        (os.platform() === "win32" &&
-          (decodedHref.toLowerCase() === forbiddenPathSingle.toLowerCase() ||
-            decodedHref
-              .toLowerCase()
-              .indexOf(forbiddenPathSingle.toLowerCase() + "/") === 0))
-      );
-    });
+    return isWin32
+      ? forbiddenPath.some(
+          (path) => decodedHrefLower.indexOf(path.toLowerCase()) == 0,
+        )
+      : forbiddenPath.some((path) => decodedHref.indexOf(path) == 0);
   }
+
   return false;
 }
 
