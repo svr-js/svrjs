@@ -14,7 +14,7 @@ module.exports = (legacyMod) => {
     let ext = req.parsedURL.pathname.match(/[^/]\.([^.]+)$/);
     if (!ext) ext = "";
     else ext = ext[1].toLowerCase();
-    
+
     // Function to parse incoming POST data from the request
     const parsePostData = (options, callback) => {
       // If the request method is not POST, return a 405 Method Not Allowed error
