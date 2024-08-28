@@ -1,6 +1,6 @@
 const url = require("url");
 
-// SVR.JS URL parser function (needed only for SVR.JS 2.x and 3.x mods)
+// SVR.JS URL parser function (compatible with legacy Node.JS URL parsing function)
 function parseURL(uri, prepend) {
   // Replace newline characters with its respective URL encodings
   uri = uri.replace(/\r/g, "%0D").replace(/\n/g, "%0A");
