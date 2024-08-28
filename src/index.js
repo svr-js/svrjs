@@ -216,6 +216,7 @@ const {
   calculateBroadcastIPv4FromCidr,
 } = require("./utils/ipSubnetUtils.js");
 const sendStatistics = require("./utils/sendStatistics.js");
+const deepClone = require("./utils/deepClone.js");
 
 process.serverConfig = {};
 let configJSONRErr = undefined;
@@ -225,7 +226,7 @@ if (fs.existsSync(process.dirname + "/config.json")) {
   try {
     configJSONf = fs.readFileSync(process.dirname + "/config.json"); // Read JSON File
     try {
-      process.serverConfig = Object.assign(Object.create(null), JSON.parse(configJSONf)); // Parse JSON and assign it to null prototype object
+      process.serverConfig = deepClone(JSON.parse(configJSONf)); // Parse JSON and deep clone to null prototype object
     } catch (err2) {
       configJSONPErr = err2;
     }
