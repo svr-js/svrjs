@@ -1,0 +1,10 @@
+      <div style="width: 100%; background-color: #ccc; background-color: rgba(200, 200, 200, 0.3); border: 1px solid green; text-align: left; margin: 10px 0;">
+        <div style="float: right;">License: <%= license ? license : "Unknown" %></div>
+        <div style="font-size: 20px;">
+          <b><%= moduleName %></b><% if (author) { %> (by <%= author %>)<% } %>
+        </div>
+        <div style="font-size: 12px;">
+          <%= description %><% if (required) { %><br/>
+          <b>Required by <%= name %>.</b><% } %>
+        </div>
+      </div>

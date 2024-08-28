@@ -1,0 +1,9 @@
+{
+  "version": "4.0.0-beta1",
+  "name": "SVR.JS",
+  "documentationURL": "https://svrjs.org/docs/tentative",
+  "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
+  "changes": [
+    "First SVR.JS 4.0.0 beta version"
+  ]
+}

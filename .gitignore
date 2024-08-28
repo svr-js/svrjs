@@ -1,2 +1,4 @@
-commit.sh
-log
+node_modules
+generatedAssets
+dist
+out

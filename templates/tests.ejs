@@ -1,0 +1,18 @@
+    <h1><%= name %> <%= version %> Tests</h1>
+    <h2>Directory (without trailing slash)</h2>
+    <iframe src="/testdir" width="75%" height="300px"></iframe>
+    <h2>Directory (with query)</h2>
+    <iframe src="/testdir/?query=value" width="75%" height="300px"></iframe>
+    <h2>Directory (personalized)</h2>
+    <iframe src="/testdir/.personalized" width="75%" height="300px"></iframe>
+    <h2>404 Error</h2>
+    <iframe src="/tfhgfhggf" width="75%" height="300px"></iframe>
+    <h2>Server Side Javascript</h2>
+    <iframe src="/hello.svr" width="75%" height="300px"></iframe>
+    <h2>Proxy test</h2>
+    <iframe src="/proxy.svr/this/hello.svr" width="75%" height="300px" id="proxy"></iframe>
+    <h2>URL rewriting test (/testdir_rewritten => /testdir)</h2>
+    <iframe src="/testdir_rewritten" width="75%" height="300px"></iframe>
+    <br/>
+    <br/>
+    <img src="/powered.png" />
