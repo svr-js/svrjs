@@ -1674,7 +1674,7 @@ function saveConfig() {
       if (configJSONobj.optOutOfStatisticsServer === undefined)
         configJSONobj.optOutOfStatisticsServer = false;
 
-      fs.writeFileSync(__dirname + "/config.json", JSON.stringify(configJSONobj, null, 2) + "\n");
+      fs.writeFileSync(process.dirname + "/config.json", JSON.stringify(configJSONobj, null, 2) + "\n");
       break;
     } catch (err) {
       if (i >= 2) throw err;
