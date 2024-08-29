@@ -44,7 +44,7 @@ function clientErrorHandler(err, socket) {
       if (err.code === "ECONNRESET" || !socket.writable) {
         return;
       }
-      socket.end(x, function () {
+      socket.end(x, () => {
         try {
           socket.destroy();
           // eslint-disable-next-line no-unused-vars
@@ -60,9 +60,9 @@ function clientErrorHandler(err, socket) {
       headers = Object.assign({}, headers);
       headers["Date"] = new Date().toGMTString();
       headers["Connection"] = "close";
-      Object.keys(headers).forEach(function (headername) {
+      Object.keys(headers).forEach((headername) => {
         if (headername.toLowerCase() == "set-cookie") {
-          headers[headername].forEach(function (headerValueS) {
+          headers[headername].forEach((headerValueS) => {
             if (
               // eslint-disable-next-line no-control-regex
               headername.match(/[^\x09\x20-\x7e\x80-\xff]|.:/) ||
@@ -105,7 +105,7 @@ function clientErrorHandler(err, socket) {
     locmessage: (msg) => serverconsole.locmessage(msg, reqId),
   };
 
-  socket.on("close", function (hasError) {
+  socket.on("close", (hasError) => {
     if (
       !hasError ||
       err.code == "ERR_SSL_HTTP_REQUEST" ||
@@ -114,7 +114,7 @@ function clientErrorHandler(err, socket) {
       logFacilities.locmessage("Client disconnected.");
     else logFacilities.locmessage("Client disconnected due to error.");
   });
-  socket.on("error", function () {});
+  socket.on("error", () => {});
 
   // Header and footer placeholders
   let head = "";
@@ -178,7 +178,7 @@ function clientErrorHandler(err, socket) {
         if (p) callback(p);
         else {
           if (errorCode == 404) {
-            fs.access(config.page404, fs.constants.F_OK, function (err) {
+            fs.access(config.page404, fs.constants.F_OK, (err) => {
               if (err) {
                 fs.access(
                   "." + errorCode.toString(),
@@ -229,7 +229,7 @@ function clientErrorHandler(err, socket) {
         getErrorFileName(list, callback, _i + 1);
         return;
       } else {
-        fs.access(list[_i].path, fs.constants.F_OK, function (err) {
+        fs.access(list[_i].path, fs.constants.F_OK, (err) => {
           if (err) {
             getErrorFileName(list, callback, _i + 1);
           } else {
@@ -239,7 +239,7 @@ function clientErrorHandler(err, socket) {
       }
     };
 
-    getErrorFileName(config.errorPages, function (errorFile) {
+    getErrorFileName(config.errorPages, (errorFile) => {
       if (Object.prototype.toString.call(stack) === "[object Error]")
         stack = generateErrorStack(stack);
       if (stack === undefined)
@@ -313,7 +313,7 @@ function clientErrorHandler(err, socket) {
           );
           res.end();
         } else {
-          fs.readFile(errorFile, function (err, data) {
+          fs.readFile(errorFile, (err, data) => {
             try {
               if (err) throw err;
               res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
