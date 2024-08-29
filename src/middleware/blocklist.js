@@ -23,14 +23,14 @@ module.exports.commands = {
     if (ip == undefined || JSON.stringify(ip) == "[]") {
       if (!cluster.isPrimary === false) log("Cannot block non-existent IP.");
     } else {
-      for (var i = 0; i < ip.length; i++) {
-        if (ip[i] != "localhost" && ip[i].indexOf(":") == -1) {
-          ip[i] = "::ffff:" + ip[i];
+      ip.forEach((ipAddress) => {
+        if (ipAddress !== "localhost" && ipAddress.indexOf(":") == -1) {
+          ipAddress = "::ffff:" + ipAddress;
         }
-        if (!blocklist.check(ip[i])) {
-          blocklist.add(ip[i]);
+        if (!blocklist.check(ipAddress)) {
+          blocklist.add(ipAddress);
         }
-      }
+      });
       process.serverConfig.blacklist = blocklist.raw;
       if (!cluster.isPrimary === false) log("IPs successfully blocked.");
       passCommand(ip, log);
@@ -40,12 +40,12 @@ module.exports.commands = {
     if (ip == undefined || JSON.stringify(ip) == "[]") {
       if (!cluster.isPrimary === false) log("Cannot unblock non-existent IP.");
     } else {
-      for (var i = 0; i < ip.length; i++) {
-        if (ip[i].indexOf(":") == -1) {
-          ip[i] = "::ffff:" + ip[i];
+      ip.forEach((ipAddress) => {
+        if (ipAddress !== "localhost" && ipAddress.indexOf(":") == -1) {
+          ipAddress = "::ffff:" + ipAddress;
         }
-        blocklist.remove(ip[i]);
-      }
+        blocklist.remove(ipAddress);
+      });
       process.serverConfig.blacklist = blocklist.raw;
       if (!cluster.isPrimary === false) log("IPs successfully unblocked.");
       passCommand(ip, log);
