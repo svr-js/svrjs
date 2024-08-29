@@ -117,6 +117,13 @@ describe("Forbidden paths handling", () => {
       expect(
         isIndexOfForbiddenPath("/notforbidden/", "serverSideScriptDirectories"),
       ).toBe(false);
+      expect(isIndexOfForbiddenPath("/config.json.fake", "config")).toBe(false);
+      expect(
+        isIndexOfForbiddenPath(
+          "/node_modules_fake/",
+          "serverSideScriptDirectories",
+        ),
+      ).toBe(false);
     });
 
     test("should handle case insensitivity on Windows", () => {

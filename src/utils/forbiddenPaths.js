@@ -54,16 +54,23 @@ function isIndexOfForbiddenPath(decodedHref, match) {
   if (typeof forbiddenPath === "string") {
     const forbiddenPathLower = isWin32 ? forbiddenPath.toLowerCase() : null;
     return isWin32
-      ? decodedHrefLower.indexOf(forbiddenPathLower) == 0
-      : decodedHref.indexOf(forbiddenPath) == 0;
+      ? decodedHrefLower === forbiddenPathLower ||
+          decodedHrefLower.indexOf(forbiddenPathLower + "/") == 0
+      : decodedHref === forbiddenPath ||
+          decodedHref.indexOf(forbiddenPath + "/") == 0;
   }
 
   if (typeof forbiddenPath === "object") {
     return isWin32
       ? forbiddenPath.some(
-          (path) => decodedHrefLower.indexOf(path.toLowerCase()) == 0,
+          (path) =>
+            decodedHrefLower === path.toLowerCase() ||
+            decodedHrefLower.indexOf(path.toLowerCase() + "/") == 0,
         )
-      : forbiddenPath.some((path) => decodedHref.indexOf(path) == 0);
+      : forbiddenPath.some(
+          (path) =>
+            decodedHref === path || decodedHref.indexOf(path + "/") == 0,
+        );
   }
 
   return false;
