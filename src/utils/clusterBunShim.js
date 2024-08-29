@@ -26,9 +26,7 @@ if (!process.singleThreaded) {
       cluster.worker = {
         id: parseInt(process.env.NODE_UNIQUE_ID),
         process: process,
-        isDead: () => {
-          return false;
-        },
+        isDead: () => false,
         send: (message, ...params) => {
           process.send(message, ...params);
         },
@@ -98,9 +96,7 @@ if (!process.singleThreaded) {
       });
 
       newWorker.process = newWorker;
-      newWorker.isDead = () => {
-        return newWorker.exitCode !== null || newWorker.killed;
-      };
+      newWorker.isDead = () => newWorker.exitCode !== null || newWorker.killed;
       newWorker.id = newEnvironment.NODE_UNIQUE_ID;
 
       function checkSendImplementation(worker) {

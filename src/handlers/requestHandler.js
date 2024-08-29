@@ -34,9 +34,8 @@ function requestHandler(req, res) {
   // SVR.JS configuration object (modified)
   const config = deepClone(process.serverConfig);
 
-  config.generateServerString = () => {
-    return generateServerString(config.exposeServerVersion);
-  };
+  config.generateServerString = () =>
+    generateServerString(config.exposeServerVersion);
 
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {

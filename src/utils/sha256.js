@@ -22,37 +22,14 @@ function sha256(s) {
       return (msw << 16) | (lsw & 0xffff);
     };
 
-    const S = (X, n) => {
-      return (X >>> n) | (X << (32 - n));
-    };
-
-    const R = (X, n) => {
-      return X >>> n;
-    };
-
-    const Ch = (x, y, z) => {
-      return (x & y) ^ (~x & z);
-    };
-
-    const Maj = (x, y, z) => {
-      return (x & y) ^ (x & z) ^ (y & z);
-    };
-
-    const Sigma0256 = (x) => {
-      return S(x, 2) ^ S(x, 13) ^ S(x, 22);
-    };
-
-    const Sigma1256 = (x) => {
-      return S(x, 6) ^ S(x, 11) ^ S(x, 25);
-    };
-
-    const Gamma0256 = (x) => {
-      return S(x, 7) ^ S(x, 18) ^ R(x, 3);
-    };
-
-    const Gamma1256 = (x) => {
-      return S(x, 17) ^ S(x, 19) ^ R(x, 10);
-    };
+    const S = (X, n) => (X >>> n) | (X << (32 - n));
+    const R = (X, n) => X >>> n;
+    const Ch = (x, y, z) => (x & y) ^ (~x & z);
+    const Maj = (x, y, z) => (x & y) ^ (x & z) ^ (y & z);
+    const Sigma0256 = (x) => S(x, 2) ^ S(x, 13) ^ S(x, 22);
+    const Sigma1256 = (x) => S(x, 6) ^ S(x, 11) ^ S(x, 25);
+    const Gamma0256 = (x) => S(x, 7) ^ S(x, 18) ^ R(x, 3);
+    const Gamma1256 = (x) => S(x, 17) ^ S(x, 19) ^ R(x, 10);
 
     function coreSha256(m, l) {
       const K = new Array(

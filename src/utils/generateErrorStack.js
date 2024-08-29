@@ -5,9 +5,9 @@ function generateErrorStack(errorObject) {
 
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (
-    errorStack.some((errorStackLine) => {
-      return errorStackLine.indexOf(errorObject.name) == 0;
-    })
+    errorStack.some(
+      (errorStackLine) => errorStackLine.indexOf(errorObject.name) == 0,
+    )
   ) {
     return errorObject.stack;
   }

@@ -1719,9 +1719,7 @@ function start(init) {
               /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/,
             )
           ) &&
-          process.serverConfig.users.some((entry) => {
-            return entry.pbkdf2;
-          })
+          process.serverConfig.users.some((entry) => entry.pbkdf2)
         )
           serverconsole.locwarnmessage(
             "PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service.",
