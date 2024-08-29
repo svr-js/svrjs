@@ -78,7 +78,7 @@ function LOG(s) {
 }
 
 // Server console function
-var serverconsole = {
+const serverconsole = {
   climessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {

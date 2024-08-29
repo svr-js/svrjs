@@ -2,7 +2,7 @@
 function ipBlockList(rawBlockList) {
   // Initialize the instance with empty arrays
   if (rawBlockList === undefined) rawBlockList = [];
-  var instance = {
+  const instance = {
     raw: [],
     rawtoPreparedMap: [],
     prepared: [],

@@ -36,8 +36,8 @@ function proxyHandler(req, socket, head) {
     return generateServerString(config.exposeServerVersion);
   };
 
-  var reqip = socket.remoteAddress;
-  var reqport = socket.remotePort;
+  const reqip = socket.remoteAddress;
+  const reqport = socket.remotePort;
   process.reqcounter++;
   logFacilities.locmessage(
     `Somebody connected to ${

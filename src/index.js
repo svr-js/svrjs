@@ -422,7 +422,7 @@ try {
 } catch (err) {
   ifaceEx = err;
 }
-var ips = [];
+let ips = [];
 const brdIPs = ["255.255.255.255", "127.255.255.255", "0.255.255.255"];
 const netIPs = ["127.0.0.0"];
 
@@ -461,7 +461,7 @@ if (ips.length == 0) {
 }
 
 // Server IP address
-var host = ips[ips.length - 1];
+let host = ips[ips.length - 1];
 if (!host) host = "[offline]";
 
 // Public IP address-related
@@ -1132,7 +1132,7 @@ if (process.serverConfig.secure) {
         key: sniCredentialsSingle.key,
       });
       try {
-        var snMatches = sniCredentialsSingle.name.match(
+        let snMatches = sniCredentialsSingle.name.match(
           /^([^:[]*|\[[^]]*\]?)((?::.*)?)$/,
         );
         if (!snMatches[1][0].match(/^\.+$/))
@@ -1414,7 +1414,7 @@ function SVRJSFork() {
       "Starting next thread, because previous one hung up/crashed...",
     );
   // Fork new worker
-  var newWorker = {};
+  let newWorker = {};
   try {
     if (
       !threadLimitWarned &&
@@ -1518,7 +1518,7 @@ function getWorkerCountToFork() {
 }
 
 function forkWorkers(workersToFork, callback) {
-  for (var i = 0; i < workersToFork; i++) {
+  for (let i = 0; i < workersToFork; i++) {
     if (i == 0) {
       SVRJSFork();
     } else {
@@ -1582,9 +1582,9 @@ function msgListener(message) {
 
 // Save configuration file
 function saveConfig() {
-  for (var i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     try {
-      var configJSONobj = {};
+      let configJSONobj = {};
       if (fs.existsSync(process.dirname + "/config.json"))
         configJSONobj = JSON.parse(
           fs.readFileSync(process.dirname + "/config.json").toString(),
@@ -1674,12 +1674,11 @@ function saveConfig() {
       if (configJSONobj.optOutOfStatisticsServer === undefined)
         configJSONobj.optOutOfStatisticsServer = false;
 
-      var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
-      fs.writeFileSync(__dirname + "/config.json", configString);
+      fs.writeFileSync(__dirname + "/config.json", JSON.stringify(configJSONobj, null, 2) + "\n");
       break;
     } catch (err) {
       if (i >= 2) throw err;
-      var now = Date.now();
+      const now = Date.now();
       while (Date.now() - now < 2);
     }
   }
@@ -1967,8 +1966,8 @@ function start(init) {
       }, 300000);
     } else if (cluster.isPrimary) {
       setInterval(() => {
-        var allWorkers = Object.keys(cluster.workers);
-        var goodWorkers = [];
+        let allWorkers = Object.keys(cluster.workers);
+        let goodWorkers = [];
 
         const checkWorker = (callback, _id) => {
           if (typeof _id === "undefined") _id = 0;
@@ -2058,8 +2057,8 @@ function start(init) {
             commands[line.split(" ")[0]] !== undefined &&
             commands[line.split(" ")[0]] !== null
           ) {
-            var argss = line.split(" ");
-            var command = argss.shift();
+            let argss = line.split(" ");
+            const command = argss.shift();
             commands[command](argss, (msg) => process.send(msg));
             process.send("\x12END");
           } else {
@@ -2087,15 +2086,15 @@ function start(init) {
         const command = argss.shift();
         if (line != "") {
           if (cluster.isPrimary !== undefined) {
-            var allWorkers = Object.keys(cluster.workers);
+            let allWorkers = Object.keys(cluster.workers);
             if (command == "block")
               commands.block(argss, serverconsole.climessage);
             if (command == "unblock")
               commands.unblock(argss, serverconsole.climessage);
             if (command == "restart") {
-              var stopError = false;
+              let stopError = false;
               exiting = true;
-              for (var i = 0; i < allWorkers.length; i++) {
+              for (let i = 0; i < allWorkers.length; i++) {
                 try {
                   if (cluster.workers[allWorkers[i]]) {
                     cluster.workers[allWorkers[i]].kill();
@@ -2224,7 +2223,7 @@ function start(init) {
               !process.serverConfig.secure
             ) {
               // It doesn't support through Unix sockets or Windows named pipes
-              var address = (
+              let address = (
                 typeof process.serverConfig.port == "number" && listenAddress
                   ? listenAddress
                   : "localhost"
@@ -2232,7 +2231,7 @@ function start(init) {
               if (address.indexOf(":") > -1) {
                 address = "[" + address + "]";
               }
-              var connection = http2.connect(
+              const connection = http2.connect(
                 "http://" +
                   address +
                   ":" +

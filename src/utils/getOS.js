@@ -1,12 +1,12 @@
 const os = require("os");
 
 function getOS() {
-  var osType = os.type();
-  var platform = os.platform();
+  const osType = os.type();
+  const platform = os.platform();
   if (platform == "android") {
     return "Android";
   } else if (osType == "Windows_NT" || osType == "WindowsNT") {
-    var arch = os.arch();
+    const arch = os.arch();
     if (arch == "ia32") {
       return "Win32";
     } else if (arch == "x64") {

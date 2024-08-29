@@ -29,8 +29,8 @@ function noproxyHandler(req, socket, head) {
   // SVR.JS configuration object (modified)
   const config = deepClone(process.serverConfig);
 
-  var reqip = socket.remoteAddress;
-  var reqport = socket.remotePort;
+  const reqip = socket.remoteAddress;
+  const reqport = socket.remotePort;
   process.reqcounter++;
   logFacilities.locmessage(
     `Somebody connected to ${

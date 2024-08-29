@@ -29,7 +29,7 @@ let passwordHashCacheIntervalId = -1;
 // Non-standard code object
 let nonStandardCodes = [];
 process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
-  var newObject = {};
+  let newObject = {};
   Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
     if (nsKey != "users") {
       newObject[nsKey] = nonStandardCodeRaw[nsKey];
@@ -77,7 +77,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         );
         if (nonStandardCodes[i].regex) {
           // Regex match
-          var createdRegex = createRegex(nonStandardCodes[i].regex, true);
+          const createdRegex = createRegex(nonStandardCodes[i].regex, true);
           isMatch =
             req.url.match(createdRegex) ||
             hrefWithoutDuplicateSlashes.match(createdRegex);
