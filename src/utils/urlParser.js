@@ -1,6 +1,6 @@
 const url = require("url");
 
-// SVR.JS URL parser function (needed only for SVR.JS 2.x and 3.x mods)
+// SVR.JS URL parser function (compatible with legacy Node.JS URL parsing function)
 function parseURL(uri, prepend) {
   // Replace newline characters with its respective URL encodings
   uri = uri.replace(/\r/g, "%0D").replace(/\n/g, "%0A");
@@ -13,7 +13,7 @@ function parseURL(uri, prepend) {
 
   // Parse the URL using regular expression
   let parsedURI = uri.match(
-    /^(?:([^:]+:)(\/\/)?)?(?:([^@/?#*]+)@)?([^:/?#*]+|\[[^*]\/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/,
+    /^(?:([^:]+:)(\/\/)?)?(?:([^@/?#*]+)@)?([^:/?#*]+|\[[^*\]/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/,
   );
   // Match 1: protocol
   // Match 2: slashes after protocol

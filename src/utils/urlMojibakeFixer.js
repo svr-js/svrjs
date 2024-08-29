@@ -1,21 +1,16 @@
 // Node.JS mojibake URL fixing function
 function fixNodeMojibakeURL(string) {
-  var encoded = "";
-
-  //Encode URLs
-  Buffer.from(string, "latin1").forEach((value) => {
-    if (value > 127) {
-      encoded +=
-        "%" + (value < 16 ? "0" : "") + value.toString(16).toUpperCase();
-    } else {
-      encoded += String.fromCodePoint(value);
-    }
-  });
-
-  //Upper case the URL encodings
-  return encoded.replace(/%[0-9a-f-A-F]{2}/g, (match) => {
-    return match.toUpperCase();
-  });
+  return Buffer.from(string, "latin1")
+    .reduce((result, value) => {
+      if (value > 127) {
+        result +=
+          "%" + (value < 16 ? "0" : "") + value.toString(16).toUpperCase();
+      } else {
+        result += String.fromCharCode(value);
+      }
+      return result;
+    }, "")
+    .replace(/%[0-9a-f]{2}/gi, (match) => match.toUpperCase());
 }
 
 module.exports = fixNodeMojibakeURL;

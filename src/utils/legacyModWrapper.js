@@ -13,6 +13,7 @@ module.exports = (legacyMod) => {
   let middleware = (req, res, logFacilities, config, next) => {
     let ext = req.parsedURL.pathname.match(/[^/]\.([^.]+)$/);
     if (!ext) ext = "";
+    else ext = ext[1].toLowerCase();
 
     // Function to parse incoming POST data from the request
     const parsePostData = (options, callback) => {

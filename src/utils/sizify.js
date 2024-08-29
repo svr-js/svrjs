@@ -1,26 +1,25 @@
 function sizify(bytes, addI) {
-  if (bytes == 0) return "0";
+  if (bytes === 0) return "0";
   if (bytes < 0) bytes = -bytes;
+
   const prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
-  let prefixIndex = Math.floor(
-    Math.log2 ? Math.log2(bytes) / 10 : Math.log(bytes) / (Math.log(2) * 10),
+  const prefixIndex = Math.min(
+    Math.floor(Math.log2(bytes) / 10),
+    prefixes.length - 1,
   );
-  if (prefixIndex >= prefixes.length - 1) prefixIndex = prefixes.length - 1;
-  let prefixIndexTranslated = Math.pow(2, 10 * prefixIndex);
-  let decimalPoints =
-    2 -
-    Math.floor(
-      Math.log10
-        ? Math.log10(bytes / prefixIndexTranslated)
-        : Math.log(bytes / prefixIndexTranslated) / Math.log(10),
-    );
-  if (decimalPoints < 0) decimalPoints = 0;
-  return (
+  const prefixIndexTranslated = Math.pow(2, 10 * prefixIndex);
+  const decimalPoints = Math.max(
+    2 - Math.floor(Math.log10(bytes / prefixIndexTranslated)),
+    0,
+  );
+
+  const size =
     Math.ceil((bytes / prefixIndexTranslated) * Math.pow(10, decimalPoints)) /
-      Math.pow(10, decimalPoints) +
-    prefixes[prefixIndex] +
-    (prefixIndex > 0 && addI ? "i" : "")
-  );
+    Math.pow(10, decimalPoints);
+  const prefix = prefixes[prefixIndex];
+  const suffix = prefixIndex > 0 && addI ? "i" : "";
+
+  return size + prefix + suffix;
 }
 
 module.exports = sizify;
