@@ -30,7 +30,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           fs.stat(
             "." + decodeURIComponent(req.parsedURL.pathname),
             (err, stats) => {
-              var _fileState = 3;
+              let _fileState = 3;
               if (err) {
                 _fileState = 3;
               } else if (stats.isDirectory()) {
@@ -126,7 +126,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         logFacilities.errmessage("Content blocked.");
         return;
       } else if (sHref != req.parsedURL.pathname) {
-        var rewrittenAgainURL =
+        const rewrittenAgainURL =
           sHref +
           (req.parsedURL.search ? req.parsedURL.search : "") +
           (req.parsedURL.hash ? req.parsedURL.hash : "");

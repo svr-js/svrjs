@@ -2,7 +2,7 @@
 function ipBlockList(rawBlockList) {
   // Initialize the instance with empty arrays
   if (rawBlockList === undefined) rawBlockList = [];
-  var instance = {
+  const instance = {
     raw: [],
     rawtoPreparedMap: [],
     prepared: [],
@@ -10,9 +10,8 @@ function ipBlockList(rawBlockList) {
   };
 
   // Function to normalize IPv4 address (remove leading zeros)
-  const normalizeIPv4Address = (address) => {
-    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
-  };
+  const normalizeIPv4Address = (address) =>
+    address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
 
   // Function to expand IPv6 address to full format
   const expandIPv6Address = (address) => {
@@ -236,9 +235,7 @@ function ipBlockList(rawBlockList) {
       ? checkIfIPv4CIDRMatches
       : checkIfIPv6CIDRMatches;
 
-    return instance.cidrs.some((iCidr) => {
-      return checkMethod(ipParsedObject, iCidr);
-    });
+    return instance.cidrs.some((iCidr) => checkMethod(ipParsedObject, iCidr));
   };
 
   // Add initial raw block list values to the instance

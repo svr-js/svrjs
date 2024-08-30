@@ -134,16 +134,14 @@ for (
     args[i] == "/h" ||
     args[i] == "/?"
   ) {
-    console.log(name + " usage:");
+    console.log(`${name} usage:`);
     console.log(
       "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
     );
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets " +
-        name +
-        " to default settings (WARNING: DANGEROUS)",
+      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`,
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -180,17 +178,15 @@ for (
   } else if (args[i] == "--single-threaded") {
     process.singleThreaded = true;
   } else {
-    console.log("Unrecognized argument: " + args[i]);
-    console.log(name + " usage:");
+    console.log(`Unrecognized argument: ${args[i]}`);
+    console.log(`${name} usage:`);
     console.log(
       "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
     );
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets " +
-        name +
-        " to default settings (WARNING: DANGEROUS)",
+      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`,
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -422,7 +418,7 @@ try {
 } catch (err) {
   ifaceEx = err;
 }
-var ips = [];
+let ips = [];
 const brdIPs = ["255.255.255.255", "127.255.255.255", "0.255.255.255"];
 const netIPs = ["127.0.0.0"];
 
@@ -461,7 +457,7 @@ if (ips.length == 0) {
 }
 
 // Server IP address
-var host = ips[ips.length - 1];
+let host = ips[ips.length - 1];
 if (!host) host = "[offline]";
 
 // Public IP address-related
@@ -821,7 +817,7 @@ if (!disableMods) {
         crypto.__disabled__ === undefined
           ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n"
           : ""
-      }var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn () => {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach(((t) => {null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
+      }var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function() {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
       const modfoot =
         "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
@@ -1132,7 +1128,7 @@ if (process.serverConfig.secure) {
         key: sniCredentialsSingle.key,
       });
       try {
-        var snMatches = sniCredentialsSingle.name.match(
+        let snMatches = sniCredentialsSingle.name.match(
           /^([^:[]*|\[[^]]*\]?)((?::.*)?)$/,
         );
         if (!snMatches[1][0].match(/^\.+$/))
@@ -1414,7 +1410,7 @@ function SVRJSFork() {
       "Starting next thread, because previous one hung up/crashed...",
     );
   // Fork new worker
-  var newWorker = {};
+  let newWorker = {};
   try {
     if (
       !threadLimitWarned &&
@@ -1518,7 +1514,7 @@ function getWorkerCountToFork() {
 }
 
 function forkWorkers(workersToFork, callback) {
-  for (var i = 0; i < workersToFork; i++) {
+  for (let i = 0; i < workersToFork; i++) {
     if (i == 0) {
       SVRJSFork();
     } else {
@@ -1582,9 +1578,9 @@ function msgListener(message) {
 
 // Save configuration file
 function saveConfig() {
-  for (var i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++) {
     try {
-      var configJSONobj = {};
+      let configJSONobj = {};
       if (fs.existsSync(process.dirname + "/config.json"))
         configJSONobj = JSON.parse(
           fs.readFileSync(process.dirname + "/config.json").toString(),
@@ -1674,12 +1670,14 @@ function saveConfig() {
       if (configJSONobj.optOutOfStatisticsServer === undefined)
         configJSONobj.optOutOfStatisticsServer = false;
 
-      var configString = JSON.stringify(configJSONobj, null, 2) + "\n";
-      fs.writeFileSync(__dirname + "/config.json", configString);
+      fs.writeFileSync(
+        process.dirname + "/config.json",
+        JSON.stringify(configJSONobj, null, 2) + "\n",
+      );
       break;
     } catch (err) {
       if (i >= 2) throw err;
-      var now = Date.now();
+      const now = Date.now();
       while (Date.now() - now < 2);
     }
   }
@@ -1717,9 +1715,7 @@ function start(init) {
               /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/,
             )
           ) &&
-          process.serverConfig.users.some((entry) => {
-            return entry.pbkdf2;
-          })
+          process.serverConfig.users.some((entry) => entry.pbkdf2)
         )
           serverconsole.locwarnmessage(
             "PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service.",
@@ -1967,8 +1963,8 @@ function start(init) {
       }, 300000);
     } else if (cluster.isPrimary) {
       setInterval(() => {
-        var allWorkers = Object.keys(cluster.workers);
-        var goodWorkers = [];
+        let allWorkers = Object.keys(cluster.workers);
+        let goodWorkers = [];
 
         const checkWorker = (callback, _id) => {
           if (typeof _id === "undefined") _id = 0;
@@ -2058,8 +2054,8 @@ function start(init) {
             commands[line.split(" ")[0]] !== undefined &&
             commands[line.split(" ")[0]] !== null
           ) {
-            var argss = line.split(" ");
-            var command = argss.shift();
+            let argss = line.split(" ");
+            const command = argss.shift();
             commands[command](argss, (msg) => process.send(msg));
             process.send("\x12END");
           } else {
@@ -2087,15 +2083,15 @@ function start(init) {
         const command = argss.shift();
         if (line != "") {
           if (cluster.isPrimary !== undefined) {
-            var allWorkers = Object.keys(cluster.workers);
+            let allWorkers = Object.keys(cluster.workers);
             if (command == "block")
               commands.block(argss, serverconsole.climessage);
             if (command == "unblock")
               commands.unblock(argss, serverconsole.climessage);
             if (command == "restart") {
-              var stopError = false;
+              let stopError = false;
               exiting = true;
-              for (var i = 0; i < allWorkers.length; i++) {
+              for (let i = 0; i < allWorkers.length; i++) {
                 try {
                   if (cluster.workers[allWorkers[i]]) {
                     cluster.workers[allWorkers[i]].kill();
@@ -2150,9 +2146,7 @@ function start(init) {
               commands[command](argss, serverconsole.climessage);
               // eslint-disable-next-line no-unused-vars
             } catch (err) {
-              serverconsole.climessage(
-                'Unrecognized command "' + command + '".',
-              );
+              serverconsole.climessage(`Unrecognized command "${command}".`);
             }
           }
         }
@@ -2224,7 +2218,7 @@ function start(init) {
               !process.serverConfig.secure
             ) {
               // It doesn't support through Unix sockets or Windows named pipes
-              var address = (
+              let address = (
                 typeof process.serverConfig.port == "number" && listenAddress
                   ? listenAddress
                   : "localhost"
@@ -2232,7 +2226,7 @@ function start(init) {
               if (address.indexOf(":") > -1) {
                 address = "[" + address + "]";
               }
-              var connection = http2.connect(
+              const connection = http2.connect(
                 "http://" +
                   address +
                   ":" +

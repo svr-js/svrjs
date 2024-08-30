@@ -32,12 +32,11 @@ function proxyHandler(req, socket, head) {
   // SVR.JS configuration object (modified)
   const config = deepClone(process.serverConfig);
 
-  config.generateServerString = () => {
-    return generateServerString(config.exposeServerVersion);
-  };
+  config.generateServerString = () =>
+    generateServerString(config.exposeServerVersion);
 
-  var reqip = socket.remoteAddress;
-  var reqport = socket.remotePort;
+  const reqip = socket.remoteAddress;
+  const reqport = socket.remotePort;
   process.reqcounter++;
   logFacilities.locmessage(
     `Somebody connected to ${

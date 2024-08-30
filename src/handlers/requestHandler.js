@@ -34,9 +34,8 @@ function requestHandler(req, res) {
   // SVR.JS configuration object (modified)
   const config = deepClone(process.serverConfig);
 
-  config.generateServerString = () => {
-    return generateServerString(config.exposeServerVersion);
-  };
+  config.generateServerString = () =>
+    generateServerString(config.exposeServerVersion);
 
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
@@ -79,7 +78,7 @@ function requestHandler(req, res) {
       if (table == undefined) table = this.tHeaders;
       if (table == undefined) table = {};
       table = Object.assign({}, table);
-      Object.keys(table).forEach(function (key) {
+      Object.keys(table).forEach((key) => {
         const al = key.toLowerCase();
         if (
           al == "transfer-encoding" ||
@@ -343,7 +342,7 @@ function requestHandler(req, res) {
         if (p) callback(p);
         else {
           if (errorCode == 404) {
-            fs.access(config.page404, fs.constants.F_OK, function (err) {
+            fs.access(config.page404, fs.constants.F_OK, (err) => {
               if (err) {
                 fs.access(
                   "." + errorCode.toString(),
@@ -400,7 +399,7 @@ function requestHandler(req, res) {
         getErrorFileName(list, callback, _i + 1);
         return;
       } else {
-        fs.access(list[_i].path, fs.constants.F_OK, function (err) {
+        fs.access(list[_i].path, fs.constants.F_OK, (err) => {
           if (err) {
             getErrorFileName(list, callback, _i + 1);
           } else {
@@ -410,7 +409,7 @@ function requestHandler(req, res) {
       }
     };
 
-    getErrorFileName(config.errorPages, function (errorFile) {
+    getErrorFileName(config.errorPages, (errorFile) => {
       // Generate error stack if not provided
       if (Object.prototype.toString.call(stack) === "[object Error]")
         stack = generateErrorStack(stack);
@@ -442,7 +441,7 @@ function requestHandler(req, res) {
           cheaders["Allow"] = "GET, POST, HEAD, OPTIONS";
 
         // Read the error file and replace placeholders with error information
-        fs.readFile(errorFile, function (err, data) {
+        fs.readFile(errorFile, (err, data) => {
           try {
             if (err) throw err;
             res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);

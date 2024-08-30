@@ -4,9 +4,8 @@ function ipMatch(IP1, IP2) {
   if (!IP2) return false;
 
   // Function to normalize IPv4 address (remove leading zeros)
-  const normalizeIPv4Address = (address) => {
-    return address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
-  };
+  const normalizeIPv4Address = (address) =>
+    address.replace(/(^|\.)(?:0(?!\.|$))+/g, "$1");
 
   // Function to expand IPv6 address to full format
   const expandIPv6Address = (address) => {

@@ -29,7 +29,7 @@ let passwordHashCacheIntervalId = -1;
 // Non-standard code object
 let nonStandardCodes = [];
 process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
-  var newObject = {};
+  let newObject = {};
   Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
     if (nsKey != "users") {
       newObject[nsKey] = nonStandardCodeRaw[nsKey];
@@ -42,12 +42,12 @@ process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
 
 if (!cluster.isPrimary) {
   passwordHashCacheIntervalId = setInterval(() => {
-    pbkdf2Cache = pbkdf2Cache.filter((entry) => {
-      return entry.addDate > new Date() - 3600000;
-    });
-    scryptCache = scryptCache.filter((entry) => {
-      return entry.addDate > new Date() - 3600000;
-    });
+    pbkdf2Cache = pbkdf2Cache.filter(
+      (entry) => entry.addDate > new Date() - 3600000,
+    );
+    scryptCache = scryptCache.filter(
+      (entry) => entry.addDate > new Date() - 3600000,
+    );
   }, 1800000);
 }
 
@@ -77,7 +77,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         );
         if (nonStandardCodes[i].regex) {
           // Regex match
-          var createdRegex = createRegex(nonStandardCodes[i].regex, true);
+          const createdRegex = createRegex(nonStandardCodes[i].regex, true);
           isMatch =
             req.url.match(createdRegex) ||
             hrefWithoutDuplicateSlashes.match(createdRegex);
@@ -192,11 +192,10 @@ module.exports = (req, res, logFacilities, config, next) => {
           );
           return;
         } else {
-          cacheEntry = scryptCache.find((entry) => {
-            return (
-              entry.password == hashedPassword && entry.salt == list[_i].salt
-            );
-          });
+          cacheEntry = scryptCache.find(
+            (entry) =>
+              entry.password == hashedPassword && entry.salt == list[_i].salt,
+          );
           if (cacheEntry) {
             cb(cacheEntry.hash);
           } else {
@@ -226,11 +225,10 @@ module.exports = (req, res, logFacilities, config, next) => {
           );
           return;
         } else {
-          cacheEntry = pbkdf2Cache.find((entry) => {
-            return (
-              entry.password == hashedPassword && entry.salt == list[_i].salt
-            );
-          });
+          cacheEntry = pbkdf2Cache.find(
+            (entry) =>
+              entry.password == hashedPassword && entry.salt == list[_i].salt,
+          );
           if (cacheEntry) {
             cb(cacheEntry.hash);
           } else {

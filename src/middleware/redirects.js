@@ -9,7 +9,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     !config.disableNonEncryptedServer &&
     !config.disableToHTTPSRedirect
   ) {
-    var hostx = req.headers.host;
+    const hostx = req.headers.host;
     if (hostx === undefined) {
       logFacilities.errmessage("Host header is missing.");
       res.error(400);
@@ -22,7 +22,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       return;
     }
 
-    var isPublicServer = !(
+    const isPublicServer = !(
       req.socket.realRemoteAddress
         ? req.socket.realRemoteAddress
         : req.socket.remoteAddress
@@ -30,11 +30,11 @@ module.exports = (req, res, logFacilities, config, next) => {
       /^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i,
     );
 
-    var destinationPort = 0;
+    let destinationPort = 0;
 
-    var parsedHostx = hostx.match(/(\[[^\]]*\]|[^:]*)(?::([0-9]+))?/);
-    var hostname = parsedHostx[1];
-    var hostPort = parsedHostx[2] ? parseInt(parsedHostx[2]) : 80;
+    const parsedHostx = hostx.match(/(\[[^\]]*\]|[^:]*)(?::([0-9]+))?/);
+    let hostname = parsedHostx[1];
+    let hostPort = parsedHostx[2] ? parseInt(parsedHostx[2]) : 80;
     if (isNaN(hostPort)) hostPort = 80;
 
     if (

@@ -1,11 +1,11 @@
 {
-  "version": "4.0.0-beta2",
+  "version": "4.0.0-beta3",
   "name": "SVR.JS",
   "documentationURL": "https://svrjs.org/docs/tentative",
   "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
   "changes": [
-    "Fixed the bug with \"ext\" variable for .tar.gz mods.",
-    "Fixed the regular expression in the URL parser.",
-    "Optimized many functions"
+    "Fixed the bug related to forbidden path checking.",
+    "Fixed \"NaN\" file sizes in directory listings.",
+    "SVR.JS zip archives now include empty directories."
   ]
 }

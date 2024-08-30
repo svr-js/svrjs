@@ -14,7 +14,7 @@ function calculateBroadcastIPv4FromCidr(ipWithCidr) {
     .split(".")
     .map((num, index) => {
       // Calculate resulting 8-bit
-      var power = Math.max(Math.min(mask - index * 8, 8), 0);
+      const power = Math.max(Math.min(mask - index * 8, 8), 0);
       return (
         (parseInt(num) & ((Math.pow(2, power) - 1) << (8 - power))) |
         (Math.pow(2, 8 - power) - 1)
@@ -39,7 +39,7 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
     .split(".")
     .map((num, index) => {
       // Calculate resulting 8-bit
-      var power = Math.max(Math.min(mask - index * 8, 8), 0);
+      const power = Math.max(Math.min(mask - index * 8, 8), 0);
       return (
         parseInt(num) &
         ((Math.pow(2, power) - 1) << (8 - power))

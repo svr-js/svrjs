@@ -38,7 +38,7 @@ function serverErrorHandler(err, isRedirect, server, start) {
     } catch (err) {
       // Probably main process exited
     }
-    setTimeout(function () {
+    setTimeout(() => {
       const errno = os.constants.errno[err.code];
       process.exit(errno !== undefined ? errno : 1);
     }, 50);

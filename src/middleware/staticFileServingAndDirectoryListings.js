@@ -34,7 +34,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     let levelDownCount = 0;
 
     // Loop through the path components
-    for (var i = 0; i < pathComponents.length; i++) {
+    for (let i = 0; i < pathComponents.length; i++) {
       // If the component is "..", decrement the levelUpCount
       if (".." === pathComponents[i]) {
         levelUpCount--;
@@ -313,7 +313,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           // Helper function to check if compression is allowed for the file
           const canCompress = (path, list) => {
             let canCompress = true;
-            for (var i = 0; i < list.length; i++) {
+            for (let i = 0; i < list.length; i++) {
               if (createRegex(list[i], true).test(path)) {
                 canCompress = false;
                 break;
@@ -437,7 +437,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 })
                 .on("open", () => {
                   try {
-                    var resStream = {};
+                    let resStream = {};
                     if (useBrotli && isCompressable) {
                       resStream = zlib.createBrotliCompress();
                       resStream.pipe(res);
@@ -738,7 +738,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   // Get stats for all files in the directory and generate the listing
                   getStatsForAllFiles(list, readFrom, (filelist) => {
                     let directoryListingRows = [];
-                    for (var i = 0; i < filelist.length; i++) {
+                    for (let i = 0; i < filelist.length; i++) {
                       if (filelist[i].name[0] !== ".") {
                         const estats = filelist[i].stats;
                         const ename = filelist[i].name;
@@ -773,7 +773,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             .replace(/>/g, "&gt;")}</a></td><td>${
                             estats.isDirectory()
                               ? "-"
-                              : sizify(estats.size.toString())
+                              : sizify(estats.size)
                           }</td><td>${estats.mtime.toDateString()}</td></tr>\r\n`;
 
                           // Determine the file type and set the appropriate image and alt text
