@@ -773,7 +773,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             .replace(/>/g, "&gt;")}</a></td><td>${
                             estats.isDirectory()
                               ? "-"
-                              : sizify(estats.size.toString())
+                              : sizify(estats.size)
                           }</td><td>${estats.mtime.toDateString()}</td></tr>\r\n`;
 
                           // Determine the file type and set the appropriate image and alt text

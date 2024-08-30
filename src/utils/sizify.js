@@ -1,5 +1,5 @@
 function sizify(bytes, addI) {
-  if (bytes === 0) return "0";
+  if (bytes == 0) return "0";
   if (bytes < 0) bytes = -bytes;
 
   const prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
