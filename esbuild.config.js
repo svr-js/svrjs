@@ -217,17 +217,13 @@ esbuild
         archive.pipe(output);
 
         // Add everything in the "dist" directory except for "svr.js" and "svr.compressed"
-        const distFilesAndDirectories = fs.existsSync(__dirname + "/dist")
-          ? fs.readdirSync(__dirname + "/dist")
-          : [];
-        distFilesAndDirectories.forEach((entry) => {
-          if (entry == "svr.js" || entry == "svr.compressed") return;
-          const stats = fs.statSync(__dirname + "/dist/" + entry);
-          if (stats.isDirectory()) {
-            archive.directory(__dirname + "/dist/" + entry, entry);
-          } else if (stats.isFile()) {
-            archive.file(__dirname + "/dist/" + entry, { name: entry });
-          }
+        archive.glob("**/*", {
+          cwd: __dirname + "/dist",
+          ignore: [
+            "svr.js",
+            "svr.compressed"
+          ],
+          dot: true
         });
 
         // Create a stream for the "svr.compressed" file
