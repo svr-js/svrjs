@@ -9,6 +9,7 @@
     "lint:fix": "npm run lint -- --fix",
     "start": "node dist/svr.js",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "test:middleware": "jest tests/middleware",
     "test:utils": "jest tests/utils"
   },
