@@ -3,7 +3,7 @@ const {
   isForbiddenPath,
   isIndexOfForbiddenPath,
   forbiddenPaths,
-} = require("../../src/utils/forbiddenPaths");
+} = require("../../src/utils/forbiddenPaths.js");
 const os = require("os");
 
 jest.mock("os", () => ({

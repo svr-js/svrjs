@@ -1,4 +1,4 @@
-const ipBlockList = require("../../src/utils/ipBlockList");
+const ipBlockList = require("../../src/utils/ipBlockList.js");
 
 describe("IP block list functionality", () => {
   let blockList;

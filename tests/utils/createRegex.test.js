@@ -1,4 +1,4 @@
-const createRegex = require("../../src/utils/createRegex");
+const createRegex = require("../../src/utils/createRegex.js");
 const os = require("os");
 
 jest.mock("os", () => ({

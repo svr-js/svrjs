@@ -51,18 +51,18 @@ module.exports = (req, res, logFacilities, config, next) => {
           address = address.replace(/\/+/g, "/");
           tempRewrittenURL = address;
         }
-        if (
-          matchHostname(mapEntry.host, req.headers.host) &&
-          ipMatch(
-            mapEntry.ip,
-            req.socket ? req.socket.localAddress : undefined,
-          ) &&
-          address.match(createRegex(mapEntry.definingRegex)) &&
-          !(mapEntry.isNotDirectory && _fileState == 2) &&
-          !(mapEntry.isNotFile && _fileState == 1)
-        ) {
-          rewrittenURL = tempRewrittenURL;
-          try {
+        try {
+          if (
+            matchHostname(mapEntry.host, req.headers.host) &&
+            ipMatch(
+              mapEntry.ip,
+              req.socket ? req.socket.localAddress : undefined,
+            ) &&
+            address.match(createRegex(mapEntry.definingRegex)) &&
+            !(mapEntry.isNotDirectory && _fileState == 2) &&
+            !(mapEntry.isNotFile && _fileState == 1)
+          ) {
+            rewrittenURL = tempRewrittenURL;
             mapEntry.replacements.forEach((replacement) => {
               rewrittenURL = rewrittenURL.replace(
                 createRegex(replacement.regex),
@@ -70,10 +70,11 @@ module.exports = (req, res, logFacilities, config, next) => {
               );
             });
             if (mapEntry.append) rewrittenURL += mapEntry.append;
-          } catch (err) {
-            doCallback = false;
-            callback(err, null);
+            break;
           }
+        } catch (err) {
+          doCallback = false;
+          callback(err, null);
           break;
         }
       }

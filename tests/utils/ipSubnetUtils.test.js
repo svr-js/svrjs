@@ -1,7 +1,7 @@
 const {
   calculateBroadcastIPv4FromCidr,
   calculateNetworkIPv4FromCidr,
-} = require("../../src/utils/ipSubnetUtils");
+} = require("../../src/utils/ipSubnetUtils.js");
 
 describe("IPv4 subnet utilties", () => {
   describe("calculateBroadcastIPv4FromCidr", () => {

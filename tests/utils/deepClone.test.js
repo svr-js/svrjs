@@ -1,4 +1,4 @@
-const deepClone = require("../../src/utils/deepClone");
+const deepClone = require("../../src/utils/deepClone.js");
 
 describe("Deep cloning function", () => {
   test("should clone a simple object", () => {

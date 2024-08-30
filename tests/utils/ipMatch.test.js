@@ -1,4 +1,4 @@
-const ipMatch = require("../../src/utils/ipMatch");
+const ipMatch = require("../../src/utils/ipMatch.js");
 
 describe("IP address matching function", () => {
   test("should return true if IP1 is empty", () => {

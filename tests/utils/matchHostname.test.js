@@ -1,4 +1,4 @@
-const matchHostname = require("../../src/utils/matchHostname");
+const matchHostname = require("../../src/utils/matchHostname.js");
 
 describe("Hostname matching function", () => {
   test("should return true if hostname is undefined", () => {

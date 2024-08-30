@@ -1,4 +1,4 @@
-const sizify = require("../../src/utils/sizify");
+const sizify = require("../../src/utils/sizify.js");
 
 describe('"sizify" function', () => {
   test('should return "0" for 0 bytes', () => {

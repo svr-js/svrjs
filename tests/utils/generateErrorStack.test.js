@@ -1,4 +1,4 @@
-const generateErrorStack = require("../../src/utils/generateErrorStack");
+const generateErrorStack = require("../../src/utils/generateErrorStack.js");
 
 describe("Error stack generation function", () => {
   test("should return the original stack if it is V8-style", () => {

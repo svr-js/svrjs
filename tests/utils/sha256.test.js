@@ -1,4 +1,4 @@
-const sha256 = require("../../src/utils/sha256");
+const sha256 = require("../../src/utils/sha256.js");
 const crypto = require("crypto");
 
 // Mock the crypto module to simulate the absence of crypto support
