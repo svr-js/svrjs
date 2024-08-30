@@ -1,4 +1,9 @@
-node_modules
-generatedAssets
+# Build output
 dist
 out
+
+# Temporary files used by build script
+generatedAssets
+
+# Dependencies
+node_modules
