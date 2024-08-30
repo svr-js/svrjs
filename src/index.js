@@ -134,16 +134,14 @@ for (
     args[i] == "/h" ||
     args[i] == "/?"
   ) {
-    console.log(name + " usage:");
+    console.log(`${name} usage:`);
     console.log(
       "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
     );
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets " +
-        name +
-        " to default settings (WARNING: DANGEROUS)",
+      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`,
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -180,17 +178,15 @@ for (
   } else if (args[i] == "--single-threaded") {
     process.singleThreaded = true;
   } else {
-    console.log("Unrecognized argument: " + args[i]);
-    console.log(name + " usage:");
+    console.log(`Unrecognized argument: ${args[i]}`);
+    console.log(`${name} usage:`);
     console.log(
       "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
     );
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      "--reset               -- Resets " +
-        name +
-        " to default settings (WARNING: DANGEROUS)",
+      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`,
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -2150,9 +2146,7 @@ function start(init) {
               commands[command](argss, serverconsole.climessage);
               // eslint-disable-next-line no-unused-vars
             } catch (err) {
-              serverconsole.climessage(
-                'Unrecognized command "' + command + '".',
-              );
+              serverconsole.climessage(`Unrecognized command "${command}".`);
             }
           }
         }
