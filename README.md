@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://svrjs.org">
+  <a href="https://svrjs.org" target="_blank">
     <img src="assets/logo.png" width="384">
   </a>
 </p>
