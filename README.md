@@ -98,17 +98,12 @@ You can read the [SVR.JS documentation](https://svrjs.org/docs/tentative) to get
 
 ## npm scripts
 
-To build SVR.JS along with the zip archive, run "npm run build".
-
-To check SVR.JS code for errors with ESLint, run "npm run lint".
-
-To fix and beautify SVR.JS code with ESLint and Prettier, run "npm run lint:fix".
-
-To run SVR.JS from the "dist" folder, run "npm start".
-
-To test SVR.JS itself, run "npm run dev". This removes existing configuration.
-
-To perform unit tests with Jest, run "npm test".
+- To build SVR.JS along with the zip archive, run `npm run build`.
+- To check SVR.JS code for errors with ESLint, run `npm run lint`.
+- To fix and beautify SVR.JS code with ESLint and Prettier, run `npm run lint:fix`.
+- To run SVR.JS from the "dist" folder, run `npm start`.
+- To test SVR.JS itself, run `npm run dev`. This removes existing configuration.
+- To perform unit tests with Jest, run `npm test`.
 
 ## File structure
 
