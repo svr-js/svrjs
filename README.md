@@ -1,13 +1,11 @@
 <p align="center">
   <a href="https://svrjs.org">
-    <img src="assets/logo.png" width="192">
+    <img src="assets/logo.png" width="160">
   </a>
 </p>
 <p align="center">
-  <big>
-    <b>SVR.JS</b> - a web server running on Node.JS<br/>
-    It's free as in freedom, scalable, secure, and configurable
-  </big>
+  <b>SVR.JS</b> - a web server running on Node.JS<br/>
+  It's free as in freedom, scalable, secure, and configurable
 </p>
 
 * * *
