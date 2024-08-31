@@ -21,6 +21,7 @@ Structure:
    - utils - utility functions
  - templates - EJS templates for build script to use
  - tests - Jest unit tests
+   - middleware - tests for middleware
    - utils - unit tests for utility functions
  - utils - SVR.JS utilities (each utility has a single file)
  - esbuild.config.js - the build script
