@@ -21,7 +21,7 @@ process.serverConfig = {
   blacklist: [],
 };
 
-const blocklistMiddleware = require("../../src/middleware/blocklist");
+const blocklistMiddleware = require("../../src/middleware/blocklist.js");
 
 describe("Blocklist middleware", () => {
   let req, res, logFacilities, config, next;
