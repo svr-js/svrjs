@@ -35,6 +35,8 @@ describe("Static file serving and directory listings middleware", () => {
       res.writeHead(statusCode, { "Content-Type": "text/plain" });
       res.end(statusCode + " " + http.STATUS_CODES[statusCode]);
     };
+    res.head = "";
+    res.foot = "";
     logFacilities = {
       errmessage: jest.fn(),
       resmessage: jest.fn(),
@@ -182,4 +184,61 @@ describe("Static file serving and directory listings middleware", () => {
     expect(res._getData()).toContain("file1.txt");
     expect(res._getData()).toContain("file2.txt");
   });
+
+  test("should serve static file if the path is a file", async () => {
+    req.headers["accept-encoding"] = undefined;
+    req.path = "/file.txt";
+    req.parsedURL.pathname = "/file.txt";
+    req.originalParsedURL.pathname = "/file.txt";
+
+    fs.stat.mockImplementation((path, cb) => {
+      if (!path.match(/(?:^|\/)file\.txt$/)) {
+        cb(null, { isDirectory: () => true, isFile: () => false });
+      } else {
+        cb(null, {
+          isDirectory: () => false,
+          isFile: () => true,
+          size: 9
+        });
+      }
+    });
+
+    let mockEndListener = () => {};
+    let mockDataSent = false;
+    const mockStream = {
+      on: (event, listener) => {
+        if (event == "open") {
+          listener();
+        } else if (event == "data") {
+          if (!mockDataSent) {
+            listener(Buffer.from("mock data"));
+            mockDataSent = true;
+          }
+          mockEndListener();
+        } else if (event == "end") {
+          mockEndListener = listener;
+          if (mockDataSent) mockEndListener();
+        }
+        return mockStream;
+      },
+      once: (event, listener) => {
+        mockStream.on(event, listener);
+      },
+      pipe: (destStream) => {
+        if (!mockDataSent) {
+          destStream.end("mock data");
+        }
+        return destStream;
+      }
+    };
+
+    fs.createReadStream.mockImplementation(() => {
+      return mockStream;
+    });
+
+    await middleware(req, res, logFacilities, config, next);
+
+    expect(res.statusCode).toBe(200);
+    expect(res._getData()).toBe("mock data");
+  })
 });
