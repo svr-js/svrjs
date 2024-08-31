@@ -198,7 +198,7 @@ describe("Static file serving and directory listings middleware", () => {
         cb(null, {
           isDirectory: () => false,
           isFile: () => true,
-          size: 9
+          size: 9,
         });
       }
     });
@@ -229,7 +229,7 @@ describe("Static file serving and directory listings middleware", () => {
           destStream.end("mock data");
         }
         return destStream;
-      }
+      },
     };
 
     fs.createReadStream.mockImplementation(() => {
@@ -240,5 +240,5 @@ describe("Static file serving and directory listings middleware", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res._getData()).toBe("mock data");
-  })
+  });
 });
