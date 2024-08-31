@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://svrjs.org">
-    <img src="https://svrjs.org/logo-wide.png" width="256">
+    <img src="assets/logo.png" width="256">
   </a>
 </p>
 <p align="center">
