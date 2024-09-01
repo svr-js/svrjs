@@ -11,9 +11,12 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:middleware": "jest tests/middleware",
-    "test:utils": "jest tests/utils"
+    "test:utils": "jest tests/utils",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.4.1",
+    "@commitlint/config-conventional": "^19.4.1",
     "@eslint/js": "^9.9.0",
     "archiver": "^7.0.1",
     "ejs": "^3.1.10",
@@ -24,6 +27,7 @@
     "eslint-plugin-jest": "^28.8.0",
     "eslint-plugin-prettier": "^5.2.1",
     "globals": "^15.9.0",
+    "husky": "^9.1.5",
     "jest": "^29.7.0",
     "node-mocks-http": "^1.15.1",
     "prettier": "^3.3.3"
