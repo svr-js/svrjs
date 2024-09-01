@@ -1482,10 +1482,7 @@ function SVRJSFork() {
     newWorker.on("error", (err) => {
       if (!exiting)
         serverconsole.locwarnmessage(
-          "There was a problem when handling " +
-            name +
-            " worker! (from master process side) Reason: " +
-            err.message,
+          `There was a problem when handling ${name} worker! (from master process side) Reason: ${err.message}`,
         );
     });
     newWorker.on("exit", () => {
