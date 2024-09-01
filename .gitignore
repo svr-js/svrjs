@@ -11,6 +11,9 @@ node_modules/
 # Test coverage
 /coverage/
 
+# ESLint cache
+.eslintcache
+
 # Thumbnail cache files
 .DS_Store
 Thumbs.db
