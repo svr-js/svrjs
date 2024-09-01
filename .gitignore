@@ -1,15 +1,15 @@
 # Build output
-dist
-out
+/dist/
+/out/
 
 # Temporary files used by build script
-generatedAssets
+/generatedAssets/
 
 # Dependencies
-node_modules
+node_modules/
 
 # Test coverage
-coverage
+/coverage/
 
 # Thumbnail cache files
 .DS_Store
