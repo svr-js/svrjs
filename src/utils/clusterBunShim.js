@@ -29,7 +29,7 @@ if (!process.singleThreaded) {
         isDead: () => false,
         send: (message, ...params) => {
           process.send(message, ...params);
-        },
+        }
       };
 
       if (!process.send) {
@@ -52,9 +52,9 @@ if (!process.singleThreaded) {
             ? path.join(
                 "\\\\?\\pipe",
                 process.dirname,
-                "temp/.W" + process.pid + ".ipc",
+                "temp/.W" + process.pid + ".ipc"
               )
-            : process.dirname + "/temp/.W" + process.pid + ".ipc",
+            : process.dirname + "/temp/.W" + process.pid + ".ipc"
         );
 
         process.send = (message) => {
@@ -64,12 +64,12 @@ if (!process.singleThreaded) {
               ? path.join(
                   "\\\\?\\pipe",
                   process.dirname,
-                  "temp/.P" + process.pid + ".ipc",
+                  "temp/.P" + process.pid + ".ipc"
                 )
               : process.dirname + "/temp/.P" + process.pid + ".ipc",
             () => {
               fakeIPCConnection.end(message);
-            },
+            }
           );
         };
 
@@ -92,7 +92,7 @@ if (!process.singleThreaded) {
       let command = newArguments.shift();
       let newWorker = child_process.spawn(command, newArguments, {
         env: newEnvironment,
-        stdio: ["inherit", "inherit", "inherit", "ipc"],
+        stdio: ["inherit", "inherit", "inherit", "ipc"]
       });
 
       newWorker.process = newWorker;
@@ -158,9 +158,9 @@ if (!process.singleThreaded) {
             ? path.join(
                 "\\\\?\\pipe",
                 process.dirname,
-                "temp/.P" + newWorker.process.pid + ".ipc",
+                "temp/.P" + newWorker.process.pid + ".ipc"
               )
-            : process.dirname + "/temp/.P" + newWorker.process.pid + ".ipc",
+            : process.dirname + "/temp/.P" + newWorker.process.pid + ".ipc"
         );
 
         // Cleanup when worker process exits
@@ -174,7 +174,7 @@ if (!process.singleThreaded) {
           fakeParam2,
           fakeParam3,
           fakeParam4,
-          tries,
+          tries
         ) {
           if (!tries) tries = 0;
 
@@ -185,12 +185,12 @@ if (!process.singleThreaded) {
                 ? path.join(
                     "\\\\?\\pipe",
                     process.dirname,
-                    "temp/.W" + newWorker.process.pid + ".ipc",
+                    "temp/.W" + newWorker.process.pid + ".ipc"
                   )
                 : process.dirname + "/temp/.W" + newWorker.process.pid + ".ipc",
               () => {
                 fakeWorkerIPCConnection.end(message);
-              },
+              }
             );
           } catch (err) {
             if (tries > 50) throw err;
@@ -199,7 +199,7 @@ if (!process.singleThreaded) {
               fakeParam2,
               fakeParam3,
               fakeParam4,
-              tries + 1,
+              tries + 1
             );
           }
         };

@@ -17,40 +17,40 @@ describe("rewriteURL middleware", () => {
       parsedURL: {
         pathname: "/test",
         search: "",
-        hash: "",
+        hash: ""
       },
       url: "/test",
       headers: {
-        host: "test.com",
+        host: "test.com"
       },
       socket: {
         encrypted: false,
-        localAddress: "127.0.0.1",
-      },
+        localAddress: "127.0.0.1"
+      }
     };
     res = {
-      error: jest.fn(),
+      error: jest.fn()
     };
     logFacilities = {
       resmessage: jest.fn(),
-      errmessage: jest.fn(),
+      errmessage: jest.fn()
     };
     config = {
       rewriteMap: [],
       domain: "test.com",
-      allowDoubleSlashes: false,
+      allowDoubleSlashes: false
     };
     next = jest.fn();
 
     // Make mocks call actual functions
     createRegex.mockImplementation((...params) =>
-      jest.requireActual("../../src/utils/createRegex.js")(...params),
+      jest.requireActual("../../src/utils/createRegex.js")(...params)
     );
     parseURL.mockImplementation((...params) =>
-      jest.requireActual("../../src/utils/urlParser.js")(...params),
+      jest.requireActual("../../src/utils/urlParser.js")(...params)
     );
     sanitizeURL.mockImplementation((...params) =>
-      jest.requireActual("../../src/utils/urlSanitizer.js")(...params),
+      jest.requireActual("../../src/utils/urlSanitizer.js")(...params)
     );
   });
 
@@ -73,10 +73,10 @@ describe("rewriteURL middleware", () => {
         replacements: [
           {
             regex: "/.*/",
-            replacement: "error",
-          },
-        ],
-      },
+            replacement: "error"
+          }
+        ]
+      }
     ];
     createRegex.mockImplementation(() => {
       throw new Error("Test error");
@@ -93,10 +93,10 @@ describe("rewriteURL middleware", () => {
         replacements: [
           {
             regex: "/.*/",
-            replacement: "/new",
-          },
-        ],
-      },
+            replacement: "/new"
+          }
+        ]
+      }
     ];
     parseURL.mockImplementation(() => {
       throw new Error("Test error");
@@ -113,10 +113,10 @@ describe("rewriteURL middleware", () => {
         replacements: [
           {
             regex: "/.*/",
-            replacement: "/new",
-          },
-        ],
-      },
+            replacement: "/new"
+          }
+        ]
+      }
     ];
     sanitizeURL.mockReturnValue("/sanitized");
     middleware(req, res, logFacilities, config, next);
@@ -132,10 +132,10 @@ describe("rewriteURL middleware", () => {
         replacements: [
           {
             regex: "/.*/",
-            replacement: "/new",
-          },
-        ],
-      },
+            replacement: "/new"
+          }
+        ]
+      }
     ];
     middleware(req, res, logFacilities, config, next);
     expect(next).toHaveBeenCalled();

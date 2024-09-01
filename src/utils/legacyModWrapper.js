@@ -3,7 +3,7 @@ try {
   formidable = require("formidable");
 } catch (err) {
   formidable = {
-    _errored: err,
+    _errored: err
   };
 }
 
@@ -78,7 +78,7 @@ module.exports = (legacyMod) => {
       req.originalParsedURL.pathname, // origHref
       res.redirect, // redirect
       parsePostData, // parsePostData
-      req.authUser, // authUser
+      req.authUser // authUser
     )();
   };
 
@@ -90,7 +90,7 @@ module.exports = (legacyMod) => {
         head, // head
         config, // configJSON
         logFacilities, // serverconsole
-        next, // elseCallback
+        next // elseCallback
       )();
     };
   }

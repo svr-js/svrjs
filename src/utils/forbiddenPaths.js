@@ -65,11 +65,10 @@ function isIndexOfForbiddenPath(decodedHref, match) {
       ? forbiddenPath.some(
           (path) =>
             decodedHrefLower === path.toLowerCase() ||
-            decodedHrefLower.indexOf(path.toLowerCase() + "/") == 0,
+            decodedHrefLower.indexOf(path.toLowerCase() + "/") == 0
         )
       : forbiddenPath.some(
-          (path) =>
-            decodedHref === path || decodedHref.indexOf(path + "/") == 0,
+          (path) => decodedHref === path || decodedHref.indexOf(path + "/") == 0
         );
   }
 
@@ -83,5 +82,5 @@ module.exports = {
   getInitializePath: getInitializePath,
   isForbiddenPath: isForbiddenPath,
   isIndexOfForbiddenPath: isIndexOfForbiddenPath,
-  forbiddenPaths: forbiddenPaths,
+  forbiddenPaths: forbiddenPaths
 };

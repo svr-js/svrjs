@@ -23,7 +23,7 @@ function LOG(s) {
             "-" +
             timestamp +
             ".log",
-          "[" + new Date().toISOString() + "] " + s + "\r\n",
+          "[" + new Date().toISOString() + "] " + s + "\r\n"
         );
       } else {
         if (!logFile) {
@@ -40,19 +40,19 @@ function LOG(s) {
               ".log",
             {
               flags: "a",
-              autoClose: false,
-            },
+              autoClose: false
+            }
           );
           logFile.on("error", (err) => {
             if (
               !s.match(
-                /^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /,
+                /^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /
               ) &&
               !reallyExiting
             )
               serverconsole.locwarnmessage(
                 "There was a problem while saving logs! Logs will not be kept in log file. Reason: " +
-                  err.message,
+                  err.message
               );
           });
         }
@@ -66,13 +66,13 @@ function LOG(s) {
   } catch (err) {
     if (
       !s.match(
-        /^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /,
+        /^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /
       ) &&
       !reallyExiting
     )
       serverconsole.locwarnmessage(
         "There was a problem while saving logs! Logs will not be kept in log file. Reason: " +
-          err.message,
+          err.message
       );
   }
 }
@@ -90,13 +90,13 @@ const serverconsole = {
       "\x1b[1mSERVER CLI MESSAGE\x1b[22m" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     LOG(
       "SERVER CLI MESSAGE" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     return;
   },
@@ -112,13 +112,13 @@ const serverconsole = {
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
         msg +
-        "\x1b[37m\x1b[0m",
+        "\x1b[37m\x1b[0m"
     );
     LOG(
       "SERVER REQUEST MESSAGE" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     return;
   },
@@ -134,13 +134,13 @@ const serverconsole = {
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
         msg +
-        "\x1b[37m\x1b[0m",
+        "\x1b[37m\x1b[0m"
     );
     LOG(
       "SERVER RESPONSE MESSAGE" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     return;
   },
@@ -156,13 +156,13 @@ const serverconsole = {
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
         msg +
-        "\x1b[37m\x1b[0m",
+        "\x1b[37m\x1b[0m"
     );
     LOG(
       "SERVER RESPONSE ERROR MESSAGE" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     return;
   },
@@ -178,13 +178,13 @@ const serverconsole = {
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
         msg +
-        "\x1b[40m\x1b[0m",
+        "\x1b[40m\x1b[0m"
     );
     LOG(
       "SERVER ERROR MESSAGE" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     return;
   },
@@ -200,13 +200,13 @@ const serverconsole = {
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
         msg +
-        "\x1b[40m\x1b[0m",
+        "\x1b[40m\x1b[0m"
     );
     LOG(
       "SERVER WARNING MESSAGE" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     return;
   },
@@ -221,19 +221,19 @@ const serverconsole = {
       "\x1b[1mSERVER MESSAGE\x1b[22m" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     LOG(
       "SERVER MESSAGE" +
         (reqId ? " [Request Id: " + reqId + "]" : "") +
         ": " +
-        msg,
+        msg
     );
     return;
   },
   setProcessExiting: (state) => {
     reallyExiting = state;
-  },
+  }
 };
 
 // Wrap around process.exit, so that log contents can be flushed.

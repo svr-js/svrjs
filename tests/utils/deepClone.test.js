@@ -63,7 +63,7 @@ describe("Deep cloning function", () => {
     const original = {
       a: 1,
       b: [2, 3, { c: 4 }],
-      d: { e: 5, f: [6, { g: 7 }] },
+      d: { e: 5, f: [6, { g: 7 }] }
     };
     const cloned = deepClone(original);
     expect(cloned).toEqual(original);

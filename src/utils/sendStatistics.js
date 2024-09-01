@@ -3,7 +3,7 @@ const svrjsInfo = require("../../svrjs.json");
 const { version, statisticsServerCollectEndpoint } = svrjsInfo;
 
 let crypto = {
-  __disabled__: null,
+  __disabled__: null
 };
 let https = {
   createServer: () => {
@@ -14,7 +14,7 @@ let https = {
   },
   get: () => {
     throw new Error("Crypto support is not present");
-  },
+  }
 };
 try {
   // eslint-disable-next-line no-unused-vars
@@ -30,7 +30,7 @@ function sendStatistics(modInfos, callback) {
     version: version,
     runtime: process.isBun ? "Bun" : "Node.js",
     runtimeVersion: process.isBun ? process.versions.bun : process.version,
-    mods: modInfos,
+    mods: modInfos
   });
   const statisticsRequest = https.request(
     statisticsServerCollectEndpoint,
@@ -39,8 +39,8 @@ function sendStatistics(modInfos, callback) {
       headers: {
         "User-Agent": generateServerString(true),
         "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(statisticsToSend),
-      },
+        "Content-Length": Buffer.byteLength(statisticsToSend)
+      }
     },
     (res) => {
       const statusCode = res.statusCode;
@@ -65,7 +65,7 @@ function sendStatistics(modInfos, callback) {
           callback(err);
         }
       });
-    },
+    }
   );
   statisticsRequest.on("error", (err) => {
     callback(err);

@@ -41,7 +41,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 _fileState = 3;
               }
               rewriteURL(address, map, callback, _fileState, i);
-            },
+            }
           );
           doCallback = false;
           break;
@@ -56,7 +56,7 @@ module.exports = (req, res, logFacilities, config, next) => {
             matchHostname(mapEntry.host, req.headers.host) &&
             ipMatch(
               mapEntry.ip,
-              req.socket ? req.socket.localAddress : undefined,
+              req.socket ? req.socket.localAddress : undefined
             ) &&
             address.match(createRegex(mapEntry.definingRegex)) &&
             !(mapEntry.isNotDirectory && _fileState == 2) &&
@@ -66,7 +66,7 @@ module.exports = (req, res, logFacilities, config, next) => {
             mapEntry.replacements.forEach((replacement) => {
               rewrittenURL = rewrittenURL.replace(
                 createRegex(replacement.regex),
-                replacement.replacement,
+                replacement.replacement
               );
             });
             if (mapEntry.append) rewrittenURL += mapEntry.append;
@@ -100,7 +100,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               : config.domain
                 ? config.domain
                 : "unknown.invalid"
-          }`,
+          }`
         );
       } catch (err) {
         res.error(400, err);
@@ -109,7 +109,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
       const sHref = sanitizeURL(
         req.parsedURL.pathname,
-        config.allowDoubleSlashes,
+        config.allowDoubleSlashes
       );
       const preparedReqUrl2 =
         req.parsedURL.pathname +
@@ -132,7 +132,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           (req.parsedURL.search ? req.parsedURL.search : "") +
           (req.parsedURL.hash ? req.parsedURL.hash : "");
         logFacilities.resmessage(
-          `URL sanitized: ${req.url} => ${rewrittenAgainURL}`,
+          `URL sanitized: ${req.url} => ${rewrittenAgainURL}`
         );
         req.url = rewrittenAgainURL;
         try {
@@ -144,7 +144,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 : config.domain
                   ? config.domain
                   : "unknown.invalid"
-            }`,
+            }`
           );
         } catch (err) {
           res.error(400, err);

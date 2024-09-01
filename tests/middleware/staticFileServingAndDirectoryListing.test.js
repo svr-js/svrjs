@@ -15,20 +15,20 @@ describe("Static file serving and directory listings middleware", () => {
       headers: {
         host: "example.com",
         "accept-encoding": "gzip, deflate, br",
-        "user-agent": "Mozilla/5.0",
+        "user-agent": "Mozilla/5.0"
       },
       socket: {
-        localAddress: "127.0.0.1",
-      },
+        localAddress: "127.0.0.1"
+      }
     });
     req.parsedURL = {
-      pathname: "/",
+      pathname: "/"
     };
     req.originalParsedURL = {
-      pathname: "/",
+      pathname: "/"
     };
     res = httpMocks.createResponse({
-      eventEmitter: require("events").EventEmitter,
+      eventEmitter: require("events").EventEmitter
     });
     res.error = (statusCode) => {
       // Very simple replacement of res.error
@@ -39,14 +39,14 @@ describe("Static file serving and directory listings middleware", () => {
     res.foot = "";
     logFacilities = {
       errmessage: jest.fn(),
-      resmessage: jest.fn(),
+      resmessage: jest.fn()
     };
     config = {
       enableDirectoryListing: true,
       enableDirectoryListingVHost: [],
       enableCompression: true,
       dontCompress: [],
-      generateServerString: jest.fn().mockReturnValue("Server"),
+      generateServerString: jest.fn().mockReturnValue("Server")
     };
     next = jest.fn();
   });
@@ -64,7 +64,7 @@ describe("Static file serving and directory listings middleware", () => {
 
     expect(res.statusCode).toBe(404);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      "Resource not found.",
+      "Resource not found."
     );
   });
 
@@ -78,7 +78,7 @@ describe("Static file serving and directory listings middleware", () => {
 
     expect(res.statusCode).toBe(403);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      "Directory listing is disabled.",
+      "Directory listing is disabled."
     );
   });
 
@@ -122,7 +122,7 @@ describe("Static file serving and directory listings middleware", () => {
 
     expect(res.statusCode).toBe(508);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      "Symbolic link loop detected.",
+      "Symbolic link loop detected."
     );
   });
 
@@ -141,7 +141,7 @@ describe("Static file serving and directory listings middleware", () => {
       cb(null, {
         isDirectory: () => false,
         isFile: () => false,
-        isBlockDevice: () => true,
+        isBlockDevice: () => true
       });
     });
 
@@ -149,7 +149,7 @@ describe("Static file serving and directory listings middleware", () => {
 
     expect(res.statusCode).toBe(501);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      expect.stringContaining("doesn't support block devices"),
+      expect.stringContaining("doesn't support block devices")
     );
   });
 
@@ -172,7 +172,7 @@ describe("Static file serving and directory listings middleware", () => {
           isDirectory: () => false,
           isFile: () => true,
           size: 1024,
-          mtime: new Date(),
+          mtime: new Date()
         });
       }
     });
@@ -198,7 +198,7 @@ describe("Static file serving and directory listings middleware", () => {
         cb(null, {
           isDirectory: () => false,
           isFile: () => true,
-          size: 9,
+          size: 9
         });
       }
     });
@@ -229,7 +229,7 @@ describe("Static file serving and directory listings middleware", () => {
           destStream.end("mock data");
         }
         return destStream;
-      },
+      }
     };
 
     fs.createReadStream.mockImplementation(() => {

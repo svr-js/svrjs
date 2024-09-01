@@ -13,28 +13,28 @@ describe("Path sanitizer middleware", () => {
       parsedURL: {
         pathname: "/test",
         search: "?query=test",
-        hash: "#hash",
+        hash: "#hash"
       },
       url: "/test?query=test#hash",
       isProxy: false,
       headers: {
-        host: "test.com",
+        host: "test.com"
       },
       socket: {
-        encrypted: false,
-      },
+        encrypted: false
+      }
     };
     res = {
       redirect: jest.fn(),
-      error: jest.fn(),
+      error: jest.fn()
     };
     logFacilities = {
-      resmessage: jest.fn(),
+      resmessage: jest.fn()
     };
     config = {
       allowDoubleSlashes: false,
       rewriteDirtyURLs: false,
-      domain: "test.com",
+      domain: "test.com"
     };
     next = jest.fn();
 
@@ -52,7 +52,7 @@ describe("Path sanitizer middleware", () => {
     middleware(req, res, logFacilities, config, next);
     expect(res.redirect).toHaveBeenCalledWith(
       "/dirty%20url?query=test#hash",
-      false,
+      false
     );
     expect(next).not.toHaveBeenCalled();
   });
@@ -71,7 +71,7 @@ describe("Path sanitizer middleware", () => {
     middleware(req, res, logFacilities, config, next);
     expect(res.redirect).toHaveBeenCalledWith(
       "/clean%20url?query=test#hash",
-      false,
+      false
     );
     expect(next).not.toHaveBeenCalled();
   });

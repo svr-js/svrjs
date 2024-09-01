@@ -21,7 +21,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           req.originalParsedURL.pathname +
             "/" +
             (req.parsedURL.search ? req.parsedURL.search : "") +
-            (req.parsedURL.hash ? req.parsedURL.hash : ""),
+            (req.parsedURL.hash ? req.parsedURL.hash : "")
         );
       }
     });

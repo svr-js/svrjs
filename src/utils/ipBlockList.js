@@ -6,7 +6,7 @@ function ipBlockList(rawBlockList) {
     raw: [],
     rawtoPreparedMap: [],
     prepared: [],
-    cidrs: [],
+    cidrs: []
   };
 
   // Function to normalize IPv4 address (remove leading zeros)
@@ -79,7 +79,7 @@ function ipBlockList(rawBlockList) {
     const ipMax = ipMin + exp - 1;
     return {
       min: ipMin,
-      max: ipMax,
+      max: ipMax
     };
   };
 
@@ -106,7 +106,7 @@ function ipBlockList(rawBlockList) {
           ? i < 7 - fieldsToDelete
             ? ipBlocks[i]
             : (ipBlocks[i] >> fieldMaskModify) << fieldMaskModify
-          : 0,
+          : 0
       );
     }
     for (let i = 0; i < 8; i++) {
@@ -117,12 +117,12 @@ function ipBlockList(rawBlockList) {
             : ((ipBlocks[i] >> fieldMaskModify) << fieldMaskModify) +
               Math.pow(2, fieldMaskModify) -
               1
-          : 65535,
+          : 65535
       );
     }
     return {
       min: ipBlockMin,
-      max: ipBlockMax,
+      max: ipBlockMax
     };
   };
 
@@ -183,13 +183,13 @@ function ipBlockList(rawBlockList) {
       instance.cidrs.push(cidrLimits);
       instance.rawtoPreparedMap.push({
         cidr: true,
-        index: cidrIndex,
+        index: cidrIndex
       });
     } else {
       instance.prepared.push(rawValue);
       instance.rawtoPreparedMap.push({
         cidr: false,
-        index: beginIndex,
+        index: beginIndex
       });
     }
   };

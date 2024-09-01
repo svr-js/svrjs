@@ -30,7 +30,7 @@ const serverErrorDescs = {
     "Protocol not supported. The requested network protocol is not supported.",
   ETIMEDOUT:
     "Connection timed out. The server did not respond within the specified timeout period.",
-  UNKNOWN: "There was an unknown error with the server.",
+  UNKNOWN: "There was an unknown error with the server."
 };
 
 module.exports = serverErrorDescs;

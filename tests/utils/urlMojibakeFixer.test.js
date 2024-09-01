@@ -36,7 +36,7 @@ describe("URL mojibake fixer", () => {
 
   test("should handle strings with mixed characters", () => {
     expect(fixNodeMojibakeURL("hello123 é world ñ!@#$%^&*()")).toBe(
-      "hello123 %E9 world %F1!@#$%^&*()",
+      "hello123 %E9 world %F1!@#$%^&*()"
     );
   });
 });

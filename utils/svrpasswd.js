@@ -123,7 +123,7 @@ try {
             0x90befffa,
             0xa4506ceb,
             0xbef9a3f7,
-            0xc67178f2,
+            0xc67178f2
           );
           let HASH = new Array(
             0x6a09e667,
@@ -133,7 +133,7 @@ try {
             0x510e527f,
             0x9b05688c,
             0x1f83d9ab,
-            0x5be0cd19,
+            0x5be0cd19
           );
           let W = new Array(64);
           let a, b, c, d, e, f, g, h;
@@ -158,14 +158,14 @@ try {
                 W[j] = safeAdd(
                   safeAdd(
                     safeAdd(Gamma1256(W[j - 2]), W[j - 7]),
-                    Gamma0256(W[j - 15]),
+                    Gamma0256(W[j - 15])
                   ),
-                  W[j - 16],
+                  W[j - 16]
                 );
 
               T1 = safeAdd(
                 safeAdd(safeAdd(safeAdd(h, Sigma1256(e)), Ch(e, f, g)), K[j]),
-                W[j],
+                W[j]
               );
               T2 = safeAdd(Sigma0256(a), Maj(a, b, c));
 
@@ -229,7 +229,7 @@ try {
           for (let i = 0; i < binarray.length * 4; i++) {
             str +=
               hexTab.charAt(
-                (binarray[i >> 2] >> ((3 - (i % 4)) * 8 + 4)) & 0xf,
+                (binarray[i >> 2] >> ((3 - (i % 4)) * 8 + 4)) & 0xf
               ) +
               hexTab.charAt((binarray[i >> 2] >> ((3 - (i % 4)) * 8)) & 0xf);
           }
@@ -244,7 +244,7 @@ try {
           hx.push(parseInt(str[i] + str[i + 1], 16));
         }
         return Buffer.from(hx);
-      },
+      }
     };
   };
 }
@@ -279,7 +279,7 @@ function saveConfig() {
   let configJSONobj = {};
   if (fs.existsSync(__dirname + "/config.json"))
     configJSONobj = JSON.parse(
-      fs.readFileSync(__dirname + "/config.json").toString(),
+      fs.readFileSync(__dirname + "/config.json").toString()
     );
   configJSONobj.users = users;
   const configString = JSON.stringify(configJSONobj, null, 2);
@@ -314,7 +314,7 @@ for (
   ) {
     console.log("SVR.JS user tool usage:");
     console.log(
-      "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>",
+      "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
     );
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("-a --add              -- Add an user");
@@ -325,7 +325,7 @@ for (
     if (action != "change") {
       console.log("Multiple actions specified.");
       console.log(
-        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>",
+        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
       console.log("-a --add              -- Add an user");
@@ -338,7 +338,7 @@ for (
     if (action != "change") {
       console.log("Multiple actions specified.");
       console.log(
-        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>",
+        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
       console.log("-a --add              -- Add an user");
@@ -351,7 +351,7 @@ for (
     if (forcechange) {
       console.log("Multiple -x options specified.");
       console.log(
-        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>",
+        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
       console.log("-a --add              -- Add an user");
@@ -364,7 +364,7 @@ for (
     if (user != "") {
       console.log("Multiple users specified.");
       console.log(
-        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>",
+        "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
       console.log("-a --add              -- Add an user");
@@ -379,7 +379,7 @@ for (
 if (user == "") {
   console.log("No user specified.");
   console.log(
-    "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>",
+    "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
   );
   console.log("-h -? /h /? --help    -- Displays help");
   console.log("-a --add              -- Add an user");
@@ -419,7 +419,7 @@ function password(callback) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: "Password: ",
+    prompt: "Password: "
   });
   rl.prompt();
   process.stdout.writeold = process.stdout.write;
@@ -431,7 +431,7 @@ function password(callback) {
     var rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-      prompt: "Confirm password: ",
+      prompt: "Confirm password: "
     });
     rl.prompt();
     process.stdout.writeold = process.stdout.write;
@@ -464,7 +464,7 @@ function promptAlgorithms(callback, bypass, pbkdf2, scrypt) {
     pbkdf2:
       "PBKDF2 (PBKDF2-HMAC-SHA512, 36250 iterations) - more secure and uses less memory, but slower",
     scrypt:
-      "scrypt (N=2^14, r=8, p=1) - faster and more secure, but uses more memory",
+      "scrypt (N=2^14, r=8, p=1) - faster and more secure, but uses more memory"
   };
   if (
     !crypto.pbkdf2 ||
@@ -472,7 +472,7 @@ function promptAlgorithms(callback, bypass, pbkdf2, scrypt) {
       !(
         process.versions.bun &&
         !process.versions.bun.match(
-          /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/,
+          /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/
         )
       ))
   )
@@ -486,7 +486,7 @@ function promptAlgorithms(callback, bypass, pbkdf2, scrypt) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: "Algorithm: ",
+    prompt: "Algorithm: "
   });
   rl.prompt();
   rl.on("line", (line) => {
@@ -537,7 +537,7 @@ if (action == "delete") {
             salt: salt,
             pbkdf2: algorithm == "pbkdf2" ? true : undefined,
             scrypt: algorithm == "scrypt" ? true : undefined,
-            __svrpasswd_l2: true,
+            __svrpasswd_l2: true
           });
           saveConfig();
           console.log("User added successfully");
@@ -574,7 +574,7 @@ if (action == "delete") {
               salt: salt,
               pbkdf2: algorithm == "pbkdf2" ? true : undefined,
               scrypt: algorithm == "scrypt" ? true : undefined,
-              __svrpasswd_l2: true,
+              __svrpasswd_l2: true
             };
             saveConfig();
             console.log("Password changed successfully");
@@ -584,6 +584,6 @@ if (action == "delete") {
     },
     users[userindex].__svrpasswd_l2 && !forcechange,
     users[userindex].pbkdf2,
-    users[userindex].scrypt,
+    users[userindex].scrypt
   );
 }

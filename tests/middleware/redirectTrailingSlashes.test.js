@@ -10,11 +10,11 @@ describe("Trailing slash redirection middleware", () => {
     req = {
       isProxy: false,
       parsedURL: { pathname: "/test", search: "?query=1", hash: "#hash" },
-      originalParsedURL: { pathname: "/test" },
+      originalParsedURL: { pathname: "/test" }
     };
     res = {
       redirect: jest.fn(),
-      error: jest.fn(),
+      error: jest.fn()
     };
     logFacilities = {};
     config = { disableTrailingSlashRedirects: false };

@@ -7,7 +7,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     blocklist.check(
       req.socket.realRemoteAddress
         ? req.socket.realRemoteAddress
-        : req.socket.remoteAddress,
+        : req.socket.remoteAddress
     )
   ) {
     // Invoke 403 Forbidden error
@@ -50,7 +50,7 @@ module.exports.commands = {
       if (!cluster.isPrimary === false) log("IPs successfully unblocked.");
       passCommand(ip, log);
     }
-  },
+  }
 };
 
 module.exports.proxySafe = true;

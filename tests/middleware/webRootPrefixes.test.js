@@ -14,7 +14,7 @@ describe("Web root prefixes middleware", () => {
       url: "/test",
       parsedURL: { pathname: "/test" },
       headers: { host: "test.com" },
-      socket: { localAddress: "127.0.0.1" },
+      socket: { localAddress: "127.0.0.1" }
     };
     res = { error: jest.fn() };
     logFacilities = { resmessage: jest.fn(), errmessage: jest.fn() };
@@ -22,8 +22,8 @@ describe("Web root prefixes middleware", () => {
       allowPostfixDoubleSlashes: true,
       wwwrootPostfixPrefixesVHost: [],
       wwwrootPostfixesVHost: [
-        { host: "test.com", ip: "127.0.0.1", postfix: "postfix" },
-      ],
+        { host: "test.com", ip: "127.0.0.1", postfix: "postfix" }
+      ]
     };
     next = jest.fn();
 
@@ -35,7 +35,7 @@ describe("Web root prefixes middleware", () => {
     middleware(req, res, logFacilities, config, next);
     expect(req.url).toBe("/postfix/test");
     expect(logFacilities.resmessage).toHaveBeenCalledWith(
-      "Added web root postfix: /test => /postfix/test",
+      "Added web root postfix: /test => /postfix/test"
     );
   });
 
@@ -48,7 +48,7 @@ describe("Web root prefixes middleware", () => {
 
   test("should not add web root postfix if no matching config is found", () => {
     config.wwwrootPostfixesVHost = [
-      { host: "example.com", ip: "127.0.0.1", postfix: "postfix" },
+      { host: "example.com", ip: "127.0.0.1", postfix: "postfix" }
     ];
     middleware(req, res, logFacilities, config, next);
     expect(req.url).toBe("/test");

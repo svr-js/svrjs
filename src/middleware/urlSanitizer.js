@@ -5,7 +5,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   // Sanitize URL
   let sanitizedHref = sanitizeURL(
     req.parsedURL.pathname,
-    config.allowDoubleSlashes,
+    config.allowDoubleSlashes
   );
   let preparedReqUrl =
     req.parsedURL.pathname +
@@ -30,7 +30,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               : config.domain
                 ? config.domain
                 : "unknown.invalid"
-          }`,
+          }`
         );
       } catch (err) {
         res.error(400, err);

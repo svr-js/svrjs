@@ -40,7 +40,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     statusBody += `Average error rate: ${
       Math.round(
         ((process.err4xxcounter + process.err5xxcounter) / process.reqcounter) *
-          10000,
+          10000
       ) / 100
     }%<br/>`;
     statusBody += `Malformed HTTP requests: ${process.malformedcounter}`;
@@ -52,13 +52,13 @@ module.exports = (req, res, logFacilities, config, next) => {
           ((process.cpuUsage().user + process.cpuUsage().system) /
             1000000 /
             process.uptime()) *
-            1000,
+            1000
         ) / 1000
       }%`;
     statusBody += `<br/>Thread PID: ${process.pid}<br/>`;
 
     res.writeHead(200, http.STATUS_CODES[200], {
-      "Content-Type": "text/html; charset=utf-8",
+      "Content-Type": "text/html; charset=utf-8"
     });
     res.end(
       `${
@@ -94,7 +94,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;")) +
-                "</title>",
+                "</title>"
             )
       }<h1>${name
         .replace(/&/g, "&amp;")
@@ -107,7 +107,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               .replace(/&/g, "&amp;")
               .replace(/</g, "&lt;")
               .replace(/>/g, "&gt;")
-      }</h1>${statusBody}${res.foot == "" ? "</body></html>" : res.foot}`,
+      }</h1>${statusBody}${res.foot == "" ? "</body></html>" : res.foot}`
     );
     return;
   }

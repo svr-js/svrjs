@@ -18,7 +18,7 @@ let ETagDB = {};
 const generateETag = (filePath, stat) => {
   if (!ETagDB[filePath + "-" + stat.size + "-" + stat.mtime])
     ETagDB[filePath + "-" + stat.size + "-" + stat.mtime] = sha256(
-      filePath + "-" + stat.size + "-" + stat.mtime,
+      filePath + "-" + stat.size + "-" + stat.mtime
     );
   return ETagDB[filePath + "-" + stat.size + "-" + stat.mtime];
 };
@@ -141,7 +141,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           const clientETag = req.headers["if-none-match"];
           if (clientETag === fileETag) {
             res.writeHead(304, http.STATUS_CODES[304], {
-              ETag: clientETag,
+              ETag: clientETag
             });
             res.end();
             return;
@@ -151,7 +151,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           const ifMatchETag = req.headers["if-match"];
           if (ifMatchETag && ifMatchETag !== "*" && ifMatchETag !== fileETag) {
             res.error(412, {
-              ETag: clientETag,
+              ETag: clientETag
             });
             return;
           }
@@ -164,7 +164,7 @@ module.exports = (req, res, logFacilities, config, next) => {
             rhd["Accept-Ranges"] = "bytes";
             rhd["Content-Range"] = `bytes */${filelen}`;
             const regexmatch = req.headers["range"].match(
-              /bytes=([0-9]*)-([0-9]*)/,
+              /bytes=([0-9]*)-([0-9]*)/
             );
             if (!regexmatch) {
               res.error(416, rhd);
@@ -217,8 +217,8 @@ module.exports = (req, res, logFacilities, config, next) => {
                   res.end(
                     res.foot.substring(
                       begin - res.head.length - filelen,
-                      end - res.head.length - filelen + 1,
-                    ),
+                      end - res.head.length - filelen + 1
+                    )
                   );
                   return;
                 }
@@ -230,7 +230,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   end:
                     ext == "html"
                       ? Math.min(filelen, end - res.head.length)
-                      : end,
+                      : end
                 });
                 readStream
                   .on("error", (err) => {
@@ -266,8 +266,8 @@ module.exports = (req, res, logFacilities, config, next) => {
                               res.end(
                                 res.foot.substring(
                                   0,
-                                  end - res.head.length - filelen + 1,
-                                ),
+                                  end - res.head.length - filelen + 1
+                                )
                               );
                             });
                           }
@@ -275,7 +275,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             end: !(
                               res.foot.length > 0 &&
                               end > res.head.length + filelen
-                            ),
+                            )
                           });
                         };
                         res.writeHead(206, http.STATUS_CODES[206], rhd);
@@ -283,7 +283,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                           afterWriteCallback();
                         } else if (
                           !res.write(
-                            res.head.substring(begin, res.head.length - begin),
+                            res.head.substring(begin, res.head.length - begin)
                           )
                         ) {
                           res.on("drain", afterWriteCallback);
@@ -295,7 +295,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                         readStream.pipe(res);
                       }
                       logFacilities.resmessage(
-                        "Client successfully received content.",
+                        "Client successfully received content."
                       );
                     } catch (err) {
                       res.error(500, err);
@@ -352,10 +352,10 @@ module.exports = (req, res, logFacilities, config, next) => {
             ) {
               if (
                 /^Mozilla\/4\.[0-9]+(( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(
-                  req.headers["user-agent"],
+                  req.headers["user-agent"]
                 ) &&
                 !/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(
-                  req.headers["user-agent"],
+                  req.headers["user-agent"]
                 )
               ) {
                 isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
@@ -365,10 +365,10 @@ module.exports = (req, res, logFacilities, config, next) => {
             } else {
               if (
                 /^Mozilla\/4\.0[6-8](( *\[[^)]*\] *| *)\([^)\]]*\))? *$/.test(
-                  req.headers["user-agent"],
+                  req.headers["user-agent"]
                 ) &&
                 !/https?:\/\/|[bB][oO][tT]|[sS][pP][iI][dD][eE][rR]|[sS][uU][rR][vV][eE][yY]|MSIE/.test(
-                  req.headers["user-agent"],
+                  req.headers["user-agent"]
                 )
               ) {
                 isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
@@ -458,7 +458,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                           });
                         }
                         readStream.pipe(resStream, {
-                          end: res.foot.length == 0,
+                          end: res.foot.length == 0
                         });
                       };
                       res.writeHead(200, http.STATUS_CODES[200], hdhds);
@@ -474,7 +474,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                       readStream.pipe(resStream);
                     }
                     logFacilities.resmessage(
-                      "Client successfully received content.",
+                      "Client successfully received content."
                     );
                   } catch (err) {
                     res.error(500, err);
@@ -494,7 +494,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         if (
           checkForEnabledDirectoryListing(
             req.headers.host,
-            req.socket ? req.socket.localAddress : undefined,
+            req.socket ? req.socket.localAddress : undefined
           )
         ) {
           let customDirListingHeader = "";
@@ -520,7 +520,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             customDirListingHeader = data.toString();
                             callback();
                           }
-                        },
+                        }
                       );
                     } else {
                       callback();
@@ -532,7 +532,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   customDirListingHeader = data.toString();
                   callback();
                 }
-              },
+              }
             );
           };
 
@@ -556,7 +556,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             customDirListingFooter = data.toString();
                             callback();
                           }
-                        },
+                        }
                       );
                     } else {
                       callback();
@@ -568,7 +568,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   customDirListingFooter = data.toString();
                   callback();
                 }
-              },
+              }
             );
           };
 
@@ -579,7 +579,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               const headerHasHTMLTag = customDirListingHeader
                 .replace(/<!--(?:(?:(?!-->)[\s\S])*|)(?:-->|$)/g, "")
                 .match(
-                  /<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i,
+                  /<html(?![a-zA-Z0-9])(?:"(?:\\(?:[\s\S]|$)|[^\\"])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^\\'])*(?:'|$)|[^'">])*(?:>|$)/i
                 );
 
               // Generate HTML head and footer based on configuration and custom content
@@ -601,7 +601,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             .replace(/&/g, "&amp;")
                             .replace(/</g, "&lt;")
                             .replace(/>/g, "&gt;") +
-                          "</title>",
+                          "</title>"
                       )
                   : res.head.replace(
                       /<head>/i,
@@ -610,14 +610,14 @@ module.exports = (req, res, logFacilities, config, next) => {
                           .replace(/&/g, "&amp;")
                           .replace(/</g, "&lt;")
                           .replace(/>/g, "&gt;") +
-                        "</title>",
+                        "</title>"
                     )) + (!headerHasHTMLTag ? customDirListingHeader : "")
               }<h1>Directory: ${decodeURIComponent(origHref)
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(
                   />/g,
-                  "&gt;",
+                  "&gt;"
                 )}</h1><table id="directoryListing"> <tr> <th></th> <th>Filename</th> <th>Size</th> <th>Date</th> </tr>${
                 checkPathLevel(decodeURIComponent(origHref)) < 1
                   ? ""
@@ -648,7 +648,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 fs.existsSync(
                   "." +
                     decodeURIComponent(href) +
-                    "/.maindesc".replace(/\/+/g, "/"),
+                    "/.maindesc".replace(/\/+/g, "/")
                 )
               ) {
                 htmlFoot =
@@ -656,7 +656,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   fs.readFileSync(
                     "." +
                       decodeURIComponent(href) +
-                      "/.maindesc".replace(/\/+/g, "/"),
+                      "/.maindesc".replace(/\/+/g, "/")
                   ) +
                   htmlFoot;
               }
@@ -672,7 +672,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                     callback,
                     prefix,
                     pushArray,
-                    index,
+                    index
                   ) => {
                     if (fileList.length == 0) {
                       callback(pushArray);
@@ -686,13 +686,13 @@ module.exports = (req, res, logFacilities, config, next) => {
                           fs.lstat(
                             (prefix + "/" + fileList[index]).replace(
                               /\/+/g,
-                              "/",
+                              "/"
                             ),
                             (err, stats) => {
                               pushArray.push({
                                 name: fileList[index],
                                 stats: err ? null : stats,
-                                errored: true,
+                                errored: true
                               });
                               if (index < fileList.length - 1) {
                                 getStatsForAllFilesI(
@@ -700,18 +700,18 @@ module.exports = (req, res, logFacilities, config, next) => {
                                   callback,
                                   prefix,
                                   pushArray,
-                                  index + 1,
+                                  index + 1
                                 );
                               } else {
                                 callback(pushArray);
                               }
-                            },
+                            }
                           );
                         } else {
                           pushArray.push({
                             name: fileList[index],
                             stats: stats,
-                            errored: false,
+                            errored: false
                           });
                           if (index < fileList.length - 1) {
                             getStatsForAllFilesI(
@@ -719,13 +719,13 @@ module.exports = (req, res, logFacilities, config, next) => {
                               callback,
                               prefix,
                               pushArray,
-                              index + 1,
+                              index + 1
                             );
                           } else {
                             callback(pushArray);
                           }
                         }
-                      },
+                      }
                     );
                   };
 
@@ -756,8 +756,8 @@ module.exports = (req, res, logFacilities, config, next) => {
                               .replace(/</g, "&lt;")
                               .replace(
                                 />/g,
-                                "&gt;",
-                              )}</a></td><td>-</td><td>${estats ? estats.mtime.toDateString() : "-"}</td></tr>\r\n`,
+                                "&gt;"
+                              )}</a></td><td>-</td><td>${estats ? estats.mtime.toDateString() : "-"}</td></tr>\r\n`
                           );
                         } else {
                           let entry = `<tr><td style="width: 24px;"><img src="[img]" alt="[alt]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="${(
@@ -766,7 +766,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             encodeURIComponent(ename)
                           ).replace(
                             /\/+/g,
-                            "/",
+                            "/"
                           )}${estats.isDirectory() ? "/" : ""}">${ename
                             .replace(/&/g, "&amp;")
                             .replace(/</g, "&lt;")
@@ -789,7 +789,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                               .replace(/</g, "&lt;")
                               .replace(
                                 />/g,
-                                "&gt;",
+                                "&gt;"
                               )}</a></td><td>-</td><td>${estats.mtime.toDateString()}</td></tr>\r\n`;
 
                             // Determine the special file types (block device, character device, etc.)
@@ -819,7 +819,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                               .replace("[img]", "/.dirimages/html.png")
                               .replace(
                                 "[alt]",
-                                eext == "xml" ? "[XML]" : "[HTM]",
+                                eext == "xml" ? "[XML]" : "[HTM]"
                               );
                           } else if (eext == "js") {
                             entry = entry
@@ -838,7 +838,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                               .replace("[img]", "/.dirimages/image.png")
                               .replace(
                                 "[alt]",
-                                eext == "ico" ? "[ICO]" : "[IMG]",
+                                eext == "ico" ? "[ICO]" : "[IMG]"
                               );
                           } else if (emime && emime.split("/")[0] == "font") {
                             entry = entry
@@ -856,7 +856,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                               .replace("[img]", "/.dirimages/text.png")
                               .replace(
                                 "[alt]",
-                                eext == "json" ? "[JSO]" : "[TXT]",
+                                eext == "json" ? "[JSO]" : "[TXT]"
                               );
                           } else if (emime && emime.split("/")[0] == "video") {
                             entry = entry
@@ -885,19 +885,19 @@ module.exports = (req, res, logFacilities, config, next) => {
                     // Push the information about empty directory
                     if (directoryListingRows.length == 0) {
                       directoryListingRows.push(
-                        "<tr><td></td><td>No files found</td><td></td><td></td></tr>",
+                        "<tr><td></td><td>No files found</td><td></td><td></td></tr>"
                       );
                     }
 
                     // Send the directory listing response
                     res.writeHead(200, http.STATUS_CODES[200], {
-                      "Content-Type": "text/html; charset=utf-8",
+                      "Content-Type": "text/html; charset=utf-8"
                     });
                     res.end(
-                      htmlHead + directoryListingRows.join("") + htmlFoot,
+                      htmlHead + directoryListingRows.join("") + htmlFoot
                     );
                     logFacilities.resmessage(
-                      "Client successfully received content.",
+                      "Client successfully received content."
                     );
                   });
                 } catch (err) {
@@ -932,7 +932,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       } else {
         res.error(501);
         logFacilities.errmessage(
-          `${name} doesn't support block devices, character devices, FIFOs nor sockets.`,
+          `${name} doesn't support block devices, character devices, FIFOs nor sockets.`
         );
         return;
       }
@@ -955,7 +955,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                     readFrom = (readFrom + "/index.xhtml").replace(/\/+/g, "/");
                     properDirectoryListingAndStaticFileServe();
                   }
-                },
+                }
               );
             } else {
               stats = s;

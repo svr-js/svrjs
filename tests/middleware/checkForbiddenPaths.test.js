@@ -11,13 +11,13 @@ jest.mock("../../src/utils/forbiddenPaths.js", () => ({
     serverSideScripts: ["/forbidden"],
     serverSideScriptDirectories: ["/forbidden"],
     temp: "/forbidden",
-    log: "/forbidden",
-  },
+    log: "/forbidden"
+  }
 }));
 
 process.serverConfig = {
   secure: true,
-  sni: [],
+  sni: []
 };
 
 process.dirname = "/usr/lib/mocksvrjs";
@@ -31,19 +31,19 @@ describe("Forbidden path checking middleware", () => {
   beforeEach(() => {
     req = {
       parsedURL: { pathname: "/forbidden" },
-      isProxy: false,
+      isProxy: false
     };
     res = {
-      error: jest.fn(),
+      error: jest.fn()
     };
     logFacilities = {
-      errmessage: jest.fn(),
+      errmessage: jest.fn()
     };
     config = {
       enableLogging: true,
       enableRemoteLogBrowsing: false,
       exposeServerVersion: false,
-      disableServerSideScriptExpose: true,
+      disableServerSideScriptExpose: true
     };
     next = jest.fn();
   });

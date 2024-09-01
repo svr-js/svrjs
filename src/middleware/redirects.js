@@ -27,7 +27,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         ? req.socket.realRemoteAddress
         : req.socket.remoteAddress
     ).match(
-      /^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i,
+      /^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i
     );
 
     let destinationPort = 0;
@@ -50,7 +50,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       "https://" +
         hostname +
         (destinationPort == 443 ? "" : ":" + destinationPort) +
-        req.url,
+        req.url
     );
     return;
   }
@@ -67,7 +67,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     hostname = hostname.join(":");
     if (hostname == config.domain && hostname.indexOf("www.") != 0) {
       res.redirect(
-        `${req.socket.encrypted ? "https" : "http"}://www.${hostname}${hostport ? ":" + hostport : ""}${req.url.replace(/\/+/g, "/")}`,
+        `${req.socket.encrypted ? "https" : "http"}://www.${hostname}${hostport ? ":" + hostport : ""}${req.url.replace(/\/+/g, "/")}`
       );
       return;
     }

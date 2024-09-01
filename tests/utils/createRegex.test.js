@@ -2,7 +2,7 @@ const createRegex = require("../../src/utils/createRegex.js");
 const os = require("os");
 
 jest.mock("os", () => ({
-  platform: jest.fn(),
+  platform: jest.fn()
 }));
 
 describe("Regular expression creation function", () => {
@@ -12,7 +12,7 @@ describe("Regular expression creation function", () => {
 
   test("should throw an error for invalid regular expression", () => {
     expect(() => createRegex("invalid/regex", false)).toThrow(
-      "Invalid regular expression: invalid/regex",
+      "Invalid regular expression: invalid/regex"
     );
   });
 

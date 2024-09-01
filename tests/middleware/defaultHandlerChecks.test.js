@@ -8,11 +8,11 @@ describe("Default handler checks middleware", () => {
     req = httpMocks.createRequest();
     res = httpMocks.createResponse();
     logFacilities = {
-      errmessage: jest.fn(),
+      errmessage: jest.fn()
     };
     config = {
       getCustomHeaders: jest.fn(() => ({})),
-      generateServerString: jest.fn(() => "Server String"),
+      generateServerString: jest.fn(() => "Server String")
     };
     next = jest.fn();
   });
@@ -22,7 +22,7 @@ describe("Default handler checks middleware", () => {
     middleware(req, res, logFacilities, config, next);
     expect(res._getStatusCode()).toBe(501);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      expect.stringContaining("doesn't support proxy without proxy mod."),
+      expect.stringContaining("doesn't support proxy without proxy mod.")
     );
   });
 
@@ -32,7 +32,7 @@ describe("Default handler checks middleware", () => {
     expect(res._getStatusCode()).toBe(204);
     expect(res._getHeaders()).toHaveProperty(
       "allow",
-      "GET, POST, HEAD, OPTIONS",
+      "GET, POST, HEAD, OPTIONS"
     );
   });
 
@@ -42,7 +42,7 @@ describe("Default handler checks middleware", () => {
     middleware(req, res, logFacilities, config, next);
     expect(res.error).toHaveBeenCalledWith(405);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      expect.stringContaining("Invaild method: PUT"),
+      expect.stringContaining("Invaild method: PUT")
     );
   });
 

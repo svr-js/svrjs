@@ -8,14 +8,14 @@ describe("Redirects middleware", () => {
       headers: {},
       socket: { encrypted: false, remoteAddress: "8.8.8.8" },
       isProxy: false,
-      url: "/test",
+      url: "/test"
     };
     res = {
       redirect: jest.fn(),
-      error: jest.fn(),
+      error: jest.fn()
     };
     logFacilities = {
-      errmessage: jest.fn(),
+      errmessage: jest.fn()
     };
     config = {
       secure: true,
@@ -25,7 +25,7 @@ describe("Redirects middleware", () => {
       sport: 443,
       spubport: 8443,
       wwwredirect: true,
-      domain: "example.com",
+      domain: "example.com"
     };
     next = jest.fn();
   });

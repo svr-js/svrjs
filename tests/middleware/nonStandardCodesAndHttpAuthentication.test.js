@@ -22,7 +22,7 @@ jest.mock("crypto", () => {
     pbkdf2: jest.fn((password, salt, iterations, keylen, digest, callback) => {
       // Mock implementation for crypto.pbkdf2
       callback(null, Buffer.from(mockPbkdf2Hash));
-    }),
+    })
     // Add other properties or methods of crypto module if needed
   };
 });
@@ -34,15 +34,15 @@ process.serverConfig = {
       ip: "192.168.1.1",
       url: "/test/path",
       scode: 403,
-      users: ["127.0.0.1"],
+      users: ["127.0.0.1"]
     },
     {
       host: "example.com",
       ip: "192.168.1.1",
       url: "/test/path2",
-      scode: 401,
-    },
-  ],
+      scode: 401
+    }
+  ]
 };
 
 process.messageEventListeners = [];
@@ -58,32 +58,32 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
     req = {
       socket: {
         realRemoteAddress: "127.0.0.1",
-        localAddress: "192.168.1.1",
+        localAddress: "192.168.1.1"
       },
       parsedURL: {
-        pathname: "/test/path",
+        pathname: "/test/path"
       },
       url: "/test/path",
       headers: {
-        host: "example.com",
+        host: "example.com"
       },
-      isProxy: false,
+      isProxy: false
     };
     res = {
       error: jest.fn(),
-      redirect: jest.fn(),
+      redirect: jest.fn()
     };
     logFacilities = {
       errmessage: jest.fn(),
-      reqmessage: jest.fn(),
+      reqmessage: jest.fn()
     };
     config = {
       getCustomHeaders: jest.fn(),
-      users: [],
+      users: []
     };
     next = jest.fn();
     process.serverConfig = {
-      nonStandardCodes: [],
+      nonStandardCodes: []
     };
 
     cluster.isPrimary = true;
@@ -92,7 +92,7 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
 
   test("should handle non-standard codes", () => {
     ipBlockList.mockReturnValue({
-      check: jest.fn().mockReturnValue(true),
+      check: jest.fn().mockReturnValue(true)
     });
     matchHostname.mockReturnValue(true);
     ipMatch.mockReturnValue(true);
@@ -112,8 +112,8 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
       {
         name: "test",
         pass: "test",
-        salt: "test",
-      },
+        salt: "test"
+      }
     ];
     sha256.mockReturnValue("test");
     req.headers.authorization = "Basic dGVzdDp0ZXN0";
@@ -122,7 +122,7 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
 
     expect(next).toHaveBeenCalled();
     expect(logFacilities.reqmessage).toHaveBeenCalledWith(
-      'Client is logged in as "test".',
+      'Client is logged in as "test".'
     );
   });
 
@@ -136,8 +136,8 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
       {
         name: "test",
         pass: "test2",
-        salt: "test",
-      },
+        salt: "test"
+      }
     ];
     sha256.mockReturnValue("test");
     req.headers.authorization = "Basic dGVzdDp0ZXN0";
@@ -150,7 +150,7 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
 
     expect(next).not.toHaveBeenCalled();
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      "Brute force limit reached!",
+      "Brute force limit reached!"
     );
   });
 
@@ -164,8 +164,8 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
         name: "test",
         pass: "74657374", // "test" converted to hex
         salt: "test",
-        scrypt: true,
-      },
+        scrypt: true
+      }
     ];
     mockScryptHash = "test";
     req.headers.authorization = "Basic dGVzdDp0ZXN0";
@@ -174,7 +174,7 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
 
     expect(next).toHaveBeenCalled();
     expect(logFacilities.reqmessage).toHaveBeenCalledWith(
-      'Client is logged in as "test".',
+      'Client is logged in as "test".'
     );
   });
 
@@ -188,8 +188,8 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
         name: "test",
         pass: "74657374", // "test" converted to hex
         salt: "test",
-        pbkdf2: true,
-      },
+        pbkdf2: true
+      }
     ];
     mockPbkdf2Hash = "test";
     req.headers.authorization = "Basic dGVzdDp0ZXN0";
@@ -198,7 +198,7 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
 
     expect(next).toHaveBeenCalled();
     expect(logFacilities.reqmessage).toHaveBeenCalledWith(
-      'Client is logged in as "test".',
+      'Client is logged in as "test".'
     );
   });
 
@@ -221,8 +221,8 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
       {
         name: "test",
         pass: "test",
-        salt: "test",
-      },
+        salt: "test"
+      }
     ];
     sha256.mockReturnValue("test");
     req.headers.authorization = "Basic dGVzdDp0ZXN0";
@@ -255,7 +255,7 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
       const mockWorker = {
         send: (msg) => {
           mockHandlers.forEach((handler) => handler(msg));
-        },
+        }
       };
       const mockServerConsole = {
         climessage: () => {},
@@ -264,10 +264,10 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
         errmessage: () => {},
         locerrmessage: () => {},
         locwarnmessage: () => {},
-        locmessage: () => {},
+        locmessage: () => {}
       };
       process.messageEventListeners.forEach((listenerWrapper) =>
-        listenerWrapper(mockWorker, mockServerConsole)(message),
+        listenerWrapper(mockWorker, mockServerConsole)(message)
       );
     };
 
@@ -275,7 +275,7 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
 
     expect(next).toHaveBeenCalled();
     expect(logFacilities.reqmessage).toHaveBeenCalledWith(
-      'Client is logged in as "test".',
+      'Client is logged in as "test".'
     );
   });
 });

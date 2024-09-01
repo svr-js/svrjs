@@ -2,12 +2,12 @@ const {
   getInitializePath,
   isForbiddenPath,
   isIndexOfForbiddenPath,
-  forbiddenPaths,
+  forbiddenPaths
 } = require("../../src/utils/forbiddenPaths.js");
 const os = require("os");
 
 jest.mock("os", () => ({
-  platform: jest.fn(),
+  platform: jest.fn()
 }));
 
 describe("Forbidden paths handling", () => {
@@ -16,10 +16,10 @@ describe("Forbidden paths handling", () => {
     forbiddenPaths.config = getInitializePath("./config.json");
     forbiddenPaths.serverSideScriptDirectories = [];
     forbiddenPaths.serverSideScriptDirectories.push(
-      getInitializePath("./node_modules"),
+      getInitializePath("./node_modules")
     );
     forbiddenPaths.serverSideScriptDirectories.push(
-      getInitializePath("./mods"),
+      getInitializePath("./mods")
     );
     process.cwd = () => "/usr/lib/mocksvrjs";
     process.dirname = "/usr/lib/mocksvrjs";
@@ -43,7 +43,7 @@ describe("Forbidden paths handling", () => {
     test("should handle absolute paths on Unix", () => {
       os.platform.mockReturnValue("linux");
       expect(getInitializePath("/absolute/path")).toBe(
-        "/../../../absolute/path",
+        "/../../../absolute/path"
       );
     });
 
@@ -91,13 +91,13 @@ describe("Forbidden paths handling", () => {
     test("should handle array of forbidden paths", () => {
       os.platform.mockReturnValue("linux");
       expect(
-        isForbiddenPath("/node_modules", "serverSideScriptDirectories"),
+        isForbiddenPath("/node_modules", "serverSideScriptDirectories")
       ).toBe(true);
       expect(isForbiddenPath("/mods", "serverSideScriptDirectories")).toBe(
-        true,
+        true
       );
       expect(
-        isForbiddenPath("/notforbidden", "serverSideScriptDirectories"),
+        isForbiddenPath("/notforbidden", "serverSideScriptDirectories")
       ).toBe(false);
     });
   });
@@ -107,7 +107,7 @@ describe("Forbidden paths handling", () => {
       os.platform.mockReturnValue("linux");
       expect(isIndexOfForbiddenPath("/config.json", "config")).toBe(true);
       expect(
-        isIndexOfForbiddenPath("/node_modules/", "serverSideScriptDirectories"),
+        isIndexOfForbiddenPath("/node_modules/", "serverSideScriptDirectories")
       ).toBe(true);
     });
 
@@ -115,14 +115,14 @@ describe("Forbidden paths handling", () => {
       os.platform.mockReturnValue("linux");
       expect(isIndexOfForbiddenPath("/notconfig.json", "config")).toBe(false);
       expect(
-        isIndexOfForbiddenPath("/notforbidden/", "serverSideScriptDirectories"),
+        isIndexOfForbiddenPath("/notforbidden/", "serverSideScriptDirectories")
       ).toBe(false);
       expect(isIndexOfForbiddenPath("/config.json.fake", "config")).toBe(false);
       expect(
         isIndexOfForbiddenPath(
           "/node_modules_fake/",
-          "serverSideScriptDirectories",
-        ),
+          "serverSideScriptDirectories"
+        )
       ).toBe(false);
     });
 
@@ -133,20 +133,20 @@ describe("Forbidden paths handling", () => {
       os.platform.mockReturnValue("win32");
       expect(isIndexOfForbiddenPath("/CONFIG.JSON", "config")).toBe(true);
       expect(
-        isIndexOfForbiddenPath("/NODE_MODULES/", "serverSideScriptDirectories"),
+        isIndexOfForbiddenPath("/NODE_MODULES/", "serverSideScriptDirectories")
       ).toBe(true);
     });
 
     test("should handle array of forbidden paths", () => {
       os.platform.mockReturnValue("linux");
       expect(
-        isIndexOfForbiddenPath("/node_modules/", "serverSideScriptDirectories"),
+        isIndexOfForbiddenPath("/node_modules/", "serverSideScriptDirectories")
       ).toBe(true);
       expect(
-        isIndexOfForbiddenPath("/mods/", "serverSideScriptDirectories"),
+        isIndexOfForbiddenPath("/mods/", "serverSideScriptDirectories")
       ).toBe(true);
       expect(
-        isIndexOfForbiddenPath("/notforbidden/", "serverSideScriptDirectories"),
+        isIndexOfForbiddenPath("/notforbidden/", "serverSideScriptDirectories")
       ).toBe(false);
     });
   });

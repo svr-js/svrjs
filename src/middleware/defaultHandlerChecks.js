@@ -14,7 +14,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         .replace(/</g, "&lt;")
         .replace(
           />/g,
-          "&gt;",
+          "&gt;"
         )} doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use ${name
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -22,11 +22,11 @@ module.exports = (req, res, logFacilities, config, next) => {
         .generateServerString()
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")}</i></p></body></html>`,
+        .replace(/>/g, "&gt;")}</i></p></body></html>`
     );
     res.end();
     logFacilities.errmessage(
-      `${name} doesn't support proxy without proxy mod.`,
+      `${name} doesn't support proxy without proxy mod.`
     );
     return;
   }

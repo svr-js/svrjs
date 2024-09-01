@@ -28,7 +28,7 @@ function requestHandler(req, res) {
     errmessage: (msg) => serverconsole.errmessage(msg, reqId),
     locerrmessage: (msg) => serverconsole.locerrmessage(msg, reqId),
     locwarnmessage: (msg) => serverconsole.locwarnmessage(msg, reqId),
-    locmessage: (msg) => serverconsole.locmessage(msg, reqId),
+    locmessage: (msg) => serverconsole.locmessage(msg, reqId)
   };
 
   // SVR.JS configuration object (modified)
@@ -116,7 +116,7 @@ function requestHandler(req, res) {
       req.headers[":method"] == undefined
     ) {
       let err = new Error(
-        'Either ":path" or ":method" pseudoheader is missing.',
+        'Either ":path" or ":method" pseudoheader is missing.'
       );
       if (Buffer.alloc) err.rawPacket = Buffer.alloc(0);
       if (req.socket && req.socket.server)
@@ -156,7 +156,7 @@ function requestHandler(req, res) {
     ) {
       if (headWritten) {
         process.emitWarning("res.writeHead called multiple times.", {
-          code: "WARN_SVRJS_MULTIPLE_WRITEHEAD",
+          code: "WARN_SVRJS_MULTIPLE_WRITEHEAD"
         });
         return res;
       } else {
@@ -166,11 +166,11 @@ function requestHandler(req, res) {
         if (code >= 400 && code <= 499) process.err4xxcounter++;
         else if (code >= 500 && code <= 599) process.err5xxcounter++;
         logFacilities.errmessage(
-          "Server responded with " + code.toString() + " code.",
+          "Server responded with " + code.toString() + " code."
         );
       } else {
         logFacilities.resmessage(
-          "Server responded with " + code.toString() + " code.",
+          "Server responded with " + code.toString() + " code."
         );
       }
       if (typeof codeDescription != "string" && http.STATUS_CODES[code]) {
@@ -203,7 +203,7 @@ function requestHandler(req, res) {
       config.secure && fromMain
         ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
         : (typeof config.port == "number" ? "port " : "socket ") + config.port
-    }...`,
+    }...`
   );
 
   if (req.socket == null) {
@@ -281,13 +281,13 @@ function requestHandler(req, res) {
               : req.method == "PATCH"
                 ? "to patch content in "
                 : "to access content using " + req.method + " method in "
-    }${req.headers.host == undefined || req.isProxy ? "" : req.headers.host}${req.url}`,
+    }${req.headers.host == undefined || req.isProxy ? "" : req.headers.host}${req.url}`
   );
   if (req.headers["user-agent"] != undefined)
     logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);
   if (oldHostHeader && oldHostHeader != req.headers.host)
     logFacilities.resmessage(
-      `Host name rewritten: ${oldHostHeader} => ${req.headers.host}`,
+      `Host name rewritten: ${oldHostHeader} => ${req.headers.host}`
     );
 
   // Header and footer placeholders
@@ -332,7 +332,7 @@ function requestHandler(req, res) {
       stack
     ) {
       throw new TypeError(
-        "Error stack parameter needs to be either a string or an instance of Error object.",
+        "Error stack parameter needs to be either a string or an instance of Error object."
       );
     }
 
@@ -357,7 +357,7 @@ function requestHandler(req, res) {
                     } catch (err2) {
                       res.error(500, err2);
                     }
-                  },
+                  }
                 );
               } else {
                 try {
@@ -418,7 +418,7 @@ function requestHandler(req, res) {
 
       if (errorCode == 500 || errorCode == 502) {
         logFacilities.errmessage(
-          "There was an error while processing the request!",
+          "There was an error while processing the request!"
         );
         logFacilities.errmessage("Stack:");
         logFacilities.errmessage(stack);
@@ -455,7 +455,7 @@ function requestHandler(req, res) {
                     http.STATUS_CODES[errorCode]
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
-                      .replace(/>/g, "&gt;"),
+                      .replace(/>/g, "&gt;")
                 )
                 .replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode])
                 .replace(
@@ -467,14 +467,14 @@ function requestHandler(req, res) {
                     .replace(/\r\n/g, "<br/>")
                     .replace(/\n/g, "<br/>")
                     .replace(/\r/g, "<br/>")
-                    .replace(/ {2}/g, "&nbsp;&nbsp;"),
+                    .replace(/ {2}/g, "&nbsp;&nbsp;")
                 )
                 .replace(
                   /{path}/g,
                   req.url
                     .replace(/&/g, "&amp;")
                     .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;"),
+                    .replace(/>/g, "&gt;")
                 )
                 .replace(
                   /{server}/g,
@@ -494,7 +494,7 @@ function requestHandler(req, res) {
                         String(req.headers.host)
                           .replace(/&/g, "&amp;")
                           .replace(/</g, "&lt;")
-                          .replace(/>/g, "&gt;")),
+                          .replace(/>/g, "&gt;"))
                 )
                 .replace(
                   /{contact}/g,
@@ -503,8 +503,8 @@ function requestHandler(req, res) {
                     .replace(/</g, "&lt;")
                     .replace(/>/g, "&gt;")
                     .replace(/\./g, "[dot]")
-                    .replace(/@/g, "[at]"),
-                ),
+                    .replace(/@/g, "[at]")
+                )
             ); // Replace placeholders in error response
           } catch (err) {
             let additionalError = 500;
@@ -537,7 +537,7 @@ function requestHandler(req, res) {
                     http.STATUS_CODES[errorCode]
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
-                      .replace(/>/g, "&gt;"),
+                      .replace(/>/g, "&gt;")
                 )
                 .replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode])
                 .replace(
@@ -549,14 +549,14 @@ function requestHandler(req, res) {
                     .replace(/\r\n/g, "<br/>")
                     .replace(/\n/g, "<br/>")
                     .replace(/\r/g, "<br/>")
-                    .replace(/ {2}/g, "&nbsp;&nbsp;"),
+                    .replace(/ {2}/g, "&nbsp;&nbsp;")
                 )
                 .replace(
                   /{path}/g,
                   req.url
                     .replace(/&/g, "&amp;")
                     .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;"),
+                    .replace(/>/g, "&gt;")
                 )
                 .replace(
                   /{server}/g,
@@ -576,7 +576,7 @@ function requestHandler(req, res) {
                         String(req.headers.host)
                           .replace(/&/g, "&amp;")
                           .replace(/</g, "&lt;")
-                          .replace(/>/g, "&gt;")),
+                          .replace(/>/g, "&gt;"))
                 )
                 .replace(
                   /{contact}/g,
@@ -585,9 +585,9 @@ function requestHandler(req, res) {
                     .replace(/</g, "&lt;")
                     .replace(/>/g, "&gt;")
                     .replace(/\./g, "[dot]")
-                    .replace(/@/g, "[at]"),
+                    .replace(/@/g, "[at]")
                 )
-                .replace(/{additionalError}/g, additionalError.toString()),
+                .replace(/{additionalError}/g, additionalError.toString())
             ); // Replace placeholders in error response
             res.end();
           }
@@ -676,7 +676,7 @@ function requestHandler(req, res) {
     // CONNECT requests should be handled in "connect" event.
     res.error(501);
     logFacilities.errmessage(
-      "CONNECT requests aren't supported. Your JS runtime probably doesn't support 'connect' handler for HTTP library.",
+      "CONNECT requests aren't supported. Your JS runtime probably doesn't support 'connect' handler for HTTP library."
     );
     return;
   }
@@ -697,7 +697,7 @@ function requestHandler(req, res) {
           ? req.headers.host
           : config.domain
             ? config.domain
-            : "unknown.invalid"),
+            : "unknown.invalid")
     );
   } catch (err) {
     res.error(400, err);

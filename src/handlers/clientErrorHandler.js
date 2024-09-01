@@ -86,7 +86,7 @@ function clientErrorHandler(err, socket) {
       });
       head += "\r\n";
       res.write(head);
-    },
+    }
   };
 
   let reqIdInt = Math.floor(Math.random() * 16777216);
@@ -102,7 +102,7 @@ function clientErrorHandler(err, socket) {
     errmessage: (msg) => serverconsole.errmessage(msg, reqId),
     locerrmessage: (msg) => serverconsole.locerrmessage(msg, reqId),
     locwarnmessage: (msg) => serverconsole.locwarnmessage(msg, reqId),
-    locmessage: (msg) => serverconsole.locmessage(msg, reqId),
+    locmessage: (msg) => serverconsole.locmessage(msg, reqId)
   };
 
   socket.on("close", (hasError) => {
@@ -158,7 +158,7 @@ function clientErrorHandler(err, socket) {
       stack
     ) {
       throw new TypeError(
-        "Error stack parameter needs to be either a string or an instance of Error object.",
+        "Error stack parameter needs to be either a string or an instance of Error object."
       );
     }
 
@@ -193,7 +193,7 @@ function clientErrorHandler(err, socket) {
                     } catch (err2) {
                       callServerError(500, err2);
                     }
-                  },
+                  }
                 );
               } else {
                 try {
@@ -246,7 +246,7 @@ function clientErrorHandler(err, socket) {
         stack = generateErrorStack(new Error("Unknown error"));
       if (errorCode == 500 || errorCode == 502) {
         logFacilities.errmessage(
-          "There was an error while processing the request!",
+          "There was an error while processing the request!"
         );
         logFacilities.errmessage("Stack:");
         logFacilities.errmessage(stack);
@@ -275,7 +275,7 @@ function clientErrorHandler(err, socket) {
                   http.STATUS_CODES[errorCode]
                     .replace(/&/g, "&amp;")
                     .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;"),
+                    .replace(/>/g, "&gt;")
               )
               .replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode])
               .replace(
@@ -287,7 +287,7 @@ function clientErrorHandler(err, socket) {
                   .replace(/\r\n/g, "<br/>")
                   .replace(/\n/g, "<br/>")
                   .replace(/\r/g, "<br/>")
-                  .replace(/ {2}/g, "&nbsp;&nbsp;"),
+                  .replace(/ {2}/g, "&nbsp;&nbsp;")
               )
               .replace(
                 /{server}/g,
@@ -299,7 +299,7 @@ function clientErrorHandler(err, socket) {
                 )
                   .replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
-                  .replace(/>/g, "&gt;"),
+                  .replace(/>/g, "&gt;")
               )
               .replace(
                 /{contact}/g,
@@ -308,8 +308,8 @@ function clientErrorHandler(err, socket) {
                   .replace(/</g, "&lt;")
                   .replace(/>/g, "&gt;")
                   .replace(/\./g, "[dot]")
-                  .replace(/@/g, "[at]"),
-              )}`,
+                  .replace(/@/g, "[at]")
+              )}`
           );
           res.end();
         } else {
@@ -327,7 +327,7 @@ function clientErrorHandler(err, socket) {
                       http.STATUS_CODES[errorCode]
                         .replace(/&/g, "&amp;")
                         .replace(/</g, "&lt;")
-                        .replace(/>/g, "&gt;"),
+                        .replace(/>/g, "&gt;")
                   )
                   .replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode])
                   .replace(
@@ -339,7 +339,7 @@ function clientErrorHandler(err, socket) {
                       .replace(/\r\n/g, "<br/>")
                       .replace(/\n/g, "<br/>")
                       .replace(/\r/g, "<br/>")
-                      .replace(/ {2}/g, "&nbsp;&nbsp;"),
+                      .replace(/ {2}/g, "&nbsp;&nbsp;")
                   )
                   .replace(
                     /{server}/g,
@@ -351,7 +351,7 @@ function clientErrorHandler(err, socket) {
                     )
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
-                      .replace(/>/g, "&gt;"),
+                      .replace(/>/g, "&gt;")
                   )
                   .replace(
                     /{contact}/g,
@@ -360,8 +360,8 @@ function clientErrorHandler(err, socket) {
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;")
                       .replace(/\./g, "[dot]")
-                      .replace(/@/g, "[at]"),
-                  ),
+                      .replace(/@/g, "[at]")
+                  )
               );
             } catch (err) {
               let additionalError = 500;
@@ -392,7 +392,7 @@ function clientErrorHandler(err, socket) {
                       http.STATUS_CODES[errorCode]
                         .replace(/&/g, "&amp;")
                         .replace(/</g, "&lt;")
-                        .replace(/>/g, "&gt;"),
+                        .replace(/>/g, "&gt;")
                   )
                   .replace(/{errorDesc}/g, serverHTTPErrorDescs[errorCode])
                   .replace(
@@ -404,7 +404,7 @@ function clientErrorHandler(err, socket) {
                       .replace(/\r\n/g, "<br/>")
                       .replace(/\n/g, "<br/>")
                       .replace(/\r/g, "<br/>")
-                      .replace(/ {2}/g, "&nbsp;&nbsp;"),
+                      .replace(/ {2}/g, "&nbsp;&nbsp;")
                   )
                   .replace(
                     /{server}/g,
@@ -416,7 +416,7 @@ function clientErrorHandler(err, socket) {
                     )
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
-                      .replace(/>/g, "&gt;"),
+                      .replace(/>/g, "&gt;")
                   )
                   .replace(
                     /{contact}/g,
@@ -425,9 +425,9 @@ function clientErrorHandler(err, socket) {
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;")
                       .replace(/\./g, "[dot]")
-                      .replace(/@/g, "[at]"),
+                      .replace(/@/g, "[at]")
                   )
-                  .replace(/{additionalError}/g, additionalError.toString()),
+                  .replace(/{additionalError}/g, additionalError.toString())
               );
               res.end();
             }
@@ -445,7 +445,7 @@ function clientErrorHandler(err, socket) {
       config.secure && fromMain
         ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
         : (typeof config.port == "number" ? "port " : "socket ") + config.port
-    }...`,
+    }...`
   );
   logFacilities.reqmessage(
     `Client ${
@@ -453,7 +453,7 @@ function clientErrorHandler(err, socket) {
         ? "[unknown client]"
         : reqip +
           (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")
-    } sent invalid request.`,
+    } sent invalid request.`
   );
   try {
     head = fs.existsSync("./.head")
@@ -482,7 +482,7 @@ function clientErrorHandler(err, socket) {
         return;
       } else {
         logFacilities.errmessage(
-          `An SSL error occured: ${err.code ? err.code : err.message}`,
+          `An SSL error occured: ${err.code ? err.code : err.message}`
         );
         callServerError(400);
         return;
@@ -537,7 +537,7 @@ function clientErrorHandler(err, socket) {
     if (String(packetLine1[0]).indexOf(":") > 0) {
       if (!checkHeaders(true)) {
         logFacilities.errmessage(
-          "The request is invalid (it may be a part of larger invalid request).",
+          "The request is invalid (it may be a part of larger invalid request)."
         );
         callServerError(400); // Also malformed Packet
         return;
@@ -568,7 +568,7 @@ function clientErrorHandler(err, socket) {
     // eslint-disable-next-line no-unused-vars
   } catch (err) {
     logFacilities.errmessage(
-      "There was an error while determining type of malformed request.",
+      "There was an error while determining type of malformed request."
     );
     callServerError(400);
   }

@@ -96,7 +96,7 @@ function sha256(s) {
         0x90befffa,
         0xa4506ceb,
         0xbef9a3f7,
-        0xc67178f2,
+        0xc67178f2
       );
       let HASH = new Array(
         0x6a09e667,
@@ -106,7 +106,7 @@ function sha256(s) {
         0x510e527f,
         0x9b05688c,
         0x1f83d9ab,
-        0x5be0cd19,
+        0x5be0cd19
       );
       let W = new Array(64);
       let a, b, c, d, e, f, g, h;
@@ -131,14 +131,14 @@ function sha256(s) {
             W[j] = safeAdd(
               safeAdd(
                 safeAdd(Gamma1256(W[j - 2]), W[j - 7]),
-                Gamma0256(W[j - 15]),
+                Gamma0256(W[j - 15])
               ),
-              W[j - 16],
+              W[j - 16]
             );
 
           T1 = safeAdd(
             safeAdd(safeAdd(safeAdd(h, Sigma1256(e)), Ch(e, f, g)), K[j]),
-            W[j],
+            W[j]
           );
           T2 = safeAdd(Sigma0256(a), Maj(a, b, c));
 

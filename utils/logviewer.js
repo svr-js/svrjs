@@ -72,7 +72,7 @@ const logo = [
   "\x1b[0m                                    ,///////,",
   "",
   "",
-  "\x1b[0m",
+  "\x1b[0m"
 ];
 
 for (let i = 0; i < logo.length; i++) {
@@ -89,7 +89,7 @@ function prompt(options) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: "logviewer> ",
+    prompt: "logviewer> "
   });
   console.log("Options:");
   for (let i = 0; i < options.length; i++) {
@@ -120,36 +120,36 @@ function viewLog(log) {
       log[i] =
         log[i].replace(
           "SERVER REQUEST MESSAGE",
-          "\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m",
+          "\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m"
         ) + "\x1b[37m\x1b[0m";
     } else if (log[i].indexOf("SERVER RESPONSE MESSAGE") != -1) {
       log[i] =
         log[i].replace(
           "SERVER RESPONSE MESSAGE",
-          "\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m",
+          "\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m"
         ) + "\x1b[37m\x1b[0m";
     } else if (log[i].indexOf("SERVER RESPONSE ERROR MESSAGE") != -1) {
       log[i] =
         log[i].replace(
           "SERVER RESPONSE ERROR MESSAGE",
-          "\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m",
+          "\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m"
         ) + "\x1b[37m\x1b[0m";
     } else if (log[i].indexOf("SERVER ERROR MESSAGE") != -1) {
       log[i] =
         log[i].replace(
           "SERVER ERROR MESSAGE",
-          "\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m",
+          "\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m"
         ) + "\x1b[40m\x1b[0m";
     } else if (log[i].indexOf("SERVER WARNING MESSAGE") != -1) {
       log[i] =
         log[i].replace(
           "SERVER WARNING MESSAGE",
-          "\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m",
+          "\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m"
         ) + "\x1b[40m\x1b[0m";
     } else if (log[i].indexOf("SERVER MESSAGE") != -1) {
       log[i] = log[i].replace(
         "SERVER MESSAGE",
-        "\x1b[1mSERVER MESSAGE\x1b[22m",
+        "\x1b[1mSERVER MESSAGE\x1b[22m"
       );
     }
     console.log(log[i]);
@@ -173,7 +173,7 @@ function viewMasterLogs() {
     fs
       .readFileSync(__dirname + "/log/" + latestLogFileName)
       .toString()
-      .split("\n"),
+      .split("\n")
   );
   prompt(mainOptions);
 }
@@ -242,7 +242,7 @@ function viewFilteredWorkerLogsPrompt() {
   var rl2 = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: "filter> ",
+    prompt: "filter> "
   });
   console.log("Input filter:");
   rl2.prompt();
@@ -257,15 +257,15 @@ var mainOptions = [
   { name: "View 5 latest worker logs", callback: viewWorkerLogs },
   {
     name: "View filtered worker logs (latest 20 logs)",
-    callback: viewFilteredWorkerLogsPrompt,
+    callback: viewFilteredWorkerLogsPrompt
   },
   {
     name: "Exit log viewer",
     callback: () => {
       console.log("Bye!");
       process.exit(0);
-    },
-  },
+    }
+  }
 ];
 
 prompt(mainOptions);

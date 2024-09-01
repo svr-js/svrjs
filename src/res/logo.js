@@ -39,7 +39,7 @@ const logo = [
   "\x1b[0m                                    ,///////,",
   "",
   "",
-  "\x1b[0m",
+  "\x1b[0m"
 ];
 
 module.exports = logo;

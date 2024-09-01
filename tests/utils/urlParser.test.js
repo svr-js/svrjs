@@ -62,7 +62,7 @@ describe("URL parser", () => {
 
   test("should parse a URL with all components", () => {
     const parsedUrl = parseURL(
-      "http://user:pass@example.com:8080/path/to/resource?query=string#fragment",
+      "http://user:pass@example.com:8080/path/to/resource?query=string#fragment"
     );
     expect(parsedUrl.protocol).toBe("http:");
     expect(parsedUrl.auth).toBe("user:pass");
@@ -74,7 +74,7 @@ describe("URL parser", () => {
     expect(parsedUrl.hash).toBe("#fragment");
     expect(parsedUrl.path).toBe("/path/to/resource?query=string");
     expect(parsedUrl.href).toBe(
-      "http://user:pass@example.com:8080/path/to/resource?query=string#fragment",
+      "http://user:pass@example.com:8080/path/to/resource?query=string#fragment"
     );
   });
 });

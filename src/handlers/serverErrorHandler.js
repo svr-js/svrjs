@@ -12,15 +12,15 @@ function serverErrorHandler(err, isRedirect, server, start) {
     serverconsole.locerrmessage(
       serverErrorDescs[err.code]
         ? serverErrorDescs[err.code]
-        : serverErrorDescs["UNKNOWN"],
+        : serverErrorDescs["UNKNOWN"]
     );
     serverconsole.locmessage(
-      `${isRedirect ? attmtsRedir : attmts} attempts left.`,
+      `${isRedirect ? attmtsRedir : attmts} attempts left.`
     );
   } else {
     try {
       process.send(
-        "\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code,
+        "\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code
       );
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
@@ -59,7 +59,7 @@ process.messageEventListeners.push((worker, serverconsole) => {
         serverconsole.locerrmessage(
           serverErrorDescs[errCode]
             ? serverErrorDescs[errCode]
-            : serverErrorDescs["UNKNOWN"],
+            : serverErrorDescs["UNKNOWN"]
         );
         serverconsole.locmessage(`${tries} attempts left.`);
       }

@@ -4,7 +4,7 @@ const {
   getInitializePath,
   isForbiddenPath,
   isIndexOfForbiddenPath,
-  forbiddenPaths,
+  forbiddenPaths
 } = require("../utils/forbiddenPaths.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
@@ -13,15 +13,15 @@ forbiddenPaths.config = getInitializePath("./config.json");
 forbiddenPaths.certificates = [];
 if (process.serverConfig.secure) {
   forbiddenPaths.certificates.push(
-    getInitializePath(process.serverConfig.cert),
+    getInitializePath(process.serverConfig.cert)
   );
   forbiddenPaths.certificates.push(getInitializePath(process.serverConfig.key));
   Object.keys(process.serverConfig.sni).forEach((sniHostname) => {
     forbiddenPaths.certificates.push(
-      getInitializePath(process.serverConfig.sni[sniHostname].cert),
+      getInitializePath(process.serverConfig.sni[sniHostname].cert)
     );
     forbiddenPaths.certificates.push(
-      getInitializePath(process.serverConfig.sni[sniHostname].key),
+      getInitializePath(process.serverConfig.sni[sniHostname].key)
     );
   });
 }
@@ -29,19 +29,19 @@ forbiddenPaths.svrjs = getInitializePath(
   "./" +
     (process.dirname[process.dirname.length - 1] != "/"
       ? process.filename.replace(process.dirname + "/", "")
-      : process.filename.replace(process.dirname, "")),
+      : process.filename.replace(process.dirname, ""))
 );
 forbiddenPaths.serverSideScripts = [];
 if (process.serverConfig.useWebRootServerSideScript) {
   forbiddenPaths.serverSideScripts.push("/serverSideScript.js");
 } else {
   forbiddenPaths.serverSideScripts.push(
-    getInitializePath("./serverSideScript.js"),
+    getInitializePath("./serverSideScript.js")
   );
 }
 forbiddenPaths.serverSideScriptDirectories = [];
 forbiddenPaths.serverSideScriptDirectories.push(
-  getInitializePath("./node_modules"),
+  getInitializePath("./node_modules")
 );
 forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
 forbiddenPaths.temp = getInitializePath("./temp");
@@ -51,7 +51,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   let decodedHrefWithoutDuplicateSlashes = "";
   try {
     decodedHrefWithoutDuplicateSlashes = decodeURIComponent(
-      req.parsedURL.pathname,
+      req.parsedURL.pathname
     ).replace(/\/+/g, "/");
     // eslint-disable-next-line no-unused-vars
   } catch (err) {
@@ -66,7 +66,7 @@ module.exports = (req, res, logFacilities, config, next) => {
   ) {
     res.error(403);
     logFacilities.errmessage(
-      "Access to configuration file/certificates is denied.",
+      "Access to configuration file/certificates is denied."
     );
     return;
   } else if (
@@ -97,11 +97,11 @@ module.exports = (req, res, logFacilities, config, next) => {
     (isForbiddenPath(decodedHrefWithoutDuplicateSlashes, "svrjs") ||
       isForbiddenPath(
         decodedHrefWithoutDuplicateSlashes,
-        "serverSideScripts",
+        "serverSideScripts"
       ) ||
       isIndexOfForbiddenPath(
         decodedHrefWithoutDuplicateSlashes,
-        "serverSideScriptDirectories",
+        "serverSideScriptDirectories"
       )) &&
     !req.isProxy &&
     (config.disableServerSideScriptExpose ||

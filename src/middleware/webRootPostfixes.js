@@ -59,7 +59,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         matchHostname(postfixEntry.host) &&
         ipMatch(
           postfixEntry.ip,
-          req.socket ? req.socket.localAddress : undefined,
+          req.socket ? req.socket.localAddress : undefined
         ) &&
         !(
           postfixEntry.skipRegex &&
@@ -75,7 +75,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     });
     if (urlWithPostfix != preparedReqUrl3) {
       logFacilities.resmessage(
-        "Added web root postfix: " + req.url + " => " + urlWithPostfix,
+        "Added web root postfix: " + req.url + " => " + urlWithPostfix
       );
       req.url = urlWithPostfix;
       try {
@@ -87,7 +87,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               : config.domain
                 ? config.domain
                 : "unknown.invalid"
-          }`,
+          }`
         );
       } catch (err) {
         res.error(400, err);
@@ -96,7 +96,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
       const sHref = sanitizeURL(
         req.parsedURL.pathname,
-        config.allowDoubleSlashes,
+        config.allowDoubleSlashes
       );
       const preparedReqUrl2 =
         req.parsedURL.pathname +
@@ -119,7 +119,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           (req.parsedURL.search ? req.parsedURL.search : "") +
           (req.parsedURL.hash ? req.parsedURL.hash : "");
         logFacilities.resmessage(
-          `URL sanitized: ${req.url} => ${rewrittenAgainURL}`,
+          `URL sanitized: ${req.url} => ${rewrittenAgainURL}`
         );
         req.url = rewrittenAgainURL;
         try {
@@ -131,7 +131,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 : config.domain
                   ? config.domain
                   : "unknown.invalid"
-            }`,
+            }`
           );
         } catch (err) {
           res.error(400, err);

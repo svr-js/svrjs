@@ -22,7 +22,7 @@ try {
   tar = require("tar");
 } catch (err) {
   tar = {
-    _errored: err,
+    _errored: err
   };
 }
 
@@ -57,7 +57,7 @@ try {
   };
 }
 let crypto = {
-  __disabled__: null,
+  __disabled__: null
 };
 let https = {
   createServer: () => {
@@ -68,7 +68,7 @@ let https = {
   },
   get: () => {
     throw new Error("Crypto support is not present");
-  },
+  }
 };
 try {
   crypto = require("crypto");
@@ -87,7 +87,7 @@ try {
   ocspCache = new ocsp.Cache();
 } catch (err) {
   ocsp = {
-    _errored: err,
+    _errored: err
   };
 }
 
@@ -136,12 +136,12 @@ for (
   ) {
     console.log(`${name} usage:`);
     console.log(
-      "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
+      "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]"
     );
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`,
+      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -181,12 +181,12 @@ for (
     console.log(`Unrecognized argument: ${args[i]}`);
     console.log(`${name} usage:`);
     console.log(
-      "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]",
+      "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]"
     );
     console.log("-h -? /h /? --help    -- Displays help");
     console.log("--clean               -- Cleans up files created by " + name);
     console.log(
-      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`,
+      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`
     );
     console.log("--secure              -- Runs HTTPS server");
     console.log("--disable-mods        -- Disables mods (safe mode)");
@@ -209,7 +209,7 @@ const legacyModWrapper = require("./utils/legacyModWrapper.js");
 const generateErrorStack = require("./utils/generateErrorStack.js");
 const {
   calculateNetworkIPv4FromCidr,
-  calculateBroadcastIPv4FromCidr,
+  calculateBroadcastIPv4FromCidr
 } = require("./utils/ipSubnetUtils.js");
 const sendStatistics = require("./utils/sendStatistics.js");
 const deepClone = require("./utils/deepClone.js");
@@ -296,7 +296,7 @@ if (process.serverConfig.dontCompress === undefined)
     "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
     "/.*\\.(?:[id]mg|iso|flp)$/",
     "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
-    "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/",
+    "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"
   ];
 if (process.serverConfig.enableIPSpoofing === undefined)
   process.serverConfig.enableIPSpoofing = false;
@@ -346,7 +346,7 @@ if (typeof process.serverConfig.port === "string") {
     process.serverConfig.port = parseInt(process.serverConfig.port);
   } else {
     const portLMatch = process.serverConfig.port.match(
-      /^(\[[^ \]@/\\]+\]|[^ \][:@/\\]+):([0-9]+)$/,
+      /^(\[[^ \]@/\\]+\]|[^ \][:@/\\]+):([0-9]+)$/
     );
     if (portLMatch) {
       listenAddress = portLMatch[1]
@@ -361,7 +361,7 @@ if (typeof process.serverConfig.sport === "string") {
     process.serverConfig.sport = parseInt(process.serverConfig.sport);
   } else {
     const sportLMatch = process.serverConfig.sport.match(
-      /^(\[[^ \]@/\\]+\]|[^ \][:@/\\]+):([0-9]+)$/,
+      /^(\[[^ \]@/\\]+\]|[^ \][:@/\\]+):([0-9]+)$/
     );
     if (sportLMatch) {
       sListenAddress = sportLMatch[1]
@@ -376,7 +376,7 @@ const serverconsole = require("./utils/serverconsole.js");
 
 function addListenersToWorker(worker) {
   process.messageEventListeners.forEach((messageEventListener) =>
-    worker.on("message", messageEventListener(worker, serverconsole)),
+    worker.on("message", messageEventListener(worker, serverconsole))
   );
 }
 
@@ -404,7 +404,7 @@ try {
     process.chdir(
       process.serverConfig.wwwroot != undefined
         ? process.serverConfig.wwwroot
-        : process.dirname,
+        : process.dirname
     );
 } catch (err) {
   wwwrootError = err;
@@ -531,9 +531,9 @@ if (host != "[offline]" || ifaceEx) {
     port: crypto.__disabled__ !== undefined ? 80 : 443,
     path: "/",
     headers: {
-      "User-Agent": generateServerString(true),
+      "User-Agent": generateServerString(true)
     },
-    timeout: 5000,
+    timeout: 5000
   });
 
   if (crypto.__disabled__ === undefined) {
@@ -542,9 +542,9 @@ if (host != "[offline]" || ifaceEx) {
       port: 443,
       path: "/",
       headers: {
-        "User-Agent": generateServerString(true),
+        "User-Agent": generateServerString(true)
       },
-      timeout: 5000,
+      timeout: 5000
     });
   }
 } else {
@@ -585,7 +585,7 @@ if (process.serverConfig.secure) {
         process.serverConfig.key[0] != "/" &&
           !process.serverConfig.key.match(/^[A-Z0-9]:\\/)
           ? process.dirname + "/" + process.serverConfig.key
-          : process.serverConfig.key,
+          : process.serverConfig.key
       )
       .toString();
     cert = fs
@@ -593,7 +593,7 @@ if (process.serverConfig.secure) {
         process.serverConfig.cert[0] != "/" &&
           !process.serverConfig.cert.match(/^[A-Z0-9]:\\/)
           ? process.dirname + "/" + process.serverConfig.cert
-          : process.serverConfig.cert,
+          : process.serverConfig.cert
       )
       .toString();
     const sniNames = Object.keys(process.serverConfig.sni);
@@ -611,7 +611,7 @@ if (process.serverConfig.secure) {
             process.serverConfig.sni[sniName].cert[0] != "/" &&
               !process.serverConfig.sni[sniName].cert.match(/^[A-Z0-9]:\\/)
               ? process.dirname + "/" + process.serverConfig.sni[sniName].cert
-              : process.serverConfig.sni[sniName].cert,
+              : process.serverConfig.sni[sniName].cert
           )
           .toString(),
         key: fs
@@ -619,9 +619,9 @@ if (process.serverConfig.secure) {
             process.serverConfig.sni[sniName].key[0] != "/" &&
               !process.serverConfig.sni[sniName].key.match(/^[A-Z0-9]:\\/)
               ? process.dirname + "/" + process.serverConfig.sni[sniName].key
-              : process.serverConfig.sni[sniName].key,
+              : process.serverConfig.sni[sniName].key
           )
-          .toString(),
+          .toString()
       });
     });
   } catch (err) {
@@ -662,13 +662,13 @@ if (!disableMods) {
           else {
             modInfos.push({
               name: `Unknown mod (${modFileRaw}; module.exports.modInfo not set)`,
-              version: "ERROR",
+              version: "ERROR"
             });
           }
         } catch (err) {
           modLoadingErrors.push({
             error: err,
-            modName: modFileRaw,
+            modName: modFileRaw
           });
         }
       } else {
@@ -692,7 +692,7 @@ if (!disableMods) {
                 fs.mkdirSync(process.dirname + "/temp");
                 try {
                   fs.mkdirSync(
-                    process.dirname + "/temp/" + modloaderFolderName,
+                    process.dirname + "/temp/" + modloaderFolderName
                   );
                 } catch (err) {
                   // If there was another error, throw it
@@ -707,7 +707,7 @@ if (!disableMods) {
                 "/temp/" +
                 modloaderFolderName +
                 "/" +
-                modFileRaw,
+                modFileRaw
             );
           } catch (err) {
             // If there was an error creating the folder, ignore it if it's a known error
@@ -727,7 +727,7 @@ if (!disableMods) {
                 "/temp/" +
                 modloaderFolderName +
                 "/" +
-                modFileRaw,
+                modFileRaw
             });
           } else {
             // If it's not a ".tar.gz" file, throw an error about `svrmodpack` support being dropped
@@ -736,7 +736,7 @@ if (!disableMods) {
                 name +
                 ' no longer supports "svrmodpack" library for ' +
                 name +
-                " mods. Please consider using newer mods with .tar.gz format.",
+                " mods. Please consider using newer mods with .tar.gz format."
             );
           }
 
@@ -749,9 +749,9 @@ if (!disableMods) {
                   modloaderFolderName +
                   "/" +
                   modFileRaw +
-                  "/index.js",
-              ),
-            ),
+                  "/index.js"
+              )
+            )
           );
 
           // Read the mod's info file
@@ -764,21 +764,21 @@ if (!disableMods) {
                     modloaderFolderName +
                     "/" +
                     modFileRaw +
-                    "/mod.info",
-                ),
-              ),
+                    "/mod.info"
+                )
+              )
             );
           } catch (err) {
             // If failed to read info file, add a placeholder entry to modInfos with an error message
             modInfos.push({
               name: `Unknown mod (${modFileRaw}; ${err.message})`,
-              version: "ERROR",
+              version: "ERROR"
             });
           }
         } catch (err) {
           modLoadingErrors.push({
             error: err,
-            modName: modFileRaw,
+            modName: modFileRaw
           });
         }
       }
@@ -823,14 +823,14 @@ if (!disableMods) {
       // Write the modified server side script to the temp folder
       fs.writeFileSync(
         process.dirname + "/temp/" + tempServerSideScriptName,
-        modhead + fs.readFileSync(SSJSPath) + modfoot,
+        modhead + fs.readFileSync(SSJSPath) + modfoot
       );
 
       // Add the server side script to the mods list
       mods.push(
         legacyModWrapper(
-          require(process.dirname + "/temp/" + tempServerSideScriptName),
-        ),
+          require(process.dirname + "/temp/" + tempServerSideScriptName)
+        )
       );
     } catch (err) {
       SSJSError = err;
@@ -852,28 +852,28 @@ let middleware = [
   ...mods, // Load SVR.JS mods as middleware
   require("./middleware/defaultHandlerChecks.js"),
   require("./middleware/status.js"),
-  require("./middleware/staticFileServingAndDirectoryListings.js"),
+  require("./middleware/staticFileServingAndDirectoryListings.js")
 ];
 
 // HTTP server handlers
 const requestHandler = require("./handlers/requestHandler.js")(
   serverconsole,
-  middleware,
+  middleware
 );
 
 const proxyHandler = require("./handlers/proxyHandler.js")(
   serverconsole,
-  middleware,
+  middleware
 );
 
 const noproxyHandler = require("./handlers/noproxyHandler.js")(serverconsole);
 
 const clientErrorHandler = require("./handlers/clientErrorHandler.js")(
-  serverconsole,
+  serverconsole
 );
 
 const serverErrorHandler = require("./handlers/serverErrorHandler.js")(
-  serverconsole,
+  serverconsole
 );
 
 let messageTransmitted = false;
@@ -916,7 +916,7 @@ function listeningMessage() {
           process.serverConfig.sport == 443
             ? ""
             : ":" + process.serverConfig.sport
-        }`,
+        }`
       );
     } else {
       serverconsole.locmessage("* " + process.serverConfig.sport); // Unix socket or Windows named pipe
@@ -933,7 +933,7 @@ function listeningMessage() {
       serverconsole.locmessage(
         `* http://localhost${
           process.serverConfig.port == 80 ? "" : ":" + process.serverConfig.port
-        }`,
+        }`
       );
     } else {
       serverconsole.locmessage("* " + process.serverConfig.port); // Unix socket or Windows named pipe
@@ -950,7 +950,7 @@ function listeningMessage() {
         process.serverConfig.sport == 443
           ? ""
           : ":" + process.serverConfig.sport
-      }`,
+      }`
     );
   if (
     !(
@@ -964,7 +964,7 @@ function listeningMessage() {
     serverconsole.locmessage(
       `* http://${accHost.indexOf(":") > -1 ? "[" + accHost + "]" : accHost}${
         process.serverConfig.port == 80 ? "" : ":" + process.serverConfig.port
-      }`,
+      }`
     );
   ipStatusCallback(() => {
     if (pubip != "") {
@@ -974,7 +974,7 @@ function listeningMessage() {
             process.serverConfig.spubport == 443
               ? ""
               : ":" + process.serverConfig.spubport
-          }`,
+          }`
         );
       if (
         !(
@@ -988,7 +988,7 @@ function listeningMessage() {
             process.serverConfig.pubport == 80
               ? ""
               : ":" + process.serverConfig.pubport
-          }`,
+          }`
         );
     }
     if (domain != "") {
@@ -998,7 +998,7 @@ function listeningMessage() {
             process.serverConfig.spubport == 443
               ? ""
               : ":" + process.serverConfig.spubport
-          }`,
+          }`
         );
       if (
         !(
@@ -1012,7 +1012,7 @@ function listeningMessage() {
             process.serverConfig.pubport == 80
               ? ""
               : ":" + process.serverConfig.pubport
-          }`,
+          }`
         );
     }
     serverconsole.locmessage('For CLI help, you can type "help"');
@@ -1021,13 +1021,13 @@ function listeningMessage() {
     if (!process.serverConfig.optOutOfStatisticsServer) {
       if (crypto.__disabled__ !== undefined) {
         serverconsole.locwarnmessage(
-          "Sending data to statistics server is disabled, because the server only supports HTTPS, and your Node.JS version doesn't have crypto support.",
+          "Sending data to statistics server is disabled, because the server only supports HTTPS, and your Node.JS version doesn't have crypto support."
         );
       } else {
         sendStatistics(modInfos, (err) => {
           if (err)
             serverconsole.locwarnmessage(
-              `There was a problem, when sending data to statistics server! Reason: ${err.message}`,
+              `There was a problem, when sending data to statistics server! Reason: ${err.message}`
             );
         });
       }
@@ -1044,7 +1044,7 @@ let server2 = {};
 // Create secondary HTTP server
 try {
   server2 = http.createServer({
-    requireHostHeader: false,
+    requireHostHeader: false
   });
   // eslint-disable-next-line no-unused-vars
 } catch (err) {
@@ -1057,7 +1057,7 @@ server2.on("checkExpectation", requestHandler);
 server2.on("clientError", clientErrorHandler);
 server2.on(
   "connect",
-  process.serverConfig.disableToHTTPSRedirect ? proxyHandler : noproxyHandler,
+  process.serverConfig.disableToHTTPSRedirect ? proxyHandler : noproxyHandler
 );
 server2.on("error", (err) => {
   serverErrorHandler(err, true, server2, start);
@@ -1083,13 +1083,13 @@ if (process.serverConfig.enableHTTP2 == true) {
       minVersion: process.serverConfig.tlsMinVersion,
       maxVersion: process.serverConfig.tlsMaxVersion,
       sigalgs: process.serverConfig.signatureAlgorithms,
-      settings: process.serverConfig.http2Settings,
+      settings: process.serverConfig.http2Settings
     });
   } else {
     server = http2.createServer({
       allowHTTP1: true,
       requireHostHeader: false,
-      settings: process.serverConfig.http2Settings,
+      settings: process.serverConfig.http2Settings
     });
   }
 } else {
@@ -1105,12 +1105,12 @@ if (process.serverConfig.enableHTTP2 == true) {
       ecdhCurve: process.serverConfig.ecdhCurve,
       minVersion: process.serverConfig.tlsMinVersion,
       maxVersion: process.serverConfig.tlsMaxVersion,
-      sigalgs: process.serverConfig.signatureAlgorithms,
+      sigalgs: process.serverConfig.signatureAlgorithms
     });
   } else {
     try {
       server = http.createServer({
-        requireHostHeader: false,
+        requireHostHeader: false
       });
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
@@ -1125,11 +1125,11 @@ if (process.serverConfig.secure) {
     sniCredentials.forEach((sniCredentialsSingle) => {
       server.addContext(sniCredentialsSingle.name, {
         cert: sniCredentialsSingle.cert,
-        key: sniCredentialsSingle.key,
+        key: sniCredentialsSingle.key
       });
       try {
         let snMatches = sniCredentialsSingle.name.match(
-          /^([^:[]*|\[[^]]*\]?)((?::.*)?)$/,
+          /^([^:[]*|\[[^]]*\]?)((?::.*)?)$/
         );
         if (!snMatches[1][0].match(/^\.+$/))
           snMatches[1][0] = snMatches[1][0].replace(/\.+$/, "");
@@ -1140,7 +1140,7 @@ if (process.serverConfig.secure) {
               .replace(/\*/g, "[^.:]*") +
             (snMatches[1][0] == "[" ||
             snMatches[1].match(
-              /^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/,
+              /^(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/
             )
               ? ""
               : ".?") +
@@ -1148,7 +1148,7 @@ if (process.serverConfig.secure) {
               .replace(/([.^$+?\-\\[\]{}])/g, "\\$1")
               .replace(/\*/g, "[^.]*") +
             "$",
-          "i",
+          "i"
         );
         // eslint-disable-next-line no-unused-vars
       } catch (err) {
@@ -1238,7 +1238,7 @@ if (process.serverConfig.secure) {
         const req = ocsp.request.generate(cert, issuer);
         const options = {
           url: uri,
-          ocsp: req.data,
+          ocsp: req.data
         };
 
         ocspCache.request(req.id, options, callback);
@@ -1276,13 +1276,13 @@ let commands = {
           process.serverConfig.secure
             ? process.serverConfig.sport
             : process.serverConfig.port,
-          process.serverConfig.secure ? sListenAddress : listenAddress,
+          process.serverConfig.secure ? sListenAddress : listenAddress
         );
       } else {
         server.listen(
           process.serverConfig.secure
             ? process.serverConfig.sport
-            : process.serverConfig.port,
+            : process.serverConfig.port
         );
       }
       if (
@@ -1378,7 +1378,7 @@ let commands = {
     if (cluster.isPrimary === undefined)
       log(`This command is not supported on single-threaded ${name}.`);
     else log(`This command need to be run in ${name} master.`);
-  },
+  }
 };
 
 // Load commands from middleware
@@ -1407,7 +1407,7 @@ function SVRJSFork() {
   // Log
   if (SVRJSInitialized)
     serverconsole.locmessage(
-      "Starting next thread, because previous one hung up/crashed...",
+      "Starting next thread, because previous one hung up/crashed..."
     );
   // Fork new worker
   let newWorker = {};
@@ -1421,7 +1421,7 @@ function SVRJSFork() {
     ) {
       threadLimitWarned = true;
       serverconsole.locwarnmessage(
-        `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
+        `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
       );
     }
     if (
@@ -1437,7 +1437,7 @@ function SVRJSFork() {
     } else {
       if (SVRJSInitialized)
         serverconsole.locwarnmessage(
-          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
+          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
         );
     }
   } catch (err) {
@@ -1453,7 +1453,7 @@ function SVRJSFork() {
       ) {
         threadLimitWarned = true;
         serverconsole.locwarnmessage(
-          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
+          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
         );
       }
       if (
@@ -1469,7 +1469,7 @@ function SVRJSFork() {
       } else {
         if (SVRJSInitialized)
           serverconsole.locwarnmessage(
-            `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`,
+            `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
           );
       }
     } else {
@@ -1482,7 +1482,7 @@ function SVRJSFork() {
     newWorker.on("error", (err) => {
       if (!exiting)
         serverconsole.locwarnmessage(
-          `There was a problem when handling ${name} worker! (from master process side) Reason: ${err.message}`,
+          `There was a problem when handling ${name} worker! (from master process side) Reason: ${err.message}`
         );
     });
     newWorker.on("exit", () => {
@@ -1522,7 +1522,7 @@ function forkWorkers(workersToFork, callback) {
             if (i >= workersToFork - 1) callback();
           };
         })(i),
-        i * 6.6,
+        i * 6.6
       );
     }
   }
@@ -1545,7 +1545,7 @@ function msgListener(message) {
   if (message == "\x12END") {
     for (let i = 0; i < Object.keys(cluster.workers).length; i++) {
       cluster.workers[Object.keys(cluster.workers)[i]].removeAllListeners(
-        "message",
+        "message"
       );
       addListenersToWorker(cluster.workers[Object.keys(cluster.workers)[i]]);
     }
@@ -1564,7 +1564,7 @@ function msgListener(message) {
     serverconsole.locmessage("Configuration saved.");
   } else if (message.indexOf("\x12SAVEERR") == 0) {
     serverconsole.locwarnmessage(
-      `There was a problem while saving configuration file. Reason: ${message.substring(8)}`,
+      `There was a problem while saving configuration file. Reason: ${message.substring(8)}`
     );
   } else if (message[0] == "\x12") {
     // Discard unrecognized control messages
@@ -1580,7 +1580,7 @@ function saveConfig() {
       let configJSONobj = {};
       if (fs.existsSync(process.dirname + "/config.json"))
         configJSONobj = JSON.parse(
-          fs.readFileSync(process.dirname + "/config.json").toString(),
+          fs.readFileSync(process.dirname + "/config.json").toString()
         );
       if (configJSONobj.users === undefined) configJSONobj.users = [];
       if (process.serverConfig.secure) {
@@ -1638,7 +1638,7 @@ function saveConfig() {
           "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
           "/.*\\.(?:[id]mg|iso|flp)$/",
           "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
-          "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/",
+          "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"
         ];
       if (configJSONobj.enableIPSpoofing === undefined)
         configJSONobj.enableIPSpoofing = false;
@@ -1669,7 +1669,7 @@ function saveConfig() {
 
       fs.writeFileSync(
         process.dirname + "/config.json",
-        JSON.stringify(configJSONobj, null, 2) + "\n",
+        JSON.stringify(configJSONobj, null, 2) + "\n"
       );
       break;
     } catch (err) {
@@ -1688,69 +1688,69 @@ function start(init) {
       for (let i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
       console.log(
-        `Welcome to \x1b[1m${name} - a web server running on Node.JS\x1b[0m`,
+        `Welcome to \x1b[1m${name} - a web server running on Node.JS\x1b[0m`
       );
 
       // Print warnings
       if (version.indexOf("Nightly-") === 0)
         serverconsole.locwarnmessage(
-          "This version is only for test purposes and may be unstable.",
+          "This version is only for test purposes and may be unstable."
         );
       if (process.serverConfig.enableHTTP2 && !process.serverConfig.secure)
         serverconsole.locwarnmessage(
-          "HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!",
+          "HTTP/2 without HTTPS may not work in web browsers. Web browsers only support HTTP/2 with HTTPS!"
         );
       if (process.isBun) {
         serverconsole.locwarnmessage(
-          `Bun support is experimental. Some features of ${name}, ${name} mods and ${name} server-side JavaScript may not work as expected.`,
+          `Bun support is experimental. Some features of ${name}, ${name} mods and ${name} server-side JavaScript may not work as expected.`
         );
         if (
           process.isBun &&
           !(
             process.versions.bun &&
             !process.versions.bun.match(
-              /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/,
+              /^(?:0\.|1\.0\.|1\.1\.[0-9](?![0-9])|1\.1\.1[0-2](?![0-9]))/
             )
           ) &&
           process.serverConfig.users.some((entry) => entry.pbkdf2)
         )
           serverconsole.locwarnmessage(
-            "PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service.",
+            "PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service."
           );
       }
       if (cluster.isPrimary === undefined)
         serverconsole.locwarnmessage(
-          `You're running ${name} on single thread. Reliability may suffer, as the server is stopped after crash.`,
+          `You're running ${name} on single thread. Reliability may suffer, as the server is stopped after crash.`
         );
       if (crypto.__disabled__ !== undefined)
         serverconsole.locwarnmessage(
-          "Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server.",
+          "Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server."
         );
       if (crypto.__disabled__ === undefined && !crypto.scrypt)
         serverconsole.locwarnmessage(
-          "Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work.",
+          "Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work."
         );
       if (
         !process.isBun &&
         /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(
-          process.version,
+          process.version
         )
       )
         serverconsole.locwarnmessage(
-          "Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019).",
+          "Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019)."
         );
       if (
         !process.isBun &&
         /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(
-          process.version,
+          process.version
         )
       )
         serverconsole.locwarnmessage(
-          "Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982).",
+          "Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982)."
         );
       if (process.getuid && process.getuid() == 0)
         serverconsole.locwarnmessage(
-          `You're running ${name} as root. It's recommended to run ${name} as an non-root user. Running ${name} as root may increase the risks of OS command execution vulnerabilities.`,
+          `You're running ${name} as root. It's recommended to run ${name} as an non-root user. Running ${name} as root may increase the risks of OS command execution vulnerabilities.`
         );
       if (
         !process.isBun &&
@@ -1761,11 +1761,11 @@ function start(init) {
       ) {
         if (new Date() > new Date("11 September 2023")) {
           serverconsole.locwarnmessage(
-            "OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.",
+            "OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data."
           );
         } else {
           serverconsole.locwarnmessage(
-            "OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data.",
+            "OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data."
           );
         }
       }
@@ -1775,15 +1775,15 @@ function start(init) {
         ocsp._errored
       )
         serverconsole.locwarnmessage(
-          "Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module.",
+          "Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module."
         );
       if (disableMods)
         serverconsole.locwarnmessage(
-          `${name} is running without mods and server-side JavaScript enabled. Web applications may not work as expected`,
+          `${name} is running without mods and server-side JavaScript enabled. Web applications may not work as expected`
         );
       if (process.serverConfig.optOutOfStatisticsServer)
         serverconsole.locmessage(
-          `${name} is configured to opt out of sending data to the statistics server.`,
+          `${name} is configured to opt out of sending data to the statistics server.`
         );
       console.log();
 
@@ -1791,16 +1791,16 @@ function start(init) {
       if (process.isPrimary || process.isPrimary === undefined) {
         modLoadingErrors.forEach((modLoadingError) => {
           serverconsole.locwarnmessage(
-            `There was a problem while loading a "${String(modLoadingError.modName).replace(/[\r\n]/g, "")}" mod.`,
+            `There was a problem while loading a "${String(modLoadingError.modName).replace(/[\r\n]/g, "")}" mod.`
           );
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(
-            generateErrorStack(modLoadingError.error),
+            generateErrorStack(modLoadingError.error)
           );
         });
         if (SSJSError) {
           serverconsole.locwarnmessage(
-            "There was a problem while loading server-side JavaScript.",
+            "There was a problem while loading server-side JavaScript."
           );
           serverconsole.locwarnmessage("Stack:");
           serverconsole.locwarnmessage(generateErrorStack(SSJSError));
@@ -1816,21 +1816,21 @@ function start(init) {
       const CPUs = os.cpus();
       if (CPUs.length > 0)
         serverconsole.locmessage(
-          `CPU: ${CPUs.length > 1 ? CPUs.length + "x " : ""}${CPUs[0].model}`,
+          `CPU: ${CPUs.length > 1 ? CPUs.length + "x " : ""}${CPUs[0].model}`
         );
 
       // Throw errors
       if (vnum < 64)
         throw new Error(
-          `${name} requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by ${name}.`,
+          `${name} requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by ${name}.`
         );
       if (configJSONRErr)
         throw new Error(
-          `Can't read ${name} configuration file: ${configJSONRErr.message}`,
+          `Can't read ${name} configuration file: ${configJSONRErr.message}`
         );
       if (configJSONPErr)
         throw new Error(
-          `${name} configuration parse error: ${configJSONPErr.message}`,
+          `${name} configuration parse error: ${configJSONPErr.message}`
         );
       if (
         process.serverConfig.enableHTTP2 &&
@@ -1838,20 +1838,20 @@ function start(init) {
         typeof process.serverConfig.port != "number"
       )
         throw new Error(
-          `HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by ${name}.`,
+          `HTTP/2 without HTTPS, along with Unix sockets/Windows named pipes aren't supported by ${name}.`
         );
       if (process.serverConfig.enableHTTP2 && http2.__disabled__ !== undefined)
         throw new Error(
-          `HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with ${name}`,
+          `HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with ${name}`
         );
       if (listenAddress) {
         if (listenAddress.match(/^[0-9]+$/))
           throw new Error(
-            "Listening network address can't be numeric (it need to be either valid IP address, or valid domain name).",
+            "Listening network address can't be numeric (it need to be either valid IP address, or valid domain name)."
           );
         if (
           listenAddress.match(
-            /^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i,
+            /^(?:2(?:2[4-9]|3[0-9])\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$|ff[0-9a-f][0-9a-f]:[0-9a-f:])/i
           )
         )
           throw new Error(`${name} can't listen on multicast address.`);
@@ -1862,15 +1862,15 @@ function start(init) {
       }
       if (certificateError)
         throw new Error(
-          `There was a problem with SSL certificate/private key: ${certificateError.message}`,
+          `There was a problem with SSL certificate/private key: ${certificateError.message}`
         );
       if (wwwrootError)
         throw new Error(
-          `There was a problem with your web root: ${wwwrootError.message}`,
+          `There was a problem with your web root: ${wwwrootError.message}`
         );
       if (sniReDos)
         throw new Error(
-          "Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS.",
+          "Refusing to start, because the current SNI configuration would make the server vulnerable to ReDoS."
         );
     }
 
@@ -1890,7 +1890,7 @@ function start(init) {
                   : listenAddress) + ":"
               : "port "
             : ""
-        }${process.serverConfig.port.toString()}...`,
+        }${process.serverConfig.port.toString()}...`
       );
     if (process.serverConfig.secure)
       serverconsole.locmessage(
@@ -1902,7 +1902,7 @@ function start(init) {
                   : sListenAddress) + ":"
               : "port "
             : ""
-        }${process.serverConfig.sport.toString()}...`,
+        }${process.serverConfig.sport.toString()}...`
       );
   }
 
@@ -1918,13 +1918,13 @@ function start(init) {
           process.serverConfig.secure
             ? process.serverConfig.sport
             : process.serverConfig.port,
-          process.serverConfig.secure ? sListenAddress : listenAddress,
+          process.serverConfig.secure ? sListenAddress : listenAddress
         );
       } else {
         server.listen(
           process.serverConfig.secure
             ? process.serverConfig.sport
-            : process.serverConfig.port,
+            : process.serverConfig.port
         );
       }
     } catch (err) {
@@ -2008,7 +2008,7 @@ function start(init) {
               addListenersToWorker(cluster.workers[goodWorkers[wN]]);
             }
             serverconsole.locwarnmessage(
-              `There was a problem while saving configuration file. Reason: ${err.message}`,
+              `There was a problem while saving configuration file. Reason: ${err.message}`
             );
           }
         });
@@ -2071,7 +2071,7 @@ function start(init) {
       const rla = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
-        prompt: "",
+        prompt: ""
       });
       rla.prompt();
       rla.on("line", (line) => {
@@ -2100,7 +2100,7 @@ function start(init) {
               }
               if (stopError)
                 serverconsole.climessage(
-                  `Some ${name} workers might not be stopped.`,
+                  `Some ${name} workers might not be stopped.`
                 );
               SVRJSInitialized = false;
               closedMaster = true;
@@ -2185,10 +2185,10 @@ function start(init) {
                         : process.serverConfig.sport,
                     headers: {
                       "X-SVR-JS-From-Main-Thread": "true",
-                      "User-Agent": generateServerString(true),
+                      "User-Agent": generateServerString(true)
                     },
                     timeout: 1620,
-                    rejectUnauthorized: false,
+                    rejectUnauthorized: false
                   },
                   (res) => {
                     chksocket.removeAllListeners("timeout");
@@ -2196,7 +2196,7 @@ function start(init) {
                     res.on("data", () => {});
                     res.on("end", () => {});
                     crashed = false;
-                  },
+                  }
                 )
                 .on("error", () => {
                   if (!exiting) {
@@ -2224,10 +2224,7 @@ function start(init) {
                 address = "[" + address + "]";
               }
               const connection = http2.connect(
-                "http://" +
-                  address +
-                  ":" +
-                  process.serverConfig.port.toString(),
+                "http://" + address + ":" + process.serverConfig.port.toString()
               );
               connection.on("error", () => {
                 if (!exiting) {
@@ -2242,7 +2239,7 @@ function start(init) {
               chksocket = connection.request({
                 ":path": "/",
                 "x-svr-js-from-main-thread": "true",
-                "user-agent": generateServerString(true),
+                "user-agent": generateServerString(true)
               });
               chksocket.on("response", () => {
                 connection.close();
@@ -2273,9 +2270,9 @@ function start(init) {
                         : process.serverConfig.port,
                     headers: {
                       "X-SVR-JS-From-Main-Thread": "true",
-                      "User-Agent": generateServerString(true),
+                      "User-Agent": generateServerString(true)
                     },
-                    timeout: 1620,
+                    timeout: 1620
                   },
                   (res) => {
                     chksocket.removeAllListeners("timeout");
@@ -2283,7 +2280,7 @@ function start(init) {
                     res.on("data", () => {});
                     res.on("end", () => {});
                     crashed = false;
-                  },
+                  }
                 )
                 .on("error", () => {
                   if (!exiting) {
@@ -2327,7 +2324,7 @@ function start(init) {
                       isWorkerHungUpBuff = true;
                       cluster.workers[allWorkers[_id]].on(
                         "message",
-                        msgListener,
+                        msgListener
                       );
                       cluster.workers[allWorkers[_id]].send("\x14KILLPING");
                       setTimeout(() => {
@@ -2345,7 +2342,7 @@ function start(init) {
                   } catch (err) {
                     if (cluster.workers[allWorkers[_id]]) {
                       cluster.workers[allWorkers[_id]].removeAllListeners(
-                        "message",
+                        "message"
                       );
                       addListenersToWorker(cluster.workers[allWorkers[_id]]);
                     }
@@ -2361,19 +2358,19 @@ function start(init) {
                         isWorkerHungUpBuff = true;
                         cluster.workers[goodWorkers[wN]].on(
                           "message",
-                          msgListener,
+                          msgListener
                         );
                         cluster.workers[goodWorkers[wN]].send("\x14KILLREQ");
                       }
                     } catch (err) {
                       if (cluster.workers[goodWorkers[wN]]) {
                         cluster.workers[goodWorkers[wN]].removeAllListeners(
-                          "message",
+                          "message"
                         );
                         addListenersToWorker(cluster.workers[goodWorkers[wN]]);
                       }
                       serverconsole.locwarnmessage(
-                        `There was a problem while terminating unused worker process. Reason: ${err.message}`,
+                        `There was a problem while terminating unused worker process. Reason: ${err.message}`
                       );
                     }
                   }
@@ -2394,7 +2391,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     serverconsole.locerrmessage(`${name} main process just crashed!!!`);
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
-      err.stack ? generateErrorStack(err) : String(err),
+      err.stack ? generateErrorStack(err) : String(err)
     );
     process.exit(err.errno !== undefined ? err.errno : 1);
   }
@@ -2409,7 +2406,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
       }
     } catch (err) {
       serverconsole.locwarnmessage(
-        `There was a problem while saving configuration file. Reason: ${err.message}`,
+        `There was a problem while saving configuration file. Reason: ${err.message}`
       );
     }
     try {
@@ -2432,7 +2429,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
       try {
         fs.writeFileSync(
           process.dirname + "/temp/serverSideScript.js",
-          "// Placeholder server-side JavaScript to workaround Bun bug.\r\n",
+          "// Placeholder server-side JavaScript to workaround Bun bug.\r\n"
         );
         // eslint-disable-next-line no-unused-vars
       } catch (err) {
@@ -2472,7 +2469,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
     serverconsole.locerrmessage(`${name} worker just crashed!!!`);
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
-      err.stack ? generateErrorStack(err) : String(err),
+      err.stack ? generateErrorStack(err) : String(err)
     );
     process.exit(err.errno !== undefined ? err.errno : 1);
   }

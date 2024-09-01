@@ -5,12 +5,12 @@ function sizify(bytes, addI) {
   const prefixes = ["", "K", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"];
   const prefixIndex = Math.min(
     Math.floor(Math.log2(bytes) / 10),
-    prefixes.length - 1,
+    prefixes.length - 1
   );
   const prefixIndexTranslated = Math.pow(2, 10 * prefixIndex);
   const decimalPoints = Math.max(
     2 - Math.floor(Math.log10(bytes / prefixIndexTranslated)),
-    0,
+    0
   );
 
   const size =

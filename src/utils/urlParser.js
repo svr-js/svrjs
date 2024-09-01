@@ -13,7 +13,7 @@ function parseURL(uri, prepend) {
 
   // Parse the URL using regular expression
   let parsedURI = uri.match(
-    /^(?:([^:]+:)(\/\/)?)?(?:([^@/?#*]+)@)?([^:/?#*]+|\[[^*\]/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/,
+    /^(?:([^:]+:)(\/\/)?)?(?:([^@/?#*]+)@)?([^:/?#*]+|\[[^*\]/]\])?(?::([0-9]+))?(\*|\/[^?#]*)?(\?[^#]*)?(#[\S\s]*)?/
   );
   // Match 1: protocol
   // Match 2: slashes after protocol

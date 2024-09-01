@@ -20,7 +20,7 @@ function proxyHandler(req, socket, head) {
     errmessage: (msg) => serverconsole.errmessage(msg, reqId),
     locerrmessage: (msg) => serverconsole.locerrmessage(msg, reqId),
     locwarnmessage: (msg) => serverconsole.locwarnmessage(msg, reqId),
-    locmessage: (msg) => serverconsole.locmessage(msg, reqId),
+    locmessage: (msg) => serverconsole.locmessage(msg, reqId)
   };
 
   socket.on("close", (hasError) => {
@@ -43,7 +43,7 @@ function proxyHandler(req, socket, head) {
       config.secure
         ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
         : (typeof config.port == "number" ? "port " : "socket ") + config.port
-    }...`,
+    }...`
   );
   logFacilities.reqmessage(
     `Client ${
@@ -51,7 +51,7 @@ function proxyHandler(req, socket, head) {
         ? "[unknown client]"
         : reqip +
           (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")
-    } wants to proxy ${req.url} through this server`,
+    } wants to proxy ${req.url} through this server`
   );
   if (req.headers["user-agent"] != undefined)
     logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);
@@ -69,7 +69,7 @@ function proxyHandler(req, socket, head) {
         currentMiddleware.proxy(req, socket, head, logFacilities, config, next);
       } catch (err) {
         logFacilities.errmessage(
-          "There was an error while processing the request!",
+          "There was an error while processing the request!"
         );
         logFacilities.errmessage("Stack:");
         logFacilities.errmessage(err.stack);
@@ -78,7 +78,7 @@ function proxyHandler(req, socket, head) {
       }
     } else {
       logFacilities.errmessage(
-        `${name} doesn't support proxy without proxy mod.`,
+        `${name} doesn't support proxy without proxy mod.`
       );
       if (!socket.destroyed) socket.end("HTTP/1.1 501 Not Implemented\n\n");
     }

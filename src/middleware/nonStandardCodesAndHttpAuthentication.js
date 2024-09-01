@@ -9,7 +9,7 @@ const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
 let crypto = {
-  __disabled__: null,
+  __disabled__: null
 };
 try {
   crypto = require("crypto");
@@ -43,10 +43,10 @@ process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
 if (!cluster.isPrimary) {
   passwordHashCacheIntervalId = setInterval(() => {
     pbkdf2Cache = pbkdf2Cache.filter(
-      (entry) => entry.addDate > new Date() - 3600000,
+      (entry) => entry.addDate > new Date() - 3600000
     );
     scryptCache = scryptCache.filter(
-      (entry) => entry.addDate > new Date() - 3600000,
+      (entry) => entry.addDate > new Date() - 3600000
     );
   }, 1800000);
 }
@@ -67,13 +67,13 @@ module.exports = (req, res, logFacilities, config, next) => {
         matchHostname(nonStandardCodes[i].host, req.headers.host) &&
         ipMatch(
           nonStandardCodes[i].ip,
-          req.socket ? req.socket.localAddress : undefined,
+          req.socket ? req.socket.localAddress : undefined
         )
       ) {
         let isMatch = false;
         hrefWithoutDuplicateSlashes = req.parsedURL.pathname.replace(
           /\/+/g,
-          "/",
+          "/"
         );
         if (nonStandardCodes[i].regex) {
           // Regex match
@@ -130,7 +130,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           // Fallback replacement
           location = hrefWithoutDuplicateSlashes.replace(
             regexI[nonscodeIndex],
-            nonscode.location,
+            nonscode.location
           );
         }
       } else if (
@@ -146,7 +146,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       res.redirect(
         location,
         nonscode.scode == 302 || nonscode.scode == 307,
-        nonscode.scode == 307 || nonscode.scode == 308,
+        nonscode.scode == 307 || nonscode.scode == 308
       );
       return;
     } else {
@@ -187,14 +187,14 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              `${name} doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.`,
-            ),
+              `${name} doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.`
+            )
           );
           return;
         } else {
           cacheEntry = scryptCache.find(
             (entry) =>
-              entry.password == hashedPassword && entry.salt == list[_i].salt,
+              entry.password == hashedPassword && entry.salt == list[_i].salt
           );
           if (cacheEntry) {
             cb(cacheEntry.hash);
@@ -208,7 +208,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   hash: key,
                   password: hashedPassword,
                   salt: list[_i].salt,
-                  addDate: new Date(),
+                  addDate: new Date()
                 });
                 cb(key);
               }
@@ -220,14 +220,14 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              `${name} doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.`,
-            ),
+              `${name} doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.`
+            )
           );
           return;
         } else {
           cacheEntry = pbkdf2Cache.find(
             (entry) =>
-              entry.password == hashedPassword && entry.salt == list[_i].salt,
+              entry.password == hashedPassword && entry.salt == list[_i].salt
           );
           if (cacheEntry) {
             cb(cacheEntry.hash);
@@ -247,11 +247,11 @@ module.exports = (req, res, logFacilities, config, next) => {
                     hash: key,
                     password: hashedPassword,
                     salt: list[_i].salt,
-                    addDate: new Date(),
+                    addDate: new Date()
                   });
                   cb(key);
                 }
-              },
+              }
             );
           }
         }
@@ -282,7 +282,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         }
         const decodedCredentials = Buffer.from(
           credentialsMatch[1],
-          "base64",
+          "base64"
         ).toString("utf8");
         const decodedCredentialsMatch =
           decodedCredentials.match(/^([^:]*):(.*)$/);
@@ -314,7 +314,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           let fakeCredentials = {
             name: username,
             pass: "SVRJSAWebServerRunningOnNodeJS",
-            salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0",
+            salt: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0"
           };
           if (!process.isBun) {
             if (scryptCount > sha256Count && scryptCount > pbkdf2Count) {
@@ -334,7 +334,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 } else {
                   if (!bruteForceDb[reqip])
                     bruteForceDb[reqip] = {
-                      invalidAttempts: 0,
+                      invalidAttempts: 0
                     };
                   bruteForceDb[reqip].invalidAttempts++;
                   if (bruteForceDb[reqip].invalidAttempts >= 10) {
@@ -344,7 +344,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               }
               res.error(401, ha);
               logFacilities.errmessage(
-                `User "${String(username).replace(/[\r\n]/g, "")}" failed to log in.`,
+                `User "${String(username).replace(/[\r\n]/g, "")}" failed to log in.`
               );
             } else {
               if (bruteProtection) {
@@ -353,12 +353,12 @@ module.exports = (req, res, logFacilities, config, next) => {
                 } else {
                   if (bruteForceDb[reqip])
                     bruteForceDb[reqip] = {
-                      invalidAttempts: 0,
+                      invalidAttempts: 0
                     };
                 }
               }
               logFacilities.reqmessage(
-                `Client is logged in as "${String(username).replace(/[\r\n]/g, "")}".`,
+                `Client is logged in as "${String(username).replace(/[\r\n]/g, "")}".`
               );
               req.authUser = username;
               next();
@@ -385,7 +385,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       ) {
         if (bruteForceDb[reqip] && bruteForceDb[reqip].invalidAttempts >= 10)
           bruteForceDb[reqip] = {
-            invalidAttempts: 5,
+            invalidAttempts: 5
           };
         authorizedCallback(true);
       } else {
@@ -428,7 +428,7 @@ process.messageEventListeners.push((worker, serverconsole) => {
       ) {
         if (bruteForceDb[ip] && bruteForceDb[ip].invalidAttempts >= 10)
           bruteForceDb[ip] = {
-            invalidAttempts: 5,
+            invalidAttempts: 5
           };
         worker.send("\x14AUTHA" + ip);
       } else {
@@ -438,13 +438,13 @@ process.messageEventListeners.push((worker, serverconsole) => {
       ip = message.substring(6);
       if (bruteForceDb[ip])
         bruteForceDb[ip] = {
-          invalidAttempts: 0,
+          invalidAttempts: 0
         };
     } else if (message.substring(0, 6) == "\x12AUTHW") {
       ip = message.substring(6);
       if (!bruteForceDb[ip])
         bruteForceDb[ip] = {
-          invalidAttempts: 0,
+          invalidAttempts: 0
         };
       bruteForceDb[ip].invalidAttempts++;
       if (bruteForceDb[ip].invalidAttempts >= 10) {
@@ -458,7 +458,7 @@ module.exports.commands = {
   stop: (args, log, passCommand) => {
     clearInterval(passwordHashCacheIntervalId);
     passCommand(args, log);
-  },
+  }
 };
 
 module.exports.proxySafe = true;

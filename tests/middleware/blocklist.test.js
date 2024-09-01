@@ -13,12 +13,12 @@ middleware.mockImplementation(() => {
     check: ipBlockListCheck,
     add: ipBlockListAdd,
     remove: ipBlockListRemove,
-    raw: [],
+    raw: []
   };
 });
 
 process.serverConfig = {
-  blacklist: [],
+  blacklist: []
 };
 
 const blocklistMiddleware = require("../../src/middleware/blocklist.js");
@@ -30,14 +30,14 @@ describe("Blocklist middleware", () => {
     req = {
       socket: {
         realRemoteAddress: "127.0.0.1",
-        remoteAddress: "127.0.0.1",
-      },
+        remoteAddress: "127.0.0.1"
+      }
     };
     res = {
-      error: jest.fn(),
+      error: jest.fn()
     };
     logFacilities = {
-      errmessage: jest.fn(),
+      errmessage: jest.fn()
     };
     config = {};
     next = jest.fn();
@@ -63,7 +63,7 @@ describe("Blocklist middleware", () => {
     expect(next).not.toHaveBeenCalled();
     expect(res.error).toHaveBeenCalledWith(403);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      "Client is in the block list.",
+      "Client is in the block list."
     );
   });
 

@@ -17,7 +17,7 @@ function noproxyHandler(req, socket, head) {
     errmessage: (msg) => serverconsole.errmessage(msg, reqId),
     locerrmessage: (msg) => serverconsole.locerrmessage(msg, reqId),
     locwarnmessage: (msg) => serverconsole.locwarnmessage(msg, reqId),
-    locmessage: (msg) => serverconsole.locmessage(msg, reqId),
+    locmessage: (msg) => serverconsole.locmessage(msg, reqId)
   };
 
   socket.on("close", (hasError) => {
@@ -37,7 +37,7 @@ function noproxyHandler(req, socket, head) {
       config.secure
         ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
         : (typeof config.port == "number" ? "port " : "socket ") + config.port
-    }...`,
+    }...`
   );
   logFacilities.reqmessage(
     `Client ${
@@ -45,7 +45,7 @@ function noproxyHandler(req, socket, head) {
         ? "[unknown client]"
         : reqip +
           (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")
-    } wants to proxy ${req.url} through this server`,
+    } wants to proxy ${req.url} through this server`
   );
   if (req.headers["user-agent"] != undefined)
     logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);

@@ -8,7 +8,7 @@ describe("Response header setting middleware", () => {
     res = { setHeader: jest.fn() };
     next = jest.fn();
     config = {
-      getCustomHeaders: jest.fn(() => ({ "X-Custom-Header": "custom-value" })),
+      getCustomHeaders: jest.fn(() => ({ "X-Custom-Header": "custom-value" }))
     };
     logFacilities = {};
   });
@@ -18,7 +18,7 @@ describe("Response header setting middleware", () => {
 
     expect(res.setHeader).toHaveBeenCalledWith(
       "X-Custom-Header",
-      "custom-value",
+      "custom-value"
     );
     expect(next).toHaveBeenCalled();
   });

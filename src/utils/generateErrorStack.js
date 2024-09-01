@@ -6,7 +6,7 @@ function generateErrorStack(errorObject) {
   // If the error stack starts with the error name, return the original stack (it is V8-style then).
   if (
     errorStack.some(
-      (errorStackLine) => errorStackLine.indexOf(errorObject.name) == 0,
+      (errorStackLine) => errorStackLine.indexOf(errorObject.name) == 0
     )
   ) {
     return errorObject.stack;
@@ -16,7 +16,7 @@ function generateErrorStack(errorObject) {
   let newErrorStack = [
     errorObject.name +
       (errorObject.code ? ": " + errorObject.code : "") +
-      (errorObject.message == "" ? "" : ": " + errorObject.message),
+      (errorObject.message == "" ? "" : ": " + errorObject.message)
   ];
 
   // Process each line of the original error stack.
@@ -37,8 +37,7 @@ function generateErrorStack(errorObject) {
             ? !location || location == ""
               ? "<anonymous>"
               : location
-            : func +
-              (!location || location == "" ? "" : " (" + location + ")")),
+            : func + (!location || location == "" ? "" : " (" + location + ")"))
       );
     }
   });

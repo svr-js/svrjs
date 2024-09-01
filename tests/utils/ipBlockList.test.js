@@ -16,10 +16,10 @@ describe("IP block list functionality", () => {
   test("should add and check IPv6 address", () => {
     blockList.add("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(
-      true,
+      true
     );
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7335")).toBe(
-      false,
+      false
     );
   });
 
@@ -33,13 +33,13 @@ describe("IP block list functionality", () => {
   test("should add and check IPv6 CIDR block", () => {
     blockList.add("2001:0db8:85a3::/64");
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(
-      true,
+      true
     );
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7335")).toBe(
-      true,
+      true
     );
     expect(blockList.check("2001:0db8:85a4:0000:0000:8a2e:0370:7334")).toBe(
-      false,
+      false
     );
   });
 
@@ -53,11 +53,11 @@ describe("IP block list functionality", () => {
   test("should remove IPv6 address", () => {
     blockList.add("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(
-      true,
+      true
     );
     blockList.remove("2001:0db8:85a3:0000:0000:8a2e:0370:7334");
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(
-      false,
+      false
     );
   });
 
@@ -71,11 +71,11 @@ describe("IP block list functionality", () => {
   test("should remove IPv6 CIDR block", () => {
     blockList.add("2001:0db8:85a3::/64");
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(
-      true,
+      true
     );
     blockList.remove("2001:0db8:85a3::/64");
     expect(blockList.check("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe(
-      false,
+      false
     );
   });
 
@@ -90,16 +90,16 @@ describe("IP block list functionality", () => {
   test("should handle edge cases for IPv6 addresses", () => {
     blockList.add("2001:0db8:85a3::/64");
     expect(blockList.check("2001:0db8:85a2:ffff:ffff:ffff:ffff:ffff")).toBe(
-      false,
+      false
     );
     expect(blockList.check("2001:0db8:85a3:0000:0000:0000:0000:0000")).toBe(
-      true,
+      true
     );
     expect(blockList.check("2001:0db8:85a3:0000:ffff:ffff:ffff:ffff")).toBe(
-      true,
+      true
     );
     expect(blockList.check("2001:0db8:85a3:0001:0000:0000:0000:0000")).toBe(
-      false,
+      false
     );
   });
 });

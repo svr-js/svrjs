@@ -2,7 +2,7 @@ function calculateBroadcastIPv4FromCidr(ipWithCidr) {
   // Check if CIDR notation is valid, if it's not, return null
   if (!ipWithCidr) return null;
   const ipCA = ipWithCidr.match(
-    /^((?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\/([0-2][0-9]|3[0-2]|[0-9])$/,
+    /^((?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\/([0-2][0-9]|3[0-2]|[0-9])$/
   );
   if (!ipCA) return null;
 
@@ -27,7 +27,7 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
   // Check if CIDR notation is valid, if it's not, return null
   if (!ipWithCidr) return null;
   const ipCA = ipWithCidr.match(
-    /^((?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\/([0-2][0-9]|3[0-2]|[0-9])$/,
+    /^((?:(?:25[0-5]|(?:2[0-4]|1\d|[1-9]|)\d)\.?\b){4})\/([0-2][0-9]|3[0-2]|[0-9])$/
   );
   if (!ipCA) return null;
 
@@ -50,5 +50,5 @@ function calculateNetworkIPv4FromCidr(ipWithCidr) {
 
 module.exports = {
   calculateBroadcastIPv4FromCidr: calculateBroadcastIPv4FromCidr,
-  calculateNetworkIPv4FromCidr: calculateNetworkIPv4FromCidr,
+  calculateNetworkIPv4FromCidr: calculateNetworkIPv4FromCidr
 };

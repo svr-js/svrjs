@@ -46,7 +46,7 @@ const serverHTTPErrorDescs = {
   510: "The server requires an extended HTTP request. The request you made isn't an extended HTTP request.",
   511: "You need to authenticate yourself in order to get network access.",
   598: "The server couldn't get a response in time while it was acting as a proxy.",
-  599: "The server couldn't connect in time while it was acting as a proxy.",
+  599: "The server couldn't connect in time while it was acting as a proxy."
 };
 
 module.exports = serverHTTPErrorDescs;
