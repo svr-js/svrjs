@@ -1,15 +1,11 @@
 const middleware = require("../../src/middleware/webRootPostfixes.js");
-const createRegex = require("../../src/utils/createRegex.js");
-const ipMatch = require("../../src/utils/ipMatch.js");
 const sanitizeURL = require("../../src/utils/urlSanitizer.js");
 const parseURL = require("../../src/utils/urlParser.js");
 
-jest.mock("../../src/utils/createRegex.js");
-jest.mock("../../src/utils/ipMatch.js");
 jest.mock("../../src/utils/urlSanitizer.js");
 jest.mock("../../src/utils/urlParser.js");
 
-describe("Web root postfixes middleware", () => {
+describe("Web root prefixes middleware", () => {
   let req, res, logFacilities, config, next;
 
   beforeEach(() => {
@@ -31,8 +27,6 @@ describe("Web root postfixes middleware", () => {
     };
     next = jest.fn();
 
-    createRegex.mockReturnValue(new RegExp());
-    ipMatch.mockReturnValue(true);
     sanitizeURL.mockImplementation((url) => url);
     parseURL.mockImplementation((url) => ({ pathname: url }));
   });
