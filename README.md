@@ -8,7 +8,7 @@
   It's free as in freedom, scalable, secure, and configurable.
 </p>
 <p align="center">
-  <a href="https://svrjs.org/docs" target="_blank"><img alt="Static Badge" src="https://img.shields.io/badge/Documentation-green"></a>
+  <a href="https://svrjs.org/docs/tentative" target="_blank"><img alt="Static Badge" src="https://img.shields.io/badge/Documentation-green"></a>
   <a href="https://svrjs.org" target="_blank"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fsvrjs.org"></a>
   <a href="https://hub.docker.com/r/svrjs/svrjs" target="_blank"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/svrjs/svrjs"></a>
   <a href="https://github.com/svr-js/svrjs" target="_blank"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/svr-js/svrjs"></a>
