@@ -7,6 +7,14 @@
   <b>SVR.JS</b> - a web server running on Node.JS<br/>
   It's free as in freedom, scalable, secure, and configurable.
 </p>
+<p align="center">
+  <a href="https://svrjs.org/docs" target="_blank"><img alt="Static Badge" src="https://img.shields.io/badge/Documentation-green"></a>
+  <a href="https://svrjs.org" target="_blank"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fsvrjs.org"></a>
+  <a href="https://hub.docker.com/r/svrjs/svrjs"  target="_blank"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/svrjs/svrjs"></a>
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/svr-js/svrjs">
+  <a href="https://x.com/SVR_JS" target="_blank"><img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/SVR_JS"></a>
+  <a href="https://mastodon.social/@svrjs" target="_blank"><img alt="Mastodon Follow" src="https://img.shields.io/mastodon/follow/111643338718098121"></a>
+</p>
 
 * * *
 
