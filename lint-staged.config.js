@@ -1,3 +1,5 @@
 module.exports = {
-  "*.js": "eslint --cache --fix"
+  "tests/**/*.js": "eslint --cache --fix",
+  "src/**/*.js": "eslint --cache --fix",
+  "utils/**/*.js": "eslint --cache --fix"
 };
