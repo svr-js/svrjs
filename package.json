@@ -4,21 +4,24 @@
   "private": true,
   "scripts": {
     "build": "node esbuild.config.js",
+    "cz": "cz",
     "dev": "npm run build && npm run start",
     "lint": "eslint --no-error-on-unmatched-pattern src/**/*.js src/*.js tests/**/*.test.js tests/**/*.js tests/*.test.js tests/*.js utils/**/*.js utils/*.js",
     "lint:fix": "npm run lint -- --fix",
+    "prepare": "husky",
     "start": "node dist/svr.js",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:middleware": "jest tests/middleware",
-    "test:utils": "jest tests/utils",
-    "prepare": "husky"
+    "test:utils": "jest tests/utils"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.4.1",
     "@commitlint/config-conventional": "^19.4.1",
     "@eslint/js": "^9.9.0",
     "archiver": "^7.0.1",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "ejs": "^3.1.10",
     "esbuild": "^0.23.1",
     "esbuild-plugin-copy": "^2.1.1",
@@ -37,5 +40,10 @@
     "mime-types": "^2.1.35",
     "ocsp": "^1.2.0",
     "tar": "^6.2.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
