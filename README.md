@@ -5,7 +5,7 @@
 </p>
 <p align="center">
   <b>SVR.JS</b> - a web server running on Node.JS<br/>
-  It's free as in freedom, scalable, secure, and configurable
+  It's free as in freedom, scalable, secure, and configurable.
 </p>
 
 * * *
@@ -130,7 +130,7 @@ The file structure for SVR.JS source code looks like this:
  
 ## Contribute
 
-See [SVR.JS contribution page](https://svrjs.org/contribute) for details
+See [SVR.JS contribution page](https://svrjs.org/contribute) for details.
 
 ## License
 
