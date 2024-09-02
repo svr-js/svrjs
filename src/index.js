@@ -113,6 +113,23 @@ process.messageEventListeners = [];
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
 
+// Function for printing the command line usage of SVR.JS
+function printUsage() {
+  console.log(`${name} usage:`);
+  console.log(
+    "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]"
+  );
+  console.log("-h -? /h /? --help    -- Displays help");
+  console.log("--clean               -- Cleans up files created by " + name);
+  console.log(
+    `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`
+  );
+  console.log("--secure              -- Runs HTTPS server");
+  console.log("--disable-mods        -- Disables mods (safe mode)");
+  console.log("--single-threaded     -- Run single-threaded");
+  console.log("-v --version          -- Display server version");
+}
+
 let exiting = false;
 let forceSecure = false;
 let disableMods = false;
@@ -134,19 +151,7 @@ for (
     args[i] == "/h" ||
     args[i] == "/?"
   ) {
-    console.log(`${name} usage:`);
-    console.log(
-      "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]"
-    );
-    console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans up files created by " + name);
-    console.log(
-      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`
-    );
-    console.log("--secure              -- Runs HTTPS server");
-    console.log("--disable-mods        -- Disables mods (safe mode)");
-    console.log("--single-threaded     -- Run single-threaded");
-    console.log("-v --version          -- Display server version");
+    printUsage();
     process.exit(0);
   } else if (args[i] == "--secure") {
     forceSecure = true;
@@ -179,19 +184,7 @@ for (
     process.singleThreaded = true;
   } else {
     console.log(`Unrecognized argument: ${args[i]}`);
-    console.log(`${name} usage:`);
-    console.log(
-      "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]"
-    );
-    console.log("-h -? /h /? --help    -- Displays help");
-    console.log("--clean               -- Cleans up files created by " + name);
-    console.log(
-      `--reset               -- Resets ${name} to default settings (WARNING: DANGEROUS)`
-    );
-    console.log("--secure              -- Runs HTTPS server");
-    console.log("--disable-mods        -- Disables mods (safe mode)");
-    console.log("--single-threaded     -- Run single-threaded");
-    console.log("-v --version          -- Display server version");
+    printUsage();
     process.exit(1);
   }
 }
