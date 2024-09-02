@@ -4,17 +4,16 @@ const path = require("path");
 // Function to get URL path for use in forbidden path adding.
 function getInitializePath(to) {
   const isWin32 = os.platform() == "win32";
-  const pathModS = isWin32 ? path.win32 : path.posix; // pathModS needed just for the test suite
   const cwd = process.cwd();
   if (isWin32) {
     to = to.replace(/\//g, "\\");
     if (to[0] == "\\") to = cwd.split("\\")[0] + to;
   }
-  const absoluteTo = pathModS.isAbsolute(to)
+  const absoluteTo = path.isAbsolute(to)
     ? to
     : process.dirname + (isWin32 ? "\\" : "/") + to;
   if (isWin32 && cwd[0] != absoluteTo[0]) return "";
-  const relative = pathModS.relative(cwd, absoluteTo);
+  const relative = path.relative(cwd, absoluteTo);
   if (isWin32) {
     return "/" + relative.replace(/\\/g, "/");
   } else {

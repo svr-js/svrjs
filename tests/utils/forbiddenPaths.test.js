@@ -9,6 +9,18 @@ const os = require("os");
 jest.mock("os", () => ({
   platform: jest.fn()
 }));
+jest.mock("path", () => {
+  const path = jest.requireActual("path");
+  const os = require("os");
+  return {
+    isAbsolute: (...params) =>
+      (os.platform() == "win32" ? path.win32 : path.posix).isAbsolute(
+        ...params
+      ),
+    relative: (...params) =>
+      (os.platform() == "win32" ? path.win32 : path.posix).relative(...params)
+  };
+});
 
 describe("Forbidden paths handling", () => {
   beforeEach(() => {
