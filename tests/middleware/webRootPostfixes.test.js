@@ -5,7 +5,7 @@ const parseURL = require("../../src/utils/urlParser.js");
 jest.mock("../../src/utils/urlSanitizer.js");
 jest.mock("../../src/utils/urlParser.js");
 
-describe("Web root prefixes middleware", () => {
+describe("Web root postfixes middleware", () => {
   let req, res, logFacilities, config, next;
 
   beforeEach(() => {
