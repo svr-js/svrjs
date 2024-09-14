@@ -1,2 +1,25 @@
-commit.sh
-log
+# Build output
+/dist/
+/out/
+
+# Temporary files used by build script
+/generatedAssets/
+
+# Dependencies
+node_modules/
+
+# Test coverage
+/coverage/
+
+# ESLint cache
+.eslintcache
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Temporary files used by the editor
+*.swp
+*.swo

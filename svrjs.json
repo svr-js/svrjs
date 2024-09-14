@@ -1,0 +1,16 @@
+{
+  "version": "4.0.0",
+  "name": "SVR.JS",
+  "documentationURL": "https://svrjs.org/docs",
+  "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
+  "changes": [
+    "Added support for SVR.JS mods with \".js\" extension.",
+    "Changed SVR.JS logo.",
+    "Optimized many functions.",
+    "Redesigned default pages and default error pages.",
+    "Regex strings now can have single unescaped \"/\" within square parentheses (\"[\" and \"]\").",
+    "Removed \"graceful-fs\" dependency.",
+    "Rewritten SVR.JS to use multiple split files for the source instead of single one.",
+    "SVR.JS now uses build system consisting of esbuild, ESLint, Prettier, and Jest."
+  ]
+}

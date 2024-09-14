@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <style>
+      html {
+        background-color: #ffffff;
+        color: #000000;
+        font-family: Poppins, FreeSans, Helvetica, Tahoma, Verdana, Arial, sans-serif;
+        margin: 0.75em;
+        text-align: center;
+      }
+
+      body {
+        padding: 0.5em 0.5em 0.1em;
+        margin: 0.5em auto;
+        width: 90%;
+        max-width: 800px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.25em;
+        margin: 0.3em 0 0.5em
+      }
+
+      pre,
+      code {
+        background-color: #f9f9fa;
+        border: 1px solid #e4e4e7;
+        border-radius: 7px;
+        display: block;
+        padding: 0.2em;
+        margin: auto;
+        width: 95%;
+      }
+
+      iframe {
+        border: 1px solid #e4e4e7;
+        border-radius: 10px;
+        background-color: #ffffff;
+        width: 100%;
+        max-width: 600px;
+        height: 300px;
+      }
+
+      .warning {
+        background-color: #ffff00;
+        color: #000000;
+        border: 5px solid #ff7f00;
+        border-radius: 10px;
+        padding: 5px;
+        display: inline-block;
+      }
+
+      .logo {
+        width: 400px;
+        max-width: 100%;
+      }
+
+      code.example-configuration {
+        padding: 5px;
+        text-align: left;
+        display: block;
+        display: inline-block;
+      }
+
+      code.example-configuration pre {
+        margin: 0.2em;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: break-all;
+        word-break: break-word;
+        border: 0;
+      }
+
+      ul {
+        display: inline-block;
+        margin: 0;
+      }
+
+      .license-svrjs {
+        display: inline-block;
+        text-align: left;
+        border: 2px solid #e4e4e7;
+        border-radius: 10px;
+        background-color: #ffffff;
+        padding: 8px;
+      }
+
+      .license-card {
+        width: 100%;
+        background-color: #f9f9fa;
+        border: 1px solid #e4e4e7;
+        border-radius: 7px;
+        text-align: left;
+        margin: 10px 0;
+      }
+
+      .license-card .license-type {
+        float: right;
+      }
+
+      .license-card .license-name {
+        font-size: 20px;
+      }
+
+      .license-card .license-description {
+        font-size: 12px;
+      }
+
+      @media screen and (prefers-color-scheme: dark) {
+        html {
+          background-color: #0c0a09;
+          color: #ffffff;
+        }
+
+        pre,
+        code {
+          background-color: #191817;
+          border-color: #27272a;
+        }
+
+        iframe {
+          border-color: #27272a;
+        }
+
+        .license-svrjs {
+          background-color: #191817;
+          border-color: #27272a;
+        }
+
+        .license-card {
+          background-color: #191817;
+          border-color: #27272a;
+        }
+
+        a {
+          color: #ffffff
+        }
+
+        a:hover {
+          color: #ffffff
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <%- content %>
+  </body>
+
+</html>
