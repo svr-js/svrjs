@@ -23,10 +23,10 @@ function findAllDependencies(curList) {
             __dirname +
               "/node_modules/" +
               dependency.replace(/\/\.\./g, "") +
-              "/package.json",
+              "/package.json"
           )
-          .toString(),
-      ).dependencies || {},
+          .toString()
+      ).dependencies || {}
     );
     let noDupNewDepList = [];
     newDeplist.forEach((dep) => {
@@ -56,19 +56,19 @@ requiredDependencyList.forEach((dependency) => {
 
 // Create the template functions using EJS
 const layoutTemplate = ejs.compile(
-  fs.readFileSync(__dirname + "/templates/layout.ejs").toString(),
+  fs.readFileSync(__dirname + "/templates/layout.ejs").toString()
 );
 const testsTemplate = ejs.compile(
-  fs.readFileSync(__dirname + "/templates/tests.ejs").toString(),
+  fs.readFileSync(__dirname + "/templates/tests.ejs").toString()
 );
 const indexTemplate = ejs.compile(
-  fs.readFileSync(__dirname + "/templates/index.ejs").toString(),
+  fs.readFileSync(__dirname + "/templates/index.ejs").toString()
 );
 const licensesTemplate = ejs.compile(
-  fs.readFileSync(__dirname + "/templates/licenses.ejs").toString(),
+  fs.readFileSync(__dirname + "/templates/licenses.ejs").toString()
 );
 const licenseElementTemplate = ejs.compile(
-  fs.readFileSync(__dirname + "/templates/licenseElement.ejs").toString(),
+  fs.readFileSync(__dirname + "/templates/licenseElement.ejs").toString()
 );
 
 let licenseElements = "";
@@ -81,9 +81,9 @@ dependencyList.forEach((dependency) => {
         __dirname +
           "/node_modules/" +
           dependency.replace(/\/\.\./g, "") +
-          "/package.json",
+          "/package.json"
       )
-      .toString(),
+      .toString()
   );
   licenseElements += licenseElementTemplate({
     moduleName: packageJSON.name,
@@ -91,7 +91,7 @@ dependencyList.forEach((dependency) => {
     license: packageJSON.license,
     description: packageJSON.description || "No description",
     author: packageJSON.author ? packageJSON.author.name : packageJSON.author,
-    required: dependenciesAreRequired[dependency],
+    required: dependenciesAreRequired[dependency]
   });
 });
 
@@ -101,16 +101,16 @@ const licensesPage = layoutTemplate({
   content: licensesTemplate({
     name: name,
     version: version,
-    licenses: licenseElements,
-  }),
+    licenses: licenseElements
+  })
 });
 
 const testsPage = layoutTemplate({
   title: name + " " + version + " Tests",
   content: testsTemplate({
     name: name,
-    version: version,
-  }),
+    version: version
+  })
 });
 
 const indexPage = layoutTemplate({
@@ -119,8 +119,8 @@ const indexPage = layoutTemplate({
     name: name,
     version: version,
     documentationURL: documentationURL,
-    changes: changes,
-  }),
+    changes: changes
+  })
 });
 
 // Remove the generated assets directory if exists, and create a new one.
@@ -155,7 +155,7 @@ fs.writeFileSync(__dirname + "/generatedAssets/index.html", indexPage);
 fs.writeFileSync(__dirname + "/generatedAssets/tests.html", testsPage);
 fs.writeFileSync(
   __dirname + "/generatedAssets/licenses/index.html",
-  licensesPage,
+  licensesPage
 );
 
 // Bundle the source and copy the assets using esbuild and esbuild-plugin-copy
@@ -171,23 +171,25 @@ esbuild
         resolveFrom: __dirname,
         assets: {
           from: ["./assets/**/*"],
-          to: ["./dist"],
+          to: ["./dist"]
         },
         globbyOptions: {
-          dot: true,
-        },
+          dot: true
+        }
       }),
       esbuildCopyPlugin.copy({
         resolveFrom: __dirname,
         assets: {
           from: ["./generatedAssets/**/*"],
-          to: ["./dist"],
-        },
-      }),
-    ],
+          to: ["./dist"]
+        }
+      })
+    ]
   })
   .then(() => {
-    const utilFilesAndDirectories = fs.existsSync(__dirname + "/src/extraScripts")
+    const utilFilesAndDirectories = fs.existsSync(
+      __dirname + "/src/extraScripts"
+    )
       ? fs.readdirSync(__dirname + "/src/extraScripts")
       : [];
     const utilFiles = [];
@@ -199,11 +201,13 @@ esbuild
     // Transpile utilities using esbuild
     esbuild
       .build({
-        entryPoints: utilFiles.map((filename) => "src/extraScripts/" + filename),
+        entryPoints: utilFiles.map(
+          (filename) => "src/extraScripts/" + filename
+        ),
         bundle: true,
         outdir: "dist",
         platform: "node",
-        target: "es2017",
+        target: "es2017"
       })
       .then(() => {
         const archiveName =
@@ -212,17 +216,14 @@ esbuild
           ".zip";
         const output = fs.createWriteStream(__dirname + "/out/" + archiveName);
         const archive = archiver("zip", {
-          zlib: { level: 9 },
+          zlib: { level: 9 }
         });
         archive.pipe(output);
 
         // Add everything in the "dist" directory except for "svr.js" and "svr.compressed"
         archive.glob("**/*", {
           cwd: __dirname + "/dist",
-          ignore: [
-            "svr.js",
-            "svr.compressed"
-          ],
+          ignore: ["svr.js", "svr.compressed"],
           dot: true
         });
 
@@ -231,13 +232,13 @@ esbuild
           .createReadStream(__dirname + "/dist/svr.js")
           .pipe(
             zlib.createGzip({
-              level: 9,
-            }),
+              level: 9
+            })
           );
         archive.append(compressedSVRJSFileStream, { name: "svr.compressed" });
         archive.append(
           'const zlib = require("zlib");\nconst fs = require("fs");\nconsole.log("Deleting SVR.JS stub...");\nfs.unlinkSync("svr.js");\nconsole.log("Decompressing SVR.JS...");\nconst script = zlib.gunzipSync(fs.readFileSync("svr.compressed"));\nfs.unlinkSync("svr.compressed");\nfs.writeFileSync("svr.js",script);\nconsole.log("Restart SVR.JS to get server interface.");',
-          { name: "svr.js" },
+          { name: "svr.js" }
         );
         archive.finalize();
       })
