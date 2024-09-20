@@ -200,7 +200,7 @@ esbuild
     esbuild
       .build({
         entryPoints: utilFiles.map((filename) => "utils/" + filename),
-        bundle: false,
+        bundle: true,
         outdir: "dist",
         platform: "node",
         target: "es2017",

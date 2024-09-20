@@ -1,1 +1,1 @@
-require("./svr.js");
+require(__dirname + "/svr.js");
