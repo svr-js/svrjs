@@ -6,7 +6,7 @@
     "build": "node esbuild.config.js",
     "cz": "cz",
     "dev": "npm run build && npm run start",
-    "lint": "eslint --no-error-on-unmatched-pattern src/**/*.js src/*.js tests/**/*.test.js tests/**/*.js tests/*.test.js tests/*.js utils/**/*.js utils/*.js",
+    "lint": "eslint --no-error-on-unmatched-pattern src/**/*.js src/*.js tests/**/*.test.js tests/**/*.js tests/*.test.js tests/*.js",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "husky",
     "start": "node dist/svr.js",

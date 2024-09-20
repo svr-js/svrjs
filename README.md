@@ -123,6 +123,7 @@ The file structure for SVR.JS source code looks like this:
  - out - contains SVR.JS zip archive
  - src - contains SVR.JS source code
    - index.js - entry point
+   - extraScripts - SVR.JS extra scripts (each script has a single file)
    - handlers - handlers for servers
    - middleware - built-in middleware for servers
    - res - resources
@@ -131,7 +132,6 @@ The file structure for SVR.JS source code looks like this:
  - tests - Jest unit tests
    - middleware - tests for middleware
    - utils - unit tests for utility functions
- - utils - SVR.JS utilities (each utility has a single file)
  - commitlint.config.js - commitlint configuration
  - esbuild.config.js - the build script
  - eslint.config.js - ESLint configuration
