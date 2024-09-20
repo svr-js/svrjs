@@ -187,19 +187,19 @@ esbuild
     ],
   })
   .then(() => {
-    const utilFilesAndDirectories = fs.existsSync(__dirname + "/utils")
-      ? fs.readdirSync(__dirname + "/utils")
+    const utilFilesAndDirectories = fs.existsSync(__dirname + "/src/extraScripts")
+      ? fs.readdirSync(__dirname + "/src/extraScripts")
       : [];
     const utilFiles = [];
     utilFilesAndDirectories.forEach((entry) => {
-      if (fs.statSync(__dirname + "/utils/" + entry).isFile())
+      if (fs.statSync(__dirname + "/src/extraScripts/" + entry).isFile())
         utilFiles.push(entry);
     });
 
     // Transpile utilities using esbuild
     esbuild
       .build({
-        entryPoints: utilFiles.map((filename) => "utils/" + filename),
+        entryPoints: utilFiles.map((filename) => "src/extraScripts/" + filename),
         bundle: true,
         outdir: "dist",
         platform: "node",
