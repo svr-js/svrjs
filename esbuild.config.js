@@ -236,7 +236,7 @@ esbuild
           );
         archive.append(compressedSVRJSFileStream, { name: "svr.compressed" });
         archive.append(
-          'const zlib = require("zlib");\nconst fs = require("fs");\nconst tar = require("tar");\nconsole.log("Deleting SVR.JS stub...");\nfs.unlinkSync("svr.js");\nconsole.log("Decompressing SVR.JS...");\nconst script = zlib.gunzipSync(fs.readFileSync("svr.compressed"));\nfs.unlinkSync("svr.compressed");\nfs.writeFileSync("svr.js",script);\nconsole.log("Restart SVR.JS to get server interface.");',
+          'const zlib = require("zlib");\nconst fs = require("fs");\nconsole.log("Deleting SVR.JS stub...");\nfs.unlinkSync("svr.js");\nconsole.log("Decompressing SVR.JS...");\nconst script = zlib.gunzipSync(fs.readFileSync("svr.compressed"));\nfs.unlinkSync("svr.compressed");\nfs.writeFileSync("svr.js",script);\nconsole.log("Restart SVR.JS to get server interface.");',
           { name: "svr.js" },
         );
         archive.finalize();
