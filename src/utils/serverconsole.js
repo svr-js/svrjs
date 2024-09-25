@@ -82,7 +82,7 @@ const serverconsole = {
   climessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {
-        serverconsole.climessage(nmsg);
+        serverconsole.climessage(nmsg, reqId);
       });
       return;
     }
@@ -103,7 +103,7 @@ const serverconsole = {
   reqmessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {
-        serverconsole.reqmessage(nmsg);
+        serverconsole.reqmessage(nmsg, reqId);
       });
       return;
     }
@@ -125,7 +125,7 @@ const serverconsole = {
   resmessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {
-        serverconsole.resmessage(nmsg);
+        serverconsole.resmessage(nmsg, reqId);
       });
       return;
     }
@@ -147,7 +147,7 @@ const serverconsole = {
   errmessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {
-        serverconsole.errmessage(nmsg);
+        serverconsole.errmessage(nmsg, reqId);
       });
       return;
     }
@@ -169,7 +169,7 @@ const serverconsole = {
   locerrmessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {
-        serverconsole.locerrmessage(nmsg);
+        serverconsole.locerrmessage(nmsg, reqId);
       });
       return;
     }
@@ -191,7 +191,7 @@ const serverconsole = {
   locwarnmessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {
-        serverconsole.locwarnmessage(nmsg);
+        serverconsole.locwarnmessage(nmsg, reqId);
       });
       return;
     }
@@ -213,7 +213,7 @@ const serverconsole = {
   locmessage: (msg, reqId) => {
     if (msg.indexOf("\n") != -1) {
       msg.split("\n").forEach((nmsg) => {
-        serverconsole.locmessage(nmsg);
+        serverconsole.locmessage(nmsg, reqId);
       });
       return;
     }
