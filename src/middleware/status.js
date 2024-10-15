@@ -1,7 +1,7 @@
-const http = require("http");
 const os = require("os");
 const defaultPageCSS = require("../res/defaultPageCSS.js");
 const sizify = require("../utils/sizify.js");
+const statusCodes = require("../res/statusCodes.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
@@ -57,7 +57,7 @@ module.exports = (req, res, logFacilities, config, next) => {
       }%`;
     statusBody += `<br/>Thread PID: ${process.pid}<br/>`;
 
-    res.writeHead(200, http.STATUS_CODES[200], {
+    res.writeHead(200, statusCodes[200], {
       "Content-Type": "text/html; charset=utf-8"
     });
     res.end(

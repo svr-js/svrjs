@@ -1,4 +1,3 @@
-const http = require("http");
 const fs = require("fs");
 const net = require("net");
 const defaultPageCSS = require("../res/defaultPageCSS.js");
@@ -10,6 +9,7 @@ const matchHostname = require("../utils/matchHostname.js");
 const generateServerString = require("../utils/generateServerString.js");
 const parseURL = require("../utils/urlParser.js");
 const deepClone = require("../utils/deepClone.js");
+const statusCodes = require("../res/statusCodes.js");
 
 let serverconsole = {};
 let middleware = [];
@@ -134,7 +134,7 @@ function requestHandler(req, res) {
       req.socket.remoteAddress == "localhost")
   ) {
     let headers = config.getCustomHeaders();
-    res.writeHead(204, http.STATUS_CODES[204], headers);
+    res.writeHead(204, statusCodes[204], headers);
     res.end();
     return;
   }
@@ -173,9 +173,9 @@ function requestHandler(req, res) {
           "Server responded with " + code.toString() + " code."
         );
       }
-      if (typeof codeDescription != "string" && http.STATUS_CODES[code]) {
+      if (typeof codeDescription != "string" && statusCodes[code]) {
         if (!headers) headers = codeDescription;
-        codeDescription = http.STATUS_CODES[code];
+        codeDescription = statusCodes[code];
       }
       lastStatusCode = code;
     }
@@ -444,7 +444,7 @@ function requestHandler(req, res) {
         fs.readFile(errorFile, (err, data) => {
           try {
             if (err) throw err;
-            res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+            res.writeHead(errorCode, statusCodes[errorCode], cheaders);
             res.responseEnd(
               data
                 .toString()
@@ -452,7 +452,7 @@ function requestHandler(req, res) {
                   /{errorMessage}/g,
                   errorCode.toString() +
                     " " +
-                    http.STATUS_CODES[errorCode]
+                    statusCodes[errorCode]
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;")
@@ -523,7 +523,7 @@ function requestHandler(req, res) {
               additionalError = 508;
             }
 
-            res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+            res.writeHead(errorCode, statusCodes[errorCode], cheaders);
             res.write(
               `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${
                 additionalError == 404
@@ -534,7 +534,7 @@ function requestHandler(req, res) {
                   /{errorMessage}/g,
                   errorCode.toString() +
                     " " +
-                    http.STATUS_CODES[errorCode]
+                    statusCodes[errorCode]
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;")
@@ -620,7 +620,7 @@ function requestHandler(req, res) {
         : 301;
 
     // Write the response header with the appropriate status code and message
-    res.writeHead(statusCode, http.STATUS_CODES[statusCode], customHeaders);
+    res.writeHead(statusCode, statusCodes[statusCode], customHeaders);
 
     // Log the redirection message
     logFacilities.resmessage("Client redirected to " + destination);
@@ -656,7 +656,7 @@ function requestHandler(req, res) {
       // Respond with list of methods
       let hdss = config.getCustomHeaders();
       hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-      res.writeHead(204, http.STATUS_CODES[204], hdss);
+      res.writeHead(204, statusCodes[204], hdss);
       res.end();
       return;
     } else {
