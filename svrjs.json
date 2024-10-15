@@ -1,9 +1,9 @@
 {
-  "version": "4.0.1",
+  "version": "4.0.2",
   "name": "SVR.JS",
   "documentationURL": "https://svrjs.org/docs",
   "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
   "changes": [
-    "Fixed a bug with no request ID shown for multiline log entries for HTTP requests."
+    "Fixed a bug with 497, 598, and 599 status code HTTP responses."
   ]
 }

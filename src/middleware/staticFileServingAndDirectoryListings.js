@@ -1,4 +1,3 @@
-const http = require("http");
 const fs = require("fs");
 const os = require("os");
 const zlib = require("zlib");
@@ -9,6 +8,7 @@ const ipMatch = require("../utils/ipMatch.js");
 const createRegex = require("../utils/createRegex.js");
 const sha256 = require("../utils/sha256.js");
 const sizify = require("../utils/sizify.js");
+const statusCodes = require("../res/statusCodes.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
@@ -140,7 +140,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           // Check if the client's request matches the ETag value (If-None-Match)
           const clientETag = req.headers["if-none-match"];
           if (clientETag === fileETag) {
-            res.writeHead(304, http.STATUS_CODES[304], {
+            res.writeHead(304, statusCodes[304], {
               ETag: clientETag
             });
             res.end();
@@ -206,14 +206,14 @@ module.exports = (req, res, logFacilities, config, next) => {
                   begin < res.head.length &&
                   end - begin < res.head.length
                 ) {
-                  res.writeHead(206, http.STATUS_CODES[206], rhd);
+                  res.writeHead(206, statusCodes[206], rhd);
                   res.end(res.head.substring(begin, end + 1));
                   return;
                 } else if (
                   ext == "html" &&
                   begin >= res.head.length + filelen
                 ) {
-                  res.writeHead(206, http.STATUS_CODES[206], rhd);
+                  res.writeHead(206, statusCodes[206], rhd);
                   res.end(
                     res.foot.substring(
                       begin - res.head.length - filelen,
@@ -278,7 +278,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                             )
                           });
                         };
-                        res.writeHead(206, http.STATUS_CODES[206], rhd);
+                        res.writeHead(206, statusCodes[206], rhd);
                         if (res.head.length == 0 || begin > res.head.length) {
                           afterWriteCallback();
                         } else if (
@@ -291,7 +291,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                           process.nextTick(afterWriteCallback);
                         }
                       } else {
-                        res.writeHead(206, http.STATUS_CODES[206], rhd);
+                        res.writeHead(206, statusCodes[206], rhd);
                         readStream.pipe(res);
                       }
                       logFacilities.resmessage(
@@ -302,7 +302,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                     }
                   });
               } else {
-                res.writeHead(206, http.STATUS_CODES[206], rhd);
+                res.writeHead(206, statusCodes[206], rhd);
                 res.end();
               }
             }
@@ -461,7 +461,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                           end: res.foot.length == 0
                         });
                       };
-                      res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                      res.writeHead(200, statusCodes[200], hdhds);
                       if (res.head.length == 0) {
                         afterWriteCallback();
                       } else if (!resStream.write(res.head)) {
@@ -470,7 +470,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                         process.nextTick(afterWriteCallback);
                       }
                     } else {
-                      res.writeHead(200, http.STATUS_CODES[200], hdhds);
+                      res.writeHead(200, statusCodes[200], hdhds);
                       readStream.pipe(resStream);
                     }
                     logFacilities.resmessage(
@@ -481,7 +481,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   }
                 });
             } else {
-              res.writeHead(200, http.STATUS_CODES[200], hdhds);
+              res.writeHead(200, statusCodes[200], hdhds);
               res.end();
               logFacilities.resmessage("Client successfully received content.");
             }
@@ -890,7 +890,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                     }
 
                     // Send the directory listing response
-                    res.writeHead(200, http.STATUS_CODES[200], {
+                    res.writeHead(200, statusCodes[200], {
                       "Content-Type": "text/html; charset=utf-8"
                     });
                     res.end(

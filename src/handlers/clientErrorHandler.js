@@ -1,6 +1,7 @@
 const fs = require("fs");
 const http = require("http");
 const defaultPageCSS = require("../res/defaultPageCSS.js");
+const statusCodes = require("../res/statusCodes.js");
 const generateErrorStack = require("../utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const generateServerString = require("../utils/generateServerString.js");
@@ -265,14 +266,14 @@ function clientErrorHandler(err, socket) {
           parseInt(process.version.split(".")[0].substring(1)) >= 16
         ) {
           // Disable custom error page for HTTP SSL error
-          res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+          res.writeHead(errorCode, statusCodes[errorCode], cheaders);
           res.write(
             `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}${"</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p><p><i>{server}</i></p></body></html>"
               .replace(
                 /{errorMessage}/g,
                 errorCode.toString() +
                   " " +
-                  http.STATUS_CODES[errorCode]
+                  statusCodes[errorCode]
                     .replace(/&/g, "&amp;")
                     .replace(/</g, "&lt;")
                     .replace(/>/g, "&gt;")
@@ -316,7 +317,7 @@ function clientErrorHandler(err, socket) {
           fs.readFile(errorFile, (err, data) => {
             try {
               if (err) throw err;
-              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+              res.writeHead(errorCode, statusCodes[errorCode], cheaders);
               responseEnd(
                 data
                   .toString()
@@ -324,7 +325,7 @@ function clientErrorHandler(err, socket) {
                     /{errorMessage}/g,
                     errorCode.toString() +
                       " " +
-                      http.STATUS_CODES[errorCode]
+                      statusCodes[errorCode]
                         .replace(/&/g, "&amp;")
                         .replace(/</g, "&lt;")
                         .replace(/>/g, "&gt;")
@@ -378,7 +379,7 @@ function clientErrorHandler(err, socket) {
               } else if (err.code == "ELOOP") {
                 additionalError = 508;
               }
-              res.writeHead(errorCode, http.STATUS_CODES[errorCode], cheaders);
+              res.writeHead(errorCode, statusCodes[errorCode], cheaders);
               res.write(
                 `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${
                   additionalError == 404
@@ -389,7 +390,7 @@ function clientErrorHandler(err, socket) {
                     /{errorMessage}/g,
                     errorCode.toString() +
                       " " +
-                      http.STATUS_CODES[errorCode]
+                      statusCodes[errorCode]
                         .replace(/&/g, "&amp;")
                         .replace(/</g, "&lt;")
                         .replace(/>/g, "&gt;")
