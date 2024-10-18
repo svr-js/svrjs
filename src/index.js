@@ -1727,6 +1727,10 @@ function start(init) {
           serverconsole.locwarnmessage(
             "PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service."
           );
+      } else if (process.versions && process.versions.deno) {
+        serverconsole.locwarnmessage(
+          `Deno support is experimental. Some features of ${name}, ${name} mods and ${name} server-side JavaScript may not work as expected.`
+        );
       }
       if (cluster.isPrimary === undefined)
         serverconsole.locwarnmessage(
