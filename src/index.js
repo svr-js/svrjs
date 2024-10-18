@@ -1436,16 +1436,26 @@ function SVRJSFork() {
         ((process.isBun &&
           process.versions.bun &&
           process.versions.bun[0] != "0") ||
-          (process.versions && process.versions.deno_)) &&
+          (process.versions && process.versions.deno)) &&
         Object.keys(cluster.workers) > 0
       )
     ) {
       newWorker = cluster.fork();
     } else {
-      if (SVRJSInitialized)
-        serverconsole.locwarnmessage(
-          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
-        );
+      if (SVRJSInitialized) {
+        if (
+          process.isBun &&
+          process.versions.bun &&
+          process.versions.bun[0] != "0"
+        )
+          serverconsole.locwarnmessage(
+            `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
+          );
+        else if (process.versions && process.versions.deno)
+          serverconsole.locwarnmessage(
+            `${name} limited the number of workers to one, because of startup problems in Deno with shimmed (not native) clustering module. Reliability may suffer.`
+          );
+      }
     }
   } catch (err) {
     if (
