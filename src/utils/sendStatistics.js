@@ -28,8 +28,16 @@ try {
 function sendStatistics(modInfos, callback) {
   const statisticsToSend = JSON.stringify({
     version: version,
-    runtime: process.isBun ? "Bun" : "Node.js",
-    runtimeVersion: process.isBun ? process.versions.bun : process.version,
+    runtime: process.isBun
+      ? "Bun"
+      : process.versions && process.versions.deno
+        ? "Deno"
+        : "Node.js",
+    runtimeVersion: process.isBun
+      ? process.versions.bun
+      : process.versions && process.versions.deno
+        ? process.versions.deno
+        : process.version,
     mods: modInfos
   });
   const statisticsRequest = https.request(
