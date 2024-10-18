@@ -199,7 +199,7 @@ if (!fs.existsSync(process.dirname + "/mods"))
 if (!fs.existsSync(process.dirname + "/temp"))
   fs.mkdirSync(process.dirname + "/temp");
 
-const cluster = require("./utils/clusterShim.js"); // Cluster module with shim for Bun
+const cluster = require("./utils/clusterShim.js"); // Cluster module with shim for Bun and Deno
 const legacyModWrapper = require("./utils/legacyModWrapper.js");
 const generateErrorStack = require("./utils/generateErrorStack.js");
 const {
