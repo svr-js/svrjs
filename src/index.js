@@ -199,7 +199,7 @@ if (!fs.existsSync(process.dirname + "/mods"))
 if (!fs.existsSync(process.dirname + "/temp"))
   fs.mkdirSync(process.dirname + "/temp");
 
-const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
+const cluster = require("./utils/clusterShim.js"); // Cluster module with shim for Bun
 const legacyModWrapper = require("./utils/legacyModWrapper.js");
 const generateErrorStack = require("./utils/generateErrorStack.js");
 const {
@@ -1453,7 +1453,7 @@ function SVRJSFork() {
       err.message == "Not implemented: cluster.fork"
     ) {
       // If cluster.fork throws a NotImplementedError, shim cluster module
-      cluster.bunShim();
+      cluster.shim();
       if (
         !threadLimitWarned &&
         cluster.__shimmed__ &&

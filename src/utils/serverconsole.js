@@ -3,7 +3,7 @@ const fs = require("fs");
 let enableLoggingIntoFile = process.serverConfig.enableLogging;
 let logFile = undefined;
 let logSync = false;
-let cluster = require("./clusterBunShim.js");
+let cluster = require("./clusterShim.js");
 let reallyExiting = false;
 const timestamp = process.serverConfig.timestamp;
 
