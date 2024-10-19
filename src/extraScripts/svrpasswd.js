@@ -299,7 +299,9 @@ if (
   args.push("-h");
 for (
   let i =
-    process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("bun") > -1
+    process.argv[0].indexOf("node") > -1 ||
+    process.argv[0].indexOf("bun") > -1 ||
+    process.argv[0].indexOf("deno") > -1
       ? 2
       : 1;
   i < args.length;
