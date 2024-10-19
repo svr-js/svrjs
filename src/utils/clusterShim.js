@@ -13,9 +13,9 @@ if (!process.singleThreaded) {
     // Clustering is not supported!
   }
 
-  // Cluster & IPC shim for Bun
+  // Cluster & IPC shim for Bun and Deno
 
-  cluster.bunShim = () => {
+  cluster.shim = () => {
     cluster.isMaster = !process.env.NODE_UNIQUE_ID;
     cluster.isPrimary = cluster.isMaster;
     cluster.isWorker = !cluster.isMaster;
@@ -126,7 +126,7 @@ if (!process.singleThreaded) {
           };
 
           try {
-            worker.send(undefined);
+            if (process.isBun) worker.send(undefined);
           } catch (err) {
             if (err.message === "NOT IMPLEMENTED") {
               sendImplemented = false;
@@ -216,11 +216,11 @@ if (!process.singleThreaded) {
   };
 
   if (
-    process.isBun &&
+    (process.isBun || (process.versions && process.versions.deno)) &&
     (cluster.isMaster === undefined ||
       (cluster.isMaster && process.env.NODE_UNIQUE_ID))
   ) {
-    cluster.bunShim();
+    cluster.shim();
   }
 
   // Shim cluster.isPrimary field

@@ -138,7 +138,9 @@ let disableMods = false;
 const args = process.argv;
 for (
   let i =
-    process.argv[0].indexOf("node") > -1 || process.argv[0].indexOf("bun") > -1
+    process.argv[0].indexOf("node") > -1 ||
+    process.argv[0].indexOf("bun") > -1 ||
+    process.argv[0].indexOf("deno") > -1
       ? 2
       : 1;
   i < args.length;
@@ -197,7 +199,7 @@ if (!fs.existsSync(process.dirname + "/mods"))
 if (!fs.existsSync(process.dirname + "/temp"))
   fs.mkdirSync(process.dirname + "/temp");
 
-const cluster = require("./utils/clusterBunShim.js"); // Cluster module with shim for Bun
+const cluster = require("./utils/clusterShim.js"); // Cluster module with shim for Bun and Deno
 const legacyModWrapper = require("./utils/legacyModWrapper.js");
 const generateErrorStack = require("./utils/generateErrorStack.js");
 const {
@@ -631,6 +633,7 @@ try {
 }
 
 if (vnum === undefined) vnum = 0;
+if (process.versions && process.versions.deno) vnum = 64;
 if (process.isBun) vnum = 64;
 
 let mods = [];
@@ -1416,27 +1419,51 @@ function SVRJSFork() {
       serverconsole.locwarnmessage(
         `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
       );
+    } else if (
+      !threadLimitWarned &&
+      cluster.__shimmed__ &&
+      process.versions &&
+      process.versions.deno
+    ) {
+      threadLimitWarned = true;
+      serverconsole.locwarnmessage(
+        `${name} limited the number of workers to one, because of startup problems in Deno with shimmed (not native) clustering module. Reliability may suffer.`
+      );
     }
     if (
       !(
         cluster.__shimmed__ &&
-        process.isBun &&
-        process.versions.bun &&
-        process.versions.bun[0] != "0" &&
+        ((process.isBun &&
+          process.versions.bun &&
+          process.versions.bun[0] != "0") ||
+          (process.versions && process.versions.deno)) &&
         Object.keys(cluster.workers) > 0
       )
     ) {
       newWorker = cluster.fork();
     } else {
-      if (SVRJSInitialized)
-        serverconsole.locwarnmessage(
-          `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
-        );
+      if (SVRJSInitialized) {
+        if (
+          process.isBun &&
+          process.versions.bun &&
+          process.versions.bun[0] != "0"
+        )
+          serverconsole.locwarnmessage(
+            `${name} limited the number of workers to one, because of startup problems in Bun 1.0 and newer with shimmed (not native) clustering module. Reliability may suffer.`
+          );
+        else if (process.versions && process.versions.deno)
+          serverconsole.locwarnmessage(
+            `${name} limited the number of workers to one, because of startup problems in Deno with shimmed (not native) clustering module. Reliability may suffer.`
+          );
+      }
     }
   } catch (err) {
-    if (err.name == "NotImplementedError") {
+    if (
+      err.name == "NotImplementedError" ||
+      err.message == "Not implemented: cluster.fork"
+    ) {
       // If cluster.fork throws a NotImplementedError, shim cluster module
-      cluster.bunShim();
+      cluster.shim();
       if (
         !threadLimitWarned &&
         cluster.__shimmed__ &&
@@ -1710,6 +1737,10 @@ function start(init) {
           serverconsole.locwarnmessage(
             "PBKDF2 password hashing function in Bun versions older than v1.1.13 blocks the event loop, which may result in denial of service."
           );
+      } else if (process.versions && process.versions.deno) {
+        serverconsole.locwarnmessage(
+          `Deno support is experimental. Some features of ${name}, ${name} mods and ${name} server-side JavaScript may not work as expected.`
+        );
       }
       if (cluster.isPrimary === undefined)
         serverconsole.locwarnmessage(
@@ -1725,6 +1756,7 @@ function start(init) {
         );
       if (
         !process.isBun &&
+        !(process.versions && process.versions.deno) &&
         /^v(?:[0-9]\.|1[0-7]\.|18\.(?:[0-9]|1[0-8])\.|18\.19\.0|20\.(?:[0-9]|10)\.|20\.11\.0|21\.[0-5]\.|21\.6\.0|21\.6\.1(?![0-9]))/.test(
           process.version
         )
@@ -1734,6 +1766,7 @@ function start(init) {
         );
       if (
         !process.isBun &&
+        !(process.versions && process.versions.deno) &&
         /^v(?:[0-9]\.|1[0-7]\.|18\.(?:1?[0-9])\.|18\.20\.0|20\.(?:[0-9]|1[01])\.|20\.12\.0|21\.[0-6]\.|21\.7\.0|21\.7\.1(?![0-9]))/.test(
           process.version
         )
@@ -1805,6 +1838,8 @@ function start(init) {
       serverconsole.locmessage("Server version: " + version);
       if (process.isBun)
         serverconsole.locmessage("Bun version: v" + process.versions.bun);
+      else if (process.versions && process.versions.deno)
+        serverconsole.locmessage("Deno version: " + process.versions.deno);
       else serverconsole.locmessage("Node.JS version: " + process.version);
       const CPUs = os.cpus();
       if (CPUs.length > 0)

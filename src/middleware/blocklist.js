@@ -1,4 +1,4 @@
-const cluster = require("../utils/clusterBunShim.js");
+const cluster = require("../utils/clusterShim.js");
 const ipBlockList = require("../utils/ipBlockList.js");
 let blocklist = ipBlockList(process.serverConfig.blacklist);
 

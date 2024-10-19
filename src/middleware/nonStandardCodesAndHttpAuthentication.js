@@ -4,7 +4,7 @@ const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
 const matchHostname = require("../utils/matchHostname.js");
 const ipBlockList = require("../utils/ipBlockList.js");
-const cluster = require("../utils/clusterBunShim.js");
+const cluster = require("../utils/clusterShim.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
