@@ -179,6 +179,14 @@ if (!isDev) {
       console.error("Stack:");
       console.error(err.stack);
     }
+  }).on("ready", () => {
+    try {
+      generateAssets();
+    } catch (err) {
+      console.error("There is a problem when regenerating assets!");
+      console.error("Stack:");
+      console.error(err.stack);
+    }
   });
 }
 
