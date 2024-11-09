@@ -117,7 +117,7 @@ if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into pr
 function printUsage() {
   console.log(`${name} usage:`);
   console.log(
-    "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]"
+    "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [--stdout-notty] [-v] [--version]"
   );
   console.log("-h -? /h /? --help    -- Displays help");
   console.log("--clean               -- Cleans up files created by " + name);
@@ -127,12 +127,16 @@ function printUsage() {
   console.log("--secure              -- Runs HTTPS server");
   console.log("--disable-mods        -- Disables mods (safe mode)");
   console.log("--single-threaded     -- Run single-threaded");
+  console.log(
+    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performace"
+  );
   console.log("-v --version          -- Display server version");
 }
 
 let exiting = false;
 let forceSecure = false;
 let disableMods = false;
+let stdoutNoTTY = false;
 
 // Handle command line arguments
 const args = process.argv;
@@ -184,6 +188,8 @@ for (
     disableMods = true;
   } else if (args[i] == "--single-threaded") {
     process.singleThreaded = true;
+  } else if (args[i] == "--stdout-notty") {
+    stdoutNoTTY = true;
   } else {
     console.log(`Unrecognized argument: ${args[i]}`);
     printUsage();
@@ -385,7 +391,7 @@ try {
   // Failed to get inspector URL
 }
 
-if (!process.stdout.isTTY && !inspectorURL) {
+if (!stdoutNoTTY && !process.stdout.isTTY && !inspectorURL) {
   // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
   console.log = () => {};
   process.stdout.write = () => {};
