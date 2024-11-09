@@ -11,7 +11,7 @@
   <a href="https://svrjs.org/docs" target="_blank"><img alt="Static Badge" src="https://img.shields.io/badge/Documentation-green"></a>
   <a href="https://svrjs.org" target="_blank"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fsvrjs.org"></a>
   <a href="https://hub.docker.com/r/svrjs/svrjs" target="_blank"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/svrjs/svrjs"></a>
-  <a href="https://github.com/svr-js/svrjs/tree/next" target="_blank"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/svr-js/svrjs"></a>
+  <a href="https://github.com/svr-js/svrjs" target="_blank"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/svr-js/svrjs"></a>
   <a href="https://x.com/SVR_JS" target="_blank"><img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/SVR_JS"></a>
   <a href="https://mastodon.social/@svrjs" target="_blank"><img alt="Mastodon Follow" src="https://img.shields.io/mastodon/follow/111643338718098121"></a>
 </p>
@@ -87,7 +87,7 @@ After running the command, you will get bundled SVR.JS script, around with built
 
 To install SVR.JS you just built from the source code, you can install it via SVR.JS installer for GNU/Linux or manually.
 
-If you want to install SVR.JS manually, you can read the [server documentation](https://svrjs.org/docs/tentative).
+If you want to install SVR.JS manually, you can read the [server documentation](https://svrjs.org/docs).
 
 If you want to install via SVR.JS installer for GNU/Linux, run this command:
 ```bash
@@ -102,7 +102,7 @@ After installation, SVR.JS should be listening at http://localhost.
 
 ## SVR.JS documentation
 
-You can read the [SVR.JS documentation](https://svrjs.org/docs/tentative) to get information on how to use SVR.JS.
+You can read the [SVR.JS documentation](https://svrjs.org/docs) to get information on how to use SVR.JS.
 
 ## npm scripts
 
