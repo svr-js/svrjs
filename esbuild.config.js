@@ -18,8 +18,8 @@ if (!fs.existsSync(__dirname + "/dist/mods"))
 if (!fs.existsSync(__dirname + "/dist/temp"))
   fs.mkdirSync(__dirname + "/dist/temp");
 
-// Create the out directory if it doesn't exist
-if (!fs.existsSync(__dirname + "/out")) fs.mkdirSync(__dirname + "/out");
+// Create the out directory if it doesn't exist and if not building for development
+if (!isDev && !fs.existsSync(__dirname + "/out")) fs.mkdirSync(__dirname + "/out");
 
 function generateAssets() {
   // Variables from "svrjs.json" file
