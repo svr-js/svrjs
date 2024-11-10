@@ -7,7 +7,9 @@ const archiver = require("archiver");
 const chokidar = require("chokidar");
 const svrjsInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.json"));
 const { version } = svrjsInfo;
-const svrjsCoreInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.core.json"));
+const svrjsCoreInfo = JSON.parse(
+  fs.readFileSync(__dirname + "/svrjs.core.json")
+);
 const { externalPackages } = svrjsCoreInfo;
 const coreVersion = svrjsCoreInfo.version;
 const corePackageJSON = svrjsCoreInfo.packageJSON;
@@ -23,10 +25,12 @@ if (!fs.existsSync(__dirname + "/dist/temp"))
   fs.mkdirSync(__dirname + "/dist/temp");
 
 // Create the out directory if it doesn't exist and if not building for development
-if (!isDev && !fs.existsSync(__dirname + "/out")) fs.mkdirSync(__dirname + "/out");
+if (!isDev && !fs.existsSync(__dirname + "/out"))
+  fs.mkdirSync(__dirname + "/out");
 
 // Create the core directory if it doesn't exist and if not building for development
-if (!isDev && !fs.existsSync(__dirname + "/core")) fs.mkdirSync(__dirname + "/core");
+if (!isDev && !fs.existsSync(__dirname + "/core"))
+  fs.mkdirSync(__dirname + "/core");
 
 function generateAssets() {
   // Variables from "svrjs.json" file
@@ -178,23 +182,25 @@ if (!isDev) {
     __dirname + "/package.json",
     __dirname + "/svrjs.json"
   ]);
-  watcher.on("change", () => {
-    try {
-      generateAssets();
-    } catch (err) {
-      console.error("There is a problem when regenerating assets!");
-      console.error("Stack:");
-      console.error(err.stack);
-    }
-  }).on("ready", () => {
-    try {
-      generateAssets();
-    } catch (err) {
-      console.error("There is a problem when regenerating assets!");
-      console.error("Stack:");
-      console.error(err.stack);
-    }
-  });
+  watcher
+    .on("change", () => {
+      try {
+        generateAssets();
+      } catch (err) {
+        console.error("There is a problem when regenerating assets!");
+        console.error("Stack:");
+        console.error(err.stack);
+      }
+    })
+    .on("ready", () => {
+      try {
+        generateAssets();
+      } catch (err) {
+        console.error("There is a problem when regenerating assets!");
+        console.error("Stack:");
+        console.error(err.stack);
+      }
+    });
 }
 
 if (!isDev) {
@@ -250,85 +256,97 @@ if (!isDev) {
           target: "es2017"
         })
         .then(() => {
-          const dependencies = JSON.parse(fs.readFileSync(__dirname + "/package.json")).dependencies || {};
-          const coreDependencyNames = Object.keys(dependencies).filter((dependency) => externalPackages.indexOf(dependency) != -1);
+          const dependencies =
+            JSON.parse(fs.readFileSync(__dirname + "/package.json"))
+              .dependencies || {};
+          const coreDependencyNames = Object.keys(dependencies).filter(
+            (dependency) => externalPackages.indexOf(dependency) != -1
+          );
           const packageJSON = Object.assign({}, corePackageJSON);
 
           // Add package.json properties
           packageJSON.version = coreVersion;
           packageJSON.main = "./svr.core.js";
-          packageJSON.dependencies = coreDependencyNames.reduce((previousDependencies, dependency) => {
-            previousDependencies[dependency] = dependencies[dependency];
-            return previousDependencies;
-          }, {});
+          packageJSON.dependencies = coreDependencyNames.reduce(
+            (previousDependencies, dependency) => {
+              previousDependencies[dependency] = dependencies[dependency];
+              return previousDependencies;
+            },
+            {}
+          );
 
           // Write package.json
-          fs.writeFileSync(__dirname + "/core/package.json", JSON.stringify(packageJSON, null, 2));
+          fs.writeFileSync(
+            __dirname + "/core/package.json",
+            JSON.stringify(packageJSON, null, 2)
+          );
 
           // Build SVR.JS Core
           esbuild
-    .build({
-      entryPoints: ["src/core.js"],
-      bundle: true,
-      outfile: "core/svr.core.js",
-      platform: "node",
-      target: "es2017",
-      external: coreDependencyNames,
-      plugins: [
-        esbuildCopyPlugin.copy({
-          resolveFrom: __dirname,
-          assets: {
-            from: ["./coreAssets/**/*"],
-            to: ["./core"]
-          },
-          globbyOptions: {
-            dot: true
-          }
-        })
-      ]
-    })
-    .then(() => {
-          const archiveName =
-            "svr.js." +
-            version.toLowerCase().replace(/[^0-9a-z]+/g, ".") +
-            ".zip";
-          const output = fs.createWriteStream(
-            __dirname + "/out/" + archiveName
-          );
-          const archive = archiver("zip", {
-            zlib: { level: 9 }
-          });
-          archive.pipe(output);
+            .build({
+              entryPoints: ["src/core.js"],
+              bundle: true,
+              outfile: "core/svr.core.js",
+              platform: "node",
+              target: "es2017",
+              external: coreDependencyNames,
+              plugins: [
+                esbuildCopyPlugin.copy({
+                  resolveFrom: __dirname,
+                  assets: {
+                    from: ["./coreAssets/**/*"],
+                    to: ["./core"]
+                  },
+                  globbyOptions: {
+                    dot: true
+                  }
+                })
+              ]
+            })
+            .then(() => {
+              const archiveName =
+                "svr.js." +
+                version.toLowerCase().replace(/[^0-9a-z]+/g, ".") +
+                ".zip";
+              const output = fs.createWriteStream(
+                __dirname + "/out/" + archiveName
+              );
+              const archive = archiver("zip", {
+                zlib: { level: 9 }
+              });
+              archive.pipe(output);
 
-          // Add everything in the "dist" directory except for "svr.js" and "svr.compressed"
-          archive.glob("**/*", {
-            cwd: __dirname + "/dist",
-            ignore: ["svr.js", "svr.compressed"],
-            dot: true
-          });
+              // Add everything in the "dist" directory except for "svr.js" and "svr.compressed"
+              archive.glob("**/*", {
+                cwd: __dirname + "/dist",
+                ignore: ["svr.js", "svr.compressed"],
+                dot: true
+              });
 
-          // Create a stream for the "svr.compressed" file
-          const compressedSVRJSFileStream = fs
-            .createReadStream(__dirname + "/dist/svr.js")
-            .pipe(
-              zlib.createGzip({
-                level: 9
-              })
-            );
-          archive.append(compressedSVRJSFileStream, { name: "svr.compressed" });
-          archive.append(
-            'const zlib = require("zlib");\nconst fs = require("fs");\nconsole.log("Deleting SVR.JS stub...");\nfs.unlinkSync("svr.js");\nconsole.log("Decompressing SVR.JS...");\nconst script = zlib.gunzipSync(fs.readFileSync("svr.compressed"));\nfs.unlinkSync("svr.compressed");\nfs.writeFileSync("svr.js",script);\nconsole.log("Restart SVR.JS to get server interface.");',
-            { name: "svr.js" }
-          );
-          archive.finalize();
+              // Create a stream for the "svr.compressed" file
+              const compressedSVRJSFileStream = fs
+                .createReadStream(__dirname + "/dist/svr.js")
+                .pipe(
+                  zlib.createGzip({
+                    level: 9
+                  })
+                );
+              archive.append(compressedSVRJSFileStream, {
+                name: "svr.compressed"
+              });
+              archive.append(
+                'const zlib = require("zlib");\nconst fs = require("fs");\nconsole.log("Deleting SVR.JS stub...");\nfs.unlinkSync("svr.js");\nconsole.log("Decompressing SVR.JS...");\nconst script = zlib.gunzipSync(fs.readFileSync("svr.compressed"));\nfs.unlinkSync("svr.compressed");\nfs.writeFileSync("svr.js",script);\nconsole.log("Restart SVR.JS to get server interface.");',
+                { name: "svr.js" }
+              );
+              archive.finalize();
+            })
+            .catch((err) => {
+              throw err;
+            });
         })
         .catch((err) => {
           throw err;
         });
-      })
-      .catch((err) => {
-        throw err;
-      });
     })
     .catch((err) => {
       throw err;
