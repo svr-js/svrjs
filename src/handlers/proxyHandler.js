@@ -32,6 +32,9 @@ function proxyHandler(req, socket, head) {
   // SVR.JS configuration object (modified)
   const config = deepClone(process.serverConfig);
 
+  // Determine the webroot from the current working directory if it is not configured
+  if (config.wwwroot === undefined) config.wwwroot = process.cwd();
+
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
 

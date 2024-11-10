@@ -37,6 +37,9 @@ function requestHandler(req, res) {
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
 
+  // Determine the webroot from the current working directory if it is not configured
+  if (config.wwwroot === undefined) config.wwwroot = process.cwd();
+
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
     let ph = Object.assign({}, config.customHeaders);
@@ -345,14 +348,14 @@ function requestHandler(req, res) {
             fs.access(config.page404, fs.constants.F_OK, (err) => {
               if (err) {
                 fs.access(
-                  "." + errorCode.toString(),
+                  config.wwwroot + "/." + errorCode.toString(),
                   fs.constants.F_OK,
                   (err) => {
                     try {
                       if (err) {
                         callback(errorCode.toString() + ".html");
                       } else {
-                        callback("." + errorCode.toString());
+                        callback(config.wwwroot + "/." + errorCode.toString());
                       }
                     } catch (err2) {
                       res.error(500, err2);
@@ -368,17 +371,21 @@ function requestHandler(req, res) {
               }
             });
           } else {
-            fs.access("." + errorCode.toString(), fs.constants.F_OK, (err) => {
-              try {
-                if (err) {
-                  callback(errorCode.toString() + ".html");
-                } else {
-                  callback("." + errorCode.toString());
+            fs.access(
+              config.wwwroot + "/." + errorCode.toString(),
+              fs.constants.F_OK,
+              (err) => {
+                try {
+                  if (err) {
+                    callback(errorCode.toString() + ".html");
+                  } else {
+                    callback(config.wwwroot + "/." + errorCode.toString());
+                  }
+                } catch (err2) {
+                  res.error(500, err2);
                 }
-              } catch (err2) {
-                res.error(500, err2);
               }
-            });
+            );
           }
         }
       };
@@ -633,15 +640,15 @@ function requestHandler(req, res) {
   };
 
   try {
-    res.head = fs.existsSync("./.head")
-      ? fs.readFileSync("./.head").toString()
-      : fs.existsSync("./head.html")
-        ? fs.readFileSync("./head.html").toString()
+    res.head = fs.existsSync(`${config.wwwroot}/.head`)
+      ? fs.readFileSync(`${config.wwwroot}/.head`).toString()
+      : fs.existsSync(`${config.wwwroot}/head.html`)
+        ? fs.readFileSync(`${config.wwwroot}/head.html`).toString()
         : ""; // header
-    res.foot = fs.existsSync("./.foot")
-      ? fs.readFileSync("./.foot").toString()
-      : fs.existsSync("./foot.html")
-        ? fs.readFileSync("./foot.html").toString()
+    res.foot = fs.existsSync(`${config.wwwroot}/.foot`)
+      ? fs.readFileSync(`${config.wwwroot}/.foot`).toString()
+      : fs.existsSync(`${config.wwwroot}/foot.html`)
+        ? fs.readFileSync(`${config.wwwroot}/foot.html`).toString()
         : ""; // footer
   } catch (err) {
     res.error(500, err);

@@ -86,7 +86,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     res.error(400);
     return;
   }
-  let readFrom = "." + dHref;
+  let readFrom = config.wwwroot + dHref;
   let dirImagesMissing = false;
   fs.stat(readFrom, (err, stats) => {
     if (err) {
@@ -502,13 +502,16 @@ module.exports = (req, res, logFacilities, config, next) => {
 
           const getCustomDirListingHeader = (callback) => {
             fs.readFile(
-              ("." + dHref + "/.dirhead").replace(/\/+/g, "/"),
+              (config.wwwroot + dHref + "/.dirhead").replace(/\/+/g, "/"),
               (err, data) => {
                 if (err) {
                   if (err.code == "ENOENT" || err.code == "EISDIR") {
                     if (os.platform != "win32" || href != "/") {
                       fs.readFile(
-                        ("." + dHref + "/HEAD.html").replace(/\/+/g, "/"),
+                        (config.wwwroot + dHref + "/HEAD.html").replace(
+                          /\/+/g,
+                          "/"
+                        ),
                         (err, data) => {
                           if (err) {
                             if (err.code == "ENOENT" || err.code == "EISDIR") {
@@ -538,13 +541,16 @@ module.exports = (req, res, logFacilities, config, next) => {
 
           const getCustomDirListingFooter = (callback) => {
             fs.readFile(
-              ("." + dHref + "/.dirfoot").replace(/\/+/g, "/"),
+              (config.wwwroot + dHref + "/.dirfoot").replace(/\/+/g, "/"),
               (err, data) => {
                 if (err) {
                   if (err.code == "ENOENT" || err.code == "EISDIR") {
                     if (os.platform != "win32" || href != "/") {
                       fs.readFile(
-                        ("." + dHref + "/FOOT.html").replace(/\/+/g, "/"),
+                        (config.wwwroot + dHref + "/FOOT.html").replace(
+                          /\/+/g,
+                          "/"
+                        ),
                         (err, data) => {
                           if (err) {
                             if (err.code == "ENOENT" || err.code == "EISDIR") {
@@ -646,7 +652,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
               if (
                 fs.existsSync(
-                  "." +
+                  config.wwwroot +
                     decodeURIComponent(href) +
                     "/.maindesc".replace(/\/+/g, "/")
                 )
@@ -654,7 +660,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 htmlFoot =
                   "</table><hr/>" +
                   fs.readFileSync(
-                    "." +
+                    config.wwwroot +
                       decodeURIComponent(href) +
                       "/.maindesc".replace(/\/+/g, "/")
                   ) +

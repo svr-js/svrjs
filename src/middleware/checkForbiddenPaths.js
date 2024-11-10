@@ -8,8 +8,12 @@ const {
 } = require("../utils/forbiddenPaths.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
+const wwwroot =
+  process.serverConfig && process.serverConfig.wwwroot !== undefined
+    ? process.serverConfig.wwwroot
+    : ".";
 
-forbiddenPaths.config = getInitializePath("./config.json");
+forbiddenPaths.config = getInitializePath(`${wwwroot}/config.json`);
 forbiddenPaths.certificates = [];
 if (process.serverConfig.secure) {
   forbiddenPaths.certificates.push(
@@ -26,7 +30,8 @@ if (process.serverConfig.secure) {
   });
 }
 forbiddenPaths.svrjs = getInitializePath(
-  "./" +
+  wwwroot +
+    "/" +
     (process.dirname[process.dirname.length - 1] != "/"
       ? process.filename.replace(process.dirname + "/", "")
       : process.filename.replace(process.dirname, ""))
@@ -36,16 +41,18 @@ if (process.serverConfig.useWebRootServerSideScript) {
   forbiddenPaths.serverSideScripts.push("/serverSideScript.js");
 } else {
   forbiddenPaths.serverSideScripts.push(
-    getInitializePath("./serverSideScript.js")
+    getInitializePath(`${wwwroot}/serverSideScript.js`)
   );
 }
 forbiddenPaths.serverSideScriptDirectories = [];
 forbiddenPaths.serverSideScriptDirectories.push(
-  getInitializePath("./node_modules")
+  getInitializePath(`${wwwroot}/node_modules`)
 );
-forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
-forbiddenPaths.temp = getInitializePath("./temp");
-forbiddenPaths.log = getInitializePath("./log");
+forbiddenPaths.serverSideScriptDirectories.push(
+  getInitializePath(wwwroot + "/mods")
+);
+forbiddenPaths.temp = getInitializePath(`${wwwroot}/temp`);
+forbiddenPaths.log = getInitializePath(`${wwwroot}/log`);
 
 module.exports = (req, res, logFacilities, config, next) => {
   let decodedHrefWithoutDuplicateSlashes = "";

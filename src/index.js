@@ -812,7 +812,11 @@ if (!disableMods) {
   }
 
   // Determine path of server-side script file
-  let SSJSPath = "./serverSideScript.js";
+  let SSJSPath = `${
+    process.serverConfig.wwwroot != undefined
+      ? process.serverConfig.wwwroot
+      : process.dirname
+  }/serverSideScript.js`;
   if (!process.serverConfig.useWebRootServerSideScript)
     SSJSPath = process.dirname + "/serverSideScript.js";
 
