@@ -1,5 +1,7 @@
-const svrjsInfo = require("../../svrjs.core.json");
-const { version, name } = svrjsInfo;
+const svrjsCoreInfo = require("../../svrjs.core.json");
+const { name } = svrjsCoreInfo;
+const svrjsInfo = require("../../svrjs.json");
+const { version } = svrjsInfo;
 const getOS = require("./getOS.js");
 
 function generateServerString(exposeServerVersion) {

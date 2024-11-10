@@ -11,7 +11,6 @@ const svrjsCoreInfo = JSON.parse(
   fs.readFileSync(__dirname + "/svrjs.core.json")
 );
 const { externalPackages } = svrjsCoreInfo;
-const coreVersion = svrjsCoreInfo.version;
 const corePackageJSON = svrjsCoreInfo.packageJSON;
 const isDev = process.env.NODE_ENV == "development";
 
@@ -265,7 +264,7 @@ if (!isDev) {
           const packageJSON = Object.assign({}, corePackageJSON);
 
           // Add package.json properties
-          packageJSON.version = coreVersion;
+          packageJSON.version = version;
           packageJSON.main = "./svr.core.js";
           packageJSON.dependencies = coreDependencyNames.reduce(
             (previousDependencies, dependency) => {
