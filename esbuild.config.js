@@ -7,6 +7,10 @@ const archiver = require("archiver");
 const chokidar = require("chokidar");
 const svrjsInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.json"));
 const { version } = svrjsInfo;
+const svrjsCoreInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.core.json"));
+const { externalPackages } = svrjsCoreInfo;
+const coreVersion = svrjsCoreInfo.version;
+const corePackageJSON = svrjsCoreInfo.packageJSON;
 const isDev = process.env.NODE_ENV == "development";
 
 // Create the dist directory if it doesn't exist
@@ -20,6 +24,9 @@ if (!fs.existsSync(__dirname + "/dist/temp"))
 
 // Create the out directory if it doesn't exist and if not building for development
 if (!isDev && !fs.existsSync(__dirname + "/out")) fs.mkdirSync(__dirname + "/out");
+
+// Create the core directory if it doesn't exist and if not building for development
+if (!isDev && !fs.existsSync(__dirname + "/core")) fs.mkdirSync(__dirname + "/core");
 
 function generateAssets() {
   // Variables from "svrjs.json" file
@@ -243,6 +250,44 @@ if (!isDev) {
           target: "es2017"
         })
         .then(() => {
+          const dependencies = JSON.parse(fs.readFileSync(__dirname + "/package.json")).dependencies || {};
+          const coreDependencyNames = Object.keys(dependencies).filter((dependency) => externalPackages.indexOf(dependency) != -1);
+          const packageJSON = Object.assign({}, corePackageJSON);
+
+          // Add package.json properties
+          packageJSON.version = coreVersion;
+          packageJSON.main = "./svr.core.js";
+          packageJSON.dependencies = coreDependencyNames.reduce((previousDependencies, dependency) => {
+            previousDependencies[dependency] = dependencies[dependency];
+            return previousDependencies;
+          }, {});
+
+          // Write package.json
+          fs.writeFileSync(__dirname + "/core/package.json", JSON.stringify(packageJSON, null, 2));
+
+          // Build SVR.JS Core
+          esbuild
+    .build({
+      entryPoints: ["src/core.js"],
+      bundle: true,
+      outfile: "core/svr.core.js",
+      platform: "node",
+      target: "es2017",
+      external: coreDependencyNames,
+      plugins: [
+        esbuildCopyPlugin.copy({
+          resolveFrom: __dirname,
+          assets: {
+            from: ["./coreAssets/**/*"],
+            to: ["./core"]
+          },
+          globbyOptions: {
+            dot: true
+          }
+        })
+      ]
+    })
+    .then(() => {
           const archiveName =
             "svr.js." +
             version.toLowerCase().replace(/[^0-9a-z]+/g, ".") +
@@ -280,6 +325,10 @@ if (!isDev) {
         .catch((err) => {
           throw err;
         });
+      })
+      .catch((err) => {
+        throw err;
+      });
     })
     .catch((err) => {
       throw err;

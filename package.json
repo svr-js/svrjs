@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run clean && NODE_ENV=production node esbuild.config.js",
     "cz": "cz",
-    "clean": "rimraf dist && rimraf out && rimraf generatedAssets",
+    "clean": "rimraf dist && rimraf out && rimraf generatedAssets && rimraf core",
     "dev": "npm run clean && concurrently \"NODE_ENV=development node esbuild.config.js\" \"wait-on dist/svr.js && nodemon dist/svr.js --stdout-notty --no-save-config\"",
     "lint": "eslint --no-error-on-unmatched-pattern src/**/*.js src/*.js tests/**/*.test.js tests/**/*.js tests/*.test.js tests/*.js",
     "lint:fix": "npm run lint -- --fix",

@@ -854,7 +854,7 @@ if (!disableMods) {
 }
 
 // Middleware
-let middleware = [
+const middleware = [
   require("./middleware/urlSanitizer.js"),
   require("./middleware/redirects.js"),
   require("./middleware/blocklist.js"),
