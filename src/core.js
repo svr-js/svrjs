@@ -625,7 +625,7 @@ function requestHandler(req, res, next) {
 }
 
 function init(config) {
-  coreConfig = config;
+  if (config) coreConfig = config;
   return requestHandler;
 }
 
