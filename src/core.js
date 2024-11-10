@@ -13,7 +13,6 @@ const statusCodes = require("./res/statusCodes.js");
 
 const middleware = [
   require("./middleware/urlSanitizer.js"),
-  require("./middleware/rewriteURL.js"),
   require("./middleware/redirectTrailingSlashes.js"),
   require("./middleware/defaultHandlerChecks.js"),
   require("./middleware/staticFileServingAndDirectoryListings.js")
@@ -591,6 +590,9 @@ function requestHandler(req, res, next) {
             ? config.domain
             : "unknown.invalid")
     );
+
+    // req.originalParsedURL fallback
+    req.originalParsedURL = req.parsedURL;
   } catch (err) {
     res.error(400, err);
     return;
@@ -626,6 +628,43 @@ function requestHandler(req, res, next) {
 
 function init(config) {
   if (config) coreConfig = config;
+
+  if (coreConfig.users === undefined) coreConfig.users = [];
+  if (coreConfig.page404 === undefined) coreConfig.page404 = "404.html";
+  if (coreConfig.enableCompression === undefined)
+    coreConfig.enableCompression = true;
+  if (coreConfig.customHeaders === undefined) coreConfig.customHeaders = {};
+  if (coreConfig.enableDirectoryListing === undefined)
+    coreConfig.enableDirectoryListing = true;
+  if (coreConfig.enableDirectoryListingWithDefaultHead === undefined)
+    coreConfig.enableDirectoryListingWithDefaultHead = false;
+  if (coreConfig.serverAdministratorEmail === undefined)
+    coreConfig.serverAdministratorEmail = "[no contact information]";
+  if (coreConfig.stackHidden === undefined) coreConfig.stackHidden = false;
+  if (coreConfig.exposeServerVersion === undefined)
+    coreConfig.exposeServerVersion = true;
+  if (coreConfig.dontCompress === undefined)
+    coreConfig.dontCompress = [
+      "/.*\\.ipxe$/",
+      "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
+      "/.*\\.(?:[id]mg|iso|flp)$/",
+      "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
+      "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"
+    ];
+  if (coreConfig.enableIPSpoofing === undefined)
+    coreConfig.enableIPSpoofing = false;
+  if (coreConfig.enableETag === undefined) coreConfig.enableETag = true;
+  if (coreConfig.rewriteDirtyURLs === undefined)
+    coreConfig.rewriteDirtyURLs = false;
+  if (coreConfig.errorPages === undefined) coreConfig.errorPages = [];
+  if (coreConfig.disableTrailingSlashRedirects === undefined)
+    coreConfig.disableTrailingSlashRedirects = false;
+  if (coreConfig.allowDoubleSlashes === undefined)
+    coreConfig.allowDoubleSlashes = false;
+
+  // You wouldn't use SVR.JS mods in SVR.JS Core
+  coreConfig.exposeModsInErrorPages = false;
+
   return requestHandler;
 }
 

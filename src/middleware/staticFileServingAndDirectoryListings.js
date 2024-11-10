@@ -980,7 +980,32 @@ module.exports = (req, res, logFacilities, config, next) => {
     } else if (dirImagesMissing) {
       fs.stat(readFrom, (e, s) => {
         if (e || !s.isFile()) {
-          properDirectoryListingAndStaticFileServe();
+          if (err.code == "ENOENT") {
+            res.error(404);
+            logFacilities.errmessage("Resource not found.");
+            return;
+          } else if (err.code == "ENOTDIR") {
+            res.error(404); // Assume that file doesn't exist.
+            logFacilities.errmessage("Resource not found.");
+            return;
+          } else if (err.code == "EACCES") {
+            res.error(403);
+            logFacilities.errmessage("Access denied.");
+            return;
+          } else if (err.code == "ENAMETOOLONG") {
+            res.error(414);
+            return;
+          } else if (err.code == "EMFILE") {
+            res.error(503);
+            return;
+          } else if (err.code == "ELOOP") {
+            res.error(508); // The symbolic link loop is detected during file system operations.
+            logFacilities.errmessage("Symbolic link loop detected.");
+            return;
+          } else {
+            res.error(500, err);
+            return;
+          }
         } else {
           stats = s;
           properDirectoryListingAndStaticFileServe();

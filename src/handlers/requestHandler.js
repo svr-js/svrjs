@@ -706,6 +706,9 @@ function requestHandler(req, res) {
             ? config.domain
             : "unknown.invalid")
     );
+
+    // req.originalParsedURL fallback
+    req.originalParsedURL = req.parsedURL;
   } catch (err) {
     res.error(400, err);
     return;
