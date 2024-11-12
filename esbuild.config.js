@@ -266,6 +266,7 @@ if (!isDev) {
           // Add package.json properties
           packageJSON.version = version;
           packageJSON.main = "./svr.core.js";
+          packageJSON.types = "./svr.core.d.ts";
           packageJSON.dependencies = coreDependencyNames.reduce(
             (previousDependencies, dependency) => {
               previousDependencies[dependency] = dependencies[dependency];
@@ -298,6 +299,13 @@ if (!isDev) {
                   },
                   globbyOptions: {
                     dot: true
+                  }
+                }),
+                esbuildCopyPlugin.copy({
+                  resolveFrom: __dirname,
+                  assets: {
+                    from: ["./src/core.d.ts"],
+                    to: ["./core/svr.core.d.ts"]
                   }
                 })
               ]

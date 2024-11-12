@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "npm run clean && NODE_ENV=production node esbuild.config.js",
+    "build": "npm run clean && tsc --noEmit && NODE_ENV=production node esbuild.config.js",
     "cz": "cz",
     "clean": "rimraf dist && rimraf out && rimraf generatedAssets && rimraf core",
     "dev": "npm run clean && concurrently \"NODE_ENV=development node esbuild.config.js\" \"wait-on dist/svr.js && nodemon dist/svr.js --stdout-notty --no-save-config\"",
-    "lint": "eslint --no-error-on-unmatched-pattern src/**/*.js src/*.js tests/**/*.test.js tests/**/*.js tests/*.test.js tests/*.js",
+    "lint": "eslint --no-error-on-unmatched-pattern src/**/*.d.ts src/*.d.ts src/**/*.js src/*.js tests/**/*.test.js tests/**/*.js tests/*.test.js tests/*.js",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "husky",
     "start": "node dist/svr.js",
@@ -40,6 +40,8 @@
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
     "rimraf": "^5.0.10",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.14.0",
     "wait-on": "^8.0.1"
   },
   "dependencies": {
