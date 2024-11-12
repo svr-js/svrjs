@@ -1,9 +1,12 @@
 {
-  "version": "4.1.0",
+  "version": "4.2.0",
   "name": "SVR.JS",
   "documentationURL": "https://svrjs.org/docs",
   "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
   "changes": [
-    "Added experimental support for Deno 2."
+    "Added a CLI option and configuration property to not save the configuration file.",
+    "Added a CLI option to enable \"stdout\" even when it's not a TTY.",
+    "\"config.wwwroot\" property is now a normalized path to the webroot.",
+    "Fixed a bug which caused SVR.JS to crash when an image in \".dirimages\" directory is accessed and when no image in any of the \".dirimages\" directories are present."
   ]
 }

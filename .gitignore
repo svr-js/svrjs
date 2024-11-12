@@ -1,6 +1,7 @@
 # Build output
 /dist/
 /out/
+/core/
 
 # Temporary files used by build script
 /generatedAssets/

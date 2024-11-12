@@ -1,0 +1,25 @@
+{
+  "name": "SVR.JS Core",
+  "externalPackages": ["mime-types"],
+  "packageJSON": {
+    "name": "svrjs-core",
+    "description": "A library for static file serving, built from SVR.JS source code.",
+    "repository": {
+      "type": "git",
+      "url": "https://git.svrjs.org/svrjs/svrjs.git"
+    },
+    "keywords": [
+      "static",
+      "web",
+      "server",
+      "files",
+      "mime",
+      "middleware"
+    ],
+    "homepage": "https://svrjs.org",
+    "license": "MIT",
+    "engines": {
+      "node": ">=10.0.0"
+    }
+  }
+}

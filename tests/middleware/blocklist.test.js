@@ -1,8 +1,8 @@
 const middleware = require("../../src/utils/ipBlockList.js");
-const cluster = require("../../src/utils/clusterBunShim.js");
+const cluster = require("../../src/utils/clusterShim.js");
 
 jest.mock("../../src/utils/ipBlockList.js");
-jest.mock("../../src/utils/clusterBunShim.js");
+jest.mock("../../src/utils/clusterShim.js");
 
 const ipBlockListAdd = jest.fn();
 const ipBlockListCheck = jest.fn();

@@ -9,6 +9,7 @@ const {
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
+// Have to use "." for now, because this middleware isn't going to be included in SVR.JS Core anyway.
 forbiddenPaths.config = getInitializePath("./config.json");
 forbiddenPaths.certificates = [];
 if (process.serverConfig.secure) {

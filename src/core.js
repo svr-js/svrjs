@@ -1,45 +1,44 @@
 const fs = require("fs");
 const net = require("net");
-const defaultPageCSS = require("../res/defaultPageCSS.js");
-const generateErrorStack = require("../utils/generateErrorStack.js");
-const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
-const fixNodeMojibakeURL = require("../utils/urlMojibakeFixer.js");
-const ipMatch = require("../utils/ipMatch.js");
-const matchHostname = require("../utils/matchHostname.js");
-const generateServerString = require("../utils/generateServerString.js");
-const parseURL = require("../utils/urlParser.js");
-const deepClone = require("../utils/deepClone.js");
-const normalizeWebroot = require("../utils/normalizeWebroot.js");
-const statusCodes = require("../res/statusCodes.js");
+const defaultPageCSS = require("./res/defaultPageCSS.js");
+const generateErrorStack = require("./utils/generateErrorStack.js");
+const serverHTTPErrorDescs = require("./res/httpErrorDescriptions.js");
+const fixNodeMojibakeURL = require("./utils/urlMojibakeFixer.js");
+const ipMatch = require("./utils/ipMatch.js");
+const matchHostname = require("./utils/matchHostname.js");
+const generateServerStringCore = require("./utils/generateServerStringCore.js");
+const parseURL = require("./utils/urlParser.js");
+const deepClone = require("./utils/deepClone.js");
+const statusCodes = require("./res/statusCodes.js");
 
-let serverconsole = {};
-let middleware = [];
+const middleware = [
+  require("./middleware/urlSanitizer.js"),
+  require("./middleware/redirectTrailingSlashes.js"),
+  require("./middleware/defaultHandlerChecks.js"),
+  require("./middleware/staticFileServingAndDirectoryListings.js")
+];
+let coreConfig = {};
 
-function requestHandler(req, res) {
-  let reqIdInt = Math.floor(Math.random() * 16777216);
-  if (reqIdInt == 16777216) reqIdInt = 0;
-  const reqId =
-    "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
-
-  // SVR.JS log facilities
+function requestHandler(req, res, next) {
+  // SVR.JS log facilities (stubs in SVR.JS core)
   const logFacilities = {
-    climessage: (msg) => serverconsole.climessage(msg, reqId),
-    reqmessage: (msg) => serverconsole.reqmessage(msg, reqId),
-    resmessage: (msg) => serverconsole.resmessage(msg, reqId),
-    errmessage: (msg) => serverconsole.errmessage(msg, reqId),
-    locerrmessage: (msg) => serverconsole.locerrmessage(msg, reqId),
-    locwarnmessage: (msg) => serverconsole.locwarnmessage(msg, reqId),
-    locmessage: (msg) => serverconsole.locmessage(msg, reqId)
+    climessage: () => {},
+    reqmessage: () => {},
+    resmessage: () => {},
+    errmessage: () => {},
+    locerrmessage: () => {},
+    locwarnmessage: () => {},
+    locmessage: () => {}
   };
 
   // SVR.JS configuration object (modified)
-  const config = deepClone(process.serverConfig);
+  const config = deepClone(coreConfig);
 
   config.generateServerString = () =>
-    generateServerString(config.exposeServerVersion);
+    generateServerStringCore(config.exposeServerVersion);
 
-  // Normalize the webroot
-  config.wwwroot = normalizeWebroot(config.wwwroot);
+  // Determine the webroot from the current working directory if it is not configured
+  if (config.wwwroot === undefined) config.wwwroot = process.cwd();
 
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
@@ -63,12 +62,8 @@ function requestHandler(req, res) {
       if (typeof ph[phk] == "string")
         ph[phk] = ph[phk].replace(/\{path\}/g, req.url);
     });
-    ph["Server"] = config.generateServerString();
     return ph;
   };
-
-  // Estimate fromMain from SVR.JS 3.x
-  let fromMain = !(config.secure && !req.socket.encrypted);
 
   // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
   if (config.enableHTTP2 == true && req.httpVersion == "2.0") {
@@ -128,92 +123,11 @@ function requestHandler(req, res) {
     }
   }
 
-  if (
-    req.headers["x-svr-js-from-main-thread"] == "true" &&
-    req.socket &&
-    (!req.socket.remoteAddress ||
-      req.socket.remoteAddress == "::1" ||
-      req.socket.remoteAddress == "::ffff:127.0.0.1" ||
-      req.socket.remoteAddress == "127.0.0.1" ||
-      req.socket.remoteAddress == "localhost")
-  ) {
-    let headers = config.getCustomHeaders();
-    res.writeHead(204, statusCodes[204], headers);
-    res.end();
-    return;
-  }
-
   req.url = fixNodeMojibakeURL(req.url);
 
-  let headWritten = false;
-  let lastStatusCode = null;
-  res.writeHeadNative = res.writeHead;
-  res.writeHead = (code, codeDescription, headers) => {
-    if (
-      !(
-        headWritten &&
-        process.isBun &&
-        code === lastStatusCode &&
-        codeDescription === undefined &&
-        codeDescription === undefined
-      )
-    ) {
-      if (headWritten) {
-        process.emitWarning("res.writeHead called multiple times.", {
-          code: "WARN_SVRJS_MULTIPLE_WRITEHEAD"
-        });
-        return res;
-      } else {
-        headWritten = true;
-      }
-      if (code >= 400 && code <= 599) {
-        if (code >= 400 && code <= 499) process.err4xxcounter++;
-        else if (code >= 500 && code <= 599) process.err5xxcounter++;
-        logFacilities.errmessage(
-          "Server responded with " + code.toString() + " code."
-        );
-      } else {
-        logFacilities.resmessage(
-          "Server responded with " + code.toString() + " code."
-        );
-      }
-      if (typeof codeDescription != "string" && statusCodes[code]) {
-        if (!headers) headers = codeDescription;
-        codeDescription = statusCodes[code];
-      }
-      lastStatusCode = code;
-    }
-    res.writeHeadNative(code, codeDescription, headers);
-  };
-
-  let finished = false;
-  res.on("finish", () => {
-    if (!finished) {
-      finished = true;
-      logFacilities.locmessage("Client disconnected.");
-    }
-  });
-  res.on("close", () => {
-    if (!finished) {
-      finished = true;
-      logFacilities.locmessage("Client disconnected.");
-    }
-  });
-
   req.isProxy = false;
-  if (req.url[0] != "/" && req.url != "*") req.isProxy = true;
-  logFacilities.locmessage(
-    `Somebody connected to ${
-      config.secure && fromMain
-        ? (typeof config.sport == "number" ? "port " : "socket ") + config.sport
-        : (typeof config.port == "number" ? "port " : "socket ") + config.port
-    }...`
-  );
 
-  if (req.socket == null) {
-    logFacilities.errmessage("Client socket is null!!!");
-    return;
-  }
+  if (req.socket == null) return;
 
   // Set up X-Forwarded-For
   let reqip = req.socket.remoteAddress;
@@ -257,42 +171,12 @@ function requestHandler(req, res) {
     }
   }
 
-  process.reqcounter++;
-
   // Process the Host header
-  let oldHostHeader = req.headers.host;
   if (typeof req.headers.host == "string") {
     req.headers.host = req.headers.host.toLowerCase();
     if (!req.headers.host.match(/^\.+$/))
       req.headers.host = req.headers.host.replace(/\.$/, "");
   }
-
-  logFacilities.reqmessage(
-    `Client ${
-      !reqip || reqip == ""
-        ? "[unknown client]"
-        : reqip +
-          (reqport && reqport !== 0 && reqport != "" ? ":" + reqport : "")
-    } wants ${
-      req.method == "GET"
-        ? "content in "
-        : req.method == "POST"
-          ? "to post content in "
-          : req.method == "PUT"
-            ? "to add content in "
-            : req.method == "DELETE"
-              ? "to delete content in "
-              : req.method == "PATCH"
-                ? "to patch content in "
-                : "to access content using " + req.method + " method in "
-    }${req.headers.host == undefined || req.isProxy ? "" : req.headers.host}${req.url}`
-  );
-  if (req.headers["user-agent"] != undefined)
-    logFacilities.reqmessage(`Client uses ${req.headers["user-agent"]}`);
-  if (oldHostHeader && oldHostHeader != req.headers.host)
-    logFacilities.resmessage(
-      `Host name rewritten: ${oldHostHeader} => ${req.headers.host}`
-    );
 
   // Header and footer placeholders
   res.head = "";
@@ -304,42 +188,7 @@ function requestHandler(req, res) {
     res.end();
   };
 
-  // Server error calling method
-  res.error = (errorCode, extName, stack, ch) => {
-    if (typeof errorCode !== "number") {
-      throw new TypeError("HTTP error code parameter needs to be an integer.");
-    }
-
-    // Handle optional parameters
-    if (extName && typeof extName === "object") {
-      ch = stack;
-      stack = extName;
-      extName = undefined;
-    } else if (
-      typeof extName !== "string" &&
-      extName !== null &&
-      extName !== undefined
-    ) {
-      throw new TypeError("Extension name parameter needs to be a string.");
-    }
-
-    if (
-      stack &&
-      typeof stack === "object" &&
-      Object.prototype.toString.call(stack) !== "[object Error]"
-    ) {
-      ch = stack;
-      stack = undefined;
-    } else if (
-      typeof stack !== "object" &&
-      typeof stack !== "string" &&
-      stack
-    ) {
-      throw new TypeError(
-        "Error stack parameter needs to be either a string or an instance of Error object."
-      );
-    }
-
+  const defaultServerError = (errorCode, extName, stack, ch) => {
     // Determine error file
     const getErrorFileName = (list, callback, _i) => {
       const medCallback = (p) => {
@@ -423,14 +272,6 @@ function requestHandler(req, res) {
         stack = generateErrorStack(stack);
       if (stack === undefined)
         stack = generateErrorStack(new Error("Unknown error"));
-
-      if (errorCode == 500 || errorCode == 502) {
-        logFacilities.errmessage(
-          "There was an error while processing the request!"
-        );
-        logFacilities.errmessage("Stack:");
-        logFacilities.errmessage(stack);
-      }
 
       // Hide the error stack if specified
       if (config.stackHidden) stack = "[error stack hidden]";
@@ -604,6 +445,55 @@ function requestHandler(req, res) {
     });
   };
 
+  // Server error calling method
+  res.error = (errorCode, extName, stack, ch) => {
+    if (typeof errorCode !== "number") {
+      throw new TypeError("HTTP error code parameter needs to be an integer.");
+    }
+
+    // Handle optional parameters
+    if (extName && typeof extName === "object") {
+      ch = stack;
+      stack = extName;
+      extName = undefined;
+    } else if (
+      typeof extName !== "string" &&
+      extName !== null &&
+      extName !== undefined
+    ) {
+      throw new TypeError("Extension name parameter needs to be a string.");
+    }
+
+    if (
+      stack &&
+      typeof stack === "object" &&
+      Object.prototype.toString.call(stack) !== "[object Error]"
+    ) {
+      ch = stack;
+      stack = undefined;
+    } else if (
+      typeof stack !== "object" &&
+      typeof stack !== "string" &&
+      stack
+    ) {
+      throw new TypeError(
+        "Error stack parameter needs to be either a string or an instance of Error object."
+      );
+    }
+
+    if (next) {
+      // Invoke next() handler, like when it is used in Express
+      if (errorCode == 500) {
+        next(new Error("Internal SVR.JS core error"));
+      } else {
+        next();
+      }
+    } else {
+      // Invoke default server error handler
+      defaultServerError(errorCode, extName, stack, ch);
+    }
+  };
+
   // Function to perform HTTP redirection to a specified destination URL
   res.redirect = (destination, isTemporary, keepMethod, customHeaders) => {
     // If keepMethod is a object, then save it to customHeaders
@@ -629,9 +519,6 @@ function requestHandler(req, res) {
 
     // Write the response header with the appropriate status code and message
     res.writeHead(statusCode, statusCodes[statusCode], customHeaders);
-
-    // Log the redirection message
-    logFacilities.resmessage("Client redirected to " + destination);
 
     // End the response
     res.end();
@@ -683,14 +570,10 @@ function requestHandler(req, res) {
   if (req.method == "CONNECT") {
     // CONNECT requests should be handled in "connect" event.
     res.error(501);
-    logFacilities.errmessage(
-      "CONNECT requests aren't supported. Your JS runtime probably doesn't support 'connect' handler for HTTP library."
-    );
     return;
   }
 
   if (!isForwardedValid) {
-    logFacilities.errmessage("X-Forwarded-For header is invalid.");
     res.error(400);
     return;
   }
@@ -743,8 +626,47 @@ function requestHandler(req, res) {
   nextMiddleware();
 }
 
-module.exports = (serverconsoleO, middlewareO) => {
-  serverconsole = serverconsoleO;
-  middleware = middlewareO;
+function init(config) {
+  if (config) coreConfig = deepClone(config);
+
+  if (coreConfig.users === undefined) coreConfig.users = [];
+  if (coreConfig.page404 === undefined) coreConfig.page404 = "404.html";
+  if (coreConfig.enableCompression === undefined)
+    coreConfig.enableCompression = true;
+  if (coreConfig.customHeaders === undefined) coreConfig.customHeaders = {};
+  if (coreConfig.enableDirectoryListing === undefined)
+    coreConfig.enableDirectoryListing = true;
+  if (coreConfig.enableDirectoryListingWithDefaultHead === undefined)
+    coreConfig.enableDirectoryListingWithDefaultHead = false;
+  if (coreConfig.serverAdministratorEmail === undefined)
+    coreConfig.serverAdministratorEmail = "[no contact information]";
+  if (coreConfig.stackHidden === undefined) coreConfig.stackHidden = false;
+  if (coreConfig.exposeServerVersion === undefined)
+    coreConfig.exposeServerVersion = true;
+  if (coreConfig.dontCompress === undefined)
+    coreConfig.dontCompress = [
+      "/.*\\.ipxe$/",
+      "/.*\\.(?:jpe?g|png|bmp|tiff|jfif|gif|webp)$/",
+      "/.*\\.(?:[id]mg|iso|flp)$/",
+      "/.*\\.(?:zip|rar|bz2|[gb7x]z|lzma|tar)$/",
+      "/.*\\.(?:mp[34]|mov|wm[av]|avi|webm|og[gv]|mk[va])$/"
+    ];
+  if (coreConfig.enableIPSpoofing === undefined)
+    coreConfig.enableIPSpoofing = false;
+  if (coreConfig.enableETag === undefined) coreConfig.enableETag = true;
+  if (coreConfig.rewriteDirtyURLs === undefined)
+    coreConfig.rewriteDirtyURLs = false;
+  if (coreConfig.errorPages === undefined) coreConfig.errorPages = [];
+  if (coreConfig.disableTrailingSlashRedirects === undefined)
+    coreConfig.disableTrailingSlashRedirects = false;
+  if (coreConfig.allowDoubleSlashes === undefined)
+    coreConfig.allowDoubleSlashes = false;
+
+  // You wouldn't use SVR.JS mods in SVR.JS Core
+  coreConfig.exposeModsInErrorPages = false;
+
   return requestHandler;
-};
+}
+
+module.exports = init;
+module.exports.init = init;

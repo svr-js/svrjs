@@ -6,11 +6,15 @@ const generateErrorStack = require("../utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const generateServerString = require("../utils/generateServerString.js");
 const deepClone = require("../utils/deepClone.js");
+const normalizeWebroot = require("../utils/normalizeWebroot.js");
 
 let serverconsole = {};
 
 function clientErrorHandler(err, socket) {
   const config = deepClone(process.serverConfig);
+
+  // Normalize the webroot
+  config.wwwroot = normalizeWebroot(config.wwwroot);
 
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
@@ -182,14 +186,14 @@ function clientErrorHandler(err, socket) {
             fs.access(config.page404, fs.constants.F_OK, (err) => {
               if (err) {
                 fs.access(
-                  "." + errorCode.toString(),
+                  config.wwwroot + "/." + errorCode.toString(),
                   fs.constants.F_OK,
                   (err) => {
                     try {
                       if (err) {
                         callback(errorCode.toString() + ".html");
                       } else {
-                        callback("." + errorCode.toString());
+                        callback(config.wwwroot + "/." + errorCode.toString());
                       }
                     } catch (err2) {
                       callServerError(500, err2);
@@ -205,17 +209,21 @@ function clientErrorHandler(err, socket) {
               }
             });
           } else {
-            fs.access("." + errorCode.toString(), fs.constants.F_OK, (err) => {
-              try {
-                if (err) {
-                  callback(errorCode.toString() + ".html");
-                } else {
-                  callback("." + errorCode.toString());
+            fs.access(
+              config.wwwroot + "/." + errorCode.toString(),
+              fs.constants.F_OK,
+              (err) => {
+                try {
+                  if (err) {
+                    callback(errorCode.toString() + ".html");
+                  } else {
+                    callback(config.wwwroot + "/." + errorCode.toString());
+                  }
+                } catch (err2) {
+                  callServerError(500, err2);
                 }
-              } catch (err2) {
-                callServerError(500, err2);
               }
-            });
+            );
           }
         }
       };
@@ -457,15 +465,15 @@ function clientErrorHandler(err, socket) {
     } sent invalid request.`
   );
   try {
-    head = fs.existsSync("./.head")
-      ? fs.readFileSync("./.head").toString()
-      : fs.existsSync("./head.html")
-        ? fs.readFileSync("./head.html").toString()
+    head = fs.existsSync(`${config.wwwroot}/.head`)
+      ? fs.readFileSync(`${config.wwwroot}/.head`).toString()
+      : fs.existsSync(`${config.wwwroot}/head.html`)
+        ? fs.readFileSync(`${config.wwwroot}/head.html`).toString()
         : ""; // header
-    foot = fs.existsSync("./.foot")
-      ? fs.readFileSync("./.foot").toString()
-      : fs.existsSync("./foot.html")
-        ? fs.readFileSync("./foot.html").toString()
+    foot = fs.existsSync(`${config.wwwroot}/.foot`)
+      ? fs.readFileSync(`${config.wwwroot}/.foot`).toString()
+      : fs.existsSync(`${config.wwwroot}/foot.html`)
+        ? fs.readFileSync(`${config.wwwroot}/foot.html`).toString()
         : ""; // footer
 
     if (

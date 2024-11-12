@@ -1,5 +1,6 @@
 const generateServerString = require("../utils/generateServerString");
 const deepClone = require("../utils/deepClone.js");
+const normalizeWebroot = require("../utils/normalizeWebroot.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
@@ -31,6 +32,9 @@ function proxyHandler(req, socket, head) {
 
   // SVR.JS configuration object (modified)
   const config = deepClone(process.serverConfig);
+
+  // Normalize the webroot
+  config.wwwroot = normalizeWebroot(config.wwwroot);
 
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);

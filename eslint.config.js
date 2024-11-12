@@ -1,9 +1,10 @@
 const globals = require("globals");
 const pluginJs = require("@eslint/js");
+const tseslint = require("typescript-eslint");
 const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
 const jest = require("eslint-plugin-jest");
 
-module.exports = [
+module.exports = tseslint.config(
   {
     files: ["**/*.js"],
     languageOptions: {
@@ -26,5 +27,24 @@ module.exports = [
     }
   },
   pluginJs.configs.recommended,
+  {
+    files: ["**/*.d.ts"],
+    languageOptions: {
+      sourceType: "commonjs",
+      parser: tseslint.parser
+    },
+    extends: [tseslint.configs.base],
+    rules: {
+      "no-redeclare": "off",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error"],
+      "@typescript-eslint/no-redeclare": [
+        "error",
+        {
+          ignoreDeclarationMerge: true
+        }
+      ]
+    }
+  },
   eslintPluginPrettierRecommended
-];
+);

@@ -117,7 +117,7 @@ if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into pr
 function printUsage() {
   console.log(`${name} usage:`);
   console.log(
-    "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [-v] [--version]"
+    "node svr.js [-h] [--help] [-?] [/h] [/?] [--secure] [--reset] [--clean] [--disable-mods] [--single-threaded] [--stdout-notty] [--no-save-config] [-v] [--version]"
   );
   console.log("-h -? /h /? --help    -- Displays help");
   console.log("--clean               -- Cleans up files created by " + name);
@@ -127,12 +127,18 @@ function printUsage() {
   console.log("--secure              -- Runs HTTPS server");
   console.log("--disable-mods        -- Disables mods (safe mode)");
   console.log("--single-threaded     -- Run single-threaded");
+  console.log(
+    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performace"
+  );
+  console.log("--no-save-config      -- Don't save configuration file");
   console.log("-v --version          -- Display server version");
 }
 
 let exiting = false;
 let forceSecure = false;
 let disableMods = false;
+let stdoutNoTTY = false;
+let noSaveConfig = false;
 
 // Handle command line arguments
 const args = process.argv;
@@ -184,6 +190,10 @@ for (
     disableMods = true;
   } else if (args[i] == "--single-threaded") {
     process.singleThreaded = true;
+  } else if (args[i] == "--stdout-notty") {
+    stdoutNoTTY = true;
+  } else if (args[i] == "--no-save-config") {
+    noSaveConfig = true;
   } else {
     console.log(`Unrecognized argument: ${args[i]}`);
     printUsage();
@@ -329,6 +339,11 @@ if (process.serverConfig.allowPostfixDoubleSlashes === undefined)
   process.serverConfig.allowPostfixDoubleSlashes = false;
 if (process.serverConfig.optOutOfStatisticsServer === undefined)
   process.serverConfig.optOutOfStatisticsServer = false;
+if (process.serverConfig.disableConfigurationSaving === undefined)
+  process.serverConfig.disableConfigurationSaving = false;
+
+// Don't save configuration if disableConfigurationSaving option is set to true
+if (process.serverConfig.disableConfigurationSaving) noSaveConfig = true;
 
 // Compatiblity for very old SVR.JS mods
 process.serverConfig.version = version;
@@ -385,7 +400,7 @@ try {
   // Failed to get inspector URL
 }
 
-if (!process.stdout.isTTY && !inspectorURL) {
+if (!stdoutNoTTY && !process.stdout.isTTY && !inspectorURL) {
   // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
   console.log = () => {};
   process.stdout.write = () => {};
@@ -797,7 +812,11 @@ if (!disableMods) {
   }
 
   // Determine path of server-side script file
-  let SSJSPath = "./serverSideScript.js";
+  let SSJSPath = `${
+    process.serverConfig.wwwroot != undefined
+      ? process.serverConfig.wwwroot
+      : process.dirname
+  }/serverSideScript.js`;
   if (!process.serverConfig.useWebRootServerSideScript)
     SSJSPath = process.dirname + "/serverSideScript.js";
 
@@ -835,7 +854,7 @@ if (!disableMods) {
 }
 
 // Middleware
-let middleware = [
+const middleware = [
   require("./middleware/urlSanitizer.js"),
   require("./middleware/redirects.js"),
   require("./middleware/blocklist.js"),
@@ -1686,6 +1705,8 @@ function saveConfig() {
         configJSONobj.allowDoubleSlashes = false;
       if (configJSONobj.optOutOfStatisticsServer === undefined)
         configJSONobj.optOutOfStatisticsServer = false;
+      if (configJSONobj.disableConfigurationSaving === undefined)
+        configJSONobj.disableConfigurationSaving = false;
 
       fs.writeFileSync(
         process.dirname + "/config.json",
@@ -1978,69 +1999,73 @@ function start(init) {
     let workersToFork = 1;
 
     if (cluster.isPrimary === undefined) {
-      setInterval(() => {
-        try {
-          saveConfig();
-          serverconsole.locmessage("Configuration saved.");
-        } catch (err) {
-          throw new Error(err);
-        }
-      }, 300000);
-    } else if (cluster.isPrimary) {
-      setInterval(() => {
-        let allWorkers = Object.keys(cluster.workers);
-        let goodWorkers = [];
-
-        const checkWorker = (callback, _id) => {
-          if (typeof _id === "undefined") _id = 0;
-          if (_id >= allWorkers.length) {
-            callback();
-            return;
-          }
+      if (!noSaveConfig) {
+        setInterval(() => {
           try {
-            if (cluster.workers[allWorkers[_id]]) {
-              isWorkerHungUpBuff2 = true;
-              cluster.workers[allWorkers[_id]].on("message", msgListener);
-              cluster.workers[allWorkers[_id]].send("\x14PINGPING");
-              setTimeout(() => {
-                if (isWorkerHungUpBuff2) {
-                  checkWorker(callback, _id + 1);
-                } else {
-                  goodWorkers.push(allWorkers[_id]);
-                  checkWorker(callback, _id + 1);
-                }
-              }, 250);
-            } else {
+            saveConfig();
+            serverconsole.locmessage("Configuration saved.");
+          } catch (err) {
+            throw new Error(err);
+          }
+        }, 300000);
+      }
+    } else if (cluster.isPrimary) {
+      if (!noSaveConfig) {
+        setInterval(() => {
+          let allWorkers = Object.keys(cluster.workers);
+          let goodWorkers = [];
+
+          const checkWorker = (callback, _id) => {
+            if (typeof _id === "undefined") _id = 0;
+            if (_id >= allWorkers.length) {
+              callback();
+              return;
+            }
+            try {
+              if (cluster.workers[allWorkers[_id]]) {
+                isWorkerHungUpBuff2 = true;
+                cluster.workers[allWorkers[_id]].on("message", msgListener);
+                cluster.workers[allWorkers[_id]].send("\x14PINGPING");
+                setTimeout(() => {
+                  if (isWorkerHungUpBuff2) {
+                    checkWorker(callback, _id + 1);
+                  } else {
+                    goodWorkers.push(allWorkers[_id]);
+                    checkWorker(callback, _id + 1);
+                  }
+                }, 250);
+              } else {
+                checkWorker(callback, _id + 1);
+              }
+              // eslint-disable-next-line no-unused-vars
+            } catch (err) {
+              if (cluster.workers[allWorkers[_id]]) {
+                cluster.workers[allWorkers[_id]].removeAllListeners("message");
+                addListenersToWorker(cluster.workers[allWorkers[_id]]);
+              }
               checkWorker(callback, _id + 1);
             }
-            // eslint-disable-next-line no-unused-vars
-          } catch (err) {
-            if (cluster.workers[allWorkers[_id]]) {
-              cluster.workers[allWorkers[_id]].removeAllListeners("message");
-              addListenersToWorker(cluster.workers[allWorkers[_id]]);
+          };
+          checkWorker(() => {
+            const wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
+            try {
+              if (cluster.workers[goodWorkers[wN]]) {
+                isWorkerHungUpBuff2 = true;
+                cluster.workers[goodWorkers[wN]].on("message", msgListener);
+                cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
+              }
+            } catch (err) {
+              if (cluster.workers[goodWorkers[wN]]) {
+                cluster.workers[goodWorkers[wN]].removeAllListeners("message");
+                addListenersToWorker(cluster.workers[goodWorkers[wN]]);
+              }
+              serverconsole.locwarnmessage(
+                `There was a problem while saving configuration file. Reason: ${err.message}`
+              );
             }
-            checkWorker(callback, _id + 1);
-          }
-        };
-        checkWorker(() => {
-          const wN = Math.floor(Math.random() * goodWorkers.length); //Send a configuration saving message to a random worker.
-          try {
-            if (cluster.workers[goodWorkers[wN]]) {
-              isWorkerHungUpBuff2 = true;
-              cluster.workers[goodWorkers[wN]].on("message", msgListener);
-              cluster.workers[goodWorkers[wN]].send("\x14SAVECONF");
-            }
-          } catch (err) {
-            if (cluster.workers[goodWorkers[wN]]) {
-              cluster.workers[goodWorkers[wN]].removeAllListeners("message");
-              addListenersToWorker(cluster.workers[goodWorkers[wN]]);
-            }
-            serverconsole.locwarnmessage(
-              `There was a problem while saving configuration file. Reason: ${err.message}`
-            );
-          }
-        });
-      }, 300000);
+          });
+        }, 300000);
+      }
     }
 
     if (!cluster.isPrimary && cluster.isPrimary !== undefined) {
@@ -2429,7 +2454,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
 
   process.on("exit", (code) => {
     try {
-      if (!configJSONRErr && !configJSONPErr) {
+      if (!configJSONRErr && !configJSONPErr && !noSaveConfig) {
         saveConfig();
       }
     } catch (err) {

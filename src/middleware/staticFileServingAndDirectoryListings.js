@@ -1,5 +1,6 @@
 const fs = require("fs");
 const os = require("os");
+const path = require("path");
 const zlib = require("zlib");
 const mime = require("mime-types");
 const defaultPageCSS = require("../res/defaultPageCSS.js");
@@ -86,13 +87,16 @@ module.exports = (req, res, logFacilities, config, next) => {
     res.error(400);
     return;
   }
-  let readFrom = "." + dHref;
+  let readFrom = config.wwwroot + dHref;
   let dirImagesMissing = false;
   fs.stat(readFrom, (err, stats) => {
     if (err) {
       if (err.code == "ENOENT") {
         if (
-          process.dirname != process.cwd() &&
+          process.dirname !=
+            (config.wwwroot !== undefined
+              ? path.normalize(config.wwwroot)
+              : "") &&
           dHref.match(/^\/\.dirimages\/(?:(?!\.png$).)+\.png$/)
         ) {
           dirImagesMissing = true;
@@ -502,13 +506,16 @@ module.exports = (req, res, logFacilities, config, next) => {
 
           const getCustomDirListingHeader = (callback) => {
             fs.readFile(
-              ("." + dHref + "/.dirhead").replace(/\/+/g, "/"),
+              (config.wwwroot + dHref + "/.dirhead").replace(/\/+/g, "/"),
               (err, data) => {
                 if (err) {
                   if (err.code == "ENOENT" || err.code == "EISDIR") {
                     if (os.platform != "win32" || href != "/") {
                       fs.readFile(
-                        ("." + dHref + "/HEAD.html").replace(/\/+/g, "/"),
+                        (config.wwwroot + dHref + "/HEAD.html").replace(
+                          /\/+/g,
+                          "/"
+                        ),
                         (err, data) => {
                           if (err) {
                             if (err.code == "ENOENT" || err.code == "EISDIR") {
@@ -538,13 +545,16 @@ module.exports = (req, res, logFacilities, config, next) => {
 
           const getCustomDirListingFooter = (callback) => {
             fs.readFile(
-              ("." + dHref + "/.dirfoot").replace(/\/+/g, "/"),
+              (config.wwwroot + dHref + "/.dirfoot").replace(/\/+/g, "/"),
               (err, data) => {
                 if (err) {
                   if (err.code == "ENOENT" || err.code == "EISDIR") {
                     if (os.platform != "win32" || href != "/") {
                       fs.readFile(
-                        ("." + dHref + "/FOOT.html").replace(/\/+/g, "/"),
+                        (config.wwwroot + dHref + "/FOOT.html").replace(
+                          /\/+/g,
+                          "/"
+                        ),
                         (err, data) => {
                           if (err) {
                             if (err.code == "ENOENT" || err.code == "EISDIR") {
@@ -646,7 +656,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
               if (
                 fs.existsSync(
-                  "." +
+                  config.wwwroot +
                     decodeURIComponent(href) +
                     "/.maindesc".replace(/\/+/g, "/")
                 )
@@ -654,7 +664,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 htmlFoot =
                   "</table><hr/>" +
                   fs.readFileSync(
-                    "." +
+                    config.wwwroot +
                       decodeURIComponent(href) +
                       "/.maindesc".replace(/\/+/g, "/")
                   ) +
@@ -974,7 +984,32 @@ module.exports = (req, res, logFacilities, config, next) => {
     } else if (dirImagesMissing) {
       fs.stat(readFrom, (e, s) => {
         if (e || !s.isFile()) {
-          properDirectoryListingAndStaticFileServe();
+          if (err.code == "ENOENT") {
+            res.error(404);
+            logFacilities.errmessage("Resource not found.");
+            return;
+          } else if (err.code == "ENOTDIR") {
+            res.error(404); // Assume that file doesn't exist.
+            logFacilities.errmessage("Resource not found.");
+            return;
+          } else if (err.code == "EACCES") {
+            res.error(403);
+            logFacilities.errmessage("Access denied.");
+            return;
+          } else if (err.code == "ENAMETOOLONG") {
+            res.error(414);
+            return;
+          } else if (err.code == "EMFILE") {
+            res.error(503);
+            return;
+          } else if (err.code == "ELOOP") {
+            res.error(508); // The symbolic link loop is detected during file system operations.
+            logFacilities.errmessage("Symbolic link loop detected.");
+            return;
+          } else {
+            res.error(500, err);
+            return;
+          }
         } else {
           stats = s;
           properDirectoryListingAndStaticFileServe();

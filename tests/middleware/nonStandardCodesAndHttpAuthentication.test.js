@@ -2,13 +2,13 @@ const sha256 = require("../../src/utils/sha256.js");
 const ipMatch = require("../../src/utils/ipMatch.js");
 const matchHostname = require("../../src/utils/matchHostname.js");
 const ipBlockList = require("../../src/utils/ipBlockList.js");
-const cluster = require("../../src/utils/clusterBunShim.js");
+const cluster = require("../../src/utils/clusterShim.js");
 
 jest.mock("../../src/utils/sha256.js");
 jest.mock("../../src/utils/ipMatch.js");
 jest.mock("../../src/utils/matchHostname.js");
 jest.mock("../../src/utils/ipBlockList.js");
-jest.mock("../../src/utils/clusterBunShim.js");
+jest.mock("../../src/utils/clusterShim.js");
 
 let mockScryptHash = "mocked-scrypt-hash";
 let mockPbkdf2Hash = "mocked-pbkdf2-hash";
