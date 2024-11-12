@@ -126,7 +126,7 @@ The file structure for SVR.JS source code looks like this:
  - src - contains SVR.JS source code
    - index.js - SVR.JS entry point
    - core.js - SVR.JS Core entry point
-   - core.d.ts - SVR.JS Core type definitions
+   - core.d.ts - SVR.JS Core type definitions (the type definition only on a single file)
    - extraScripts - SVR.JS extra scripts (each script has a single file)
    - handlers - handlers for servers
    - middleware - built-in middleware for servers
