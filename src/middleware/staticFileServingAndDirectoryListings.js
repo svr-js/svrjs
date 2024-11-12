@@ -1,5 +1,6 @@
 const fs = require("fs");
 const os = require("os");
+const path = require("path");
 const zlib = require("zlib");
 const mime = require("mime-types");
 const defaultPageCSS = require("../res/defaultPageCSS.js");
@@ -92,7 +93,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     if (err) {
       if (err.code == "ENOENT") {
         if (
-          process.dirname != process.cwd() &&
+          process.dirname != path.normalize(config.wwwroot) &&
           dHref.match(/^\/\.dirimages\/(?:(?!\.png$).)+\.png$/)
         ) {
           dirImagesMissing = true;
