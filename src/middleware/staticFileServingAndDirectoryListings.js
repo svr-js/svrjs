@@ -93,7 +93,10 @@ module.exports = (req, res, logFacilities, config, next) => {
     if (err) {
       if (err.code == "ENOENT") {
         if (
-          process.dirname != path.normalize(config.wwwroot) &&
+          process.dirname !=
+            (config.wwwroot !== undefined
+              ? path.normalize(config.wwwroot)
+              : "") &&
           dHref.match(/^\/\.dirimages\/(?:(?!\.png$).)+\.png$/)
         ) {
           dirImagesMissing = true;
