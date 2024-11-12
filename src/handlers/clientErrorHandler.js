@@ -6,14 +6,15 @@ const generateErrorStack = require("../utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const generateServerString = require("../utils/generateServerString.js");
 const deepClone = require("../utils/deepClone.js");
+const normalizeWebroot = require("../utils/normalizeWebroot.js");
 
 let serverconsole = {};
 
 function clientErrorHandler(err, socket) {
   const config = deepClone(process.serverConfig);
 
-  // Determine the webroot from the current working directory if it is not configured
-  if (config.wwwroot === undefined) config.wwwroot = process.cwd();
+  // Normalize the webroot
+  config.wwwroot = normalizeWebroot(config.wwwroot);
 
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);

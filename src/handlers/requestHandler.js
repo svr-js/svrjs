@@ -9,6 +9,7 @@ const matchHostname = require("../utils/matchHostname.js");
 const generateServerString = require("../utils/generateServerString.js");
 const parseURL = require("../utils/urlParser.js");
 const deepClone = require("../utils/deepClone.js");
+const normalizeWebroot = require("../utils/normalizeWebroot.js");
 const statusCodes = require("../res/statusCodes.js");
 
 let serverconsole = {};
@@ -37,8 +38,8 @@ function requestHandler(req, res) {
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
 
-  // Determine the webroot from the current working directory if it is not configured
-  if (config.wwwroot === undefined) config.wwwroot = process.cwd();
+  // Normalize the webroot
+  config.wwwroot = normalizeWebroot(config.wwwroot);
 
   // getCustomHeaders() in SVR.JS 3.x
   config.getCustomHeaders = () => {
