@@ -8,12 +8,9 @@ const {
 } = require("../utils/forbiddenPaths.js");
 const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
-const wwwroot =
-  process.serverConfig && process.serverConfig.wwwroot !== undefined
-    ? process.serverConfig.wwwroot
-    : ".";
 
-forbiddenPaths.config = getInitializePath(`${wwwroot}/config.json`);
+// Have to use "." for now, because this middleware isn't going to be included in SVR.JS Core anyway.
+forbiddenPaths.config = getInitializePath("./config.json");
 forbiddenPaths.certificates = [];
 if (process.serverConfig.secure) {
   forbiddenPaths.certificates.push(
@@ -30,8 +27,7 @@ if (process.serverConfig.secure) {
   });
 }
 forbiddenPaths.svrjs = getInitializePath(
-  wwwroot +
-    "/" +
+  "./" +
     (process.dirname[process.dirname.length - 1] != "/"
       ? process.filename.replace(process.dirname + "/", "")
       : process.filename.replace(process.dirname, ""))
@@ -41,18 +37,16 @@ if (process.serverConfig.useWebRootServerSideScript) {
   forbiddenPaths.serverSideScripts.push("/serverSideScript.js");
 } else {
   forbiddenPaths.serverSideScripts.push(
-    getInitializePath(`${wwwroot}/serverSideScript.js`)
+    getInitializePath("./serverSideScript.js")
   );
 }
 forbiddenPaths.serverSideScriptDirectories = [];
 forbiddenPaths.serverSideScriptDirectories.push(
-  getInitializePath(`${wwwroot}/node_modules`)
+  getInitializePath("./node_modules")
 );
-forbiddenPaths.serverSideScriptDirectories.push(
-  getInitializePath(wwwroot + "/mods")
-);
-forbiddenPaths.temp = getInitializePath(`${wwwroot}/temp`);
-forbiddenPaths.log = getInitializePath(`${wwwroot}/log`);
+forbiddenPaths.serverSideScriptDirectories.push(getInitializePath("./mods"));
+forbiddenPaths.temp = getInitializePath("./temp");
+forbiddenPaths.log = getInitializePath("./log");
 
 module.exports = (req, res, logFacilities, config, next) => {
   let decodedHrefWithoutDuplicateSlashes = "";
