@@ -15,7 +15,6 @@ interface RequestHandler {
 }
 
 interface InitOptions {
-  users?: Array<any>;
   page404?: string;
   enableCompression?: boolean;
   customHeaders?: { [key: string]: string };

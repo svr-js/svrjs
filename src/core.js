@@ -629,7 +629,6 @@ function requestHandler(req, res, next) {
 function init(config) {
   if (config) coreConfig = deepClone(config);
 
-  if (coreConfig.users === undefined) coreConfig.users = [];
   if (coreConfig.page404 === undefined) coreConfig.page404 = "404.html";
   if (coreConfig.enableCompression === undefined)
     coreConfig.enableCompression = true;
