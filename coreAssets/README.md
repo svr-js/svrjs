@@ -42,7 +42,6 @@ Returns: the request handler for use in Node.JS HTTP server or Express, with thr
 The *config* object is almost the same format as SVR.JS configuration. You can read about SVR.JS configuration properties in [the SVR.JS documentation](https://svrjs.org/docs/config/configuration).
 
 However, only these SVR.JS configuration properties apply to SVR.JS Core:
-- *users*
 - *page404*
 - *enableCompression*
 - *customHeaders*
@@ -58,6 +57,7 @@ However, only these SVR.JS configuration properties apply to SVR.JS Core:
 - *errorPages*
 - *disableTrailingSlashRedirects*
 - *allowDoubleSlashes*
+- *wwwroot*
 
 ### *svrjsCore.init([config])*
 
