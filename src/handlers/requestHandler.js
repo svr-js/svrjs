@@ -442,7 +442,7 @@ function requestHandler(req, res) {
         // Process custom headers if provided
         let cheaders = { ...config.getCustomHeaders(), ...ch };
 
-        cheaders["Content-Type"] = "text/html; charset=utf-8";
+        cheaders["Content-Type"] = "text/html";
 
         // Set default Allow header for 405 error if not provided
         if (errorCode == 405 && !cheaders["Allow"])
@@ -533,7 +533,7 @@ function requestHandler(req, res) {
 
             res.writeHead(errorCode, statusCodes[errorCode], cheaders);
             res.write(
-              `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${
+              `<!DOCTYPE html><html><head><title>{errorMessage}</title><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>{errorMessage}</h1><p>{errorDesc}</p>${
                 additionalError == 404
                   ? ""
                   : "<p>Additionally, a {additionalError} error occurred while loading an error page.</p>"

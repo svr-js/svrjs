@@ -58,7 +58,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     statusBody += `<br/>Thread PID: ${process.pid}<br/>`;
 
     res.writeHead(200, statusCodes[200], {
-      "Content-Type": "text/html; charset=utf-8"
+      "Content-Type": "text/html"
     });
     res.end(
       `${
@@ -76,7 +76,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   .replace(/&/g, "&amp;")
                   .replace(/</g, "&lt;")
                   .replace(/>/g, "&gt;")) +
-            '</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>' +
+            '</title><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>' +
             defaultPageCSS +
             "</style></head><body>"
           : res.head.replace(

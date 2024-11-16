@@ -901,7 +901,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
                     // Send the directory listing response
                     res.writeHead(200, statusCodes[200], {
-                      "Content-Type": "text/html; charset=utf-8"
+                      "Content-Type": "text/html"
                     });
                     res.end(
                       htmlHead + directoryListingRows.join("") + htmlFoot
