@@ -2,7 +2,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const zlib = require("zlib");
-const mime = require("mime-types");
+const { getMimeType, checkIfCompressible } = require("../utils/mimeTypes.js");
 const defaultPageCSS = require("../res/defaultPageCSS.js");
 const matchHostname = require("../utils/matchHostname.js");
 const ipMatch = require("../utils/ipMatch.js");
@@ -200,7 +200,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                 "bytes " + begin + "-" + end + "/" + filelen;
               rhd["Content-Length"] = end - begin + 1;
               delete rhd["Content-Type"];
-              const mtype = mime.contentType(ext);
+              const mtype = getMimeType(ext);
               if (mtype && ext != "") rhd["Content-Type"] = mtype;
               if (fileETag) rhd["ETag"] = fileETag;
 
@@ -338,7 +338,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           let useGzip =
             ext != "gz" && filelen > 256 && acceptEncoding.match(/\bgzip\b/);
 
-          let isCompressable = true;
+          let isCompressible = checkIfCompressible(ext);
           try {
             // Check for files not to compressed and compression enabling setting. Also check for browser quirks and adjust compression accordingly
             if (
@@ -346,7 +346,7 @@ module.exports = (req, res, logFacilities, config, next) => {
               config.enableCompression !== true ||
               !canCompress(href, config.dontCompress)
             ) {
-              isCompressable = false; // Compression is disabled
+              isCompressible = false; // Compression is disabled
             } else if (
               ext != "html" &&
               ext != "htm" &&
@@ -362,9 +362,9 @@ module.exports = (req, res, logFacilities, config, next) => {
                   req.headers["user-agent"]
                 )
               ) {
-                isCompressable = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
+                isCompressible = false; // Netscape 4.x doesn't handle compressed data properly outside of HTML documents.
               } else if (/^w3m\/[^ ]*$/.test(req.headers["user-agent"])) {
-                isCompressable = false; // w3m doesn't handle compressed data properly outside of HTML documents.
+                isCompressible = false; // w3m doesn't handle compressed data properly outside of HTML documents.
               }
             } else {
               if (
@@ -375,7 +375,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   req.headers["user-agent"]
                 )
               ) {
-                isCompressable = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
+                isCompressible = false; // Netscape 4.06-4.08 doesn't handle compressed data properly.
               }
             }
           } catch (err) {
@@ -384,7 +384,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           }
 
           // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
-          if (process.isBun && useBrotli && isCompressable) {
+          if (process.isBun && useBrotli && isCompressible) {
             try {
               zlib.createBrotliCompress();
               // eslint-disable-next-line no-unused-vars
@@ -395,11 +395,11 @@ module.exports = (req, res, logFacilities, config, next) => {
 
           try {
             let hdhds = {};
-            if (useBrotli && isCompressable) {
+            if (useBrotli && isCompressible) {
               hdhds["Content-Encoding"] = "br";
-            } else if (useDeflate && isCompressable) {
+            } else if (useDeflate && isCompressible) {
               hdhds["Content-Encoding"] = "deflate";
-            } else if (useGzip && isCompressable) {
+            } else if (useGzip && isCompressible) {
               hdhds["Content-Encoding"] = "gzip";
             } else {
               if (ext == "html") {
@@ -411,7 +411,7 @@ module.exports = (req, res, logFacilities, config, next) => {
             }
             hdhds["Accept-Ranges"] = "bytes";
             delete hdhds["Content-Type"];
-            const mtype = mime.contentType(ext);
+            const mtype = getMimeType(ext);
             if (mtype && ext != "") hdhds["Content-Type"] = mtype;
             if (fileETag) hdhds["ETag"] = fileETag;
 
@@ -442,13 +442,13 @@ module.exports = (req, res, logFacilities, config, next) => {
                 .on("open", () => {
                   try {
                     let resStream = {};
-                    if (useBrotli && isCompressable) {
+                    if (useBrotli && isCompressible) {
                       resStream = zlib.createBrotliCompress();
                       resStream.pipe(res);
-                    } else if (useDeflate && isCompressable) {
+                    } else if (useDeflate && isCompressible) {
                       resStream = zlib.createDeflateRaw();
                       resStream.pipe(res);
-                    } else if (useGzip && isCompressable) {
+                    } else if (useGzip && isCompressible) {
                       resStream = zlib.createGzip();
                       resStream.pipe(res);
                     } else {
@@ -754,7 +754,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                         const ename = filelist[i].name;
                         let eext = ename.match(/\.([^.]+)$/);
                         eext = eext ? eext[1] : "";
-                        const emime = eext ? mime.contentType(eext) : false;
+                        const emime = eext ? getMimeType(eext) : false;
                         if (filelist[i].errored) {
                           directoryListingRows.push(
                             `<tr><td style="width: 24px;"><img src="/.dirimages/bad.png" alt="[BAD]" width="24px" height="24px" /></td><td style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;"><a href="${(
@@ -901,7 +901,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 
                     // Send the directory listing response
                     res.writeHead(200, statusCodes[200], {
-                      "Content-Type": "text/html; charset=utf-8"
+                      "Content-Type": "text/html"
                     });
                     res.end(
                       htmlHead + directoryListingRows.join("") + htmlFoot

@@ -1,6 +1,6 @@
 {
   "name": "SVR.JS Core",
-  "externalPackages": ["mime-types"],
+  "externalPackages": ["mime-db"],
   "packageJSON": {
     "name": "svrjs-core",
     "description": "A library for static file serving, built from SVR.JS source code.",

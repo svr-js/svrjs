@@ -6,10 +6,10 @@ const { name } = svrjsInfo;
 module.exports = (req, res, logFacilities, config, next) => {
   if (req.isProxy) {
     let eheaders = config.getCustomHeaders();
-    eheaders["Content-Type"] = "text/html; charset=utf-8";
+    eheaders["Content-Type"] = "text/html";
     res.writeHead(501, statusCodes[501], eheaders);
     res.write(
-      `<!DOCTYPE html><html><head><title>Proxy not implemented</title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>Proxy not implemented</h1><p>${name
+      `<!DOCTYPE html><html><head><title>Proxy not implemented</title><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style>${defaultPageCSS}</style></head><body><h1>Proxy not implemented</h1><p>${name
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(
