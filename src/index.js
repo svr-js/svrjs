@@ -341,6 +341,8 @@ if (process.serverConfig.optOutOfStatisticsServer === undefined)
   process.serverConfig.optOutOfStatisticsServer = false;
 if (process.serverConfig.disableConfigurationSaving === undefined)
   process.serverConfig.disableConfigurationSaving = false;
+if (process.serverConfig.enableIncludingHeadAndFootInHTML === undefined)
+  process.serverConfig.enableIncludingHeadAndFootInHTML = true;
 
 // Don't save configuration if disableConfigurationSaving option is set to true
 if (process.serverConfig.disableConfigurationSaving) noSaveConfig = true;
@@ -1707,6 +1709,8 @@ function saveConfig() {
         configJSONobj.optOutOfStatisticsServer = false;
       if (configJSONobj.disableConfigurationSaving === undefined)
         configJSONobj.disableConfigurationSaving = false;
+      if (configJSONobj.enableIncludingHeadAndFootInHTML === undefined)
+        configJSONobj.enableIncludingHeadAndFootInHTML = true;
 
       fs.writeFileSync(
         process.dirname + "/config.json",

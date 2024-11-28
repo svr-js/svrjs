@@ -465,16 +465,21 @@ function clientErrorHandler(err, socket) {
     } sent invalid request.`
   );
   try {
-    head = fs.existsSync(`${config.wwwroot}/.head`)
-      ? fs.readFileSync(`${config.wwwroot}/.head`).toString()
-      : fs.existsSync(`${config.wwwroot}/head.html`)
-        ? fs.readFileSync(`${config.wwwroot}/head.html`).toString()
-        : ""; // header
-    foot = fs.existsSync(`${config.wwwroot}/.foot`)
-      ? fs.readFileSync(`${config.wwwroot}/.foot`).toString()
-      : fs.existsSync(`${config.wwwroot}/foot.html`)
-        ? fs.readFileSync(`${config.wwwroot}/foot.html`).toString()
-        : ""; // footer
+    if (
+      config.enableIncludingHeadAndFootInHTML ||
+      config.enableIncludingHeadAndFootInHTML === undefined
+    ) {
+      head = fs.existsSync(`${config.wwwroot}/.head`)
+        ? fs.readFileSync(`${config.wwwroot}/.head`).toString()
+        : fs.existsSync(`${config.wwwroot}/head.html`)
+          ? fs.readFileSync(`${config.wwwroot}/head.html`).toString()
+          : ""; // header
+      foot = fs.existsSync(`${config.wwwroot}/.foot`)
+        ? fs.readFileSync(`${config.wwwroot}/.foot`).toString()
+        : fs.existsSync(`${config.wwwroot}/foot.html`)
+          ? fs.readFileSync(`${config.wwwroot}/foot.html`).toString()
+          : ""; // footer
+    }
 
     if (
       (err.code &&

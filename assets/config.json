@@ -60,5 +60,6 @@
   "environmentVariables": {},
   "allowDoubleSlashes": false,
   "optOutOfStatisticsServer": false,
-  "disableConfigurationSaving": false
+  "disableConfigurationSaving": false,
+  "enableIncludingHeadAndFootInHTML": true
 }

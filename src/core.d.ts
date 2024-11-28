@@ -30,6 +30,7 @@ interface InitOptions {
   errorPages?: Array<any>;
   disableTrailingSlashRedirects?: boolean;
   allowDoubleSlashes?: boolean;
+  enableIncludingHeadAndFootInHTML?: boolean;
   wwwroot?: string;
 }
 

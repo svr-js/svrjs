@@ -57,6 +57,7 @@ However, only these SVR.JS configuration properties apply to SVR.JS Core:
 - *errorPages*
 - *disableTrailingSlashRedirects*
 - *allowDoubleSlashes*
+- *enableIncludingHeadAndFootInHTML*
 - *wwwroot*
 
 ### *svrjsCore.init([config])*

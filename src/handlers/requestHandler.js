@@ -640,19 +640,24 @@ function requestHandler(req, res) {
     return;
   };
 
-  try {
-    res.head = fs.existsSync(`${config.wwwroot}/.head`)
-      ? fs.readFileSync(`${config.wwwroot}/.head`).toString()
-      : fs.existsSync(`${config.wwwroot}/head.html`)
-        ? fs.readFileSync(`${config.wwwroot}/head.html`).toString()
-        : ""; // header
-    res.foot = fs.existsSync(`${config.wwwroot}/.foot`)
-      ? fs.readFileSync(`${config.wwwroot}/.foot`).toString()
-      : fs.existsSync(`${config.wwwroot}/foot.html`)
-        ? fs.readFileSync(`${config.wwwroot}/foot.html`).toString()
-        : ""; // footer
-  } catch (err) {
-    res.error(500, err);
+  if (
+    config.enableIncludingHeadAndFootInHTML ||
+    config.enableIncludingHeadAndFootInHTML === undefined
+  ) {
+    try {
+      res.head = fs.existsSync(`${config.wwwroot}/.head`)
+        ? fs.readFileSync(`${config.wwwroot}/.head`).toString()
+        : fs.existsSync(`${config.wwwroot}/head.html`)
+          ? fs.readFileSync(`${config.wwwroot}/head.html`).toString()
+          : ""; // header
+      res.foot = fs.existsSync(`${config.wwwroot}/.foot`)
+        ? fs.readFileSync(`${config.wwwroot}/.foot`).toString()
+        : fs.existsSync(`${config.wwwroot}/foot.html`)
+          ? fs.readFileSync(`${config.wwwroot}/foot.html`).toString()
+          : ""; // footer
+    } catch (err) {
+      res.error(500, err);
+    }
   }
 
   // Authenticated user variable
