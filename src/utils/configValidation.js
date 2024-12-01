@@ -23,6 +23,7 @@ function validatePort(port) {
 }
 
 const validators = {
+  timestamp: (value) => typeof value === "number",
   users: (value) => {
     if (!Array.isArray(value)) return false;
     return value.every(
