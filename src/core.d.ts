@@ -23,7 +23,7 @@ interface InitOptions {
   serverAdministratorEmail?: string;
   stackHidden?: boolean;
   exposeServerVersion?: boolean;
-  dontCompress?: Array<RegExp>;
+  dontCompress?: Array<RegExp | string>;
   enableIPSpoofing?: boolean;
   enableETag?: boolean;
   rewriteDirtyURLs?: boolean;

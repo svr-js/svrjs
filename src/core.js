@@ -668,6 +668,16 @@ function init(config) {
   if (coreConfig.enableIncludingHeadAndFootInHTML === undefined)
     coreConfig.enableIncludingHeadAndFootInHTML = true;
 
+  // Replacing regular expressions with "regex strings"
+  for (let i = 0; i < coreConfig.dontCompress; i++) {
+    if (
+      Object.prototype.toString.call(coreConfig.dontCompress[i]) ===
+      "[object RegExp]"
+    )
+      coreConfig.dontCompress[i] =
+        `/${coreConfig.dontCompress[i].source.replace(/(^|\\+)\//, (match, bSlashes) => (bSlashes.length % 2 == 0 ? "\\/" : "/"))}/${coreConfig.dontCompress[i].flags}`;
+  }
+
   // You wouldn't use SVR.JS mods in SVR.JS Core
   coreConfig.exposeModsInErrorPages = false;
 
