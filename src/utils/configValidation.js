@@ -57,9 +57,9 @@ const validators = {
   ecdhCurve: (value) => typeof value === "string",
   signatureAlgorithms: (value) => typeof value === "string",
   tlsMinVersion: (value) =>
-    ["TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1"].includes(value),
+    ["TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1"].indexOf(value) != -1,
   tlsMaxVersion: (value) =>
-    ["TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1"].includes(value),
+    ["TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1"].indexOf(value) != -1,
   domain: (value) => typeof value === "string",
   wwwredirect: (value) => typeof value === "boolean",
   page404: (value) => typeof value === "string",
@@ -118,7 +118,7 @@ const validators = {
           "maxHeaderSize",
           "enableConnectProtocol",
           "customSettings"
-        ].includes(key) &&
+        ].indexOf(key) != -1 &&
         (typeof value[key] === "number" ||
           typeof value[key] === "boolean" ||
           (key === "customSettings" &&
