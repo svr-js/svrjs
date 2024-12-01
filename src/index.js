@@ -218,10 +218,15 @@ const {
 } = require("./utils/ipSubnetUtils.js");
 const sendStatistics = require("./utils/sendStatistics.js");
 const deepClone = require("./utils/deepClone.js");
+const {
+  validateConfig,
+  addConfigValidators
+} = require("./utils/configValidation.js");
 
 process.serverConfig = {};
 let configJSONRErr = undefined;
 let configJSONPErr = undefined;
+let configJSONVErr = undefined;
 if (fs.existsSync(process.dirname + "/config.json")) {
   let configJSONf = "";
   try {
@@ -871,6 +876,17 @@ const middleware = [
   require("./middleware/status.js"),
   require("./middleware/staticFileServingAndDirectoryListings.js")
 ];
+
+// Validate SVR.JS configuration (including validators from SVR.JS mods and built-in middleware)
+try {
+  middleware.forEach((middlewareOne) => {
+    if (middlewareOne.configValidators)
+      addConfigValidators(middlewareOne.configValidators);
+  });
+  validateConfig(process.serverConfig);
+} catch (err) {
+  configJSONVErr = err;
+}
 
 // HTTP server handlers
 const requestHandler = require("./handlers/requestHandler.js")(
@@ -1884,6 +1900,10 @@ function start(init) {
       if (configJSONPErr)
         throw new Error(
           `${name} configuration parse error: ${configJSONPErr.message}`
+        );
+      if (configJSONVErr)
+        throw new Error(
+          `${name} configuration validation error: ${configJSONVErr.message}`
         );
       if (
         process.serverConfig.enableHTTP2 &&
