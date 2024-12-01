@@ -137,7 +137,8 @@ const validators = {
     if (!Array.isArray(value)) return false;
     return value.every(
       (vhost) =>
-        typeof vhost.host === "string" &&
+        !(vhost.ip === undefined && vhost.host === undefined) &&
+        (vhost.host === undefined || typeof vhost.host === "string") &&
         (vhost.ip === undefined || validateIP(vhost.ip)) &&
         typeof vhost.enabled === "boolean"
     );
@@ -146,7 +147,8 @@ const validators = {
     if (!Array.isArray(value)) return false;
     return value.every(
       (vhost) =>
-        typeof vhost.host === "string" &&
+        !(vhost.ip === undefined && vhost.host === undefined) &&
+        (vhost.host === undefined || typeof vhost.host === "string") &&
         (vhost.ip === undefined || validateIP(vhost.ip)) &&
         typeof vhost.headers === "object" &&
         vhost.headers !== null
@@ -156,7 +158,8 @@ const validators = {
     if (!Array.isArray(value)) return false;
     return value.every(
       (vhost) =>
-        typeof vhost.host === "string" &&
+        !(vhost.ip === undefined && vhost.host === undefined) &&
+        (vhost.host === undefined || typeof vhost.host === "string") &&
         (vhost.ip === undefined || validateIP(vhost.ip)) &&
         typeof vhost.postfix === "string" &&
         (vhost.skipRegex === undefined || validateRegex(vhost.skipRegex))
