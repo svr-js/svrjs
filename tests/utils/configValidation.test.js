@@ -84,7 +84,8 @@ describe("Configuration validation utility functions", () => {
           {
             definingRegex: "/^\\/rewrite/",
             append: "/append",
-            isNotDirectory: true
+            isNotDirectory: true,
+            replacements: [{ regex: "/replace/", replacement: "/replacement/" }]
           },
           {
             definingRegex: "/^\\/rewrite2/",
@@ -185,7 +186,8 @@ describe("Configuration validation utility functions", () => {
           {
             definingRegex: "/^\\/rewrite/",
             append: "/append",
-            isNotDirectory: true
+            isNotDirectory: true,
+            replacements: [{ regex: "/replace/", replacement: "/replacement/" }]
           },
           {
             definingRegex: "/^\\/rewrite2/",

@@ -99,7 +99,10 @@ const validators = {
     Array.isArray(value) && value.every((item) => typeof item === "string"),
   enableIPSpoofing: (value) => typeof value === "boolean",
   enableETag: (value) => typeof value === "boolean",
-  customHeaders: (value) => typeof value === "object" && value !== null,
+  customHeaders: (value) => {
+    if (typeof value !== "object" || value === null) return false;
+    return Object.keys(value).every((key) => typeof key === "string");
+  },
   http2Settings: (value) => {
     if (typeof value !== "object" || value === null) return false;
     return Object.keys(value).every(
@@ -175,13 +178,12 @@ const validators = {
         (rule.isNotFile === undefined || typeof rule.isNotFile === "boolean") &&
         (rule.allowDoubleSlashes === undefined ||
           typeof rule.allowDoubleSlashes === "boolean") &&
-        (rule.replacements === undefined ||
-          (Array.isArray(rule.replacements) &&
-            rule.replacements.every(
-              (replacement) =>
-                validateRegex(replacement.regex) &&
-                typeof replacement.replacement === "string"
-            )))
+        Array.isArray(rule.replacements) &&
+        rule.replacements.every(
+          (replacement) =>
+            validateRegex(replacement.regex) &&
+            typeof replacement.replacement === "string"
+        )
     );
   },
   disableNonEncryptedServer: (value) => typeof value === "boolean",
@@ -191,7 +193,10 @@ const validators = {
   disableUnusedWorkerTermination: (value) => typeof value === "boolean",
   useWebRootServerSideScript: (value) => typeof value === "boolean",
   disableTrailingSlashRedirects: (value) => typeof value === "boolean",
-  environmentVariables: (value) => typeof value === "object" && value !== null,
+  environmentVariables: (value) => {
+    if (typeof value !== "object" || value === null) return false;
+    return Object.keys(value).every((key) => typeof key === "string");
+  },
   allowDoubleSlashes: (value) => typeof value === "boolean",
   optOutOfStatisticsServer: (value) => typeof value === "boolean",
   disableConfigurationSaving: (value) => typeof value === "boolean"
