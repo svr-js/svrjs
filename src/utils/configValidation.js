@@ -93,7 +93,10 @@ const validators = {
           typeof code.disableBruteProtection === "boolean") &&
         (code.host === undefined || typeof code.host === "string") &&
         (code.ip === undefined || typeof code.ip === "string") &&
-        (code.userList === undefined || Array.isArray(code.userList))
+        (code.userList === undefined || Array.isArray(code.userList)) &&
+        (code.users === undefined ||
+          (Array.isArray(code.users) &&
+            code.users.every((item) => validateIP(item))))
     );
   },
   dontCompress: (value) =>
