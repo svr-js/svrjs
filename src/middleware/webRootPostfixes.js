@@ -1,32 +1,10 @@
 const createRegex = require("../utils/createRegex.js");
+const matchHostname = require("../utils/matchHostname.js");
 const ipMatch = require("../utils/ipMatch.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
 const parseURL = require("../utils/urlParser.js");
 
 module.exports = (req, res, logFacilities, config, next) => {
-  const matchHostname = (hostname) => {
-    if (typeof hostname == "undefined" || hostname == "*") {
-      return true;
-    } else if (
-      req.headers.host &&
-      hostname.indexOf("*.") == 0 &&
-      hostname != "*."
-    ) {
-      const hostnamesRoot = hostname.substring(2);
-      if (
-        req.headers.host == hostnamesRoot ||
-        (req.headers.host.length > hostnamesRoot.length &&
-          req.headers.host.indexOf("." + hostnamesRoot) ==
-            req.headers.host.length - hostnamesRoot.length - 1)
-      ) {
-        return true;
-      }
-    } else if (req.headers.host && req.headers.host == hostname) {
-      return true;
-    }
-    return false;
-  };
-
   // Add web root postfixes
   if (!req.isProxy) {
     let preparedReqUrl3 = config.allowPostfixDoubleSlashes
@@ -56,7 +34,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     });
     config.wwwrootPostfixesVHost.every((postfixEntry) => {
       if (
-        matchHostname(postfixEntry.host) &&
+        matchHostname(postfixEntry.host, req.headers.host) &&
         ipMatch(
           postfixEntry.ip,
           req.socket ? req.socket.localAddress : undefined
