@@ -154,8 +154,8 @@ const validators = {
         !(vhost.ip === undefined && vhost.host === undefined) &&
         (vhost.host === undefined || typeof vhost.host === "string") &&
         (vhost.ip === undefined || validateIP(vhost.ip)) &&
-        typeof vhost.headers === "object" &&
-        vhost.headers !== null
+        !(typeof vhost.headers !== "object" || vhost.headers === null) &&
+        Object.keys(vhost.headers).every((key) => typeof key === "string")
     );
   },
   wwwrootPostfixesVHost: (value) => {
