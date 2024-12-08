@@ -35,9 +35,11 @@ function normalizeWebroot(currentWebroot) {
 
     return (
       process.cwd() +
-      ((os.platform() == "win32" ? "\\" : "/") + "..").repeat(
-        dotdotWwwrootB.split("/").length
-      ) +
+      (dotdotWwwrootB != ""
+        ? ((os.platform() == "win32" ? "\\" : "/") + "..").repeat(
+            dotdotWwwrootB.split("/").length
+          )
+        : "") +
       (os.platform() == "win32" ? "\\" : "/") +
       currentWebroot
     );
