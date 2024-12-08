@@ -162,7 +162,6 @@ const validators = {
     if (!Array.isArray(value)) return false;
     return value.every(
       (vhost) =>
-        !(vhost.ip === undefined && vhost.host === undefined) &&
         (vhost.host === undefined || typeof vhost.host === "string") &&
         (vhost.ip === undefined || validateIP(vhost.ip)) &&
         typeof vhost.postfix === "string" &&
