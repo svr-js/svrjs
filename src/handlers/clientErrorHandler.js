@@ -7,11 +7,27 @@ const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const generateServerString = require("../utils/generateServerString.js");
 const deepClone = require("../utils/deepClone.js");
 const normalizeWebroot = require("../utils/normalizeWebroot.js");
+const ipMatch = require("../utils/ipMatch.js");
 
 let serverconsole = {};
 
 function clientErrorHandler(err, socket) {
   const config = deepClone(process.serverConfig);
+
+  // Change the webroot if there is a webroot assigned for a virtual host
+  if (config.wwwrootVHost) {
+    config.wwwrootVHost.every((wwwrootVHost) => {
+      if (
+        ipMatch(wwwrootVHost.ip, socket ? socket.localAddress : undefined) &&
+        wwwrootVHost.wwwroot
+      ) {
+        config.wwwroot = wwwrootVHost.wwwroot;
+        return false;
+      } else {
+        return true;
+      }
+    });
+  }
 
   // Normalize the webroot
   config.wwwroot = normalizeWebroot(config.wwwroot);

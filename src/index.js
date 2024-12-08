@@ -348,6 +348,8 @@ if (process.serverConfig.disableConfigurationSaving === undefined)
   process.serverConfig.disableConfigurationSaving = false;
 if (process.serverConfig.enableIncludingHeadAndFootInHTML === undefined)
   process.serverConfig.enableIncludingHeadAndFootInHTML = true;
+if (process.serverConfig.wwwrootVHost === undefined)
+  process.serverConfig.wwwrootVHost = [];
 
 // Don't save configuration if disableConfigurationSaving option is set to true
 if (process.serverConfig.disableConfigurationSaving) noSaveConfig = true;

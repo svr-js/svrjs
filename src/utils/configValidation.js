@@ -205,7 +205,16 @@ const validators = {
   },
   allowDoubleSlashes: (value) => typeof value === "boolean",
   optOutOfStatisticsServer: (value) => typeof value === "boolean",
-  disableConfigurationSaving: (value) => typeof value === "boolean"
+  disableConfigurationSaving: (value) => typeof value === "boolean",
+  wwwrootVHost: (value) => {
+    if (!Array.isArray(value)) return false;
+    return value.every(
+      (vhost) =>
+        (vhost.host === undefined || typeof vhost.host === "string") &&
+        (vhost.ip === undefined || validateIP(vhost.ip)) &&
+        typeof vhost.wwwroot === "string"
+    );
+  }
 };
 
 function validateConfig(config) {

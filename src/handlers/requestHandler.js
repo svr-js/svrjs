@@ -38,6 +38,24 @@ function requestHandler(req, res) {
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
 
+  // Change the webroot if there is a webroot assigned for a virtual host
+  if (config.wwwrootVHost) {
+    config.wwwrootVHost.every((wwwrootVHost) => {
+      if (
+        matchHostname(wwwrootVHost.host, req.headers.host) &&
+        ipMatch(
+          wwwrootVHost.ip,
+          req.socket ? req.socket.localAddress : undefined
+        ) &&
+        wwwrootVHost.wwwroot
+      ) {
+        config.wwwroot = wwwrootVHost.wwwroot;
+        return false;
+      } else {
+        return true;
+      }
+    });
+  }
   // Normalize the webroot
   config.wwwroot = normalizeWebroot(config.wwwroot);
 
