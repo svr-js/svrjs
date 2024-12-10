@@ -35,7 +35,7 @@ describe("Status middleware", () => {
   test("should set response headers and body when conditions are met", () => {
     middleware(req, res, logFacilities, config, next);
     expect(res.writeHead).toHaveBeenCalledWith(200, http.STATUS_CODES[200], {
-      "Content-Type": "text/html; charset=utf-8"
+      "Content-Type": "text/html"
     });
     expect(res.end).toHaveBeenCalled();
   });
@@ -51,7 +51,7 @@ describe("Status middleware", () => {
     jest.spyOn(os, "platform").mockReturnValue("win32");
     middleware(req, res, logFacilities, config, next);
     expect(res.writeHead).toHaveBeenCalledWith(200, http.STATUS_CODES[200], {
-      "Content-Type": "text/html; charset=utf-8"
+      "Content-Type": "text/html"
     });
     expect(res.end).toHaveBeenCalled();
     os.platform.mockRestore();
@@ -61,7 +61,7 @@ describe("Status middleware", () => {
     req.headers.host = undefined;
     middleware(req, res, logFacilities, config, next);
     expect(res.writeHead).toHaveBeenCalledWith(200, http.STATUS_CODES[200], {
-      "Content-Type": "text/html; charset=utf-8"
+      "Content-Type": "text/html"
     });
     expect(res.end).toHaveBeenCalled();
   });

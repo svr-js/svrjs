@@ -1,11 +1,11 @@
 {
-  "version": "4.3.0",
+  "version": "4.4.0",
   "name": "SVR.JS",
   "documentationURL": "https://svrjs.org/docs",
   "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
   "changes": [
-    "Added a configuration option to enable including the head and foot in static HTML",
-    "Moved the UTF-8 charset declarations from the Content-Type header to the HTML body",
-    "Replaced the \"mime-types\" library with a custom MIME type lookup function that uses the \"mime-db\" library"
+    "Added the server configuration validation.",
+    "Added the virtual host functionality that relies on switching the webroots.",
+    "Fixed a bug with relative paths in webroot normalization function."
   ]
 }

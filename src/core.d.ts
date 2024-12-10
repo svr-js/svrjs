@@ -23,11 +23,16 @@ interface InitOptions {
   serverAdministratorEmail?: string;
   stackHidden?: boolean;
   exposeServerVersion?: boolean;
-  dontCompress?: Array<RegExp>;
+  dontCompress?: Array<RegExp | string>;
   enableIPSpoofing?: boolean;
   enableETag?: boolean;
   rewriteDirtyURLs?: boolean;
-  errorPages?: Array<any>;
+  errorPages?: Array<{
+    scode: number;
+    path: string;
+    host?: string;
+    ip?: string;
+  }>;
   disableTrailingSlashRedirects?: boolean;
   allowDoubleSlashes?: boolean;
   enableIncludingHeadAndFootInHTML?: boolean;

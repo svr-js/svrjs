@@ -5,7 +5,7 @@ const os = require("os");
 jest.mock("os");
 jest.mock("path");
 
-describe("normalizeWebroot", () => {
+describe("Webroot normalization function", () => {
   test("should return process.cwd() when currentWebroot is undefined", () => {
     const cwdSpy = jest.spyOn(process, "cwd").mockReturnValue("/test");
     expect(normalizeWebroot(undefined)).toBe("/test");
