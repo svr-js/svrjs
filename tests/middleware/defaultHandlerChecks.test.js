@@ -42,7 +42,7 @@ describe("Default handler checks middleware", () => {
     middleware(req, res, logFacilities, config, next);
     expect(res.error).toHaveBeenCalledWith(405);
     expect(logFacilities.errmessage).toHaveBeenCalledWith(
-      expect.stringContaining("Invaild method: PUT")
+      expect.stringContaining("Invalid method: PUT")
     );
   });
 

@@ -43,7 +43,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     req.method != "HEAD"
   ) {
     res.error(405);
-    logFacilities.errmessage("Invaild method: " + req.method);
+    logFacilities.errmessage("Invalid method: " + req.method);
     return;
   }
 
