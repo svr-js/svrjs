@@ -128,7 +128,7 @@ function printUsage() {
   console.log("--disable-mods        -- Disables mods (safe mode)");
   console.log("--single-threaded     -- Run single-threaded");
   console.log(
-    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performace"
+    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performance"
   );
   console.log("--no-save-config      -- Don't save configuration file");
   console.log("-v --version          -- Display server version");
