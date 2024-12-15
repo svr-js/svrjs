@@ -266,7 +266,7 @@ if (
   process.serverConfig.domian !== undefined
 )
   process.serverConfig.domain = process.serverConfig.domian;
-delete process.serverConfig.domian;
+delete process.serverConfig.domian; // There was an earlier configuration property called "domian", however it is replaced by "domain".
 if (process.serverConfig.page404 === undefined)
   process.serverConfig.page404 = "404.html";
 process.serverConfig.timestamp = new Date().getTime();
@@ -1659,7 +1659,7 @@ function saveConfig() {
         configJSONobj.domian !== undefined
       )
         configJSONobj.domain = configJSONobj.domian;
-      delete configJSONobj.domian;
+      delete configJSONobj.domian; // There was an earlier configuration property called "domian", however it is replaced by "domain".
       if (configJSONobj.page404 === undefined)
         configJSONobj.page404 = "404.html";
       configJSONobj.timestamp = process.serverConfig.timestamp;
