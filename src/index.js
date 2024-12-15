@@ -354,7 +354,7 @@ if (process.serverConfig.wwwrootVHost === undefined)
 // Don't save configuration if disableConfigurationSaving option is set to true
 if (process.serverConfig.disableConfigurationSaving) noSaveConfig = true;
 
-// Compatiblity for very old SVR.JS mods
+// Compatibility for very old SVR.JS mods
 process.serverConfig.version = version;
 process.serverConfig.productName = name;
 
