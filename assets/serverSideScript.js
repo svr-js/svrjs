@@ -1,4 +1,4 @@
-//Server-side Javascript (Node.js)
+//Server-side JavaScript (Node.js)
 //This implementation uses Node.js, which powers SVR.JS.
 //This implementation contains elements specific for SVR.JS mods:
 //  req - A server request instance
