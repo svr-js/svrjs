@@ -15,7 +15,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         .replace(
           />/g,
           "&gt;"
-        )} doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use ${name
+        )} doesn't support proxy without proxy mod. If you're administrator of this server, then install this mod in order to use ${name
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")} as a proxy.</p><p><i>${config
