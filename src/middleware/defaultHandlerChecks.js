@@ -15,7 +15,7 @@ module.exports = (req, res, logFacilities, config, next) => {
         .replace(
           />/g,
           "&gt;"
-        )} doesn't support proxy without proxy mod. If you're administator of this server, then install this mod in order to use ${name
+        )} doesn't support proxy without proxy mod. If you're administrator of this server, then install this mod in order to use ${name
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")} as a proxy.</p><p><i>${config
@@ -32,9 +32,9 @@ module.exports = (req, res, logFacilities, config, next) => {
   }
 
   if (req.method == "OPTIONS") {
-    let hdss = config.getCustomHeaders();
-    hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-    res.writeHead(204, statusCodes[204], hdss);
+    let hdrs = config.getCustomHeaders();
+    hdrs["Allow"] = "GET, POST, HEAD, OPTIONS";
+    res.writeHead(204, statusCodes[204], hdrs);
     res.end();
     return;
   } else if (
@@ -43,7 +43,7 @@ module.exports = (req, res, logFacilities, config, next) => {
     req.method != "HEAD"
   ) {
     res.error(405);
-    logFacilities.errmessage("Invaild method: " + req.method);
+    logFacilities.errmessage("Invalid method: " + req.method);
     return;
   }
 

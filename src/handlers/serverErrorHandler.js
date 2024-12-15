@@ -2,32 +2,32 @@ const os = require("os");
 const cluster = require("../utils/clusterShim.js");
 const serverErrorDescs = require("../res/serverErrorDescriptions.js");
 let serverconsole = {};
-let attmts = 5;
-let attmtsRedir = 5;
+let attempts = 5;
+let attemptsRedir = 5;
 
 function serverErrorHandler(err, isRedirect, server, start) {
-  if (isRedirect) attmtsRedir--;
-  else attmts--;
-  if (cluster.isPrimary === undefined && (isRedirect ? attmtsRedir : attmts)) {
+  if (isRedirect) attemptsRedir--;
+  else attempts--;
+  if (cluster.isPrimary === undefined && (isRedirect ? attemptsRedir : attempts)) {
     serverconsole.locerrmessage(
       serverErrorDescs[err.code]
         ? serverErrorDescs[err.code]
         : serverErrorDescs["UNKNOWN"]
     );
     serverconsole.locmessage(
-      `${isRedirect ? attmtsRedir : attmts} attempts left.`
+      `${isRedirect ? attemptsRedir : attempts} attempts left.`
     );
   } else {
     try {
       process.send(
-        "\x12ERRLIST" + (isRedirect ? attmtsRedir : attmts) + err.code
+        "\x12ERRLIST" + (isRedirect ? attemptsRedir : attempts) + err.code
       );
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Probably main process exited
     }
   }
-  if ((isRedirect ? attmtsRedir : attmts) > 0) {
+  if ((isRedirect ? attemptsRedir : attempts) > 0) {
     server.close();
     setTimeout(start, 900);
   } else {
@@ -46,8 +46,8 @@ function serverErrorHandler(err, isRedirect, server, start) {
 }
 
 serverErrorHandler.resetAttempts = (isRedirect) => {
-  if (isRedirect) attmtsRedir = 5;
-  else attmts = 5;
+  if (isRedirect) attemptsRedir = 5;
+  else attempts = 5;
 };
 
 process.messageEventListeners.push((worker, serverconsole) => {

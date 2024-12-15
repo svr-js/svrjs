@@ -128,7 +128,7 @@ function printUsage() {
   console.log("--disable-mods        -- Disables mods (safe mode)");
   console.log("--single-threaded     -- Run single-threaded");
   console.log(
-    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performace"
+    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performance"
   );
   console.log("--no-save-config      -- Don't save configuration file");
   console.log("-v --version          -- Display server version");
@@ -263,10 +263,10 @@ if (process.serverConfig.pubport === undefined)
   process.serverConfig.pubport = 80;
 if (
   process.serverConfig.domain === undefined &&
-  process.serverConfig.domian !== undefined
+  process.serverConfig.domain !== undefined
 )
-  process.serverConfig.domain = process.serverConfig.domian;
-delete process.serverConfig.domian;
+  process.serverConfig.domain = process.serverConfig.domain;
+delete process.serverConfig.domain;
 if (process.serverConfig.page404 === undefined)
   process.serverConfig.page404 = "404.html";
 process.serverConfig.timestamp = new Date().getTime();
@@ -354,7 +354,7 @@ if (process.serverConfig.wwwrootVHost === undefined)
 // Don't save configuration if disableConfigurationSaving option is set to true
 if (process.serverConfig.disableConfigurationSaving) noSaveConfig = true;
 
-// Compatiblity for very old SVR.JS mods
+// Compatibility for very old SVR.JS mods
 process.serverConfig.version = version;
 process.serverConfig.productName = name;
 
@@ -429,7 +429,7 @@ try {
   wwwrootError = err;
 }
 
-// IP and network inteface-related
+// IP and network interface-related
 let ifaces = {};
 let ifaceEx = null;
 try {
@@ -1656,10 +1656,10 @@ function saveConfig() {
       if (configJSONobj.pubport === undefined) configJSONobj.pubport = 80;
       if (
         configJSONobj.domain === undefined &&
-        configJSONobj.domian !== undefined
+        configJSONobj.domain !== undefined
       )
-        configJSONobj.domain = configJSONobj.domian;
-      delete configJSONobj.domian;
+        configJSONobj.domain = configJSONobj.domain;
+      delete configJSONobj.domain;
       if (configJSONobj.page404 === undefined)
         configJSONobj.page404 = "404.html";
       configJSONobj.timestamp = process.serverConfig.timestamp;

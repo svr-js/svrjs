@@ -685,9 +685,9 @@ function requestHandler(req, res) {
     // Handle "*" URL
     if (req.method == "OPTIONS") {
       // Respond with list of methods
-      let hdss = config.getCustomHeaders();
-      hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-      res.writeHead(204, statusCodes[204], hdss);
+      let hdrs = config.getCustomHeaders();
+      hdrs["Allow"] = "GET, POST, HEAD, OPTIONS";
+      res.writeHead(204, statusCodes[204], hdrs);
       res.end();
       return;
     } else {
