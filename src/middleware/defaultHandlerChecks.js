@@ -32,9 +32,9 @@ module.exports = (req, res, logFacilities, config, next) => {
   }
 
   if (req.method == "OPTIONS") {
-    let hdss = config.getCustomHeaders();
-    hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-    res.writeHead(204, statusCodes[204], hdss);
+    let hdrs = config.getCustomHeaders();
+    hdrs["Allow"] = "GET, POST, HEAD, OPTIONS";
+    res.writeHead(204, statusCodes[204], hdrs);
     res.end();
     return;
   } else if (
