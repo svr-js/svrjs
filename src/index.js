@@ -263,10 +263,10 @@ if (process.serverConfig.pubport === undefined)
   process.serverConfig.pubport = 80;
 if (
   process.serverConfig.domain === undefined &&
-  process.serverConfig.domian !== undefined
+  process.serverConfig.domain !== undefined
 )
-  process.serverConfig.domain = process.serverConfig.domian;
-delete process.serverConfig.domian;
+  process.serverConfig.domain = process.serverConfig.domain;
+delete process.serverConfig.domain;
 if (process.serverConfig.page404 === undefined)
   process.serverConfig.page404 = "404.html";
 process.serverConfig.timestamp = new Date().getTime();
@@ -1656,10 +1656,10 @@ function saveConfig() {
       if (configJSONobj.pubport === undefined) configJSONobj.pubport = 80;
       if (
         configJSONobj.domain === undefined &&
-        configJSONobj.domian !== undefined
+        configJSONobj.domain !== undefined
       )
-        configJSONobj.domain = configJSONobj.domian;
-      delete configJSONobj.domian;
+        configJSONobj.domain = configJSONobj.domain;
+      delete configJSONobj.domain;
       if (configJSONobj.page404 === undefined)
         configJSONobj.page404 = "404.html";
       configJSONobj.timestamp = process.serverConfig.timestamp;
