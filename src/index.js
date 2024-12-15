@@ -429,7 +429,7 @@ try {
   wwwrootError = err;
 }
 
-// IP and network inteface-related
+// IP and network interface-related
 let ifaces = {};
 let ifaceEx = null;
 try {
