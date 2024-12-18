@@ -2,7 +2,7 @@
   "version": "Nightly-GitMain",
   "name": "SVR.JS",
   "documentationURL": "https://svrjs.org/docs",
-  "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
+  "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.php",
   "changes": [
     "INSERT CHANGES THERE"
   ]
