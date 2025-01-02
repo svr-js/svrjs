@@ -8,6 +8,7 @@ const ipMatch = require("../utils/ipMatch.js");
 const matchHostname = require("../utils/matchHostname.js");
 const generateServerString = require("../utils/generateServerString.js");
 const parseURL = require("../utils/urlParser.js");
+const sanitizeURL = require("../utils/urlSanitizer.js");
 const deepClone = require("../utils/deepClone.js");
 const normalizeWebroot = require("../utils/normalizeWebroot.js");
 const statusCodes = require("../res/statusCodes.js");
@@ -656,6 +657,75 @@ function requestHandler(req, res) {
 
     // Return from the function
     return;
+  };
+
+  // Function to rewrite the request URL
+  req.rewriteURL = (rewrittenURL, callback) => {
+    const oldRequestURL = req.url;
+    req.url = rewrittenURL;
+    try {
+      req.parsedURL = parseURL(
+        req.url,
+        `http${req.socket.encrypted ? "s" : ""}://${
+          req.headers.host
+            ? req.headers.host
+            : config.domain
+              ? config.domain
+              : "unknown.invalid"
+        }`
+      );
+    } catch (err) {
+      res.error(400, err);
+      return;
+    }
+
+    const sHref = sanitizeURL(
+      req.parsedURL.pathname,
+      config.allowDoubleSlashes
+    );
+    const preparedReqUrl2 =
+      req.parsedURL.pathname +
+      (req.parsedURL.search ? req.parsedURL.search : "") +
+      (req.parsedURL.hash ? req.parsedURL.hash : "");
+
+    if (
+      req.url != preparedReqUrl2 ||
+      sHref !=
+        req.parsedURL.pathname
+          .replace(/\/\.(?=\/|$)/g, "/")
+          .replace(/\/+/g, "/")
+    ) {
+      res.error(403);
+      logFacilities.errmessage("Invalid URL rewriting operation.");
+      return;
+    } else if (sHref != req.parsedURL.pathname) {
+      const rewrittenAgainURL =
+        sHref +
+        (req.parsedURL.search ? req.parsedURL.search : "") +
+        (req.parsedURL.hash ? req.parsedURL.hash : "");
+      logFacilities.resmessage(
+        `URL sanitized: ${req.url} => ${rewrittenAgainURL}`
+      );
+      req.url = rewrittenAgainURL;
+      try {
+        req.parsedURL = parseURL(
+          req.url,
+          `http${req.socket.encrypted ? "s" : ""}://${
+            req.headers.host
+              ? req.headers.host
+              : config.domain
+                ? config.domain
+                : "unknown.invalid"
+          }`
+        );
+      } catch (err) {
+        res.error(400, err);
+        return;
+      }
+    }
+
+    logFacilities.resmessage(`URL rewritten: ${oldRequestURL} => ${req.url}`);
+    callback();
   };
 
   if (

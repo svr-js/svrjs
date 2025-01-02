@@ -8,7 +8,10 @@ let attemptsRedir = 5;
 function serverErrorHandler(err, isRedirect, server, start) {
   if (isRedirect) attemptsRedir--;
   else attempts--;
-  if (cluster.isPrimary === undefined && (isRedirect ? attemptsRedir : attempts)) {
+  if (
+    cluster.isPrimary === undefined &&
+    (isRedirect ? attemptsRedir : attempts)
+  ) {
     serverconsole.locerrmessage(
       serverErrorDescs[err.code]
         ? serverErrorDescs[err.code]

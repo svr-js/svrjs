@@ -1,9 +1,7 @@
 const fs = require("fs");
 const createRegex = require("../utils/createRegex.js");
 const ipMatch = require("../utils/ipMatch.js");
-const sanitizeURL = require("../utils/urlSanitizer.js");
 const matchHostname = require("../utils/matchHostname.js");
-const parseURL = require("../utils/urlParser.js");
 
 module.exports = (req, res, logFacilities, config, next) => {
   try {
@@ -89,71 +87,10 @@ module.exports = (req, res, logFacilities, config, next) => {
       return;
     }
     if (rewrittenURL != req.url) {
-      logFacilities.resmessage(`URL rewritten: ${req.url} => ${rewrittenURL}`);
-      req.url = rewrittenURL;
-      try {
-        req.parsedURL = parseURL(
-          req.url,
-          `http${req.socket.encrypted ? "s" : ""}://${
-            req.headers.host
-              ? req.headers.host
-              : config.domain
-                ? config.domain
-                : "unknown.invalid"
-          }`
-        );
-      } catch (err) {
-        res.error(400, err);
-        return;
-      }
-
-      const sHref = sanitizeURL(
-        req.parsedURL.pathname,
-        config.allowDoubleSlashes
-      );
-      const preparedReqUrl2 =
-        req.parsedURL.pathname +
-        (req.parsedURL.search ? req.parsedURL.search : "") +
-        (req.parsedURL.hash ? req.parsedURL.hash : "");
-
-      if (
-        req.url != preparedReqUrl2 ||
-        sHref !=
-          req.parsedURL.pathname
-            .replace(/\/\.(?=\/|$)/g, "/")
-            .replace(/\/+/g, "/")
-      ) {
-        res.error(403);
-        logFacilities.errmessage("Content blocked.");
-        return;
-      } else if (sHref != req.parsedURL.pathname) {
-        const rewrittenAgainURL =
-          sHref +
-          (req.parsedURL.search ? req.parsedURL.search : "") +
-          (req.parsedURL.hash ? req.parsedURL.hash : "");
-        logFacilities.resmessage(
-          `URL sanitized: ${req.url} => ${rewrittenAgainURL}`
-        );
-        req.url = rewrittenAgainURL;
-        try {
-          req.parsedURL = parseURL(
-            req.url,
-            `http${req.socket.encrypted ? "s" : ""}://${
-              req.headers.host
-                ? req.headers.host
-                : config.domain
-                  ? config.domain
-                  : "unknown.invalid"
-            }`
-          );
-        } catch (err) {
-          res.error(400, err);
-          return;
-        }
-      }
+      req.rewriteURL(rewrittenURL, next);
+    } else {
+      next();
     }
-
-    next();
   });
 };
 

@@ -527,6 +527,8 @@ function requestHandler(req, res, next) {
     return;
   };
 
+  // req.rewriteURL is not implemented, since it is not required in SVR.JS Core.
+
   if (
     config.enableIncludingHeadAndFootInHTML ||
     config.enableIncludingHeadAndFootInHTML === undefined
