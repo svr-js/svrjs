@@ -201,7 +201,7 @@ function requestHandler(req, res) {
       }
       lastStatusCode = code;
     }
-    res.writeHeadNative(code, codeDescription, headers);
+    return res.writeHeadNative(code, codeDescription, headers);
   };
 
   let finished = false;
