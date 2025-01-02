@@ -91,8 +91,8 @@ function requestHandler(req, res) {
   // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
   if (config.enableHTTP2 == true && req.httpVersion == "2.0") {
     // Set HTTP/1.x methods (to prevent process warnings)
-    res.writeHeadNodeApi = res.writeHead;
-    res.setHeaderNodeApi = res.setHeader;
+    const resWriteHeadNodeApi = res.writeHead.bind(res);
+    const resSetHeaderNodeApi = res.setHeader.bind(res);
 
     res.writeHead = (a, b, c) => {
       let table = c;
@@ -113,7 +113,7 @@ function requestHandler(req, res) {
       if (res.stream && res.stream.destroyed) {
         return false;
       } else {
-        return res.writeHeadNodeApi(a, table);
+        return resWriteHeadNodeApi(a, table);
       }
     };
     res.setHeader = (headerName, headerValue) => {
@@ -124,7 +124,7 @@ function requestHandler(req, res) {
         al != "keep-alive" &&
         al != "upgrade"
       )
-        return res.setHeaderNodeApi(headerName, headerValue);
+        return resSetHeaderNodeApi(headerName, headerValue);
       return false;
     };
 
@@ -165,7 +165,7 @@ function requestHandler(req, res) {
 
   let headWritten = false;
   let lastStatusCode = null;
-  res.writeHeadNative = res.writeHead;
+  const resWriteHeadNative = res.writeHead.bind(res);
   res.writeHead = (code, codeDescription, headers) => {
     if (
       !(
@@ -201,7 +201,7 @@ function requestHandler(req, res) {
       }
       lastStatusCode = code;
     }
-    return res.writeHeadNative(code, codeDescription, headers);
+    return resWriteHeadNative(code, codeDescription, headers);
   };
 
   let finished = false;
