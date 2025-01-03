@@ -21,7 +21,7 @@ module.exports = (req, res, logFacilities, config, next) => {
 module.exports.commands = {
   block: (ip, log, passCommand) => {
     if (ip == undefined || JSON.stringify(ip) == "[]") {
-      if (!cluster.isPrimary === false) log("Cannot block non-existent IP.");
+      if (!cluster.isPrimary === false) log("Cannot block nonexistent IP.");
     } else {
       ip.forEach((ipAddress) => {
         if (ipAddress !== "localhost" && ipAddress.indexOf(":") == -1) {
@@ -38,7 +38,7 @@ module.exports.commands = {
   },
   unblock: (ip, log, passCommand) => {
     if (ip == undefined || JSON.stringify(ip) == "[]") {
-      if (!cluster.isPrimary === false) log("Cannot unblock non-existent IP.");
+      if (!cluster.isPrimary === false) log("Cannot unblock nonexistent IP.");
     } else {
       ip.forEach((ipAddress) => {
         if (ipAddress !== "localhost" && ipAddress.indexOf(":") == -1) {

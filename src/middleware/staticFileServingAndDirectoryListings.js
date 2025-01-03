@@ -394,26 +394,26 @@ module.exports = (req, res, logFacilities, config, next) => {
           }
 
           try {
-            let hdhds = {};
+            let hdrs = {};
             if (useBrotli && isCompressible) {
-              hdhds["Content-Encoding"] = "br";
+              hdrs["Content-Encoding"] = "br";
             } else if (useDeflate && isCompressible) {
-              hdhds["Content-Encoding"] = "deflate";
+              hdrs["Content-Encoding"] = "deflate";
             } else if (useGzip && isCompressible) {
-              hdhds["Content-Encoding"] = "gzip";
+              hdrs["Content-Encoding"] = "gzip";
             } else {
               if (ext == "html") {
-                hdhds["Content-Length"] =
+                hdrs["Content-Length"] =
                   res.head.length + filelen + res.foot.length;
               } else {
-                hdhds["Content-Length"] = filelen;
+                hdrs["Content-Length"] = filelen;
               }
             }
-            hdhds["Accept-Ranges"] = "bytes";
-            delete hdhds["Content-Type"];
+            hdrs["Accept-Ranges"] = "bytes";
+            delete hdrs["Content-Type"];
             const mtype = getMimeType(ext);
-            if (mtype && ext != "") hdhds["Content-Type"] = mtype;
-            if (fileETag) hdhds["ETag"] = fileETag;
+            if (mtype && ext != "") hdrs["Content-Type"] = mtype;
+            if (fileETag) hdrs["ETag"] = fileETag;
 
             if (req.method != "HEAD") {
               let readStream = fs.createReadStream(readFrom);
@@ -465,7 +465,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                           end: res.foot.length == 0
                         });
                       };
-                      res.writeHead(200, statusCodes[200], hdhds);
+                      res.writeHead(200, statusCodes[200], hdrs);
                       if (res.head.length == 0) {
                         afterWriteCallback();
                       } else if (!resStream.write(res.head)) {
@@ -474,7 +474,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                         process.nextTick(afterWriteCallback);
                       }
                     } else {
-                      res.writeHead(200, statusCodes[200], hdhds);
+                      res.writeHead(200, statusCodes[200], hdrs);
                       readStream.pipe(resStream);
                     }
                     logFacilities.resmessage(
@@ -485,7 +485,7 @@ module.exports = (req, res, logFacilities, config, next) => {
                   }
                 });
             } else {
-              res.writeHead(200, statusCodes[200], hdhds);
+              res.writeHead(200, statusCodes[200], hdrs);
               res.end();
               logFacilities.resmessage("Client successfully received content.");
             }

@@ -128,7 +128,7 @@ function printUsage() {
   console.log("--disable-mods        -- Disables mods (safe mode)");
   console.log("--single-threaded     -- Run single-threaded");
   console.log(
-    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performace"
+    "--stdout-notty        -- Enable stdout even when stdout is not a TTY. May decrease the performance"
   );
   console.log("--no-save-config      -- Don't save configuration file");
   console.log("-v --version          -- Display server version");
@@ -266,7 +266,7 @@ if (
   process.serverConfig.domian !== undefined
 )
   process.serverConfig.domain = process.serverConfig.domian;
-delete process.serverConfig.domian;
+delete process.serverConfig.domian; // There was an earlier configuration property called "domian", however it is replaced by "domain".
 if (process.serverConfig.page404 === undefined)
   process.serverConfig.page404 = "404.html";
 process.serverConfig.timestamp = new Date().getTime();
@@ -354,7 +354,7 @@ if (process.serverConfig.wwwrootVHost === undefined)
 // Don't save configuration if disableConfigurationSaving option is set to true
 if (process.serverConfig.disableConfigurationSaving) noSaveConfig = true;
 
-// Compatiblity for very old SVR.JS mods
+// Compatibility for very old SVR.JS mods
 process.serverConfig.version = version;
 process.serverConfig.productName = name;
 
@@ -429,7 +429,7 @@ try {
   wwwrootError = err;
 }
 
-// IP and network inteface-related
+// IP and network interface-related
 let ifaces = {};
 let ifaceEx = null;
 try {
@@ -1659,7 +1659,7 @@ function saveConfig() {
         configJSONobj.domian !== undefined
       )
         configJSONobj.domain = configJSONobj.domian;
-      delete configJSONobj.domian;
+      delete configJSONobj.domian; // There was an earlier configuration property called "domian", however it is replaced by "domain".
       if (configJSONobj.page404 === undefined)
         configJSONobj.page404 = "404.html";
       configJSONobj.timestamp = process.serverConfig.timestamp;

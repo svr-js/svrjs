@@ -512,7 +512,7 @@ function clientErrorHandler(err, socket) {
         return;
       } else {
         logFacilities.errmessage(
-          `An SSL error occured: ${err.code ? err.code : err.message}`
+          `An SSL error occurred: ${err.code ? err.code : err.message}`
         );
         callServerError(400);
         return;
@@ -520,7 +520,7 @@ function clientErrorHandler(err, socket) {
     }
 
     if (err.code && err.code.indexOf("ERR_HTTP2_") == 0) {
-      logFacilities.errmessage(`An HTTP/2 error occured: ${err.code}`);
+      logFacilities.errmessage(`An HTTP/2 error occurred: ${err.code}`);
       callServerError(400);
       return;
     }

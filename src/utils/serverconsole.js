@@ -46,7 +46,7 @@ function LOG(s) {
           logFile.on("error", (err) => {
             if (
               !s.match(
-                /^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /
+                /^SERVER WARNING MESSAGE(?: \[Request ID: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /
               ) &&
               !reallyExiting
             )
@@ -66,7 +66,7 @@ function LOG(s) {
   } catch (err) {
     if (
       !s.match(
-        /^SERVER WARNING MESSAGE(?: \[Request Id: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /
+        /^SERVER WARNING MESSAGE(?: \[Request ID: [0-9a-f]{6}\])?: There was a problem while saving logs! Logs will not be kept in log file\. Reason: /
       ) &&
       !reallyExiting
     )
@@ -88,13 +88,13 @@ const serverconsole = {
     }
     console.log(
       "\x1b[1mSERVER CLI MESSAGE\x1b[22m" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
     LOG(
       "SERVER CLI MESSAGE" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
@@ -109,14 +109,14 @@ const serverconsole = {
     }
     console.log(
       "\x1b[34m\x1b[1mSERVER REQUEST MESSAGE\x1b[22m" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg +
         "\x1b[37m\x1b[0m"
     );
     LOG(
       "SERVER REQUEST MESSAGE" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
@@ -131,14 +131,14 @@ const serverconsole = {
     }
     console.log(
       "\x1b[32m\x1b[1mSERVER RESPONSE MESSAGE\x1b[22m" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg +
         "\x1b[37m\x1b[0m"
     );
     LOG(
       "SERVER RESPONSE MESSAGE" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
@@ -153,14 +153,14 @@ const serverconsole = {
     }
     console.log(
       "\x1b[31m\x1b[1mSERVER RESPONSE ERROR MESSAGE\x1b[22m" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg +
         "\x1b[37m\x1b[0m"
     );
     LOG(
       "SERVER RESPONSE ERROR MESSAGE" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
@@ -175,14 +175,14 @@ const serverconsole = {
     }
     console.log(
       "\x1b[41m\x1b[1mSERVER ERROR MESSAGE\x1b[22m" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg +
         "\x1b[40m\x1b[0m"
     );
     LOG(
       "SERVER ERROR MESSAGE" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
@@ -197,14 +197,14 @@ const serverconsole = {
     }
     console.log(
       "\x1b[43m\x1b[1mSERVER WARNING MESSAGE\x1b[22m" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg +
         "\x1b[40m\x1b[0m"
     );
     LOG(
       "SERVER WARNING MESSAGE" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
@@ -219,13 +219,13 @@ const serverconsole = {
     }
     console.log(
       "\x1b[1mSERVER MESSAGE\x1b[22m" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );
     LOG(
       "SERVER MESSAGE" +
-        (reqId ? " [Request Id: " + reqId + "]" : "") +
+        (reqId ? " [Request ID: " + reqId + "]" : "") +
         ": " +
         msg
     );

@@ -3,7 +3,7 @@ const {
   calculateNetworkIPv4FromCidr
 } = require("../../src/utils/ipSubnetUtils.js");
 
-describe("IPv4 subnet utilties", () => {
+describe("IPv4 subnet utilities", () => {
   describe("calculateBroadcastIPv4FromCidr", () => {
     test("should return the broadcast address for a given CIDR", () => {
       expect(calculateBroadcastIPv4FromCidr("192.168.1.0/24")).toBe(

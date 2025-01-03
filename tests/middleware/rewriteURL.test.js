@@ -1,11 +1,7 @@
 const middleware = require("../../src/middleware/rewriteURL.js");
 const createRegex = require("../../src/utils/createRegex.js");
-const sanitizeURL = require("../../src/utils/urlSanitizer.js");
-const parseURL = require("../../src/utils/urlParser.js");
 
 jest.mock("fs");
-jest.mock("../../src/utils/urlSanitizer.js");
-jest.mock("../../src/utils/urlParser.js");
 jest.mock("../../src/utils/createRegex.js");
 
 describe("rewriteURL middleware", () => {
@@ -26,7 +22,8 @@ describe("rewriteURL middleware", () => {
       socket: {
         encrypted: false,
         localAddress: "127.0.0.1"
-      }
+      },
+      rewriteURL: jest.fn()
     };
     res = {
       error: jest.fn()
@@ -45,12 +42,6 @@ describe("rewriteURL middleware", () => {
     // Make mocks call actual functions
     createRegex.mockImplementation((...params) =>
       jest.requireActual("../../src/utils/createRegex.js")(...params)
-    );
-    parseURL.mockImplementation((...params) =>
-      jest.requireActual("../../src/utils/urlParser.js")(...params)
-    );
-    sanitizeURL.mockImplementation((...params) =>
-      jest.requireActual("../../src/utils/urlSanitizer.js")(...params)
     );
   });
 
@@ -85,46 +76,7 @@ describe("rewriteURL middleware", () => {
     expect(res.error).toHaveBeenCalledWith(500, expect.any(Error));
   });
 
-  test("should return 400 if parsedURL is invalid", () => {
-    config.rewriteMap = [
-      {
-        host: "test.com",
-        definingRegex: "/.*/",
-        replacements: [
-          {
-            regex: "/.*/",
-            replacement: "/new"
-          }
-        ]
-      }
-    ];
-    parseURL.mockImplementation(() => {
-      throw new Error("Test error");
-    });
-    middleware(req, res, logFacilities, config, next);
-    expect(res.error).toHaveBeenCalledWith(400, expect.any(Error));
-  });
-
-  test("should return 403 if URL is sanitized", () => {
-    config.rewriteMap = [
-      {
-        host: "test.com",
-        definingRegex: "/.*/",
-        replacements: [
-          {
-            regex: "/.*/",
-            replacement: "/new"
-          }
-        ]
-      }
-    ];
-    sanitizeURL.mockReturnValue("/sanitized");
-    middleware(req, res, logFacilities, config, next);
-    expect(res.error).toHaveBeenCalledWith(403);
-    expect(logFacilities.errmessage).toHaveBeenCalledWith("Content blocked.");
-  });
-
-  test("should call next if URL is rewritten successfully", () => {
+  test("should call req.rewriteURL if URL is to be rewritten", () => {
     config.rewriteMap = [
       {
         host: "test.com",
@@ -138,6 +90,6 @@ describe("rewriteURL middleware", () => {
       }
     ];
     middleware(req, res, logFacilities, config, next);
-    expect(next).toHaveBeenCalled();
+    expect(req.rewriteURL).toHaveBeenCalledWith("/new", next);
   });
 });

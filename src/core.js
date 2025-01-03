@@ -68,8 +68,8 @@ function requestHandler(req, res, next) {
   // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
   if (config.enableHTTP2 == true && req.httpVersion == "2.0") {
     // Set HTTP/1.x methods (to prevent process warnings)
-    res.writeHeadNodeApi = res.writeHead;
-    res.setHeaderNodeApi = res.setHeader;
+    const resWriteHeadNodeApi = res.writeHead.bind(res);
+    const resSetHeaderNodeApi = res.setHeader.bind(res);
 
     res.writeHead = (a, b, c) => {
       let table = c;
@@ -90,7 +90,7 @@ function requestHandler(req, res, next) {
       if (res.stream && res.stream.destroyed) {
         return false;
       } else {
-        return res.writeHeadNodeApi(a, table);
+        return resWriteHeadNodeApi(a, table);
       }
     };
     res.setHeader = (headerName, headerValue) => {
@@ -101,7 +101,7 @@ function requestHandler(req, res, next) {
         al != "keep-alive" &&
         al != "upgrade"
       )
-        return res.setHeaderNodeApi(headerName, headerValue);
+        return resSetHeaderNodeApi(headerName, headerValue);
       return false;
     };
 
@@ -527,6 +527,8 @@ function requestHandler(req, res, next) {
     return;
   };
 
+  // req.rewriteURL is not implemented, since it is not required in SVR.JS Core.
+
   if (
     config.enableIncludingHeadAndFootInHTML ||
     config.enableIncludingHeadAndFootInHTML === undefined
@@ -554,9 +556,9 @@ function requestHandler(req, res, next) {
     // Handle "*" URL
     if (req.method == "OPTIONS") {
       // Respond with list of methods
-      let hdss = config.getCustomHeaders();
-      hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-      res.writeHead(204, statusCodes[204], hdss);
+      let hdrs = config.getCustomHeaders();
+      hdrs["Allow"] = "GET, POST, HEAD, OPTIONS";
+      res.writeHead(204, statusCodes[204], hdrs);
       res.end();
       return;
     } else {

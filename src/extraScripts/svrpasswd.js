@@ -501,7 +501,7 @@ function promptAlgorithms(callback, bypass, pbkdf2, scrypt) {
 
 const userindex = getUserIndex(user);
 if (action == "add" && userindex != -1) {
-  console.log("User alerady exists.");
+  console.log("User already exists.");
   process.exit(1);
 } else if (action != "add" && userindex == -1) {
   console.log("User doesn't exist.");

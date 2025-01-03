@@ -1,4 +1,4 @@
-//Server-side Javascript (Node.js)
+//Server-side JavaScript (Node.js)
 //This implementation uses Node.js, which powers SVR.JS.
 //This implementation contains elements specific for SVR.JS mods:
 //  req - A server request instance
@@ -56,18 +56,18 @@ if(href == "/hello.svr") {
     });
     res.writeHead(200, "OK", headers); //Write Head
     res.end("<html><head><title>SVR.JS ServerSide Test</title></head><body><h1>Hello World!</h1><p>This is a test from server-side JavaScript. This test is executed " + requestCounter.toString() + " times from taking server up." + (req.headers.origin == undefined ? "" : " This request is done from a proxy.") + "</p><p><i>SVR.JS/" + configJSON.version + ' (' + os.platform()[0].toUpperCase() + os.platform().slice(1) + ')' + (req.headers.host == undefined ? "" : " on " + req.headers.host) + "</p></body></html>"); //Write response
-    serverconsole.resmessage("Client successfully recieved content."); //Log into SVR.JS
+    serverconsole.resmessage("Client successfully received content."); //Log into SVR.JS
     return; //Prevent SVR.JS from crashing
   });
 } else if(href == "/proxy.svr") {
   callServerError(403,"SVR.JS-exampleproxy"); //Server error
-  serverconsole.errmessage("Client fails to recieve content."); //Log into SVR.JS
+  serverconsole.errmessage("Client fails to receive content."); //Log into SVR.JS
 } else if(href.indexOf("/proxy.svr/") == 0) {
   var hn = href.split("/")[2]; //Hostname
   if(hn != "this" && !(req.socket.realRemoteAddress ? req.socket.realRemoteAddress : req.socket.remoteAddress).match(/^(?:localhost$|::1$|f[c-d][0-9a-f]{2}:|(?:::ffff:)?(?:(?:127|10)\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|192\.168\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3})$)/i) ) {
     //Prevent open proxy
     callServerError(403,"SVR.JS-exampleproxy"); //Server error
-    serverconsole.errmessage("Client fails to recieve content."); //Log into SVR.JS
+    serverconsole.errmessage("Client fails to receive content."); //Log into SVR.JS
     return;
   }
   var hdrs = req.headers;
@@ -88,7 +88,7 @@ if(href == "/hello.svr") {
   });
   proxy.on("error",(ex) => {
     callServerError(500,"SVR.JS-exampleproxy",ex.stack); //Server error
-    serverconsole.errmessage("Client fails to recieve content."); //Log into SVR.JS
+    serverconsole.errmessage("Client fails to receive content."); //Log into SVR.JS
   });
   req.pipe(proxy, {
     end: true

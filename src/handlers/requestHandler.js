@@ -8,6 +8,7 @@ const ipMatch = require("../utils/ipMatch.js");
 const matchHostname = require("../utils/matchHostname.js");
 const generateServerString = require("../utils/generateServerString.js");
 const parseURL = require("../utils/urlParser.js");
+const sanitizeURL = require("../utils/urlSanitizer.js");
 const deepClone = require("../utils/deepClone.js");
 const normalizeWebroot = require("../utils/normalizeWebroot.js");
 const statusCodes = require("../res/statusCodes.js");
@@ -91,8 +92,8 @@ function requestHandler(req, res) {
   // Make HTTP/1.x API-based scripts compatible with HTTP/2.0 API
   if (config.enableHTTP2 == true && req.httpVersion == "2.0") {
     // Set HTTP/1.x methods (to prevent process warnings)
-    res.writeHeadNodeApi = res.writeHead;
-    res.setHeaderNodeApi = res.setHeader;
+    const resWriteHeadNodeApi = res.writeHead.bind(res);
+    const resSetHeaderNodeApi = res.setHeader.bind(res);
 
     res.writeHead = (a, b, c) => {
       let table = c;
@@ -113,7 +114,7 @@ function requestHandler(req, res) {
       if (res.stream && res.stream.destroyed) {
         return false;
       } else {
-        return res.writeHeadNodeApi(a, table);
+        return resWriteHeadNodeApi(a, table);
       }
     };
     res.setHeader = (headerName, headerValue) => {
@@ -124,7 +125,7 @@ function requestHandler(req, res) {
         al != "keep-alive" &&
         al != "upgrade"
       )
-        return res.setHeaderNodeApi(headerName, headerValue);
+        return resSetHeaderNodeApi(headerName, headerValue);
       return false;
     };
 
@@ -165,7 +166,7 @@ function requestHandler(req, res) {
 
   let headWritten = false;
   let lastStatusCode = null;
-  res.writeHeadNative = res.writeHead;
+  const resWriteHeadNative = res.writeHead.bind(res);
   res.writeHead = (code, codeDescription, headers) => {
     if (
       !(
@@ -201,7 +202,7 @@ function requestHandler(req, res) {
       }
       lastStatusCode = code;
     }
-    res.writeHeadNative(code, codeDescription, headers);
+    return resWriteHeadNative(code, codeDescription, headers);
   };
 
   let finished = false;
@@ -658,6 +659,75 @@ function requestHandler(req, res) {
     return;
   };
 
+  // Function to rewrite the request URL
+  req.rewriteURL = (rewrittenURL, callback) => {
+    const oldRequestURL = req.url;
+    req.url = rewrittenURL;
+    try {
+      req.parsedURL = parseURL(
+        req.url,
+        `http${req.socket.encrypted ? "s" : ""}://${
+          req.headers.host
+            ? req.headers.host
+            : config.domain
+              ? config.domain
+              : "unknown.invalid"
+        }`
+      );
+    } catch (err) {
+      res.error(400, err);
+      return;
+    }
+
+    const sHref = sanitizeURL(
+      req.parsedURL.pathname,
+      config.allowDoubleSlashes
+    );
+    const preparedReqUrl2 =
+      req.parsedURL.pathname +
+      (req.parsedURL.search ? req.parsedURL.search : "") +
+      (req.parsedURL.hash ? req.parsedURL.hash : "");
+
+    if (
+      req.url != preparedReqUrl2 ||
+      sHref !=
+        req.parsedURL.pathname
+          .replace(/\/\.(?=\/|$)/g, "/")
+          .replace(/\/+/g, "/")
+    ) {
+      res.error(403);
+      logFacilities.errmessage("Invalid URL rewriting operation.");
+      return;
+    } else if (sHref != req.parsedURL.pathname) {
+      const rewrittenAgainURL =
+        sHref +
+        (req.parsedURL.search ? req.parsedURL.search : "") +
+        (req.parsedURL.hash ? req.parsedURL.hash : "");
+      logFacilities.resmessage(
+        `URL sanitized: ${req.url} => ${rewrittenAgainURL}`
+      );
+      req.url = rewrittenAgainURL;
+      try {
+        req.parsedURL = parseURL(
+          req.url,
+          `http${req.socket.encrypted ? "s" : ""}://${
+            req.headers.host
+              ? req.headers.host
+              : config.domain
+                ? config.domain
+                : "unknown.invalid"
+          }`
+        );
+      } catch (err) {
+        res.error(400, err);
+        return;
+      }
+    }
+
+    logFacilities.resmessage(`URL rewritten: ${oldRequestURL} => ${req.url}`);
+    callback();
+  };
+
   if (
     config.enableIncludingHeadAndFootInHTML ||
     config.enableIncludingHeadAndFootInHTML === undefined
@@ -685,9 +755,9 @@ function requestHandler(req, res) {
     // Handle "*" URL
     if (req.method == "OPTIONS") {
       // Respond with list of methods
-      let hdss = config.getCustomHeaders();
-      hdss["Allow"] = "GET, POST, HEAD, OPTIONS";
-      res.writeHead(204, statusCodes[204], hdss);
+      let hdrs = config.getCustomHeaders();
+      hdrs["Allow"] = "GET, POST, HEAD, OPTIONS";
+      res.writeHead(204, statusCodes[204], hdrs);
       res.end();
       return;
     } else {

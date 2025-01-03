@@ -1,11 +1,12 @@
 {
-  "version": "4.4.0",
+  "version": "4.5.0",
   "name": "SVR.JS",
   "documentationURL": "https://svrjs.org/docs",
-  "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.svr",
+  "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.php",
   "changes": [
-    "Added the server configuration validation.",
-    "Added the virtual host functionality that relies on switching the webroots.",
-    "Fixed a bug with relative paths in webroot normalization function."
+    "Added req.rewriteURL() method for request URL rewriting.",
+    "Corrected spelling errors.",
+    "The res.writeHead() method is now chainable.",
+    "Updated dependencies."
   ]
 }
