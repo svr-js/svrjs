@@ -77,4 +77,14 @@ describe("URL parser", () => {
       "http://user:pass@example.com:8080/path/to/resource?query=string#fragment"
     );
   });
+
+  test("should return the parsed URL object after calling the URL parser two times", () => {
+    parseURL("http://example.com");
+    const parsedUrl = parseURL("http://example.com");
+    expect(parsedUrl.protocol).toBe("http:");
+    expect(parsedUrl.hostname).toBe("example.com");
+    expect(parsedUrl.pathname).toBe("/");
+    expect(parsedUrl.path).toBe("/");
+    expect(parsedUrl.href).toBe("http://example.com/");
+  });
 });

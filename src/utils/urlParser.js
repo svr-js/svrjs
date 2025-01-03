@@ -1,4 +1,5 @@
 const url = require("url");
+const parsedURLCache = new Map();
 
 // SVR.JS URL parser function (compatible with legacy Node.JS URL parsing function)
 function parseURL(uri, prepend) {
@@ -7,6 +8,9 @@ function parseURL(uri, prepend) {
 
   // If URL begins with a slash, prepend a string if available
   if (prepend && uri[0] == "/") uri = prepend.replace(/\/+$/, "") + uri;
+
+  // If the parsed URL is in the cache, return the cached object
+  if (parsedURLCache.has(uri)) return parsedURLCache.get(uri);
 
   // Determine if URL has slashes
   let hasSlashes = uri.indexOf("/") != -1;
@@ -83,6 +87,9 @@ function parseURL(uri, prepend) {
     (uobject.port ? ":" + uobject.port : "") +
     (uobject.path ? uobject.path : "") +
     (uobject.hash ? uobject.hash : "");
+
+  // Add the parsed URL object to the cache
+  parsedURLCache.set(uri, uobject);
 
   return uobject;
 }
