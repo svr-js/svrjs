@@ -69,7 +69,7 @@ function deleteFolderRecursive(path) {
 }
 
 var os = require("os");
-var version = "3.14.18";
+var version = "3.14.19";
 var singlethreaded = false;
 
 if (process.versions) process.versions.svrjs = version; // Inject SVR.JS into process.versions
@@ -2998,7 +2998,7 @@ if (!cluster.isPrimary) {
         }
         lastStatusCode = code;
       }
-      res.writeHeadNative(code, codeDescription, headers);
+      return res.writeHeadNative(code, codeDescription, headers);
     };
 
     var finished = false;
