@@ -14,14 +14,16 @@ const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
 // ETag-related
-let ETagDB = {};
+const ETagDB = new Map();
 
 const generateETag = (filePath, stat) => {
-  if (!ETagDB[filePath + "-" + stat.size + "-" + stat.mtime])
-    ETagDB[filePath + "-" + stat.size + "-" + stat.mtime] = sha256(
-      filePath + "-" + stat.size + "-" + stat.mtime
-    );
-  return ETagDB[filePath + "-" + stat.size + "-" + stat.mtime];
+  if (!ETagDB.has(filePath + "-" + stat.size + "-" + stat.mtime)) {
+    const ETag = sha256(filePath + "-" + stat.size + "-" + stat.mtime);
+    ETagDB.set(filePath + "-" + stat.size + "-" + stat.mtime, ETag);
+    return ETag;
+  } else {
+    return ETagDB.get(filePath + "-" + stat.size + "-" + stat.mtime);
+  }
 };
 
 // eslint-disable-next-line no-unused-vars
