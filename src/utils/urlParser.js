@@ -1,6 +1,6 @@
 const url = require("url");
-const { LRUCache } = require("lru-cache");
-const parsedURLCache = new LRUCache({ max: 500 });
+const LRU = require("lru-cache");
+const parsedURLCache = LRU({ max: 500 });
 
 // SVR.JS URL parser function (compatible with legacy Node.JS URL parsing function)
 function parseURL(uri, prepend) {
