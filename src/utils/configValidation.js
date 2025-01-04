@@ -132,8 +132,6 @@ const validators = {
   enableIncludingHeadAndFootInHTML: (value) => typeof value === "boolean",
   blacklist: (value) =>
     Array.isArray(value) && value.every((item) => validateIP(item)),
-  disableServerSideScriptExpose: (value) => typeof value === "boolean",
-  enableRemoteLogBrowsing: (value) => typeof value === "boolean",
   exposeServerVersion: (value) => typeof value === "boolean",
   rewriteDirtyURLs: (value) => typeof value === "boolean",
   exposeModsInErrorPages: (value) => typeof value === "boolean",

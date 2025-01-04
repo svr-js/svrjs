@@ -255,12 +255,8 @@ if (process.serverConfig.serverAdministratorEmail === undefined)
   process.serverConfig.serverAdministratorEmail = "[no contact information]";
 if (process.serverConfig.stackHidden === undefined)
   process.serverConfig.stackHidden = false;
-if (process.serverConfig.enableRemoteLogBrowsing === undefined)
-  process.serverConfig.enableRemoteLogBrowsing = false;
 if (process.serverConfig.exposeServerVersion === undefined)
   process.serverConfig.exposeServerVersion = true;
-if (process.serverConfig.disableServerSideScriptExpose === undefined)
-  process.serverConfig.disableServerSideScriptExpose = true;
 if (process.serverConfig.allowStatus === undefined)
   process.serverConfig.allowStatus = true;
 if (process.serverConfig.rewriteMap === undefined)
@@ -1634,12 +1630,8 @@ function saveConfig() {
         configJSONobj.serverAdministratorEmail = "[no contact information]";
       if (configJSONobj.stackHidden === undefined)
         configJSONobj.stackHidden = false;
-      if (configJSONobj.enableRemoteLogBrowsing === undefined)
-        configJSONobj.enableRemoteLogBrowsing = false;
       if (configJSONobj.exposeServerVersion === undefined)
         configJSONobj.exposeServerVersion = true;
-      if (configJSONobj.disableServerSideScriptExpose === undefined)
-        configJSONobj.disableServerSideScriptExpose = true;
       if (configJSONobj.allowStatus === undefined)
         configJSONobj.allowStatus = true;
       if (configJSONobj.rewriteMap === undefined) configJSONobj.rewriteMap = [];
