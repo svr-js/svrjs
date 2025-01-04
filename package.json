@@ -44,6 +44,7 @@
     "wait-on": "^8.0.1"
   },
   "dependencies": {
+    "fetch-blob": "^4.0.0",
     "formidable": "^2.1.2",
     "globalthis": "^1.0.4",
     "lru-cache": "^10.4.3",
