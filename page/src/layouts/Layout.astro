@@ -1,0 +1,23 @@
+---
+import "@fontsource/poppins";
+import "@fontsource/poppins/700.css";
+import "../styles/main.css";
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="p-5 md:py-28 md:px-10 w-full max-w-screen-xl mx-auto">
+      <slot />
+    </div>
+  </body>
+</html>
