@@ -17,26 +17,7 @@
   "enableRemoteLogBrowsing": false,
   "exposeServerVersion": true,
   "disableServerSideScriptExpose": true,
-  "rewriteMap": [
-    {
-      "definingRegex": "/^\\/serverSideScript\\.js(?:$|[#?])/",
-      "replacements": [
-        {
-          "regex": "/^\\/serverSideScript\\.js($|[#?])/",
-          "replacement": "/NONEXISTENT_PAGE$1"
-        }
-      ]
-    },
-    {
-      "definingRegex": "/^\\/testdir_rewritten(?:$|[\\/?#])/",
-      "replacements": [
-        {
-          "regex": "/^\\/testdir_rewritten($|[\\/?#])/",
-          "replacement": "/testdir$1"
-        }
-      ]
-    }
-  ],
+  "rewriteMap": [],
   "allowStatus": true,
   "dontCompress": [
     "/.*\\.ipxe$/",
