@@ -2,9 +2,7 @@
   "name": "SVR.JS Core",
   "externalPackages": [
     "lru-cache",
-    "mime-db",
-    "globalthis",
-    "node-abort-controller"
+    "mime-db"
   ],
   "packageJSON": {
     "name": "svrjs-core",

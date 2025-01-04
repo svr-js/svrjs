@@ -29,6 +29,24 @@ app.use(svrjsCore());
 app.listen(3000);
 ```
 
+## Note about older Node.JS versions
+
+In Node.JS versions older than v14.17.0, `AbortController` is not implemented in Node.JS, so the `lru-cache` library may emit a warning about `AbortController`. If you aim for compatibility with these versions of Node.JS, install the `node-abort-controller` npm package and add this code before loading SVR.JS Core:
+
+```javascript
+// Polyfill AbortController
+if (typeof AbortController === "undefined") {
+  Object.assign(globalThis, require("node-abort-controller"));
+}
+```
+
+In Node.JS versions older than v12.0.0, `globalThis` is not implemented in Node.JS, so loading SVR.JS Core may fail due to undefined `globalThis`. If you aim for compatibility with these versions of Node.JS, install the `globalthis` npm package and add this code before loading SVR.JS Core and polyfilling `AbortController`:
+
+```javascript
+// Polyfill globalThis
+require("globalthis/shim")();
+```
+
 ## Methods
 
 ### *svrjsCore([config])*

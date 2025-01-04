@@ -1,6 +1,5 @@
 const fs = require("fs");
 const net = require("net");
-require("./utils/polyfillsCore.js");
 const defaultPageCSS = require("./res/defaultPageCSS.js");
 const generateErrorStack = require("./utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("./res/httpErrorDescriptions.js");
