@@ -624,7 +624,7 @@ if (process.versions && process.versions.deno) vnum = 64;
 if (process.isBun) vnum = 64;
 
 let mods = [];
-const modFiles = fs.readdirSync(__dirname + "/mods").sort();
+const modFiles = fs.readdirSync(process.dirname + "/mods").sort();
 let modInfos = [];
 let modLoadingErrors = [];
 let SSJSError = undefined;
