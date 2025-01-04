@@ -63,7 +63,7 @@ if (!isDev) {
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
-            from: ["./assets/wwwroot/**/*"],
+            from: ["./page/dist/**/*"],
             to: ["./dist/wwwroot"]
           },
           globbyOptions: {
@@ -231,7 +231,7 @@ if (!isDev) {
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
-            from: ["./assets/wwwroot/**/*"],
+            from: ["./page/dist/**/*"],
             to: ["./dist/wwwroot"]
           },
           globbyOptions: {

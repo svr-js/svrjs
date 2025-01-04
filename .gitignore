@@ -3,8 +3,8 @@
 /out/
 /core/
 
-# Temporary files used by build script
-/generatedAssets/
+# Generated webroot
+/page/dist/
 
 # Dependencies
 node_modules/

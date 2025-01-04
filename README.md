@@ -106,11 +106,13 @@ You can read the [SVR.JS documentation](https://svrjs.org/docs) to get informati
 
 ## npm scripts
 
-- To build SVR.JS along with the zip archive, run `npm run build`.
-- To check SVR.JS code for errors with ESLint, run `npm run lint`.
-- To fix and beautify SVR.JS code with ESLint and Prettier, run `npm run lint:fix`.
-- To run SVR.JS from the "dist" folder, run `npm start`.
+- To build SVR.JS along with the default page and the zip archive, run `npm run build`.
+- To build the default page, run `npm run build:page`.
 - To test SVR.JS itself, run `npm run dev`. This removes existing configuration.
+- To run the development server for the default page (built with Astro), run `npm run dev:page`.
+- To check SVR.JS code and default page for errors with ESLint, run `npm run lint`.
+- To fix and beautify SVR.JS code and default page with ESLint and Prettier, run `npm run lint:fix`.
+- To run SVR.JS from the "dist" folder, run `npm start`.
 - To perform unit tests with Jest, run `npm test`.
  
 ## Contribute
