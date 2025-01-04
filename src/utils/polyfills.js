@@ -1,5 +1,5 @@
-// Polyfill globalThis
-require("globalthis/shim")();
+// Load core polyfills
+require("./polyfillsCore.js");
 
 // Polyfill fetch
 const nodeFetch = require("node-fetch");
