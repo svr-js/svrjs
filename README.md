@@ -112,38 +112,6 @@ You can read the [SVR.JS documentation](https://svrjs.org/docs) to get informati
 - To run SVR.JS from the "dist" folder, run `npm start`.
 - To test SVR.JS itself, run `npm run dev`. This removes existing configuration.
 - To perform unit tests with Jest, run `npm test`.
-
-## File structure
-
-The file structure for SVR.JS source code looks like this:
- - .husky - Git hooks
- - assets - various assets
-   - core - files to copy into core folder and into SVR.JS Core package
-   - dirimages - files to copy into .dirimages folder in dist folder
-   - svrjs - files to copy into dist folder
-   - wwwroot - files to copy into wwwroot folder in dist folder
- - core - contains SVR.JS Core
- - dist - contains SVR.JS, assets, and SVR.JS utilities
- - out - contains SVR.JS zip archive
- - src - contains SVR.JS source code
-   - index.js - SVR.JS entry point
-   - core.js - SVR.JS Core entry point
-   - core.d.ts - SVR.JS Core type definitions (the type definition only on a single file)
-   - extraScripts - SVR.JS extra scripts (each script has a single file)
-   - handlers - handlers for servers
-   - middleware - built-in middleware for servers
-   - res - resources
-   - utils - utility functions
- - tests - Jest unit tests
-   - middleware - tests for middleware
-   - utils - unit tests for utility functions
- - commitlint.config.js - commitlint configuration
- - esbuild.config.js - the build script
- - eslint.config.js - ESLint configuration
- - jest.config.js - Jest configuration
- - lint-staged.config.js - lint-staged configuration
- - prettier.config.js - Prettier configuration
- - svrjs.json - SVR.JS version, name, documentation URL, and statistics server collection endpoint URL
  
 ## Contribute
 
