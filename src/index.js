@@ -50,29 +50,8 @@ try {
     throw new Error("HTTP/2 support is not present");
   };
 }
-let crypto = {
-  __disabled__: null
-};
-let https = {
-  createServer: () => {
-    throw new Error("Crypto support is not present");
-  },
-  connect: () => {
-    throw new Error("Crypto support is not present");
-  },
-  get: () => {
-    throw new Error("Crypto support is not present");
-  }
-};
-try {
-  crypto = require("crypto");
-  https = require("https");
-  // eslint-disable-next-line no-unused-vars
-} catch (err) {
-  http2.createSecureServer = () => {
-    throw new Error("Crypto support is not present");
-  };
-}
+const crypto = require("crypto");
+const https = require("https");
 
 const ocsp = require("ocsp");
 const ocspCache = new ocsp.Cache();
@@ -512,7 +491,7 @@ function doIpRequest(isHTTPS, options) {
     });
   });
   ipRequest.on("error", () => {
-    if (crypto.__disabled__ || ipRequestGotError) {
+    if (ipRequestGotError) {
       ipRequestCompleted = true;
       process.emit("ipRequestCompleted");
     } else {
@@ -520,7 +499,7 @@ function doIpRequest(isHTTPS, options) {
     }
   });
   ipRequest.on("timeout", () => {
-    if (crypto.__disabled__ || ipRequestGotError) {
+    if (ipRequestGotError) {
       ipRequestCompleted = true;
       process.emit("ipRequestCompleted");
     } else {
@@ -531,9 +510,9 @@ function doIpRequest(isHTTPS, options) {
 }
 
 if (host != "[offline]" || ifaceEx) {
-  doIpRequest(crypto.__disabled__ === undefined, {
+  doIpRequest(true, {
     host: "api64.ipify.org",
-    port: crypto.__disabled__ !== undefined ? 80 : 443,
+    port: 443,
     path: "/",
     headers: {
       "User-Agent": generateServerString(true)
@@ -541,17 +520,15 @@ if (host != "[offline]" || ifaceEx) {
     timeout: 5000
   });
 
-  if (crypto.__disabled__ === undefined) {
-    doIpRequest(true, {
-      host: "api.seeip.org",
-      port: 443,
-      path: "/",
-      headers: {
-        "User-Agent": generateServerString(true)
-      },
-      timeout: 5000
-    });
-  }
+  doIpRequest(true, {
+    host: "api.seeip.org",
+    port: 443,
+    path: "/",
+    headers: {
+      "User-Agent": generateServerString(true)
+    },
+    timeout: 5000
+  });
 } else {
   ipRequestCompleted = true;
 }
@@ -822,11 +799,7 @@ if (!disableMods) {
         hexstrbase64 === undefined
           ? ""
           : "var hexstrbase64 = require('../hexstrbase64/index.js');\r\n"
-      }${
-        crypto.__disabled__ === undefined
-          ? "var crypto = require('crypto');\r\nvar https = require('https');\r\n"
-          : ""
-      }var stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function() {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
+      }var crypto = require('crypto');\r\nvar https = require('https');\r\nvar stream = require('stream');\r\nvar customvar1;\r\nvar customvar2;\r\nvar customvar3;\r\nvar customvar4;\r\n\r\nfunction Mod() {}\r\nMod.prototype.callback = function callback(req, res, serverconsole, responseEnd, href, ext, uobject, search, defaultpage, users, page404, head, foot, fd, elseCallback, configJSON, callServerError, getCustomHeaders, origHref, redirect, parsePostData, authUser) {\r\nreturn function() {\r\nvar disableEndElseCallbackExecute = false;\r\nfunction filterHeaders(e){var r={};return Object.keys(e).forEach((function(t){null!==e[t]&&void 0!==e[t]&&("object"==typeof e[t]?r[t]=JSON.parse(JSON.stringify(e[t])):r[t]=e[t])})),r}\r\nfunction checkHostname(e){if(void 0===e||"*"==e)return!0;if(req.headers.host&&0==e.indexOf("*.")&&"*."!=e){var r=e.substring(2);if(req.headers.host==r||req.headers.host.indexOf("."+r)==req.headers.host.length-r.length-1)return!0}else if(req.headers.host&&req.headers.host==e)return!0;return!1}\r\nfunction checkHref(e){return href==e||"win32"==os.platform()&&href.toLowerCase()==e.toLowerCase()}\r\n`;
       const modfoot =
         "\r\nif(!disableEndElseCallbackExecute) {\r\ntry{\r\nelseCallback();\r\n} catch(err) {\r\n}\r\n}\r\n}\r\n}\r\nmodule.exports = Mod;";
       // Write the modified server side script to the temp folder
@@ -1039,18 +1012,12 @@ function listeningMessage() {
 
     // Code for sending data to a statistics server
     if (!process.serverConfig.optOutOfStatisticsServer) {
-      if (crypto.__disabled__ !== undefined) {
-        serverconsole.locwarnmessage(
-          "Sending data to statistics server is disabled, because the server only supports HTTPS, and your Node.JS version doesn't have crypto support."
-        );
-      } else {
-        sendStatistics(modInfos, (err) => {
-          if (err)
-            serverconsole.locwarnmessage(
-              `There was a problem, when sending data to statistics server! Reason: ${err.message}`
-            );
-        });
-      }
+      sendStatistics(modInfos, (err) => {
+        if (err)
+          serverconsole.locwarnmessage(
+            `There was a problem, when sending data to statistics server! Reason: ${err.message}`
+          );
+      });
     }
   });
 }
@@ -1774,11 +1741,7 @@ function start(init) {
         serverconsole.locwarnmessage(
           `You're running ${name} on single thread. Reliability may suffer, as the server is stopped after crash.`
         );
-      if (crypto.__disabled__ !== undefined)
-        serverconsole.locwarnmessage(
-          "Your Node.JS version doesn't have crypto support! The 'crypto' module is essential for providing cryptographic functionality in Node.JS. Without crypto support, certain security features may be unavailable, and some functionality may not work as expected. It's recommended to use a Node.JS version that includes crypto support to ensure the security and proper functioning of your server."
-        );
-      if (crypto.__disabled__ === undefined && !crypto.scrypt)
+      if (!crypto.scrypt)
         serverconsole.locwarnmessage(
           "Your JavaScript runtime doesn't have native scrypt support. HTTP authentication involving scrypt hashes will not work."
         );

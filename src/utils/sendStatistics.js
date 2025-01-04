@@ -2,29 +2,6 @@ const generateServerString = require("./generateServerString.js");
 const svrjsInfo = require("../../svrjs.json");
 const { version, statisticsServerCollectEndpoint } = svrjsInfo;
 
-let crypto = {
-  __disabled__: null
-};
-let https = {
-  createServer: () => {
-    throw new Error("Crypto support is not present");
-  },
-  connect: () => {
-    throw new Error("Crypto support is not present");
-  },
-  get: () => {
-    throw new Error("Crypto support is not present");
-  }
-};
-try {
-  // eslint-disable-next-line no-unused-vars
-  crypto = require("crypto");
-  https = require("https");
-  // eslint-disable-next-line no-unused-vars
-} catch (err) {
-  // Can't load HTTPS
-}
-
 function sendStatistics(modInfos, callback) {
   const statisticsToSend = JSON.stringify({
     version: version,
@@ -40,45 +17,41 @@ function sendStatistics(modInfos, callback) {
         : process.version,
     mods: modInfos
   });
-  const statisticsRequest = https.request(
-    statisticsServerCollectEndpoint,
-    {
-      method: "POST",
-      headers: {
-        "User-Agent": generateServerString(true),
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(statisticsToSend)
-      }
+
+  // Fetch API is present in Node.JS 18 and newer. For older versions, Fetch API implementation from "node-fetch" library is used (it is polyfilled).
+  fetch(statisticsServerCollectEndpoint, {
+    method: "POST",
+    headers: {
+      "User-Agent": generateServerString(true),
+      "Content-Type": "application/json",
+      "Content-Length": statisticsToSend.length // Note: Content-Length is not strictly necessary with Fetch
     },
-    (res) => {
-      const statusCode = res.statusCode;
-      let data = "";
-      res.on("data", (chunk) => {
-        data += chunk.toString();
-      });
-      res.on("end", () => {
-        try {
-          let parsedJson = {};
-          try {
-            parsedJson = JSON.parse(data);
-            // eslint-disable-next-line no-unused-vars
-          } catch (err) {
-            throw new Error("JSON parse error (response parsing failed).");
+    body: statisticsToSend
+  })
+    .then((res) => {
+      const statusCode = res.status;
+      return res
+        .json()
+        .then((data) => {
+          if (!data) {
+            callback(new Error("Unspecified JSON parse error"));
+            return;
+          } else if (data.status !== statusCode) {
+            callback(new Error("Status code mismatch"));
+            return;
+          } else if (statusCode !== 200) {
+            callback(new Error(data.message));
+            return;
           }
-          if (parsedJson.status != statusCode)
-            throw new Error("Status code mismatch");
-          if (statusCode != 200) throw new Error(parsedJson.message);
           callback(null);
-        } catch (err) {
+        })
+        .catch((err) => {
           callback(err);
-        }
-      });
-    }
-  );
-  statisticsRequest.on("error", (err) => {
-    callback(err);
-  });
-  statisticsRequest.end(statisticsToSend);
+        });
+    })
+    .catch((err) => {
+      callback(err);
+    });
 }
 
 module.exports = sendStatistics;

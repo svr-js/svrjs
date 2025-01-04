@@ -216,44 +216,34 @@ module.exports = (req, res, logFacilities, config, next) => {
           }
         }
       } else if (list[_i].pbkdf2) {
-        if (crypto.__disabled__ !== undefined) {
-          res.error(
-            500,
-            new Error(
-              `${name} doesn't support PBKDF2-hashed passwords on Node.JS versions without crypto support.`
-            )
-          );
-          return;
+        cacheEntry = pbkdf2Cache.find(
+          (entry) =>
+            entry.password == hashedPassword && entry.salt == list[_i].salt
+        );
+        if (cacheEntry) {
+          cb(cacheEntry.hash);
         } else {
-          cacheEntry = pbkdf2Cache.find(
-            (entry) =>
-              entry.password == hashedPassword && entry.salt == list[_i].salt
-          );
-          if (cacheEntry) {
-            cb(cacheEntry.hash);
-          } else {
-            crypto.pbkdf2(
-              password,
-              list[_i].salt,
-              36250,
-              64,
-              "sha512",
-              (err, derivedKey) => {
-                if (err) {
-                  res.error(500, err);
-                } else {
-                  const key = derivedKey.toString("hex");
-                  pbkdf2Cache.push({
-                    hash: key,
-                    password: hashedPassword,
-                    salt: list[_i].salt,
-                    addDate: new Date()
-                  });
-                  cb(key);
-                }
+          crypto.pbkdf2(
+            password,
+            list[_i].salt,
+            36250,
+            64,
+            "sha512",
+            (err, derivedKey) => {
+              if (err) {
+                res.error(500, err);
+              } else {
+                const key = derivedKey.toString("hex");
+                pbkdf2Cache.push({
+                  hash: key,
+                  password: hashedPassword,
+                  salt: list[_i].salt,
+                  addDate: new Date()
+                });
+                cb(key);
               }
-            );
-          }
+            }
+          );
         }
       } else {
         cb(hashedPassword);
