@@ -9,7 +9,7 @@ jest.mock("os", () => ({
   platform: jest.fn()
 }));
 
-describe("checkForbiddenPaths middleware", () => {
+describe("Forbidden path checking middleware", () => {
   let req, res, logFacilities, config, next;
 
   beforeEach(() => {
