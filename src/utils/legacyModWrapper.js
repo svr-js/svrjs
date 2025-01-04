@@ -1,11 +1,4 @@
-let formidable = undefined;
-try {
-  formidable = require("formidable");
-} catch (err) {
-  formidable = {
-    _errored: err
-  };
-}
+const formidable = require("formidable");
 
 module.exports = (legacyMod) => {
   const legacyModHandler = new legacyMod();
@@ -36,9 +29,6 @@ module.exports = (legacyMod) => {
         callback = options;
         formidableOptions = {};
       }
-
-      // If the formidable module had an error, call the server error function with 500 status code and error stack
-      if (formidable._errored) res.error(500, formidable._errored);
 
       // Create a new formidable form
       const form = formidable(formidableOptions);

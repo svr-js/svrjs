@@ -17,14 +17,7 @@ try {
   // Don't use inspector
 }
 
-let tar = {};
-try {
-  tar = require("tar");
-} catch (err) {
-  tar = {
-    _errored: err
-  };
-}
+const tar = require("tar");
 
 let http2 = {};
 try {
@@ -80,16 +73,8 @@ try {
   };
 }
 
-let ocsp = {};
-let ocspCache = {};
-try {
-  ocsp = require("ocsp");
-  ocspCache = new ocsp.Cache();
-} catch (err) {
-  ocsp = {
-    _errored: err
-  };
-}
+const ocsp = require("ocsp");
+const ocspCache = new ocsp.Cache();
 
 process.dirname = __dirname;
 process.filename = __filename;
@@ -738,7 +723,6 @@ if (!disableMods) {
           // Determine if the mod file is a ".tar.gz" file or not
           if (modFile.indexOf(".tar.gz") == modFile.length - 7) {
             // If it's a ".tar.gz" file, extract its contents using `tar`
-            if (tar._errored) throw tar._errored;
             tar.x({
               file: modFile,
               sync: true,
@@ -1265,7 +1249,7 @@ if (process.serverConfig.secure) {
     delete sock._parent.reallyDestroy;
   });
 
-  if (process.serverConfig.enableOCSPStapling && !ocsp._errored) {
+  if (process.serverConfig.enableOCSPStapling) {
     server.on("OCSPRequest", (cert, issuer, callback) => {
       ocsp.getOCSPURI(cert, (err, uri) => {
         if (err) return callback(err);
@@ -1838,14 +1822,6 @@ function start(init) {
           );
         }
       }
-      if (
-        process.serverConfig.secure &&
-        process.serverConfig.enableOCSPStapling &&
-        ocsp._errored
-      )
-        serverconsole.locwarnmessage(
-          "Can't load OCSP module. OCSP stapling will be disabled. OCSP stapling is a security feature that improves the performance and security of HTTPS connections by caching the certificate status response. If you require this feature, consider updating your Node.JS version or checking for any issues with the 'ocsp' module."
-        );
       if (disableMods)
         serverconsole.locwarnmessage(
           `${name} is running without mods and server-side JavaScript enabled. Web applications may not work as expected`
