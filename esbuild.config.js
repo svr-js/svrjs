@@ -2,9 +2,7 @@ const esbuild = require("esbuild");
 const esbuildCopyPlugin = require("esbuild-plugin-copy");
 const fs = require("fs");
 const zlib = require("zlib");
-const ejs = require("ejs");
 const archiver = require("archiver");
-const chokidar = require("chokidar");
 const svrjsInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.json"));
 const { version } = svrjsInfo;
 const svrjsCoreInfo = JSON.parse(
@@ -22,6 +20,10 @@ if (!fs.existsSync(__dirname + "/dist/mods"))
   fs.mkdirSync(__dirname + "/dist/mods");
 if (!fs.existsSync(__dirname + "/dist/temp"))
   fs.mkdirSync(__dirname + "/dist/temp");
+if (!fs.existsSync(__dirname + "/dist/wwwroot"))
+    fs.mkdirSync(__dirname + "/dist/wwwroot");
+if (!fs.existsSync(__dirname + "/dist/.dirimages"))
+    fs.mkdirSync(__dirname + "/dist/.dirimages");
 
 // Create the out directory if it doesn't exist and if not building for development
 if (!isDev && !fs.existsSync(__dirname + "/out"))
@@ -30,177 +32,6 @@ if (!isDev && !fs.existsSync(__dirname + "/out"))
 // Create the core directory if it doesn't exist and if not building for development
 if (!isDev && !fs.existsSync(__dirname + "/core"))
   fs.mkdirSync(__dirname + "/core");
-
-function generateAssets() {
-  // Variables from "svrjs.json" file
-  const svrjsInfo = JSON.parse(fs.readFileSync(__dirname + "/svrjs.json"));
-  const { name, version, documentationURL, changes } = svrjsInfo;
-
-  // Dependency-related variables
-  const dependencies =
-    JSON.parse(fs.readFileSync(__dirname + "/package.json")).dependencies || {};
-  const requiredDependencyList = Object.keys(dependencies);
-  let dependencyList = Object.keys(dependencies);
-
-  // Function to find and add all dependencies into the dependencyList array.
-  const findAllDependencies = (curList) => {
-    // If no curList parameter is specified, use dependencyList.
-    if (!curList) curList = dependencyList;
-    curList.forEach((dependency) => {
-      const newDeplist = Object.keys(
-        JSON.parse(
-          fs
-            .readFileSync(
-              __dirname +
-                "/node_modules/" +
-                dependency.replace(/\/\.\./g, "") +
-                "/package.json"
-            )
-            .toString()
-        ).dependencies || {}
-      );
-      let noDupNewDepList = [];
-      newDeplist.forEach((dep) => {
-        // Ignore duplicates
-        if (dependencyList.indexOf(dep) == -1) {
-          noDupNewDepList.push(dep);
-          dependencyList.push(dep);
-        }
-      });
-      // Call findAllDependencies for the dependency list.
-      findAllDependencies(noDupNewDepList);
-    });
-  };
-
-  // Get list of all dependencies
-  findAllDependencies();
-  dependencyList = dependencyList.sort();
-
-  // Create and populate an object, where whenever the dependencies are required are listed.
-  let dependenciesAreRequired = {};
-  dependencyList.forEach((dependency) => {
-    dependenciesAreRequired[dependency] = false;
-  });
-  requiredDependencyList.forEach((dependency) => {
-    dependenciesAreRequired[dependency] = true;
-  });
-
-  // Create the template functions using EJS
-  const layoutTemplate = ejs.compile(
-    fs.readFileSync(__dirname + "/templates/layout.ejs").toString()
-  );
-  const testsTemplate = ejs.compile(
-    fs.readFileSync(__dirname + "/templates/tests.ejs").toString()
-  );
-  const indexTemplate = ejs.compile(
-    fs.readFileSync(__dirname + "/templates/index.ejs").toString()
-  );
-  const licensesTemplate = ejs.compile(
-    fs.readFileSync(__dirname + "/templates/licenses.ejs").toString()
-  );
-  const licenseElementTemplate = ejs.compile(
-    fs.readFileSync(__dirname + "/templates/licenseElement.ejs").toString()
-  );
-
-  let licenseElements = "";
-
-  // Generate the licenses list in HTML
-  dependencyList.forEach((dependency) => {
-    const packageJSON = JSON.parse(
-      fs
-        .readFileSync(
-          __dirname +
-            "/node_modules/" +
-            dependency.replace(/\/\.\./g, "") +
-            "/package.json"
-        )
-        .toString()
-    );
-    licenseElements += licenseElementTemplate({
-      moduleName: packageJSON.name,
-      name: name,
-      license: packageJSON.license,
-      description: packageJSON.description || "No description",
-      author: packageJSON.author ? packageJSON.author.name : packageJSON.author,
-      required: dependenciesAreRequired[dependency]
-    });
-  });
-
-  // Generate pages
-  const licensesPage = layoutTemplate({
-    title: name + " " + version + " Licenses",
-    content: licensesTemplate({
-      name: name,
-      version: version,
-      licenses: licenseElements
-    })
-  });
-
-  const testsPage = layoutTemplate({
-    title: name + " " + version + " Tests",
-    content: testsTemplate({
-      name: name,
-      version: version
-    })
-  });
-
-  const indexPage = layoutTemplate({
-    title: name + " " + version,
-    content: indexTemplate({
-      name: name,
-      version: version,
-      documentationURL: documentationURL,
-      changes: changes
-    })
-  });
-
-  // Create the generated assets directory if it doesn't exist
-  if (!fs.existsSync(__dirname + "/generatedAssets"))
-    fs.mkdirSync(__dirname + "/generatedAssets");
-
-  // Create a licenses directory
-  if (!fs.existsSync(__dirname + "/generatedAssets/licenses"))
-    fs.mkdirSync(__dirname + "/generatedAssets/licenses");
-
-  // Write to HTML files
-  fs.writeFileSync(__dirname + "/generatedAssets/index.html", indexPage);
-  fs.writeFileSync(__dirname + "/generatedAssets/tests.html", testsPage);
-  fs.writeFileSync(
-    __dirname + "/generatedAssets/licenses/index.html",
-    licensesPage
-  );
-}
-
-if (!isDev) {
-  // Generate assets
-  generateAssets();
-} else {
-  // Generate assets with watching
-  const watcher = chokidar.watch([
-    __dirname + "/templates",
-    __dirname + "/package.json",
-    __dirname + "/svrjs.json"
-  ]);
-  watcher
-    .on("change", () => {
-      try {
-        generateAssets();
-      } catch (err) {
-        console.error("There is a problem when regenerating assets!");
-        console.error("Stack:");
-        console.error(err.stack);
-      }
-    })
-    .on("ready", () => {
-      try {
-        generateAssets();
-      } catch (err) {
-        console.error("There is a problem when regenerating assets!");
-        console.error("Stack:");
-        console.error(err.stack);
-      }
-    });
-}
 
 if (!isDev) {
   // Bundle the source and copy the assets using esbuild and esbuild-plugin-copy
@@ -215,7 +46,7 @@ if (!isDev) {
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
-            from: ["./assets/**/*"],
+            from: ["./assets/svrjs/**/*"],
             to: ["./dist"]
           },
           globbyOptions: {
@@ -225,8 +56,18 @@ if (!isDev) {
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
-            from: ["./generatedAssets/**/*"],
-            to: ["./dist"]
+            from: ["./assets/dirimages/*.png"],
+            to: ["./dist/.dirimages"]
+          }
+        }),
+        esbuildCopyPlugin.copy({
+          resolveFrom: __dirname,
+          assets: {
+            from: ["./assets/wwwroot/**/*"],
+            to: ["./dist/wwwroot"]
+          },
+          globbyOptions: {
+            dot: true
           }
         })
       ]
@@ -294,7 +135,7 @@ if (!isDev) {
                 esbuildCopyPlugin.copy({
                   resolveFrom: __dirname,
                   assets: {
-                    from: ["./coreAssets/**/*"],
+                    from: ["./assets/core/**/*"],
                     to: ["./core"]
                   },
                   globbyOptions: {
@@ -371,21 +212,32 @@ if (!isDev) {
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
-            from: ["./assets/**/*"],
+            from: ["./assets/svrjs/**/*"],
             to: ["./dist"]
           },
           globbyOptions: {
             dot: true
           },
-          watch: {}
+          watch: true
         }),
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
-            from: ["./generatedAssets/**/*"],
-            to: ["./dist"]
+            from: ["./assets/dirimages/*.png"],
+            to: ["./dist/.dirimages"]
           },
-          watch: {}
+          watch: true
+        }),
+        esbuildCopyPlugin.copy({
+          resolveFrom: __dirname,
+          assets: {
+            from: ["./assets/wwwroot/**/*"],
+            to: ["./dist/wwwroot"]
+          },
+          globbyOptions: {
+            dot: true
+          },
+          watch: true
         })
       ]
     })

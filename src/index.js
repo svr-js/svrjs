@@ -388,7 +388,7 @@ try {
     process.chdir(
       process.serverConfig.wwwroot != undefined
         ? process.serverConfig.wwwroot
-        : process.dirname
+        : process.dirname + "/wwwroot"
     );
 } catch (err) {
   wwwrootError = err;
