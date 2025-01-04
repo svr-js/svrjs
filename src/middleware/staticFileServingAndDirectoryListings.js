@@ -2,7 +2,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const zlib = require("zlib");
-const LRU = require("lru-cache");
+const { LRUCache } = require("lru-cache");
 const { getMimeType, checkIfCompressible } = require("../utils/mimeTypes.js");
 const defaultPageCSS = require("../res/defaultPageCSS.js");
 const matchHostname = require("../utils/matchHostname.js");
@@ -15,7 +15,7 @@ const svrjsInfo = require("../../svrjs.json");
 const { name } = svrjsInfo;
 
 // ETag-related
-const ETagDB = LRU({ max: 1000 });
+const ETagDB = new LRUCache({ max: 1000 });
 
 const generateETag = (filePath, stat) => {
   if (!ETagDB.has(filePath + "-" + stat.size + "-" + stat.mtime)) {
