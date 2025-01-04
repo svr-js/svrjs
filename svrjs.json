@@ -1,5 +1,5 @@
 {
-  "version": "Nightly-GitNext",
+  "version": "Nightly-GitMain",
   "name": "SVR.JS",
   "statisticsServerCollectEndpoint": "https://statistics.svrjs.org/collect.php"
 }
