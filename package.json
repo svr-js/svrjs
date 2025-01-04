@@ -45,8 +45,11 @@
   },
   "dependencies": {
     "formidable": "^2.1.2",
+    "globalthis": "^1.0.4",
     "lru-cache": "^10.4.3",
     "mime-db": "^1.53.0",
+    "node-abort-controller": "^3.1.1",
+    "node-fetch": "^2.7.0",
     "ocsp": "^1.2.0",
     "tar": "^6.2.1"
   },

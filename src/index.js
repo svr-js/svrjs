@@ -3,6 +3,7 @@ const fs = require("fs");
 const os = require("os");
 const dns = require("dns");
 const readline = require("readline");
+require("./utils/polyfills.js");
 const logo = require("./res/logo.js");
 const generateServerString = require("./utils/generateServerString.js");
 const deleteFolderRecursive = require("./utils/deleteFolderRecursive.js");
