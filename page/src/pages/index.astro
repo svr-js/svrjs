@@ -13,46 +13,56 @@ import Logo from "../components/Logo.astro";
     class="block max-w-full h-auto w-36 md:w-72 mx-auto md:mx-0 mb-2 md:mb-4"
   />
   <h1>Welcome to SVR.JS!</h1>
-  <h2>If you are a regular visitor</h2>
-  <p>
-    Welcome to our website! We're excited to have you here. However, please note
-    that this is a newly installed web server, and there might be some issues or
-    missing content as we continue to set things up.
-  </p>
-  <p>
-    If you encounter any problems or have any questions, please feel free to
-    contact our support team. We appreciate your patience and understanding as
-    we work to provide you with the best experience possible.
-  </p>
-  <p>Thank you for visiting!</p>
-  <h2>If you are an administrator of this website</h2>
-  <p>Congratulations, you have installed SVR.JS successfully! 🎉</p>
-  <div class="my-3 md:my-6">
-    <a href="https://svrjs.org/docs" class="btn">Read the documentation</a>
+  <div class="flex flex-col md:flex-row">
+    <div class="w-full md:w-1/2 md:mx-2">
+      <h2>If you are a regular visitor</h2>
+      <p>
+        Welcome to our website! We're excited to have you here. However, please
+        note that this is a newly installed web server, and there might be some
+        issues or missing content as we continue to set things up.
+      </p>
+      <p>
+        If you encounter any problems or have any questions, please feel free to
+        contact our support team. We appreciate your patience and understanding
+        as we work to provide you with the best experience possible.
+      </p>
+      <p>Thank you for visiting!</p>
+    </div><div class="w-full md:w-1/2 md:mx-2">
+      <h2>If you are an administrator of this website</h2>
+      <p>Congratulations, you have installed SVR.JS successfully! 🎉</p>
+      <div class="my-3 md:my-6">
+        <a href="https://svrjs.org/docs" class="btn">Read the documentation</a>
+      </div>
+      <h3>Website setup and configuration</h3>
+      <p>
+        Now that SVR.JS is installed, you can start setting up your website.
+      </p>
+      <ol>
+        <li>
+          <strong>Edit the server configuration file</strong> &mdash; this file can
+          be found either in <code>config.json</code> in the SVR.JS installation
+          directory, or in <code>/etc/svrjs-config.json</code> if you have installed
+          SVR.JS via the SVR.JS installer for GNU/Linux.
+        </li>
+        <li>
+          <strong>Replace the default page with contents of the website.</strong
+          > &mdash; you can find the root of the website either in <code
+            >wwwroot</code
+          > in the SVR.JS installation directory, or in <code
+            >/var/www/svrjs</code
+          > if you have installed SVR.JS via the SVR.JS installer for GNU/Linux.
+        </li>
+      </ol>
+      <h3>Need help?</h3>
+      <p>
+        If you encounter issues with SVR.JS, check the <a
+          href="https://svrjs.org/docs">official documentation</a
+        >, visit the <a href="https://community.svrjs.org"
+          >SVR.JS community forums</a
+        >, or <a href="https://svrjs.org/contact">contact the SVR.JS support</a
+        >.
+      </p>
+      <p>Thank you for choosing SVR.JS!</p>
+    </div>
   </div>
-  <h3>Website setup and configuration</h3>
-  <p>Now that SVR.JS is installed, you can start setting up your website.</p>
-  <ol>
-    <li>
-      <strong>Edit the server configuration file</strong> &mdash; this file can be
-      found either in <code>config.json</code> in the SVR.JS installation directory,
-      or in <code>/etc/svrjs-config.json</code> if you have installed SVR.JS via
-      the SVR.JS installer for GNU/Linux.
-    </li>
-    <li>
-      <strong>Replace the default page with contents of the website.</strong> &mdash;
-      you can find the root of the website either in <code>wwwroot</code> in the
-      SVR.JS installation directory, or in <code>/var/www/svrjs</code> if you have
-      installed SVR.JS via the SVR.JS installer for GNU/Linux.
-    </li>
-  </ol>
-  <h3>Need help?</h3>
-  <p>
-    If you encounter issues with SVR.JS, check the <a
-      href="https://svrjs.org/docs">official documentation</a
-    >, visit the <a href="https://community.svrjs.org"
-      >SVR.JS community forums</a
-    >, or <a href="https://svrjs.org/contact">contact the SVR.JS support</a>.
-  </p>
-  <p>Thank you for choosing SVR.JS!</p>
 </Layout>
