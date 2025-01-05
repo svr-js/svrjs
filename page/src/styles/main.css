@@ -63,3 +63,82 @@ body {
     }
   }
 }
+
+/* Tailwind CSS classes applied for typography (no Tailwind CSS Typography plugin used) */
+
+@layer base {
+  main h1 {
+    @apply text-3xl md:text-5xl pb-1 md:pb-2 font-bold mb-2 md:mb-4;
+  }
+
+  main h2 {
+    @apply text-xl md:text-3xl pb-1 md:pb-2 font-bold mb-1 md:mb-2;
+  }
+
+  main h3 {
+    @apply text-lg md:text-2xl pb-1 md:pb-2 font-bold mb-1 md:mb-2;
+  }
+
+  main p {
+    @apply text-base md:text-lg text-muted-foreground text-start mb-2 md:mb-4;
+  }
+
+  main ol {
+    @apply text-base md:text-lg text-muted-foreground text-start mb-2 md:mb-4 list-decimal ps-6;
+  }
+
+  main ul {
+    @apply text-base md:text-lg text-muted-foreground text-start mb-2 md:mb-4 list-disc ps-6;
+  }
+
+  main li {
+    @apply my-1;
+  }
+
+  main h1 a,
+  main h2 a,
+  main h3 a,
+  main h4 a,
+  main h5 a,
+  main h6 a,
+  main p a,
+  main li a {
+    @apply text-primary underline;
+  }
+
+  main code {
+    @apply font-mono text-foreground;
+  }
+
+  main b,
+  main strong {
+    @apply font-bold text-foreground;
+  }
+
+  main i,
+  main em {
+    @apply italic;
+  }
+
+  main pre {
+    @apply font-mono text-foreground;
+  }
+}
+
+/* Components for the page */
+@layer components {
+  .btn {
+    @apply inline-block bg-primary text-primary-foreground rounded-md px-5 py-2 text-base md:text-lg hover:bg-primary/75 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/75;
+  }
+}
+
+/* Utility classes for the page */
+@layer utilities {
+  .container {
+    @apply p-5 md:py-28 md:px-10 w-full max-w-screen-xl mx-auto;
+  }
+}

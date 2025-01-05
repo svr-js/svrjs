@@ -16,8 +16,8 @@ const { title, description } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <div class="p-5 md:py-28 md:px-10 w-full max-w-screen-xl mx-auto">
+    <main class="container">
       <slot />
-    </div>
+    </main>
   </body>
 </html>

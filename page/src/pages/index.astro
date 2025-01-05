@@ -12,81 +12,47 @@ import Logo from "../components/Logo.astro";
     height="100"
     class="block max-w-full h-auto w-36 md:w-72 mx-auto md:mx-0 mb-2 md:mb-4"
   />
-  <h1 class="text-3xl md:text-5xl pb-1 md:pb-2 font-bold mb-2 md:mb-4">
-    Welcome to SVR.JS!
-  </h1>
-  <h2 class="text-xl md:text-3xl pb-1 md:pb-2 font-bold mb-1 md:mb-2">
-    If you are a regular visitor
-  </h2>
-  <p class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4">
+  <h1>Welcome to SVR.JS!</h1>
+  <h2>If you are a regular visitor</h2>
+  <p>
     Welcome to our website! We're excited to have you here. However, please note
     that this is a newly installed web server, and there might be some issues or
     missing content as we continue to set things up.
   </p>
-  <p class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4">
+  <p>
     If you encounter any problems or have any questions, please feel free to
     contact our support team. We appreciate your patience and understanding as
     we work to provide you with the best experience possible.
   </p>
-  <p class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4">
-    Thank you for visiting!
-  </p>
-  <h2 class="text-xl md:text-3xl pb-1 md:pb-2 font-bold mb-1 md:mb-2">
-    If you are an administrator of this website
-  </h2>
-  <p class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4">
-    Congratulations, you have installed SVR.JS successfully! 🎉
-  </p>
+  <p>Thank you for visiting!</p>
+  <h2>If you are an administrator of this website</h2>
+  <p>Congratulations, you have installed SVR.JS successfully! 🎉</p>
   <div class="my-3 md:my-6">
-    <a
-      href="https://svrjs.org/docs"
-      class="inline-block bg-primary text-primary-foreground rounded-md px-5 py-2 text-base md:text-lg hover:bg-primary/75 transition-colors"
-      >Read the documentation</a
-    >
+    <a href="https://svrjs.org/docs" class="btn">Read the documentation</a>
   </div>
-  <h3 class="text-lg md:text-2xl pb-1 md:pb-2 font-bold mb-1 md:mb-2">
-    Website setup and configuration
-  </h3>
-  <p class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4">
-    Now that SVR.JS is installed, you can start setting up your website.
-  </p>
-  <ol
-    class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4 list-decimal ps-6"
-  >
-    <li class="my-1">
-      <strong class="font-bold text-foreground"
-        >Edit the server configuration file</strong
-      > &mdash; this file can be found either in <code
-        class="font-mono text-foreground">config.json</code
-      > in the SVR.JS installation directory, or in <code
-        class="font-mono text-foreground">/etc/svrjs-config.json</code
-      > if you have installed SVR.JS via the SVR.JS installer for GNU/Linux.
+  <h3>Website setup and configuration</h3>
+  <p>Now that SVR.JS is installed, you can start setting up your website.</p>
+  <ol>
+    <li>
+      <strong>Edit the server configuration file</strong> &mdash; this file can be
+      found either in <code>config.json</code> in the SVR.JS installation directory,
+      or in <code>/etc/svrjs-config.json</code> if you have installed SVR.JS via
+      the SVR.JS installer for GNU/Linux.
     </li>
-    <li class="my-1">
-      <strong class="font-bold text-foreground"
-        >Replace the default page with contents of the website.</strong
-      > &mdash; you can find the root of the website either in <code
-        class="font-mono text-foreground">wwwroot</code
-      > in the SVR.JS installation directory, or in <code
-        class="font-mono text-foreground">/var/www/svrjs</code
-      > if you have installed SVR.JS via the SVR.JS installer for GNU/Linux.
+    <li>
+      <strong>Replace the default page with contents of the website.</strong> &mdash;
+      you can find the root of the website either in <code>wwwroot</code> in the
+      SVR.JS installation directory, or in <code>/var/www/svrjs</code> if you have
+      installed SVR.JS via the SVR.JS installer for GNU/Linux.
     </li>
   </ol>
-  <h3 class="text-lg md:text-2xl pb-1 md:pb-2 font-bold mb-1 md:mb-2">
-    Need help?
-  </h3>
-  <p class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4">
+  <h3>Need help?</h3>
+  <p>
     If you encounter issues with SVR.JS, check the <a
-      href="https://svrjs.org/docs"
-      class="text-primary underline">official documentation</a
-    >, visit the <a
-      href="https://community.svrjs.org"
-      class="text-primary underline">SVR.JS community forums</a
-    >, or <a href="https://svrjs.org/contact" class="text-primary underline"
-      >contact the SVR.JS support</a
-    >.
+      href="https://svrjs.org/docs">official documentation</a
+    >, visit the <a href="https://community.svrjs.org"
+      >SVR.JS community forums</a
+    >, or <a href="https://svrjs.org/contact">contact the SVR.JS support</a>.
   </p>
-  <p class="md:text-lg text-muted-foreground text-start mb-2 md:mb-4">
-    Thank you for choosing SVR.JS!
-  </p>
+  <p>Thank you for choosing SVR.JS!</p>
 </Layout>
