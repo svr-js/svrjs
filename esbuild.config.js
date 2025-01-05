@@ -167,11 +167,11 @@ if (!isDev) {
               // Add everything in the "dist" directory except for "svr.js" and "svr.compressed"
               archive.glob("**/*", {
                 cwd: __dirname + "/dist",
-                ignore: ["svr.compressed"],
+                ignore: ["svr.js", "svr.compressed"],
                 dot: true
               });
 
-              // Create a stream for the "svr.compressed" file, to maintain compatibility with the older SVR.JS update script for GNU/Linux
+              // Create a stream for the "svr.compressed" file
               const compressedSVRJSFileStream = fs
                 .createReadStream(__dirname + "/dist/svr.js")
                 .pipe(
@@ -182,6 +182,10 @@ if (!isDev) {
               archive.append(compressedSVRJSFileStream, {
                 name: "svr.compressed"
               });
+              archive.append(
+                'const zlib = require("zlib");\nconst fs = require("fs");\nconsole.log("Deleting SVR.JS stub...");\nfs.unlinkSync("svr.js");\nconsole.log("Decompressing SVR.JS...");\nconst script = zlib.gunzipSync(fs.readFileSync("svr.compressed"));\nfs.unlinkSync("svr.compressed");\nfs.writeFileSync("svr.js",script);\nconsole.log("Restart SVR.JS to get server interface.");',
+                { name: "svr.js" }
+              );
               archive.finalize();
             })
             .catch((err) => {
