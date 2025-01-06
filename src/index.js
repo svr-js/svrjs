@@ -1217,14 +1217,20 @@ if (process.serverConfig.secure) {
     server.on("OCSPRequest", (cert, issuer, callback) => {
       ocsp.getOCSPURI(cert, (err, uri) => {
         if (err) return callback(err);
+        if (uri === null) return callback();
 
         const req = ocsp.request.generate(cert, issuer);
-        const options = {
-          url: uri,
-          ocsp: req.data
-        };
+        ocspCache.probe(req.id, (err, cached) => {
+          if (err) return callback(err);
+          if (cached !== false) return callback(null, cached.response);
 
-        ocspCache.request(req.id, options, callback);
+          const options = {
+            url: uri,
+            ocsp: req.data
+          };
+
+          ocspCache.request(req.id, options, callback);
+        });
       });
     });
   }
