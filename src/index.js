@@ -53,7 +53,7 @@ try {
 const crypto = require("crypto");
 const https = require("https");
 
-const ocsp = require("ocsp");
+const ocsp = require("@techteamer/ocsp");
 const ocspCache = new ocsp.Cache();
 
 process.dirname = __dirname;
