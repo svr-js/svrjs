@@ -187,7 +187,7 @@ module.exports = (req, res, logFacilities, config, next) => {
           res.error(
             500,
             new Error(
-              `${name} doesn't support scrypt-hashed passwords on Node.JS versions without scrypt hash support.`
+              `${name} doesn't support scrypt-hashed passwords on Node.js versions without scrypt hash support.`
             )
           );
           return;

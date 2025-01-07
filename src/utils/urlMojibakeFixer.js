@@ -1,4 +1,4 @@
-// Node.JS mojibake URL fixing function
+// Node.js mojibake URL fixing function
 function fixNodeMojibakeURL(string) {
   return Buffer.from(string, "latin1")
     .reduce((result, value) => {

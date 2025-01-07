@@ -371,7 +371,7 @@ try {
 }
 
 if (!stdoutNoTTY && !process.stdout.isTTY && !inspectorURL) {
-  // When stdout is not a terminal and not attached to an Node.JS inspector, disable it to improve performance of SVR.JS
+  // When stdout is not a terminal and not attached to an Node.js inspector, disable it to improve performance of SVR.JS
   console.log = () => {};
   process.stdout.write = () => {};
   process.stdout._write = () => {};
@@ -1701,7 +1701,7 @@ function start(init) {
       for (let i = 0; i < logo.length; i++) console.log(logo[i]); // Print logo
       console.log();
       console.log(
-        `Welcome to \x1b[1m${name} - a web server running on Node.JS\x1b[0m`
+        `Welcome to \x1b[1m${name} - a web server running on Node.js\x1b[0m`
       );
 
       // Print warnings
@@ -1751,7 +1751,7 @@ function start(init) {
         )
       )
         serverconsole.locwarnmessage(
-          "Your Node.JS version is vulnerable to HTTP server DoS (CVE-2024-22019)."
+          "Your Node.js version is vulnerable to HTTP server DoS (CVE-2024-22019)."
         );
       if (
         !process.isBun &&
@@ -1761,7 +1761,7 @@ function start(init) {
         )
       )
         serverconsole.locwarnmessage(
-          "Your Node.JS version is vulnerable to HTTP server request smuggling (CVE-2024-27982)."
+          "Your Node.js version is vulnerable to HTTP server request smuggling (CVE-2024-27982)."
         );
       if (process.getuid && process.getuid() == 0)
         serverconsole.locwarnmessage(
@@ -1776,11 +1776,11 @@ function start(init) {
       ) {
         if (new Date() > new Date("11 September 2023")) {
           serverconsole.locwarnmessage(
-            "OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data."
+            "OpenSSL 1.x is no longer receiving security updates after 11th September 2023. Your HTTPS communication might be vulnerable. It is recommended to update to a newer version of Node.js that includes OpenSSL 3.0 or higher to ensure the security of your server and data."
           );
         } else {
           serverconsole.locwarnmessage(
-            "OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.JS that includes OpenSSL 3.0 or higher to ensure the security of your server and data."
+            "OpenSSL 1.x will no longer receive security updates after 11th September 2023. Your HTTPS communication might be vulnerable in future. It is recommended to update to a newer version of Node.js that includes OpenSSL 3.0 or higher to ensure the security of your server and data."
           );
         }
       }
@@ -1821,7 +1821,7 @@ function start(init) {
         serverconsole.locmessage("Bun version: v" + process.versions.bun);
       else if (process.versions && process.versions.deno)
         serverconsole.locmessage("Deno version: " + process.versions.deno);
-      else serverconsole.locmessage("Node.JS version: " + process.version);
+      else serverconsole.locmessage("Node.js version: " + process.version);
       const CPUs = os.cpus();
       if (CPUs.length > 0)
         serverconsole.locmessage(
@@ -1831,7 +1831,7 @@ function start(init) {
       // Throw errors
       if (vnum < 64)
         throw new Error(
-          `${name} requires Node.JS 10.0.0 and newer, but your Node.JS version isn't supported by ${name}.`
+          `${name} requires Node.js 10.0.0 and newer, but your Node.js version isn't supported by ${name}.`
         );
       if (configJSONRErr)
         throw new Error(
@@ -1855,7 +1855,7 @@ function start(init) {
         );
       if (process.serverConfig.enableHTTP2 && http2.__disabled__ !== undefined)
         throw new Error(
-          `HTTP/2 isn't supported by your Node.JS version! You may not be able to use HTTP/2 with ${name}`
+          `HTTP/2 isn't supported by your Node.js version! You may not be able to use HTTP/2 with ${name}`
         );
       if (listenAddress) {
         if (listenAddress.match(/^[0-9]+$/))

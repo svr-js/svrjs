@@ -56,7 +56,7 @@ function clientErrorHandler(err, socket) {
     socket.localPort == config.sport
   );
 
-  // Define response object similar to Node.JS native one
+  // Define response object similar to Node.js native one
   let res = {
     socket: socket,
     write: (x) => {

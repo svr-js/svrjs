@@ -6,13 +6,13 @@ function generateServerString(exposeServerVersion) {
   return exposeServerVersion
     ? `${name.replace(/ /g, "-")}/${version} (${getOS()}; ${
         process.isBun
-          ? "Bun/v" + process.versions.bun + "; like Node.JS/" + process.version
+          ? "Bun/v" + process.versions.bun + "; like Node.js/" + process.version
           : process.versions && process.versions.deno
             ? "Deno/v" +
               process.versions.deno +
-              "; like Node.JS/" +
+              "; like Node.js/" +
               process.version
-            : "Node.JS/" + process.version
+            : "Node.js/" + process.version
       })`
     : name.replace(/ /g, "-");
 }

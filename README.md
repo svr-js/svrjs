@@ -4,7 +4,7 @@
   </a>
 </p>
 <p align="center">
-  <b>SVR.JS</b> - a web server running on Node.JS<br/>
+  <b>SVR.JS</b> - a web server running on Node.js<br/>
   It's free as in freedom, scalable, secure, and configurable.
 </p>
 <p align="center">
@@ -43,7 +43,7 @@
 *   Expandability via server-side JavaScript and mods
 *   Ability to serve non-standard error pages
 *   URL rewriting engine
-*   Event driven architecture powered by Node.JS, along with clustering.
+*   Event driven architecture powered by Node.js, along with clustering.
 
 ### Compression and content delivery
 
@@ -71,7 +71,7 @@
 
 ## Building SVR.JS
 
-To build SVR.JS, you need Node.JS 18.0.0 or newer.
+To build SVR.JS, you need Node.js 18.0.0 or newer.
 
 Before building SVR.JS, install the npm packages using this command:
 ```bash

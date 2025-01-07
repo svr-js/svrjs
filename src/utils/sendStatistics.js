@@ -18,7 +18,7 @@ function sendStatistics(modInfos, callback) {
     mods: modInfos
   });
 
-  // Fetch API is present in Node.JS 18 and newer. For older versions, Fetch API implementation from "node-fetch" library is used (it is polyfilled).
+  // Fetch API is present in Node.js 18 and newer. For older versions, Fetch API implementation from "node-fetch" library is used (it is polyfilled).
   fetch(statisticsServerCollectEndpoint, {
     method: "POST",
     headers: {

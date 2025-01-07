@@ -2,7 +2,7 @@ const url = require("url");
 const { LRUCache } = require("lru-cache");
 const parsedURLCache = new LRUCache({ max: 500 });
 
-// SVR.JS URL parser function (compatible with legacy Node.JS URL parsing function)
+// SVR.JS URL parser function (compatible with legacy Node.js URL parsing function)
 function parseURL(uri, prepend) {
   // Replace newline characters with its respective URL encodings
   uri = uri.replace(/\r/g, "%0D").replace(/\n/g, "%0A");
