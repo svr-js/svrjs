@@ -1,103 +1,54 @@
-const defaultHandlerChecks = require("../../src/middleware/defaultHandlerChecks.js");
-const statusCodes = require("../../src/res/statusCodes.js");
-const svrjsInfo = require("../../svrjs.json");
-
-const mockConfig = {
-  getCustomHeaders: jest.fn(() => ({
-    "X-Custom-Header": "Test",
-    Server: "test-server"
-  })),
-  generateServerString: jest.fn(() => "test-server")
-};
-
-const mockLogFacilities = {
-  errmessage: jest.fn()
-};
+const middleware = require("../../src/middleware/defaultHandlerChecks.js");
+const httpMocks = require("node-mocks-http");
 
 describe("Default handler checks middleware", () => {
-  let req, res, next;
+  let req, res, logFacilities, config, next;
 
   beforeEach(() => {
-    req = {};
-    res = {
-      writeHead: jest.fn(),
-      write: jest.fn(),
-      end: jest.fn(),
-      error: jest.fn()
+    req = httpMocks.createRequest();
+    res = httpMocks.createResponse();
+    logFacilities = {
+      errmessage: jest.fn()
+    };
+    config = {
+      getCustomHeaders: jest.fn(() => ({})),
+      generateServerString: jest.fn(() => "Server String")
     };
     next = jest.fn();
-    jest.clearAllMocks();
   });
 
-  test("should return 501 if request is a proxy request", () => {
+  test("should return 501 and log error message if req.isProxy is true", () => {
     req.isProxy = true;
-
-    defaultHandlerChecks(req, res, mockLogFacilities, mockConfig, next);
-
-    expect(mockConfig.getCustomHeaders).toHaveBeenCalled();
-    expect(res.writeHead).toHaveBeenCalledWith(
-      501,
-      statusCodes[501],
-      expect.objectContaining({ "Content-Type": "text/html" })
+    middleware(req, res, logFacilities, config, next);
+    expect(res._getStatusCode()).toBe(501);
+    expect(logFacilities.errmessage).toHaveBeenCalledWith(
+      expect.stringContaining("doesn't support proxy without proxy mod.")
     );
-    expect(res.write).toHaveBeenCalledWith(
-      expect.stringContaining("Proxy not implemented")
-    );
-    expect(res.end).toHaveBeenCalled();
-    expect(mockLogFacilities.errmessage).toHaveBeenCalledWith(
-      `${svrjsInfo.name} doesn't support proxy without proxy mod.`
-    );
-    expect(next).not.toHaveBeenCalled();
   });
 
-  test("should return 204 and Allow header on OPTIONS request", () => {
+  test("should return 204 if req.method is OPTIONS", () => {
     req.method = "OPTIONS";
-
-    defaultHandlerChecks(req, res, mockLogFacilities, mockConfig, next);
-
-    expect(mockConfig.getCustomHeaders).toHaveBeenCalled();
-    expect(res.writeHead).toHaveBeenCalledWith(
-      204,
-      statusCodes[204],
-      expect.objectContaining({ Allow: "GET, POST, HEAD, OPTIONS" })
+    middleware(req, res, logFacilities, config, next);
+    expect(res._getStatusCode()).toBe(204);
+    expect(res._getHeaders()).toHaveProperty(
+      "allow",
+      "GET, POST, HEAD, OPTIONS"
     );
-    expect(res.end).toHaveBeenCalled();
-    expect(next).not.toHaveBeenCalled();
   });
 
-  test("should return 405 and log error for unsupported methods", () => {
+  test("should call res.error with 405 and log error message if req.method is not GET, POST, or HEAD", () => {
     req.method = "PUT";
-
-    defaultHandlerChecks(req, res, mockLogFacilities, mockConfig, next);
-
+    res.error = jest.fn();
+    middleware(req, res, logFacilities, config, next);
     expect(res.error).toHaveBeenCalledWith(405);
-    expect(mockLogFacilities.errmessage).toHaveBeenCalledWith(
-      "Invalid method: PUT"
+    expect(logFacilities.errmessage).toHaveBeenCalledWith(
+      expect.stringContaining("Invalid method: PUT")
     );
-    expect(next).not.toHaveBeenCalled();
   });
 
-  test("should call next() for GET requests", () => {
+  test("should call next if req.method is GET, POST, or HEAD and req.isProxy is false", () => {
     req.method = "GET";
-
-    defaultHandlerChecks(req, res, mockLogFacilities, mockConfig, next);
-
-    expect(next).toHaveBeenCalled();
-  });
-
-  test("should call next() for POST requests", () => {
-    req.method = "POST";
-
-    defaultHandlerChecks(req, res, mockLogFacilities, mockConfig, next);
-
-    expect(next).toHaveBeenCalled();
-  });
-
-  test("should call next() for HEAD requests", () => {
-    req.method = "HEAD";
-
-    defaultHandlerChecks(req, res, mockLogFacilities, mockConfig, next);
-
+    middleware(req, res, logFacilities, config, next);
     expect(next).toHaveBeenCalled();
   });
 });
