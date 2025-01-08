@@ -78,6 +78,7 @@ function parseURL(uri, prepend) {
   } else {
     uobject.query = Object.create(null);
   }
+  if (uobject.query) Object.freeze(uobject.query);
   if (parsedURI[8]) uobject.hash = parsedURI[8];
   if (uobject.pathname)
     uobject.path = uobject.pathname + (uobject.search ? uobject.search : "");
@@ -88,6 +89,8 @@ function parseURL(uri, prepend) {
     (uobject.port ? ":" + uobject.port : "") +
     (uobject.path ? uobject.path : "") +
     (uobject.hash ? uobject.hash : "");
+
+  Object.freeze(uobject);
 
   // Add the parsed URL object to the cache
   parsedURLCache.set(uri, uobject);
