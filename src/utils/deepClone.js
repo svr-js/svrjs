@@ -1,49 +1,35 @@
 // Function to deep clone an object or array
 function deepClone(obj, isFullObject) {
-  if (typeof obj !== "object" || obj === null) {
-    return obj;
-  }
+  if (typeof obj !== "object" || obj === null) return obj;
 
-  const objectsArray = [];
-  const clonesArray = [];
+  const cache = new Map();
 
-  const recurse = (obj) => {
-    let objectsArrayIndex = -1;
+  const recurse = (item) => {
+    if (typeof item !== "object" || item === null) return item;
 
-    for (let i = 0; i < objectsArray.length; i++) {
-      if (objectsArray[i] == obj) {
-        objectsArrayIndex = i;
-        break;
+    if (cache.has(item)) return cache.get(item);
+
+    const clone = Array.isArray(item)
+      ? []
+      : isFullObject
+        ? {}
+        : Object.create(null);
+    cache.set(item, clone);
+
+    if (Array.isArray(item)) {
+      for (let i = 0; i < item.length; i++) {
+        clone[i] = recurse(item[i]);
       }
-    }
-
-    if (objectsArrayIndex != -1) {
-      return clonesArray[objectsArrayIndex];
-    }
-
-    if (Array.isArray(obj)) {
-      const clone = [];
-      objectsArray.push(obj);
-      clonesArray.push(clone);
-      obj.forEach((item, index) => {
-        clone[index] =
-          typeof item !== "object" || item === null ? item : recurse(item);
-      });
-      return clone;
     } else {
-      const clone = isFullObject ? {} : Object.create(null);
-      objectsArray.push(obj);
-      clonesArray.push(clone);
-      Object.keys(obj).forEach((key) => {
-        clone[key] =
-          typeof obj[key] !== "object" || obj[key] === null
-            ? obj[key]
-            : recurse(obj[key]);
+      Object.keys(item).forEach((key) => {
+        clone[key] = recurse(item[key]);
       });
-      return clone;
     }
+
+    return clone;
   };
-  return recurse(obj, objectsArray, clonesArray);
+
+  return recurse(obj);
 }
 
 module.exports = deepClone;
