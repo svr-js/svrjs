@@ -3,6 +3,7 @@ const fs = require("fs");
 const os = require("os");
 const dns = require("dns");
 const readline = require("readline");
+const path = require("path");
 require("./utils/polyfills.js");
 const logo = require("./res/logo.js");
 const generateServerString = require("./utils/generateServerString.js");
@@ -560,18 +561,16 @@ if (process.serverConfig.secure) {
   try {
     key = fs
       .readFileSync(
-        process.serverConfig.key[0] != "/" &&
-          !process.serverConfig.key.match(/^[A-Z0-9]:\\/)
-          ? process.dirname + "/" + process.serverConfig.key
-          : process.serverConfig.key
+        path.isAbsolute(process.serverConfig.key)
+          ? process.serverConfig.key
+          : process.dirname + "/" + process.serverConfig.key
       )
       .toString();
     cert = fs
       .readFileSync(
-        process.serverConfig.cert[0] != "/" &&
-          !process.serverConfig.cert.match(/^[A-Z0-9]:\\/)
-          ? process.dirname + "/" + process.serverConfig.cert
-          : process.serverConfig.cert
+        path.isAbsolute(process.serverConfig.cert)
+          ? process.serverConfig.cert
+          : process.dirname + "/" + process.serverConfig.cert
       )
       .toString();
     const sniNames = Object.keys(process.serverConfig.sni);
@@ -586,18 +585,16 @@ if (process.serverConfig.secure) {
         name: sniName,
         cert: fs
           .readFileSync(
-            process.serverConfig.sni[sniName].cert[0] != "/" &&
-              !process.serverConfig.sni[sniName].cert.match(/^[A-Z0-9]:\\/)
-              ? process.dirname + "/" + process.serverConfig.sni[sniName].cert
-              : process.serverConfig.sni[sniName].cert
+            path.isAbsolute(process.serverConfig.sni[sniName].cert)
+              ? process.serverConfig.sni[sniName].cert
+              : process.dirname + "/" + process.serverConfig.sni[sniName].cert
           )
           .toString(),
         key: fs
           .readFileSync(
-            process.serverConfig.sni[sniName].key[0] != "/" &&
-              !process.serverConfig.sni[sniName].key.match(/^[A-Z0-9]:\\/)
-              ? process.dirname + "/" + process.serverConfig.sni[sniName].key
-              : process.serverConfig.sni[sniName].key
+            path.isAbsolute(process.serverConfig.sni[sniName].key)
+              ? process.serverConfig.sni[sniName].key
+              : process.dirname + "/" + process.serverConfig.sni[sniName].key
           )
           .toString()
       });
