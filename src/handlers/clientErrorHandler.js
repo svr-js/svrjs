@@ -5,14 +5,18 @@ const statusCodes = require("../res/statusCodes.js");
 const generateErrorStack = require("../utils/generateErrorStack.js");
 const serverHTTPErrorDescs = require("../res/httpErrorDescriptions.js");
 const generateServerString = require("../utils/generateServerString.js");
-const deepClone = require("../utils/deepClone.js");
+const configInit = require("../utils/configInit.js");
 const normalizeWebroot = require("../utils/normalizeWebroot.js");
 const ipMatch = require("../utils/ipMatch.js");
 
 let serverconsole = {};
 
 function clientErrorHandler(err, socket) {
-  const config = deepClone(process.serverConfig);
+  const config = configInit(
+    process.serverConfig,
+    undefined,
+    socket ? socket.localAddress : undefined
+  );
 
   // Change the webroot if there is a webroot assigned for a virtual host
   if (config.wwwrootVHost) {

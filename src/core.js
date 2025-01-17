@@ -9,6 +9,7 @@ const matchHostname = require("./utils/matchHostname.js");
 const generateServerStringCore = require("./utils/generateServerStringCore.js");
 const parseURL = require("./utils/urlParser.js");
 const deepClone = require("./utils/deepClone.js");
+const configInit = require("./utils/configInit.js");
 const statusCodes = require("./res/statusCodes.js");
 
 const middleware = [
@@ -32,7 +33,7 @@ function requestHandler(req, res, next) {
   };
 
   // SVR.JS configuration object (modified)
-  const config = deepClone(coreConfig);
+  const config = configInit(coreConfig, undefined, undefined);
 
   config.generateServerString = () =>
     generateServerStringCore(config.exposeServerVersion);

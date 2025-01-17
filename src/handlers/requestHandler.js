@@ -9,8 +9,8 @@ const matchHostname = require("../utils/matchHostname.js");
 const generateServerString = require("../utils/generateServerString.js");
 const parseURL = require("../utils/urlParser.js");
 const sanitizeURL = require("../utils/urlSanitizer.js");
-const deepClone = require("../utils/deepClone.js");
 const normalizeWebroot = require("../utils/normalizeWebroot.js");
+const configInit = require("../utils/configInit.js");
 const statusCodes = require("../res/statusCodes.js");
 
 let serverconsole = {};
@@ -21,6 +21,14 @@ function requestHandler(req, res) {
   if (reqIdInt == 16777216) reqIdInt = 0;
   const reqId =
     "0".repeat(6 - reqIdInt.toString(16).length) + reqIdInt.toString(16);
+
+  // Process the Host header before obtaining the server configuration
+  let oldHostHeader = req.headers.host;
+  if (typeof req.headers.host == "string") {
+    req.headers.host = req.headers.host.toLowerCase();
+    if (!req.headers.host.match(/^\.+$/))
+      req.headers.host = req.headers.host.replace(/\.$/, "");
+  }
 
   // SVR.JS log facilities
   const logFacilities = {
@@ -34,7 +42,11 @@ function requestHandler(req, res) {
   };
 
   // SVR.JS configuration object (modified)
-  const config = deepClone(process.serverConfig);
+  const config = configInit(
+    process.serverConfig,
+    req.headers.host,
+    req.socket ? req.socket.localAddress : undefined
+  );
 
   config.generateServerString = () =>
     generateServerString(config.exposeServerVersion);
@@ -57,6 +69,7 @@ function requestHandler(req, res) {
       }
     });
   }
+
   // Normalize the webroot
   config.wwwroot = normalizeWebroot(config.wwwroot);
 
@@ -277,14 +290,6 @@ function requestHandler(req, res) {
   }
 
   process.reqcounter++;
-
-  // Process the Host header
-  let oldHostHeader = req.headers.host;
-  if (typeof req.headers.host == "string") {
-    req.headers.host = req.headers.host.toLowerCase();
-    if (!req.headers.host.match(/^\.+$/))
-      req.headers.host = req.headers.host.replace(/\.$/, "");
-  }
 
   logFacilities.reqmessage(
     `Client ${

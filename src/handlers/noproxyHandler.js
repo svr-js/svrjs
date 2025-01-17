@@ -1,4 +1,4 @@
-const deepClone = require("../utils/deepClone.js");
+const configInit = require("../utils/configInit.js");
 
 let serverconsole = {};
 
@@ -27,7 +27,7 @@ function noproxyHandler(req, socket, head) {
   socket.on("error", () => {});
 
   // SVR.JS configuration object (modified)
-  const config = deepClone(process.serverConfig);
+  const config = configInit(process.serverConfig, undefined, undefined);
 
   const reqip = socket.remoteAddress;
   const reqport = socket.remotePort;
