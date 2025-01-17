@@ -238,14 +238,14 @@ if (process.serverConfig.secure) {
   if (process.serverConfig.sport === undefined)
     process.serverConfig.sport = 443;
   if (process.serverConfig.spubport === undefined)
-    process.serverConfig.spubport = 443;
+    process.serverConfig.spubport = process.serverConfig.sport;
   if (process.serverConfig.sni === undefined) process.serverConfig.sni = {};
   if (process.serverConfig.enableOCSPStapling === undefined)
     process.serverConfig.enableOCSPStapling = false;
 }
 if (process.serverConfig.port === undefined) process.serverConfig.port = 80;
 if (process.serverConfig.pubport === undefined)
-  process.serverConfig.pubport = 80;
+  process.serverConfig.pubport = process.serverConfig.port;
 if (
   process.serverConfig.domain === undefined &&
   process.serverConfig.domian !== undefined
