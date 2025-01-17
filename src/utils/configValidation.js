@@ -212,13 +212,39 @@ const validators = {
         (vhost.ip === undefined || validateIP(vhost.ip)) &&
         typeof vhost.wwwroot === "string"
     );
-  }
+  },
+  configVHost: () => false, // The "configVHost" property shouldn't be present in the host configuration
+  ip: (value) => validateIP(value)
 };
 
 function validateConfig(config) {
   Object.keys(config).forEach((prop) => {
-    if (validators[prop] && !validators[prop](config[prop])) {
-      throw new Error(`Invalid value for the "${prop}" configuration property`);
+    if (prop == "configVHost") {
+      if (!Array.isArray(config.configVHost)) {
+        throw new Error("Invalid virtual host configuration");
+      } else {
+        config.configVHost.forEach((vhost) => {
+          if (!(typeof vhost === "object" && vhost !== null)) {
+            throw new Error("Invalid virtual host configuration");
+          } else if (vhost.ip === undefined && vhost.domain === undefined) {
+            throw new Error(
+              "Virtual hosts must have either a domain name or an IP address"
+            );
+          } else {
+            Object.keys(vhost).forEach((prop) => {
+              if (validators[prop] && !validators[prop](vhost[prop])) {
+                throw new Error(
+                  `Invalid value for the "${prop}" configuration property in the ${vhost.domain !== undefined && vhost.ip !== undefined ? `"${vhost.domain}" on ${vhost.ip}` : vhost.domain !== undefined ? `"${vhost.domain}"` : vhost.ip} virtual host`
+                );
+              }
+            });
+          }
+        });
+      }
+    } else if (validators[prop] && !validators[prop](config[prop])) {
+      throw new Error(
+        `Invalid value for the "${prop}" configuration property in the global configuration`
+      );
     }
   });
 }
