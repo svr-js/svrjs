@@ -1,6 +1,7 @@
 {
     "watch": [
       "dist/svr.js",
-      "dist/config.json"
+      "dist/config.json",
+      "dist/svrjs.yaml"
     ]
 }

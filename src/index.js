@@ -149,7 +149,10 @@ for (
     deleteFolderRecursive(process.dirname + "/temp");
     fs.mkdirSync(process.dirname + "/temp");
     console.log("Removing configuration file...");
-    fs.unlinkSync(process.dirname + "/config.json");
+    if (fs.existsSync(process.dirname + "/svrjs.yaml"))
+      fs.unlinkSync(process.dirname + "/svrjs.yaml");
+    if (fs.existsSync(process.dirname + "/config.json"))
+      fs.unlinkSync(process.dirname + "/config.json");
     console.log("Done!");
     process.exit(0);
   } else if (args[i] == "--disable-mods") {
@@ -184,26 +187,42 @@ const {
 } = require("./utils/ipSubnetUtils.js");
 const sendStatistics = require("./utils/sendStatistics.js");
 const deepClone = require("./utils/deepClone.js");
+const configYAMLAdapter = require("./utils/configYamlAdapter.js");
 const {
   validateConfig,
   addConfigValidators
 } = require("./utils/configValidation.js");
 
 process.serverConfig = {};
-let configJSONRErr = undefined;
-let configJSONPErr = undefined;
-let configJSONVErr = undefined;
-if (fs.existsSync(process.dirname + "/config.json")) {
+let configRErr = undefined;
+let configPErr = undefined;
+let configVErr = undefined;
+let configIsYAML = false;
+
+if (fs.existsSync(process.dirname + "/svrjs.yaml")) {
+  let svrjsYAMLf = "";
+  try {
+    svrjsYAMLf = fs.readFileSync(process.dirname + "/svrjs.yaml").toString(); // Read YAML File
+    try {
+      process.serverConfig = deepClone(configYAMLAdapter(svrjsYAMLf)); // Parse YAML through an adapter and deep clone to null prototype object
+      configIsYAML = true;
+    } catch (err2) {
+      configPErr = err2;
+    }
+  } catch (err) {
+    configRErr = err;
+  }
+} else if (fs.existsSync(process.dirname + "/config.json")) {
   let configJSONf = "";
   try {
-    configJSONf = fs.readFileSync(process.dirname + "/config.json"); // Read JSON File
+    configJSONf = fs.readFileSync(process.dirname + "/config.json").toString(); // Read JSON File
     try {
       process.serverConfig = deepClone(JSON.parse(configJSONf)); // Parse JSON and deep clone to null prototype object
     } catch (err2) {
-      configJSONPErr = err2;
+      configPErr = err2;
     }
   } catch (err) {
-    configJSONRErr = err;
+    configRErr = err;
   }
 }
 
@@ -838,7 +857,7 @@ try {
   });
   validateConfig(process.serverConfig);
 } catch (err) {
-  configJSONVErr = err;
+  configVErr = err;
 }
 
 // HTTP server handlers
@@ -1830,17 +1849,17 @@ function start(init) {
         throw new Error(
           `${name} requires Node.js 10.0.0 and newer, but your Node.js version isn't supported by ${name}.`
         );
-      if (configJSONRErr)
+      if (configRErr)
         throw new Error(
-          `Can't read ${name} configuration file: ${configJSONRErr.message}`
+          `Can't read ${name} configuration file: ${configRErr.message}`
         );
-      if (configJSONPErr)
+      if (configPErr)
         throw new Error(
-          `${name} configuration parse error: ${configJSONPErr.message}`
+          `${name} configuration parse error: ${configPErr.message}`
         );
-      if (configJSONVErr)
+      if (configVErr)
         throw new Error(
-          `${name} configuration validation error: ${configJSONVErr.message}`
+          `${name} configuration validation error: ${configVErr.message}`
         );
       if (
         process.serverConfig.enableHTTP2 &&
@@ -1960,7 +1979,7 @@ function start(init) {
     let workersToFork = 1;
 
     if (cluster.isPrimary === undefined) {
-      if (!noSaveConfig) {
+      if (!noSaveConfig && !configIsYAML) {
         setInterval(() => {
           try {
             saveConfig();
@@ -1971,7 +1990,7 @@ function start(init) {
         }, 300000);
       }
     } else if (cluster.isPrimary) {
-      if (!noSaveConfig) {
+      if (!noSaveConfig && !configIsYAML) {
         setInterval(() => {
           let allWorkers = Object.keys(cluster.workers);
           let goodWorkers = [];
@@ -2415,7 +2434,7 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
 
   process.on("exit", (code) => {
     try {
-      if (!configJSONRErr && !configJSONPErr && !noSaveConfig) {
+      if (!configRErr && !configPErr && !noSaveConfig && !configIsYAML) {
         saveConfig();
       }
     } catch (err) {

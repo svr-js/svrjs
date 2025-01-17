@@ -58,7 +58,8 @@
     "mime-db": "^1.53.0",
     "node-abort-controller": "^3.1.1",
     "node-fetch": "^2.7.0",
-    "tar": "^6.2.1"
+    "tar": "^6.2.1",
+    "yaml": "^1.10.2"
   },
   "config": {
     "commitizen": {
