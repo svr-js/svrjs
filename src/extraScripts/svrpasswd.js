@@ -2,6 +2,7 @@
 const readline = require("readline");
 const fs = require("fs");
 const crypto = require("crypto");
+const YAML = require("yaml");
 
 if (!crypto.randomInt) {
   // Polyfill crypto.randomInt (a very simple polyfill)
@@ -11,7 +12,11 @@ if (!crypto.randomInt) {
 }
 
 let configJSON = {};
-if (fs.existsSync(__dirname + "/config.json")) {
+let configIsYAML = false;
+
+if (fs.existsSync(__dirname + "/svrjs.yaml")) {
+  configIsYAML = true;
+} else if (fs.existsSync(__dirname + "/config.json")) {
   let configJSONf = "";
   try {
     configJSONf = fs.readFileSync(__dirname + "/config.json"); //Read JSON File
@@ -74,9 +79,15 @@ for (
       "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
     );
     console.log("-h -? /h /? --help    -- Displays help");
-    console.log("-a --add              -- Add an user");
-    console.log("-d --delete           -- Deletes an user");
-    console.log("-x                    -- Changes hash algorithm");
+    console.log(
+      '-a --add              -- Add an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+    );
+    console.log(
+      '-d --delete           -- Deletes an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+    );
+    console.log(
+      '-x                    -- Changes hash algorithm (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+    );
     process.exit(0);
   } else if (args[i] == "-a" || args[i] == "--add") {
     if (action != "change") {
@@ -85,9 +96,15 @@ for (
         "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
-      console.log("-a --add              -- Add an user");
-      console.log("-d --delete           -- Deletes an user");
-      console.log("-x                    -- Changes hash algorithm");
+      console.log(
+        '-a --add              -- Add an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration) '
+      );
+      console.log(
+        '-d --delete           -- Deletes an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
+      console.log(
+        '-x                    -- Changes hash algorithm (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
       process.exit(1);
     }
     action = "add";
@@ -98,9 +115,15 @@ for (
         "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
-      console.log("-a --add              -- Add an user");
-      console.log("-d --delete           -- Deletes an user");
-      console.log("-x                    -- Changes hash algorithm");
+      console.log(
+        '-a --add              -- Add an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
+      console.log(
+        '-d --delete           -- Deletes an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
+      console.log(
+        '-x                    -- Changes hash algorithm (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
       process.exit(1);
     }
     action = "delete";
@@ -111,9 +134,15 @@ for (
         "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
-      console.log("-a --add              -- Add an user");
-      console.log("-d --delete           -- Deletes an user");
-      console.log("-x                    -- Changes hash algorithm");
+      console.log(
+        '-a --add              -- Add an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
+      console.log(
+        '-d --delete           -- Deletes an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
+      console.log(
+        '-x                    -- Changes hash algorithm (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
       process.exit(1);
     }
     forcechange = true;
@@ -124,9 +153,15 @@ for (
         "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
       );
       console.log("-h -? /h /? --help    -- Displays help");
-      console.log("-a --add              -- Add an user");
-      console.log("-d --delete           -- Deletes an user");
-      console.log("-x                    -- Changes hash algorithm");
+      console.log(
+        '-a --add              -- Add an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
+      console.log(
+        '-d --delete           -- Deletes an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
+      console.log(
+        '-x                    -- Changes hash algorithm (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+      );
       process.exit(1);
     }
     user = args[i];
@@ -139,9 +174,15 @@ if (user == "") {
     "node svrpasswd.js [-h] [--help] [-?] [/h] [/?] [-x] [-a|--add|-d|--delete] <username>"
   );
   console.log("-h -? /h /? --help    -- Displays help");
-  console.log("-a --add              -- Add an user");
-  console.log("-d --delete           -- Deletes an user");
-  console.log("-x                    -- Changes hash algorithm");
+  console.log(
+    '-a --add              -- Add an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+  );
+  console.log(
+    '-d --delete           -- Deletes an user (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+  );
+  console.log(
+    '-x                    -- Changes hash algorithm (ineffective if SVR.JS uses "svrjs.yaml" file for configuration)'
+  );
   process.exit(1);
 }
 
@@ -254,19 +295,7 @@ function promptAlgorithms(callback, bypass, pbkdf2, scrypt) {
   });
 }
 
-const userindex = getUserIndex(user);
-if (action == "add" && userindex != -1) {
-  console.log("User already exists.");
-  process.exit(1);
-} else if (action != "add" && userindex == -1) {
-  console.log("User doesn't exist.");
-  process.exit(1);
-}
-if (action == "delete") {
-  users.splice(userindex, 1);
-  saveConfig();
-  console.log("User deleted successfully");
-} else if (action == "add") {
+if (configIsYAML) {
   promptAlgorithms((algorithm) => {
     if (!algorithm) {
       console.log("Invalid algorithm!");
@@ -288,23 +317,37 @@ if (action == "delete") {
           } else {
             hash = sha256(password + salt);
           }
-          users.push({
+          const userObject = {
             name: user,
             pass: hash,
-            salt: salt,
-            pbkdf2: algorithm == "pbkdf2" ? true : undefined,
-            scrypt: algorithm == "scrypt" ? true : undefined,
-            __svrpasswd_l2: true
-          });
-          saveConfig();
-          console.log("User added successfully");
+            salt: salt
+          };
+          if (algorithm == "pbkdf2") userObject.pbkdf2 = true;
+          if (algorithm == "scrypt") userObject.scrypt = true;
+          console.log(
+            'Copy the user object below into "users" property of either global configuration or a virtual host in the "svrjs.yaml" file. Remember about the indentation in the SVR.JS configuration.'
+          );
+          console.log();
+          console.log(YAML.stringify([userObject]));
         }
       });
     }
   });
 } else {
-  promptAlgorithms(
-    (algorithm) => {
+  const userindex = getUserIndex(user);
+  if (action == "add" && userindex != -1) {
+    console.log("User already exists.");
+    process.exit(1);
+  } else if (action != "add" && userindex == -1) {
+    console.log("User doesn't exist.");
+    process.exit(1);
+  }
+  if (action == "delete") {
+    users.splice(userindex, 1);
+    saveConfig();
+    console.log("User deleted successfully");
+  } else if (action == "add") {
+    promptAlgorithms((algorithm) => {
       if (!algorithm) {
         console.log("Invalid algorithm!");
         process.exit(1);
@@ -314,8 +357,8 @@ if (action == "delete") {
             console.log("Passwords don't match!");
             process.exit(1);
           } else {
-            var salt = generateSalt();
-            var hash = "";
+            const salt = generateSalt();
+            let hash = "";
             if (algorithm == "scrypt") {
               hash = crypto.scryptSync(password, salt, 64).toString("hex");
             } else if (algorithm == "pbkdf2") {
@@ -325,22 +368,60 @@ if (action == "delete") {
             } else {
               hash = sha256(password + salt);
             }
-            users[userindex] = {
+            users.push({
               name: user,
               pass: hash,
               salt: salt,
               pbkdf2: algorithm == "pbkdf2" ? true : undefined,
               scrypt: algorithm == "scrypt" ? true : undefined,
               __svrpasswd_l2: true
-            };
+            });
             saveConfig();
-            console.log("Password changed successfully");
+            console.log("User added successfully");
           }
         });
       }
-    },
-    users[userindex].__svrpasswd_l2 && !forcechange,
-    users[userindex].pbkdf2,
-    users[userindex].scrypt
-  );
+    });
+  } else {
+    promptAlgorithms(
+      (algorithm) => {
+        if (!algorithm) {
+          console.log("Invalid algorithm!");
+          process.exit(1);
+        } else {
+          password((password) => {
+            if (!password) {
+              console.log("Passwords don't match!");
+              process.exit(1);
+            } else {
+              var salt = generateSalt();
+              var hash = "";
+              if (algorithm == "scrypt") {
+                hash = crypto.scryptSync(password, salt, 64).toString("hex");
+              } else if (algorithm == "pbkdf2") {
+                hash = crypto
+                  .pbkdf2Sync(password, salt, 36250, 64, "sha512")
+                  .toString("hex");
+              } else {
+                hash = sha256(password + salt);
+              }
+              users[userindex] = {
+                name: user,
+                pass: hash,
+                salt: salt,
+                pbkdf2: algorithm == "pbkdf2" ? true : undefined,
+                scrypt: algorithm == "scrypt" ? true : undefined,
+                __svrpasswd_l2: true
+              };
+              saveConfig();
+              console.log("Password changed successfully");
+            }
+          });
+        }
+      },
+      users[userindex].__svrpasswd_l2 && !forcechange,
+      users[userindex].pbkdf2,
+      users[userindex].scrypt
+    );
+  }
 }
