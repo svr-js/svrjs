@@ -42,6 +42,19 @@ process.serverConfig = {
       url: "/test/path2",
       scode: 401
     }
+  ],
+  configVHost: [
+    {
+      host: "example.org",
+      ip: "192.168.1.1",
+      nonStandardCodes: [
+        {
+          url: "/test/path3",
+          scode: 403,
+          users: ["127.0.0.1"]
+        }
+      ]
+    }
   ]
 };
 
@@ -91,6 +104,22 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
   });
 
   test("should handle non-standard codes", () => {
+    ipBlockList.mockReturnValue({
+      check: jest.fn().mockReturnValue(true)
+    });
+    matchHostname.mockReturnValue(true);
+    ipMatch.mockReturnValue(true);
+
+    middleware(req, res, logFacilities, config, next);
+
+    expect(res.error).toHaveBeenCalledWith(403);
+    expect(logFacilities.errmessage).toHaveBeenCalledWith("Content blocked.");
+  });
+
+  test("should handle non-standard codes per virtual host from configVHost property", () => {
+    req.headers.host = "example.org";
+    req.parsedURL.pathname = "/test/path3";
+    req.url = "/test/path3";
     ipBlockList.mockReturnValue({
       check: jest.fn().mockReturnValue(true)
     });
@@ -203,8 +232,8 @@ describe("Non-standard codes and HTTP authentication middleware", () => {
   });
 
   test("should call next if no non-standard codes or HTTP authentication is needed", () => {
-    req.parsedURL.pathname = "/test/path3";
-    req.url = "/test/path3";
+    req.parsedURL.pathname = "/test/path4";
+    req.url = "/test/path4";
 
     middleware(req, res, logFacilities, config, next);
 

@@ -37,8 +37,39 @@ process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
       newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
     }
   });
+  newObject = Object.freeze(newObject);
   nonStandardCodes.push(newObject);
 });
+
+let nonStandardCodesVHost = [];
+if (Array.isArray(process.serverConfig.configVHost)) {
+  process.serverConfig.configVHost.forEach((vhost) => {
+    if (Array.isArray(vhost.nonStandardCodes)) {
+      const newNonStandardCodes = [];
+
+      vhost.nonStandardCodes.forEach((nonStandardCodeRaw) => {
+        let newObject = {};
+        Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
+          if (nsKey != "users") {
+            newObject[nsKey] = nonStandardCodeRaw[nsKey];
+          } else {
+            newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
+          }
+        });
+        newObject = Object.freeze(newObject);
+        newNonStandardCodes.push(newObject);
+      });
+
+      if (typeof vhost === "object" && vhost !== null) {
+        nonStandardCodesVHost.push({
+          domain: vhost.domain,
+          ip: vhost.ip,
+          nonStandardCodes: newNonStandardCodes
+        });
+      }
+    }
+  });
+}
 
 if (!cluster.isPrimary) {
   passwordHashCacheIntervalId = setInterval(() => {
@@ -51,6 +82,21 @@ if (!cluster.isPrimary) {
   }, 1800000);
 }
 
+function getNonStandardCodes(hostname, ip) {
+  let nonStandardCodeVHost = [];
+  nonStandardCodesVHost.every((vhost) => {
+    if (
+      (vhost.domain === undefined || matchHostname(vhost.domain, hostname)) &&
+      (vhost.ip === undefined || ipMatch(vhost.ip, ip))
+    ) {
+      nonStandardCodeVHost = vhost.nonStandardCodes;
+      return false;
+    }
+    return true;
+  });
+  return [...nonStandardCodes, ...nonStandardCodeVHost];
+}
+
 module.exports = (req, res, logFacilities, config, next) => {
   let nonscodeIndex = -1;
   let authIndex = -1;
@@ -59,6 +105,10 @@ module.exports = (req, res, logFacilities, config, next) => {
   const reqip = req.socket.realRemoteAddress
     ? req.socket.realRemoteAddress
     : req.socket.remoteAddress;
+  const nonStandardCodes = getNonStandardCodes(
+    req.headers.host,
+    req.socket ? req.socket.localAddress : undefined
+  );
 
   // Scan for non-standard codes
   if (!req.isProxy && nonStandardCodes != undefined) {
