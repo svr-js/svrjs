@@ -2420,14 +2420,14 @@ function start(init) {
 // Process event listeners
 if (cluster.isPrimary || cluster.isPrimary === undefined) {
   // Crash handler
-  function crashHandlerMaster(err) {
+  const crashHandlerMaster = (err) => {
     serverconsole.locerrmessage(`${name} main process just crashed!!!`);
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
       err.stack ? generateErrorStack(err) : String(err)
     );
     process.exit(err.errno !== undefined ? err.errno : 1);
-  }
+  };
 
   process.on("uncaughtException", crashHandlerMaster);
   process.on("unhandledRejection", crashHandlerMaster);
@@ -2498,14 +2498,14 @@ if (cluster.isPrimary || cluster.isPrimary === undefined) {
   });
 } else {
   // Crash handler
-  function crashHandler(err) {
+  const crashHandler = (err) => {
     serverconsole.locerrmessage(`${name} worker just crashed!!!`);
     serverconsole.locerrmessage("Stack:");
     serverconsole.locerrmessage(
       err.stack ? generateErrorStack(err) : String(err)
     );
     process.exit(err.errno !== undefined ? err.errno : 1);
-  }
+  };
 
   process.on("uncaughtException", crashHandler);
   process.on("unhandledRejection", crashHandler);
