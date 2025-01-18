@@ -1020,6 +1020,40 @@ function listeningMessage() {
           }`
         );
     }
+    if (Array.isArray(process.serverConfig.configVHost)) {
+      process.serverConfig.configVHost.forEach((vhost) => {
+        if (
+          typeof vhost === "object" &&
+          vhost !== null &&
+          vhost.domain &&
+          vhost.domain !== "localhost" &&
+          vhost.domain !== domain
+        ) {
+          if (process.serverConfig.secure && !sListenToLocalhost)
+            serverconsole.locmessage(
+              `* https://${vhost.domain}${
+                process.serverConfig.spubport == 443
+                  ? ""
+                  : ":" + process.serverConfig.spubport
+              }`
+            );
+          if (
+            !(
+              process.serverConfig.secure &&
+              process.serverConfig.disableNonEncryptedServer
+            ) &&
+            !listenToLocalhost
+          )
+            serverconsole.locmessage(
+              `* http://${vhost.domain}${
+                process.serverConfig.pubport == 80
+                  ? ""
+                  : ":" + process.serverConfig.pubport
+              }`
+            );
+        }
+      });
+    }
     serverconsole.locmessage('For CLI help, you can type "help"');
 
     // Code for sending data to a statistics server
