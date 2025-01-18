@@ -28,36 +28,49 @@ let passwordHashCacheIntervalId = -1;
 
 // Non-standard code object
 let nonStandardCodes = [];
-process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
-  let newObject = {};
-  Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
-    if (nsKey != "users") {
-      newObject[nsKey] = nonStandardCodeRaw[nsKey];
-    } else {
-      newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
+if (Array.isArray(process.serverConfig.nonStandardCodes)) {
+  process.serverConfig.nonStandardCodes.forEach((nonStandardCodeRaw) => {
+    if (typeof nonStandardCodeRaw === "object" && nonStandardCodeRaw !== null) {
+      let newObject = {};
+      Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
+        if (nsKey != "users") {
+          newObject[nsKey] = nonStandardCodeRaw[nsKey];
+        } else {
+          newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
+        }
+      });
+      newObject = Object.freeze(newObject);
+      nonStandardCodes.push(newObject);
     }
   });
-  newObject = Object.freeze(newObject);
-  nonStandardCodes.push(newObject);
-});
+}
 
 let nonStandardCodesVHost = [];
 if (Array.isArray(process.serverConfig.configVHost)) {
   process.serverConfig.configVHost.forEach((vhost) => {
-    if (Array.isArray(vhost.nonStandardCodes)) {
+    if (
+      typeof vhost === "object" &&
+      vhost !== null &&
+      Array.isArray(vhost.nonStandardCodes)
+    ) {
       const newNonStandardCodes = [];
 
       vhost.nonStandardCodes.forEach((nonStandardCodeRaw) => {
-        let newObject = {};
-        Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
-          if (nsKey != "users") {
-            newObject[nsKey] = nonStandardCodeRaw[nsKey];
-          } else {
-            newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
-          }
-        });
-        newObject = Object.freeze(newObject);
-        newNonStandardCodes.push(newObject);
+        if (
+          typeof nonStandardCodeRaw === "object" &&
+          nonStandardCodeRaw !== null
+        ) {
+          let newObject = {};
+          Object.keys(nonStandardCodeRaw).forEach((nsKey) => {
+            if (nsKey != "users") {
+              newObject[nsKey] = nonStandardCodeRaw[nsKey];
+            } else {
+              newObject["users"] = ipBlockList(nonStandardCodeRaw.users);
+            }
+          });
+          newObject = Object.freeze(newObject);
+          newNonStandardCodes.push(newObject);
+        }
       });
 
       if (typeof vhost === "object" && vhost !== null) {
