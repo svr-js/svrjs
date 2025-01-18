@@ -1,6 +1,15 @@
+const { LRUCache } = require("lru-cache");
+const sanitizedURLCache = new LRUCache({ max: 1000 });
+
 // SVR.JS path sanitizer function
 function sanitizeURL(resource, allowDoubleSlashes) {
   if (resource === "*" || resource === "") return resource;
+
+  // Cache key
+  const cacheKey = `${allowDoubleSlashes ? true : false}:${resource}`;
+
+  // Check if URL is in cache and return cached value if it is
+  if (sanitizedURLCache.has(cacheKey)) return sanitizedURLCache.get(cacheKey);
 
   // Remove null characters
   resource = resource.replace(/%00|\0/g, "");
@@ -42,9 +51,13 @@ function sanitizeURL(resource, allowDoubleSlashes) {
   }
   resource = resource.replace(/\/\.\.(?=\/|$)/g, "");
 
-  // If the result has length of 0, return "/", else return the sanitized URL
-  if (resource.length == 0) return "/";
-  else return resource;
+  // If the result has length of 0, set the result to "/"
+  if (resource.length == 0) resource = "/";
+
+  // Set the result in the cache
+  sanitizedURLCache.set(cacheKey, resource);
+
+  return resource;
 }
 
 module.exports = sanitizeURL;

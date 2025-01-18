@@ -99,4 +99,10 @@ describe("URL sanitizer", () => {
     expect(sanitizeURL("/%5f")).toBe("/_");
     expect(sanitizeURL("/%5F")).toBe("/_");
   });
+
+  test("should return the sanitized URL after calling the URL sanitizer two times", () => {
+    sanitizeURL("/./test");
+    const sanitizedURL = sanitizeURL("/./test");
+    expect(sanitizedURL).toBe("/test");
+  });
 });
