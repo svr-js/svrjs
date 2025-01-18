@@ -96,6 +96,7 @@ if (!cluster.isPrimary) {
 }
 
 function getNonStandardCodes(hostname, ip) {
+  if (nonStandardCodesVHost.length === 0) return nonStandardCodes;
   let nonStandardCodeVHost = [];
   nonStandardCodesVHost.every((vhost) => {
     if (
