@@ -1,5 +1,6 @@
 const esbuild = require("esbuild");
 const esbuildCopyPlugin = require("esbuild-plugin-copy");
+const esbuildTextReplacePlugin = require("esbuild-plugin-text-replace");
 const fs = require("fs");
 const zlib = require("zlib");
 const archiver = require("archiver");
@@ -21,9 +22,9 @@ if (!fs.existsSync(__dirname + "/dist/mods"))
 if (!fs.existsSync(__dirname + "/dist/temp"))
   fs.mkdirSync(__dirname + "/dist/temp");
 if (!fs.existsSync(__dirname + "/dist/wwwroot"))
-    fs.mkdirSync(__dirname + "/dist/wwwroot");
+  fs.mkdirSync(__dirname + "/dist/wwwroot");
 if (!fs.existsSync(__dirname + "/dist/.dirimages"))
-    fs.mkdirSync(__dirname + "/dist/.dirimages");
+  fs.mkdirSync(__dirname + "/dist/.dirimages");
 
 // Create the out directory if it doesn't exist and if not building for development
 if (!isDev && !fs.existsSync(__dirname + "/out"))
@@ -43,6 +44,15 @@ if (!isDev) {
       platform: "node",
       target: "es2017",
       plugins: [
+        esbuildTextReplacePlugin({
+          include: /\.c?js$/,
+          pattern: [
+            [
+              /require(?:\(\s*(["'])punycode\1\s*\)|`punycode`)/g,
+              'require("punycode/")'
+            ]
+          ]
+        }),
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
@@ -93,7 +103,18 @@ if (!isDev) {
           bundle: true,
           outdir: "dist",
           platform: "node",
-          target: "es2017"
+          target: "es2017",
+          plugins: [
+            esbuildTextReplacePlugin({
+              include: /\.c?js$/,
+              pattern: [
+                [
+                  /require(?:\(\s*(["'])punycode\1\s*\)|`punycode`)/g,
+                  'require("punycode/")'
+                ]
+              ]
+            })
+          ]
         })
         .then(() => {
           const dependencies =
@@ -209,6 +230,15 @@ if (!isDev) {
       platform: "node",
       target: "es2017",
       plugins: [
+        esbuildTextReplacePlugin({
+          include: /\.c?js$/,
+          pattern: [
+            [
+              /require(?:\(\s*(["'])punycode\1\s*\)|`punycode`)/g,
+              'require("punycode/")'
+            ]
+          ]
+        }),
         esbuildCopyPlugin.copy({
           resolveFrom: __dirname,
           assets: {
