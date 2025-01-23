@@ -130,7 +130,7 @@ describe("Configuration validation utility functions", () => {
         enableDirectoryListingWithDefaultHead: false,
         nonStandardCodes: [
           { scode: 418, url: "/teapot.html" },
-          { scode: 451, regex: "unavailable", location: "legal" }
+          { scode: 451, url: "/unavailable", location: "legal" }
         ],
         dontCompress: ["image/jpeg", "image/png"],
         enableIPSpoofing: false,
