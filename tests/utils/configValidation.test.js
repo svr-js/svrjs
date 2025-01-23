@@ -295,6 +295,72 @@ describe("Configuration validation utility functions", () => {
         'Invalid value for the "ip" configuration property in the "vhost1.example.com" on invalidIP virtual host'
       );
     });
+
+    test("should throw an error for global-only property in virtual host config", () => {
+      const config = {
+        configVHost: [
+          {
+            domain: "vhost1.example.com",
+            ip: "192.168.1.10",
+            wwwroot: "/var/www/vhost1",
+            port: 8080 // Global-only property
+          }
+        ]
+      };
+
+      expect(() => validateConfig(config)).toThrow(
+        'The "port" configuration property in the "vhost1.example.com" on 192.168.1.10 virtual host is supported only in the global configuration'
+      );
+    });
+
+    test("should throw an error for another global-only property in virtual host config", () => {
+      const config = {
+        configVHost: [
+          {
+            domain: "vhost1.example.com",
+            ip: "192.168.1.10",
+            wwwroot: "/var/www/vhost1",
+            secure: true // Global-only property
+          }
+        ]
+      };
+
+      expect(() => validateConfig(config)).toThrow(
+        'The "secure" configuration property in the "vhost1.example.com" on 192.168.1.10 virtual host is supported only in the global configuration'
+      );
+    });
+
+    test("should throw an error for multiple global-only properties in virtual host config", () => {
+      const config = {
+        configVHost: [
+          {
+            domain: "vhost1.example.com",
+            ip: "192.168.1.10",
+            wwwroot: "/var/www/vhost1",
+            port: 8080, // Global-only property
+            secure: true // Global-only property
+          }
+        ]
+      };
+
+      expect(() => validateConfig(config)).toThrow(
+        'The "port" configuration property in the "vhost1.example.com" on 192.168.1.10 virtual host is supported only in the global configuration'
+      );
+    });
+
+    test("should pass validation for a valid virtual host config without global-only properties", () => {
+      const config = {
+        configVHost: [
+          {
+            domain: "vhost1.example.com",
+            ip: "192.168.1.10",
+            wwwroot: "/var/www/vhost1"
+          }
+        ]
+      };
+
+      expect(() => validateConfig(config)).not.toThrow();
+    });
   });
 
   describe("addConfigValidators", () => {

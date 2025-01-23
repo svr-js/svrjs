@@ -853,7 +853,10 @@ const middleware = [
 try {
   middleware.forEach((middlewareOne) => {
     if (middlewareOne.configValidators)
-      addConfigValidators(middlewareOne.configValidators);
+      addConfigValidators(
+        middlewareOne.configValidators,
+        middlewareOne.configGlobalOnly
+      );
   });
   validateConfig(process.serverConfig);
 } catch (err) {

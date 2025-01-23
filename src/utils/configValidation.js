@@ -217,6 +217,68 @@ const validators = {
   ip: (value) => validateIP(value)
 };
 
+const globalOnlyProperties = {
+  timestamp: true,
+  users: true,
+  port: true,
+  pubport: true,
+  sport: true,
+  spubport: true,
+  secure: true,
+  cert: true,
+  key: true,
+  sni: true,
+  enableOCSPStapling: true,
+  useClientCertificate: true,
+  rejectUnauthorizedClientCertificates: true,
+  cipherSuite: true,
+  ecdhCurve: true,
+  signatureAlgorithms: true,
+  tlsMinVersion: true,
+  tlsMaxVersion: true,
+  domain: false,
+  wwwredirect: false,
+  page404: false,
+  errorPages: false,
+  serverAdministratorEmail: false,
+  enableLogging: true,
+  enableCompression: false,
+  enableHTTP2: true,
+  enableDirectoryListing: false,
+  enableDirectoryListingWithDefaultHead: false,
+  nonStandardCodes: true,
+  dontCompress: false,
+  enableIPSpoofing: false,
+  enableETag: false,
+  customHeaders: false,
+  http2Settings: true,
+  enableIncludingHeadAndFootInHTML: false,
+  blacklist: true,
+  exposeServerVersion: false,
+  rewriteDirtyURLs: false,
+  exposeModsInErrorPages: false,
+  enableDirectoryListingVHost: false,
+  customHeadersVHost: false,
+  wwwrootPostfixesVHost: false,
+  wwwrootPostfixPrefixesVHost: false,
+  allowPostfixDoubleSlashes: false,
+  rewriteMap: false,
+  disableNonEncryptedServer: true,
+  disableToHTTPSRedirect: true,
+  allowStatus: false,
+  wwwroot: false,
+  disableUnusedWorkerTermination: true,
+  useWebRootServerSideScript: true,
+  disableTrailingSlashRedirects: false,
+  environmentVariables: false,
+  allowDoubleSlashes: false,
+  optOutOfStatisticsServer: true,
+  disableConfigurationSaving: false,
+  wwwrootVHost: false,
+  configVHost: true,
+  ip: false
+};
+
 function validateConfig(config) {
   Object.keys(config).forEach((prop) => {
     if (prop == "configVHost") {
@@ -232,7 +294,11 @@ function validateConfig(config) {
             );
           } else {
             Object.keys(vhost).forEach((prop) => {
-              if (validators[prop] && !validators[prop](vhost[prop])) {
+              if (globalOnlyProperties[prop]) {
+                throw new Error(
+                  `The "${prop}" configuration property in the ${vhost.domain !== undefined && vhost.ip !== undefined ? `"${vhost.domain}" on ${vhost.ip}` : vhost.domain !== undefined ? `"${vhost.domain}"` : vhost.ip} virtual host is supported only in the global configuration`
+                );
+              } else if (validators[prop] && !validators[prop](vhost[prop])) {
                 throw new Error(
                   `Invalid value for the "${prop}" configuration property in the ${vhost.domain !== undefined && vhost.ip !== undefined ? `"${vhost.domain}" on ${vhost.ip}` : vhost.domain !== undefined ? `"${vhost.domain}"` : vhost.ip} virtual host`
                 );
@@ -249,7 +315,7 @@ function validateConfig(config) {
   });
 }
 
-function addConfigValidators(newValidators) {
+function addConfigValidators(newValidators, newGlobalOnlyProperties) {
   Object.keys(newValidators).forEach((newValidatorProperty) => {
     if (validators[newValidatorProperty]) {
       throw new Error(
@@ -257,6 +323,9 @@ function addConfigValidators(newValidators) {
       );
     } else {
       validators[newValidatorProperty] = newValidators[newValidatorProperty];
+      if (newGlobalOnlyProperties)
+        globalOnlyProperties[newValidatorProperty] =
+          newGlobalOnlyProperties[newValidatorProperty];
     }
   });
 }
