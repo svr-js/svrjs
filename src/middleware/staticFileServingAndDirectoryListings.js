@@ -387,7 +387,13 @@ module.exports = (req, res, logFacilities, config, next) => {
           }
 
           // Bun 1.1 has definition for zlib.createBrotliCompress, but throws an error while invoking the function.
-          if (process.isBun && useBrotli && isCompressible) {
+          if (
+            process.isBun &&
+            (!process.versions.bun ||
+              process.versions.bun.match(/^(?:0\.|1\.[0-1]\.)/)) &&
+            useBrotli &&
+            isCompressible
+          ) {
             try {
               zlib.createBrotliCompress();
               // eslint-disable-next-line no-unused-vars
