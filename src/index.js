@@ -268,15 +268,15 @@ if (process.serverConfig.enableHTTP2 === undefined)
 if (process.serverConfig.enableLogging === undefined)
   process.serverConfig.enableLogging = true;
 if (process.serverConfig.enableDirectoryListing === undefined)
-  process.serverConfig.enableDirectoryListing = true;
+  process.serverConfig.enableDirectoryListing = configIsYAML ? false : true;
 if (process.serverConfig.enableDirectoryListingWithDefaultHead === undefined)
   process.serverConfig.enableDirectoryListingWithDefaultHead = false;
 if (process.serverConfig.serverAdministratorEmail === undefined)
   process.serverConfig.serverAdministratorEmail = "[no contact information]";
 if (process.serverConfig.stackHidden === undefined)
-  process.serverConfig.stackHidden = false;
+  process.serverConfig.stackHidden = configIsYAML ? true : false;
 if (process.serverConfig.exposeServerVersion === undefined)
-  process.serverConfig.exposeServerVersion = true;
+  process.serverConfig.exposeServerVersion = configIsYAML ? false : true;
 if (process.serverConfig.allowStatus === undefined)
   process.serverConfig.allowStatus = true;
 if (process.serverConfig.rewriteMap === undefined)
@@ -306,7 +306,7 @@ if (process.serverConfig.errorPages === undefined)
 if (process.serverConfig.useWebRootServerSideScript === undefined)
   process.serverConfig.useWebRootServerSideScript = true;
 if (process.serverConfig.exposeModsInErrorPages === undefined)
-  process.serverConfig.exposeModsInErrorPages = true;
+  process.serverConfig.exposeModsInErrorPages = configIsYAML ? false : true;
 if (process.serverConfig.disableTrailingSlashRedirects === undefined)
   process.serverConfig.disableTrailingSlashRedirects = false;
 if (process.serverConfig.environmentVariables === undefined)
@@ -326,9 +326,11 @@ if (process.serverConfig.allowPostfixDoubleSlashes === undefined)
 if (process.serverConfig.optOutOfStatisticsServer === undefined)
   process.serverConfig.optOutOfStatisticsServer = false;
 if (process.serverConfig.disableConfigurationSaving === undefined)
-  process.serverConfig.disableConfigurationSaving = false;
+  process.serverConfig.disableConfigurationSaving = configIsYAML ? true : false;
 if (process.serverConfig.enableIncludingHeadAndFootInHTML === undefined)
-  process.serverConfig.enableIncludingHeadAndFootInHTML = true;
+  process.serverConfig.enableIncludingHeadAndFootInHTML = configIsYAML
+    ? false
+    : true;
 if (process.serverConfig.wwwrootVHost === undefined)
   process.serverConfig.wwwrootVHost = [];
 
@@ -1639,7 +1641,7 @@ function msgListener(message) {
   }
 }
 
-// Save configuration file
+// Save configuration file (config.json only, no svrjs.yaml)
 function saveConfig() {
   for (let i = 0; i < 3; i++) {
     try {
