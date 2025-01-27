@@ -219,7 +219,7 @@ const validators = {
 
 const globalOnlyProperties = {
   timestamp: true,
-  users: true,
+  users: false,
   port: true,
   pubport: true,
   sport: true,
