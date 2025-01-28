@@ -304,7 +304,7 @@ if (process.serverConfig.rewriteDirtyURLs === undefined)
 if (process.serverConfig.errorPages === undefined)
   process.serverConfig.errorPages = [];
 if (process.serverConfig.useWebRootServerSideScript === undefined)
-  process.serverConfig.useWebRootServerSideScript = true;
+  process.serverConfig.useWebRootServerSideScript = configIsYAML ? false : true;
 if (process.serverConfig.exposeModsInErrorPages === undefined)
   process.serverConfig.exposeModsInErrorPages = configIsYAML ? false : true;
 if (process.serverConfig.disableTrailingSlashRedirects === undefined)
