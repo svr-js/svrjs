@@ -19,7 +19,7 @@ const serverHTTPErrorDescs = {
   413: "The request you sent is too large.",
   414: "The URL you sent is too long.",
   415: "The media type of request you sent isn't supported by the server.",
-  416: "The requested content range (Content-Range header) you sent is unsatisfiable.",
+  416: "The requested content range (Range header) you sent is unsatisfiable.",
   417: "The expectation specified in the Expect property couldn't be satisfied.",
   418: "The server (teapot) can't brew any coffee! ;)",
   421: "The request you made isn't intended for this server.",
